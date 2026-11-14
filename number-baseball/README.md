@@ -54,6 +54,8 @@ GitHub Pages 같은 정적 호스팅에 `public/`을 올릴 때는 `public/confi
 
 ## 배포 시 참고
 
+단계별 안내는 [DEPLOY.md](DEPLOY.md)를 보세요.
+
 - Node를 실행할 수 있는 호스팅이면 됩니다(`npm start`). 저장소의 Root Directory를 `number-baseball`로 지정하세요.
 - 도메인은 선택 사항입니다. 대부분의 호스팅이 무료 하위 도메인을 제공합니다.
 
