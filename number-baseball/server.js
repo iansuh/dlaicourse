@@ -69,6 +69,15 @@ function limited(req, kind, max, windowMs) {
   if (!e || e.reset < now) { e = { n: 0, reset: now + windowMs }; hits.set(k, e); }
   return ++e.n > max;
 }
+// Recovery code: shown once at signup (and after each reset), stored only as a hash.
+// It lets people reset a forgotten password without the site collecting an email address.
+async function newRecovery(u) {
+  const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const raw = Array.from(crypto.randomBytes(12), (b) => abc[b % abc.length]).join('');
+  u.rsalt = crypto.randomBytes(16).toString('hex');
+  u.rhash = (await scrypt(raw, u.rsalt, 32)).toString('hex');
+  return raw.match(/.{4}/g).join('-');
+}
 async function authApi(req, res, route, m) {
   const name = typeof m.username === 'string' ? m.username.trim().normalize('NFKC') : '';
   const pass = typeof m.password === 'string' ? m.password : '';
@@ -83,7 +92,8 @@ async function authApi(req, res, route, m) {
     const hash = (await scrypt(pass, salt, 32)).toString('hex');
     if (users[key]) return send(res, 409, { error: 'errTaken' });
     users[key] = { name, salt, hash, created: Date.now(), w: 0, l: 0, d: 0, sessions: {} };
-    return send(res, 200, { auth: openSession(key), ...publicUser(users[key]) });
+    const recovery = await newRecovery(users[key]);
+    return send(res, 200, { auth: openSession(key), recovery, ...publicUser(users[key]) });
   }
   if (route === 'login') {
     if (limited(req, 'login', 10, 60e3)) return send(res, 429, { error: 'errRate' });
@@ -92,6 +102,20 @@ async function authApi(req, res, route, m) {
     const got = await scrypt(pass.slice(0, 72), u ? u.salt : '00', 32);
     if (!u || !crypto.timingSafeEqual(got, Buffer.from(u.hash, 'hex'))) return send(res, 401, { error: 'errAuth' });
     return send(res, 200, { auth: openSession(key), ...publicUser(u) });
+  }
+  if (route === 'reset') {
+    if (limited(req, 'reset', 5, 900e3)) return send(res, 429, { error: 'errRate' });
+    if (pass.length < 6 || pass.length > 72) return send(res, 400, { error: 'errPass' });
+    const key = userKey(name), u = users[key];
+    const code = String(m.recovery || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 32);
+    const got = await scrypt(code, u && u.rsalt ? u.rsalt : '00', 32);
+    if (!u || !u.rhash || !crypto.timingSafeEqual(got, Buffer.from(u.rhash, 'hex'))) return send(res, 401, { error: 'errRecovery' });
+    u.salt = crypto.randomBytes(16).toString('hex');
+    u.hash = (await scrypt(pass, u.salt, 32)).toString('hex');
+    for (const h in u.sessions) tokenOwner.delete(h); // sign out everywhere
+    u.sessions = {};
+    const recovery = await newRecovery(u);             // the old code is used up
+    return send(res, 200, { auth: openSession(key), recovery, ...publicUser(u) });
   }
   if (route === 'logout') {
     const s = userByToken(m.auth);
@@ -372,7 +396,7 @@ async function api(req, res, url) {
   }
   if (req.method !== 'POST') return send(res, 404, { error: 'errInvalid' });
   const m = await readBody(req);
-  if (route === 'signup' || route === 'login' || route === 'logout') return authApi(req, res, route, m);
+  if (['signup', 'login', 'logout', 'reset'].includes(route)) return authApi(req, res, route, m);
   // Online rooms are for signed-in accounts only.
   const who = route === 'create' || route === 'join' ? userByToken(m.auth) : null;
   if ((route === 'create' || route === 'join') && !who) return send(res, 401, { error: 'errLogin' });

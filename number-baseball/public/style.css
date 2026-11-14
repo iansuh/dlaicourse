@@ -200,3 +200,5 @@ body.xl #chatLog { height: 80px; padding: 0 3px; }
 }
 
 .rec { color: var(--mute); font-weight: 400; }
+.reccode { text-align: center; font-size: 18px; user-select: all; color: var(--ink); }
+body.xl .reccode { font-size: 12px; text-align: left; }
