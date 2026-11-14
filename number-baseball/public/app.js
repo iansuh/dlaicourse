@@ -33,6 +33,7 @@
   let sess = null;      // online session {room, pid, token}
   let es = null, esErrors = 0;
   let err = '', copied = false, memo = {};
+  let posMemo = store.get('posMemo') !== '0'; // position grid in the memo board, on by default
   const wipe = new Set();
 
   const t = (k, vars) => {
@@ -368,11 +369,23 @@
       const a = d.me.hist[i], b = d.opp.hist[i];
       rows += `<tr><td>${i + 1}</td><td class="num">${a ? a.g : ''}</td><td>${a ? hint(a) : ''}</td><td class="num">${b ? b.g : ''}</td><td>${b ? hint(b) : ''}</td></tr>`;
     }
-    const chips = [...'0123456789'].map((c) => `<button class="chip ${memo[c] || ''}" data-act="memo" data-v="${c}">${c}</button>`).join('');
+    // Memo board: top row = is the digit in the number at all; grid below = is it in this position.
+    const D = [...'0123456789'];
+    let board = '<span class="mh"></span>' + D.map((c) => `<button class="chip ${memo[c] || ''}" data-act="memo" data-v="${c}" aria-label="${c}">${c}</button>`).join('');
+    if (posMemo) {
+      for (let i = 1; i <= view.digits; i++) {
+        board += `<span class="mh" title="${esc(t('posN', { n: i }))}">${i}</span>` + D.map((c) => {
+          const k = i + ':' + c, st = memo[k] || '';
+          return `<button class="pos ${st}${memo[c] === 'no' ? ' dim' : ''}" data-act="memo" data-v="${k}" aria-label="${esc(t('posN', { n: i }))} ${c}">${st === 'no' ? '✕' : st === 'yes' ? c : ''}</button>`;
+        }).join('');
+      }
+    }
     return `<div class="row between"><span>${esc(t('mySecret'))}: <b class="num">${esc(d.me.secret || '-')}</b></span><span>vs <b>${esc(d.opp.name)}</b>${d.opp.pending && !d.done ? ' ✓' : ''}</span></div>
       ${top}
       <table class="hist"><thead><tr><th>#</th><th>${esc(t('me'))}</th><th>${esc(t('result'))}</th><th>${esc(t('opp'))}</th><th>${esc(t('result'))}</th></tr></thead><tbody>${rows}</tbody></table>
-      <div class="memo" title="${esc(t('memo'))}">${chips}</div><p class="tiny">${esc(t('memo'))}</p>`;
+      <div class="memo${posMemo ? ' grid' : ''}">${board}</div>
+      <div class="row between memo-foot"><p class="tiny grow">${esc(t(posMemo ? 'memoPos' : 'memo'))}</p>
+      <button class="link tiny" data-act="posMemo">${esc(t(posMemo ? 'posHide' : 'posShow'))}</button></div>`;
   }
 
   function gameHtml() {
@@ -502,7 +515,19 @@
     secret: () => submitNum('sIn', 'secret'),
     guess: () => submitNum('gIn', 'guess'),
     forfeit: () => act('forfeit'),
-    memo: (v) => { memo[v] = memo[v] === 'no' ? 'yes' : memo[v] === 'yes' ? '' : 'no'; render(); },
+    memo: (v) => {
+      memo[v] = memo[v] === 'no' ? 'yes' : memo[v] === 'yes' ? '' : 'no';
+      // Marking a digit as sitting in one position means it is not in the other positions (digits never repeat),
+      // and that position holds no other digit.
+      if (v.includes(':') && memo[v] === 'yes') {
+        const [i, c] = v.split(':');
+        for (let j = 1; j <= view.digits; j++) if (String(j) !== i && !memo[j + ':' + c]) memo[j + ':' + c] = 'no';
+        for (const d of '0123456789') if (d !== c && !memo[i + ':' + d]) memo[i + ':' + d] = 'no';
+        memo[c] = 'yes';
+      }
+      render();
+    },
+    posMemo: () => { posMemo = !posMemo; store.set('posMemo', posMemo ? '1' : '0'); render(); },
     again: () => { if (local) { memo = {}; startLocal(local.digits); render(); } else act('lobby'); },
     home: () => {
       if (local && sess) { local = null; memo = {}; wipe.add('gIn').add('sIn'); render(); return; } // back to the waiting room

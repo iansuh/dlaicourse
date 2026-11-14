@@ -336,3 +336,20 @@ window.I18N = {
   };
   for (const l in add) Object.assign(window.I18N[l], add[l]);
 })();
+
+// Memo board with positions.
+(() => {
+  const add = {
+    en: { memoPos: 'Memo — top row: is the digit in the number? Grid: is it in that position? Tap: ✕ → ✓ → clear', memo: 'Memo — tap a digit: excluded → confirmed → clear', posShow: 'Show positions', posHide: 'Hide positions', posN: 'Position {n}' },
+    ko: { memoPos: '메모 — 윗줄: 숫자가 있나? 아래 칸: 그 자리에 있나? 누르면 ✕ → 확정 → 지움', memo: '메모 — 숫자를 누르면: 제외 → 확정 → 해제', posShow: '자리 메모 펼치기', posHide: '자리 메모 접기', posN: '{n}번째 자리' },
+    ja: { memoPos: 'メモ — 上段：その数字はある？ 下のマス：その位置にある？ タップ：✕ → 確定 → 消去', memo: 'メモ — 数字をタップ：除外 → 確定 → 解除', posShow: '位置メモを表示', posHide: '位置メモを隠す', posN: '{n}桁目' },
+    zh: { memoPos: '备忘 — 上排：有没有这个数字？下方格子：是否在这一位？点击：✕ → 确认 → 清除', memo: '备忘 — 点击数字：排除 → 确认 → 清除', posShow: '显示位置备忘', posHide: '隐藏位置备忘', posN: '第{n}位' },
+    es: { memoPos: 'Notas — fila de arriba: ¿está la cifra? Cuadrícula: ¿está en esa posición? Toca: ✕ → ✓ → borrar', memo: 'Notas — toca una cifra: descartada → confirmada → borrar', posShow: 'Mostrar posiciones', posHide: 'Ocultar posiciones', posN: 'Posición {n}' },
+    fr: { memoPos: 'Notes — ligne du haut : le chiffre est-il présent ? Grille : est-il à cette position ? Touchez : ✕ → ✓ → effacer', memo: 'Notes — touchez un chiffre : exclu → confirmé → effacer', posShow: 'Afficher les positions', posHide: 'Masquer les positions', posN: 'Position {n}' },
+    de: { memoPos: 'Notizen — obere Reihe: Ist die Ziffer dabei? Raster: Steht sie an dieser Stelle? Tippen: ✕ → ✓ → löschen', memo: 'Notizen — Ziffer antippen: ausgeschlossen → sicher → löschen', posShow: 'Stellen anzeigen', posHide: 'Stellen ausblenden', posN: 'Stelle {n}' },
+    pt: { memoPos: 'Notas — linha de cima: o dígito está no número? Grade: está nessa posição? Toque: ✕ → ✓ → limpar', memo: 'Notas — toque num dígito: excluído → confirmado → limpar', posShow: 'Mostrar posições', posHide: 'Ocultar posições', posN: 'Posição {n}' },
+    ru: { memoPos: 'Заметки — верхний ряд: есть ли цифра? Сетка: стоит ли она на этом месте? Нажатие: ✕ → ✓ → сброс', memo: 'Заметки — нажмите на цифру: исключена → точно есть → сброс', posShow: 'Показать позиции', posHide: 'Скрыть позиции', posN: 'Позиция {n}' },
+    vi: { memoPos: 'Ghi chú — hàng trên: có chữ số này không? Lưới: nó ở vị trí này không? Chạm: ✕ → ✓ → xóa', memo: 'Ghi chú — chạm vào số: loại → chắc chắn → xóa', posShow: 'Hiện ghi chú vị trí', posHide: 'Ẩn ghi chú vị trí', posN: 'Vị trí {n}' },
+  };
+  for (const l in add) Object.assign(window.I18N[l], add[l]);
+})();
