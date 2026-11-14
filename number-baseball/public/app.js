@@ -21,7 +21,8 @@
   form.size = Number(store.get('size')) || 1;
   form.name = '';
   let auth = store.get('auth') || '';   // login token
-  let authMode = 'login', recCode = '';   // login-screen mode; recovery code waiting to be shown once
+  let authMode = 'login';   // login | signup | forgot (ask for a code) | reset (enter code + new password)
+  let info = '';
   let acct = null;                       // signed-in account {name, stats}; null while playing as a guest
   let view = null;      // what is on screen: the vs-computer game if one is running, else the online room
   let ov = null;        // online room view pushed by the server
@@ -190,12 +191,13 @@
     if (!view) render();
   }
   async function authCall(route) {
-    const u = $('#fUser'), p = $('#fPass'), r = $('#fRec');
-    if (!u || !p) return;
+    const val = (id) => { const el = document.getElementById(id); return el ? el.value : undefined; };
     try {
-      const data = await post(route, { username: u.value.trim(), password: p.value, recovery: r ? r.value : undefined });
-      err = ''; wipe.add('fUser').add('fPass').add('fRec');
-      authMode = 'login'; recCode = data.recovery || '';
+      const data = await post(route, { username: (val('fUser') || '').trim(), password: val('fPass'), email: val('fEmail'), code: val('fRec'), lang });
+      err = ''; info = '';
+      if (route === 'forgot') { authMode = 'reset'; info = 'codeSent'; wipe.add('fPass').add('fRec'); render(); return; }
+      wipe.add('fUser').add('fPass').add('fRec').add('fEmail');
+      authMode = 'login';
       setAccount(data);
       render(); pollRooms();
     } catch (e) { err = e.message; render(); }
@@ -218,38 +220,42 @@
   const digitOpts = (cur) => opts([3, 4, 5, 6].map((n) => [n, n]), cur);
 
   const sizeOpts = (cur) => opts([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => [n, `${n} : ${n}`]), cur);
-  function codeHtml() {
-    return `<section class="card">
-      <h3>${esc(t('recTitle'))}</h3>
-      <p class="banner num reccode">${esc(recCode)}</p>
-      <p class="status">${esc(t('recBody'))}</p>
-      <div class="row"><button class="grow" data-act="copyCode">${esc(t(copied ? 'copied' : 'copy'))}</button>
-      <button class="primary grow" data-act="codeOk">${esc(t('saved'))}</button></div>
-    </section>`;
-  }
-  function resetHtml() {
-    return `<section class="card">
-      <h3>${esc(t('forgot'))}</h3>
-      <div class="row"><input id="fUser" class="grow" maxlength="12" placeholder="${esc(t('userId'))}" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
-      <div class="row"><input id="fRec" class="grow code" maxlength="20" placeholder="${esc(t('recCode'))} (XXXX-XXXX-XXXX)" autocomplete="off" spellcheck="false"></div>
-      <div class="row"><input id="fPass" class="grow" type="password" maxlength="72" placeholder="${esc(t('newPass'))}" autocomplete="new-password"></div>
-      ${errLine()}
-      <div class="row"><button class="primary grow" data-act="reset">${esc(t('resetBtn'))}</button></div>
-      <div class="row"><button class="link" data-act="authMode" data-v="login">${esc(t('back'))}</button></div>
-    </section>`;
-  }
   function loginHtml() {
+    const user = `<div class="row"><input id="fUser" class="grow" maxlength="12" placeholder="${esc(t('userId'))}" autocomplete="username" autocapitalize="off" spellcheck="false"></div>`;
+    const email = `<div class="row"><input id="fEmail" class="grow" type="email" maxlength="254" placeholder="${esc(t('email'))}" autocomplete="email" autocapitalize="off" spellcheck="false"></div>`;
+    const pass = (ph, ac) => `<div class="row"><input id="fPass" class="grow" type="password" maxlength="72" placeholder="${esc(t(ph))}" autocomplete="${ac}"></div>`;
+    const back = `<div class="row"><button class="link" data-act="authMode" data-v="login">${esc(t('back'))}</button></div>`;
+    const note = info ? `<p class="status">${esc(t(info))}</p>` : '';
+    if (authMode === 'signup') {
+      return `<section class="card"><h3>${esc(t('signup'))}</h3>
+        <p class="status">${esc(t('loginHint'))}</p>
+        ${user}${email}<p class="tiny">${esc(t('emailHint'))}</p>${pass('password', 'new-password')}
+        ${errLine()}
+        <div class="row"><button class="primary grow" data-act="signup">${esc(t('signup'))}</button></div>${back}</section>`;
+    }
+    if (authMode === 'forgot') {
+      return `<section class="card"><h3>${esc(t('forgot'))}</h3>
+        ${user}${email}
+        ${errLine()}
+        <div class="row"><button class="primary grow" data-act="forgot">${esc(t('sendCode'))}</button></div>${back}</section>`;
+    }
+    if (authMode === 'reset') {
+      return `<section class="card"><h3>${esc(t('forgot'))}</h3>
+        ${note}${user}
+        <div class="row"><input id="fRec" class="grow num" inputmode="numeric" maxlength="6" placeholder="${esc(t('mailCode'))}" autocomplete="one-time-code"></div>
+        ${pass('newPass', 'new-password')}
+        ${errLine()}
+        <div class="row"><button class="primary grow" data-act="reset">${esc(t('resetBtn'))}</button></div>${back}</section>`;
+    }
     return `<section class="card">
       <p class="sub">${esc(t('sub'))}</p>
-      <p class="status">${esc(t('loginHint'))}</p>
-      <div class="row"><input id="fUser" class="grow" maxlength="12" placeholder="${esc(t('userId'))}" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
-      <div class="row"><input id="fPass" class="grow" type="password" maxlength="72" placeholder="${esc(t('password'))}" autocomplete="current-password"></div>
+      ${user}${pass('password', 'current-password')}
       ${errLine()}
       <div class="row">
         <button class="primary grow" data-act="signin">${esc(t('login'))}</button>
-        <button class="grow" data-act="signup">${esc(t('signup'))}</button>
+        <button class="grow" data-act="authMode" data-v="signup">${esc(t('signup'))}</button>
       </div>
-      <div class="row between"><button class="link" data-act="guest">${esc(t('guest'))}</button><button class="link" data-act="authMode" data-v="reset">${esc(t('forgot'))}</button></div>
+      <div class="row between"><button class="link" data-act="guest">${esc(t('guest'))}</button><button class="link" data-act="authMode" data-v="forgot">${esc(t('forgot'))}</button></div>
       <div class="row"><button class="link" data-act="rules">${esc(t('rules'))}</button></div>
     </section>`;
   }
@@ -396,13 +402,13 @@
     const app = $('#app');
     view = local ? local.view : ov;
     const keep = {};
-    for (const id of ['gIn', 'sIn', 'cIn', 'fUser', 'fPass', 'fRec']) { const el = document.getElementById(id); if (el && !wipe.has(id)) keep[id] = el.value; }
+    for (const id of ['gIn', 'sIn', 'cIn', 'fUser', 'fPass', 'fRec', 'fEmail']) { const el = document.getElementById(id); if (el && !wipe.has(id)) keep[id] = el.value; }
     wipe.clear();
     const focusId = document.activeElement && document.activeElement.id;
     const log = document.getElementById('chatLog');
     const stick = !log || log.scrollHeight - log.scrollTop - log.clientHeight < 30;
     const logTop = log ? log.scrollTop : 0;
-    app.innerHTML = !view ? (recCode ? codeHtml() : form.in ? homeHtml() : authMode === 'reset' ? resetHtml() : loginHtml())
+    app.innerHTML = !view ? (form.in ? homeHtml() : loginHtml())
       : (view.phase === 'lobby' ? lobbyHtml() : gameHtml()) + chatHtml();
     for (const id in keep) { const el = document.getElementById(id); if (el) el.value = keep[id]; }
     const log2 = document.getElementById('chatLog');
@@ -459,11 +465,8 @@
   const actions = {
     signin: () => authCall('login'),
     reset: () => authCall('reset'),
-    authMode: (v) => { authMode = v; err = ''; wipe.add('fPass').add('fRec'); render(); },
-    codeOk: () => { recCode = ''; copied = false; render(); pollRooms(); },
-    copyCode: async () => {
-      try { await navigator.clipboard.writeText(recCode); copied = true; render(); } catch { /* the code is on screen to copy by hand */ }
-    },
+    forgot: () => authCall('forgot'),
+    authMode: (v) => { authMode = v; err = ''; info = ''; wipe.add('fPass').add('fRec'); render(); },
     signup: () => authCall('signup'),
     guest: () => { err = ''; acct = null; form.name = ''; form.in = true; render(); },
     logout: () => {
@@ -528,7 +531,7 @@
     if (id === 'gIn') actions.guess();
     else if (id === 'sIn') actions.secret();
     else if (id === 'fCode') actions.join();
-    else if (id === 'fPass' || id === 'fUser' || id === 'fRec') { if (authMode === 'reset') actions.reset(); else actions.signin(); }
+    else if (['fPass', 'fUser', 'fRec', 'fEmail'].includes(id)) actions[authMode === 'login' ? 'signin' : authMode]();
     else if (id === 'cIn' && !e.isComposing) actions.chat();
   });
   $('#rulesBtn').addEventListener('click', actions.rules);
