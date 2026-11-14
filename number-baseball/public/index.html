@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Number Baseball</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- Spreadsheet look-alike chrome (only visible in sheet mode) -->
+<div id="xlTitle" class="xl-only"><span class="xl-ico">▦</span><span>Book1.xlsx</span></div>
+<header id="bar">
+  <div id="brand">⚾ <span id="brandText"></span></div>
+  <nav id="xlTabs" class="xl-only"></nav>
+  <div id="tools">
+    <button id="rulesBtn" type="button" title="?">?</button>
+    <label id="sheetLbl"><input type="checkbox" id="sheetChk"> <span id="sheetTxt"></span></label>
+    <select id="langSel" aria-label="Language"></select>
+  </div>
+</header>
+<div id="xlFx" class="xl-only"><span class="cellname">B2</span><span class="fx">fx</span><span id="fxVal"></span></div>
+<div id="xlCols" class="xl-only"></div>
+
+<main id="app"></main>
+
+<div id="xlSheets" class="xl-only"><span class="on">Sheet1</span><span>Sheet2</span><span>Sheet3</span><span id="bossHint"></span></div>
+
+<div id="boss" hidden></div>
+
+<dialog id="rulesDlg">
+  <h2 id="rulesTitle"></h2>
+  <ol id="rulesList"></ol>
+  <form method="dialog"><button id="rulesClose"></button></form>
+</dialog>
+
+<script src="i18n.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
