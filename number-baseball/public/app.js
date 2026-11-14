@@ -10,7 +10,10 @@
   // ---------- state ----------
   let lang = store.get('lang');
   if (!I18N[lang]) lang = Object.keys(I18N).find((l) => (navigator.language || '').toLowerCase().startsWith(l)) || 'en';
-  let sheet = store.get('sheet') === '1';
+  const SKINS = ['light', 'dark', 'pink', 'mint', 'sheet', 'ghost'];
+  let skin = store.get('skin') || (store.get('sheet') === '1' ? 'sheet' : '');
+  if (!SKINS.includes(skin)) skin = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  const pageTitle = () => (skin === 'sheet' ? 'Book1.xlsx' : skin === 'ghost' ? 'Untitled' : t('title'));
   const form = {
     name: store.get('name') || '', digits: Number(store.get('digits')) || 3, level: store.get('level') || 'normal',
     code: (new URLSearchParams(location.search).get('room') || '').toUpperCase().slice(0, 5),
@@ -349,11 +352,12 @@
   }
   function applyStatic() {
     document.documentElement.lang = lang;
-    document.body.classList.toggle('xl', sheet);
-    document.title = sheet ? 'Book1.xlsx' : t('title');
+    document.body.className = 'skin-' + skin + (skin === 'sheet' ? ' xl' : '');
+    document.title = pageTitle();
+    const names = t('skins').split(',');
+    $('#skinSel').innerHTML = SKINS.map((k, i) => `<option value="${k}">${esc(names[i] || k)}</option>`).join('');
+    $('#skinSel').value = skin;
     $('#brandText').textContent = t('title');
-    $('#sheetTxt').textContent = t('sheet');
-    $('#sheetChk').checked = sheet;
     $('#rulesBtn').title = t('rules');
     $('#rulesTitle').textContent = t('rules');
     $('#rulesList').innerHTML = [1, 2, 3, 4, 5, 6].map((i) => `<li>${esc(t('r' + i))}</li>`).join('');
@@ -454,7 +458,7 @@
     else if (id === 'cIn' && !e.isComposing) actions.chat();
   });
   $('#rulesBtn').addEventListener('click', actions.rules);
-  $('#sheetChk').addEventListener('change', (e) => { sheet = e.target.checked; store.set('sheet', sheet ? '1' : '0'); applyStatic(); });
+  $('#skinSel').addEventListener('change', (e) => { skin = e.target.value; store.set('skin', skin); applyStatic(); });
   const sel = $('#langSel');
   sel.innerHTML = Object.entries(LANGS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
   sel.value = lang;
@@ -481,7 +485,7 @@
     const boss = $('#boss');
     if (!boss.innerHTML) buildBoss();
     boss.hidden = !boss.hidden;
-    document.title = boss.hidden ? (sheet ? 'Book1.xlsx' : t('title')) : 'Sales_Report_FY.xlsx';
+    document.title = boss.hidden ? pageTitle() : 'Sales_Report_FY.xlsx';
     if (boss.hidden) render(); else if (document.activeElement) document.activeElement.blur();
   });
 

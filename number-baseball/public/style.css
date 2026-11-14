@@ -2,9 +2,20 @@
   --bg: #f4f5f7; --card: #fff; --ink: #1d2433; --mute: #667085; --line: #d9dde5;
   --accent: #1f6feb; --good: #16803c; --bad: #c62828; --a: #1f6feb; --b: #d9480f;
 }
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #14171c; --card: #1e232b; --ink: #e8ebf0; --mute: #98a2b3; --line: #343b47; --accent: #5b9cff; --good: #4cc27a; --bad: #ff7b72; --a: #5b9cff; --b: #ff9b62; }
-}
+body.skin-dark { --bg: #14171c; --card: #1e232b; --ink: #e8ebf0; --mute: #98a2b3; --line: #343b47; --accent: #5b9cff; --good: #4cc27a; --bad: #ff7b72; --a: #5b9cff; --b: #ff9b62; color-scheme: dark; }
+body.skin-pink { --bg: #ffeef5; --card: #fffafc; --ink: #4a2338; --mute: #a0627f; --line: #f6c6d9; --accent: #e0457b; --good: #1f8a4c; --bad: #c62828; --a: #e0457b; --b: #7b4fd6; }
+body.skin-mint { --bg: #e9f7f1; --card: #fbfffd; --ink: #173b30; --mute: #5b7f73; --line: #c1e2d5; --accent: #0f9d76; --good: #0b7a3e; --bad: #c62828; --a: #0f9d76; --b: #c2570c; }
+/* Ghost: an almost blank page. Text is barely there until the pointer is over the game. */
+body.skin-ghost { --bg: #fff; --card: #fff; --ink: #d2d2d2; --mute: #e2e2e2; --line: #f1f1f1; --accent: #cfcfcf; --good: #c3d6c7; --bad: #e0c4c4; --a: #d2d2d2; --b: #d2d2d2; }
+body.skin-ghost:has(.card:hover) { --ink: #8c8c8c; --mute: #b0b0b0; --line: #e4e4e4; --accent: #9a9a9a; --good: #7fa588; --bad: #c08c8c; --a: #8c8c8c; --b: #8c8c8c; }
+body.skin-ghost #bar { border-bottom-color: transparent; }
+body.skin-ghost .card { border-color: transparent; }
+body.skin-ghost button.primary { background: none; color: var(--ink); }
+body.skin-ghost .chip.yes { background: none; color: var(--good); font-weight: 700; }
+body.skin-ghost #brand { visibility: hidden; }
+body.skin-ghost :focus-visible { outline: 1px solid var(--accent); outline-offset: 0; }
+body.skin-ghost ::placeholder { color: var(--mute); }
+@media (pointer: coarse) { body.skin-ghost { --ink: #a8a8a8; --mute: #c4c4c4; --line: #e9e9e9; --accent: #b0b0b0; } }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body { background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif; min-width: 240px; }
