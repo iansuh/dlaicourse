@@ -8,6 +8,7 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   // ---------- state ----------
+  const OFFLINE = !!(window.NB_CONFIG && window.NB_CONFIG.offline); // no game server: computer mode only
   let lang = store.get('lang');
   if (!I18N[lang]) lang = Object.keys(I18N).find((l) => (navigator.language || '').toLowerCase().startsWith(l)) || 'en';
   const SKINS = ['light', 'dark', 'pink', 'mint', 'sheet', 'ghost'];
@@ -268,6 +269,7 @@
       </div>
       <div class="row"><button class="link" data-act="rules">${esc(t('rules'))}</button></div>`;
     if (!acct) {
+      if (OFFLINE) return `<section class="card"><p class="sub">${esc(t('sub'))}</p>${cpu}</section>`;
       return `<section class="card">
         <div class="row between"><span class="status">${esc(t('loginHint'))}</span><button class="link" data-act="logout">${esc(t('login'))}</button></div>
         ${cpu}</section>`;
@@ -570,10 +572,15 @@
   $('#xlCols').innerHTML = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((c) => `<span>${c}</span>`).join('');
   applyStatic();
   try { sess = JSON.parse(sessionStorage.getItem('nb_sess')); } catch { sess = null; }
-  form.in = false;
-  refreshMe().then(pollRooms);
-  if (sess && sess.room) connect(); else sess = null;
-  render();
-  pollRooms();
-  setInterval(pollRooms, 3000);
+  if (OFFLINE) {
+    form.in = true; sess = null;
+    render();
+  } else {
+    form.in = false;
+    refreshMe().then(pollRooms);
+    if (sess && sess.room) connect(); else sess = null;
+    render();
+    pollRooms();
+    setInterval(pollRooms, 3000);
+  }
 })();

@@ -42,6 +42,16 @@ Node.js 18 이상만 있으면 되고 `npm install`이 필요 없습니다(외�
 | `public/i18n.js` | 언어별 문자열 |
 | `public/style.css` | 기본 스킨과 시트 모드 스킨 |
 
+## 컴퓨터 대결 전용 버전
+
+서버 없이 파일 하나로 도는 체험판을 만들 수 있습니다. 로그인 화면 없이 바로 컴퓨터 대결로 시작합니다.
+
+```bash
+node tools/build-offline.js            # dist/number-baseball-offline.html 생성
+```
+
+GitHub Pages 같은 정적 호스팅에 `public/`을 올릴 때는 `public/config.js`의 `offline`을 `true`로 바꾸면 같은 동작이 됩니다.
+
 ## 배포 시 참고
 
 - Node를 실행할 수 있는 호스팅이면 됩니다(`npm start`). 저장소의 Root Directory를 `number-baseball`로 지정하세요.
