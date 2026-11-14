@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6feb">
 <title>Number Baseball</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -22,6 +23,7 @@
 <div id="xlCols" class="xl-only"></div>
 
 <main id="app"></main>
+<footer id="foot"><a id="donate" target="_blank" rel="noopener noreferrer" hidden></a></footer>
 
 <div id="xlSheets" class="xl-only"><span class="on">Sheet1</span><span>Sheet2</span><span>Sheet3</span><span id="bossHint"></span></div>
 
@@ -33,6 +35,7 @@
   <form method="dialog"><button id="rulesClose"></button></form>
 </dialog>
 
+<script src="config.js"></script>
 <script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>

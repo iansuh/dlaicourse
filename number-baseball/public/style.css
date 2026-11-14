@@ -147,3 +147,43 @@ body.xl dialog { border-radius: 0; font-size: 12px; }
 #xlSheets span { padding: 0 10px; color: #444; line-height: 23px; white-space: nowrap; }
 #xlSheets span.on { background: #fff; color: #217346; font-weight: 600; border-bottom: 2px solid #217346; }
 #bossHint { margin-left: auto; color: #a19f9d !important; font-size: 11px; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- room list, chat, footer ---------- */
+.rooms { list-style: none; margin: 4px 0; padding: 0; max-height: 190px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+.rooms li { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+.rooms li:last-child { border-bottom: 0; }
+.rooms .grow { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rooms small { color: var(--mute); }
+.banner.wait { color: var(--mute); font-weight: 400; }
+.card.chat { margin-top: 8px; }
+.card.chat h3 { margin-top: 0; }
+#chatLog { height: 96px; overflow-y: auto; border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; overscroll-behavior: contain; }
+#chatLog p { margin: 0; overflow-wrap: anywhere; }
+#chatLog b { color: var(--accent); margin-right: 2px; }
+#foot { text-align: center; padding: 4px 10px 16px; font-size: 12px; }
+#foot a { color: var(--mute); }
+body.xl #foot { text-align: left; padding: 0 0 0 34px; background: none; }
+body.xl .rooms, body.xl #chatLog { border-radius: 0; background: #fff; }
+body.xl .rooms li { padding: 0 3px; min-height: 20px; }
+body.xl .card.chat { margin-top: 20px; }
+body.xl .card.chat h3 { margin: 0; }
+body.xl #chatLog { height: 80px; padding: 0 3px; }
+
+/* ---------- phones and tablets: thumb-sized controls, edge-to-edge card ---------- */
+@media (pointer: coarse) {
+  body:not(.xl) { font-size: 16px; }
+  body:not(.xl) #app { padding: 8px max(8px, env(safe-area-inset-right)) 8px max(8px, env(safe-area-inset-left)); }
+  body:not(.xl) .card { max-width: 560px; }
+  body:not(.xl) input, body:not(.xl) select, body:not(.xl) button { min-height: 44px; }
+  body:not(.xl) button.link { min-height: 36px; }
+  body:not(.xl) #rulesBtn { width: 36px; height: 36px; min-height: 0; }
+  body:not(.xl) #langSel { min-height: 36px; }
+  body:not(.xl) .chip { min-height: 40px; font-size: 17px; }
+  body:not(.xl) .hist td { padding: 6px 4px; font-size: 17px; }
+  body:not(.xl) .rooms li { padding: 6px 8px; }
+  body:not(.xl) #chatLog { height: 120px; }
+  body:not(.xl) #foot { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  /* Sheet mode stays dense on purpose, but rows get a little taller so they can be tapped. */
+  body.xl input, body.xl select, body.xl button, body.xl .chip { height: 28px; }
+  body.xl #langSel { height: 22px; }
+}

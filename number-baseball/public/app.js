@@ -15,11 +15,16 @@
     name: store.get('name') || '', digits: Number(store.get('digits')) || 3, level: store.get('level') || 'normal',
     code: (new URLSearchParams(location.search).get('room') || '').toUpperCase().slice(0, 5),
   };
-  let view = null;      // current game view (same shape for online and vs-computer)
-  let local = null;     // vs-computer game state
+  form.size = Number(store.get('size')) || 1;
+  let view = null;      // what is on screen: the vs-computer game if one is running, else the online room
+  let ov = null;        // online room view pushed by the server
+  let local = null;     // vs-computer game state (also used to practise while waiting in a room)
+  let roomList = [], roomsKey = '', notice = '';
+  const coarse = window.matchMedia && matchMedia('(pointer: coarse)').matches;
   let sess = null;      // online session {room, pid, token}
   let es = null, esErrors = 0;
-  let err = '', copied = false, memo = {}, wipeInputs = false;
+  let err = '', copied = false, memo = {};
+  const wipe = new Set();
 
   const t = (k, vars) => {
     let s = (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;
@@ -62,14 +67,14 @@
     const ok = perms(n).filter((c) => !tried.has(c) && used.every((h) => { const r = judge(c, h.g); return r.s === h.s && r.b === h.b; }));
     return ok.length ? ok[Math.floor(Math.random() * ok.length)] : randomNum(n);
   }
-  function startLocal() {
-    local = { digits: form.digits, level: form.level, secret: null, cpuSecret: randomNum(form.digits), hist: [[], []], done: false, outcome: null };
+  function startLocal(digits) {
+    local = { digits, level: form.level, secret: null, cpuSecret: randomNum(digits), hist: [[], []], done: false, outcome: null };
     memo = {};
     syncLocal();
   }
   function syncLocal() {
     const L = local, w = L.outcome === 'win' ? 0 : L.outcome === 'lose' ? 1 : L.outcome;
-    view = {
+    L.view = {
       local: true, digits: L.digits, phase: L.done ? 'done' : 'play', host: 'me', you: 'me',
       players: [{ id: 'me', name: form.name || t('me'), team: 'A', online: true }, { id: 'cpu', name: t('cpu'), team: 'B', online: true }],
       duels: [{ a: 'me', b: 'cpu', rounds: L.hist[0].length, winner: w, done: L.done }],
@@ -117,10 +122,13 @@
     es = new EventSource(`api/events?room=${sess.room}&pid=${sess.pid}&token=${sess.token}`);
     es.onmessage = (e) => {
       esErrors = 0;
-      const was = view && view.duel && view.duel.me.secret;
-      view = JSON.parse(e.data);
-      if (was && view.duel && !view.duel.me.secret) memo = {};
-      if (view.phase === 'lobby') memo = {};
+      const was = ov && ov.duel && ov.duel.me.secret;
+      ov = JSON.parse(e.data);
+      if (local && ov.phase !== 'lobby') { local = null; memo = {}; notice = 'matchFound'; wipe.add('gIn').add('sIn'); }
+      if (!local) {
+        if (was && ov.duel && !ov.duel.me.secret) memo = {};
+        if (ov.phase === 'lobby') memo = {};
+      }
       render();
     };
     es.onerror = async () => {
@@ -139,13 +147,13 @@
   function goHome(e) {
     if (es) { es.close(); es = null; }
     setSess(null);
-    view = null; local = null; memo = {}; err = e || '';
+    ov = null; local = null; memo = {}; notice = ''; err = e || '';
     history.replaceState(null, '', location.pathname);
     render();
   }
   async function enterRoom(route) {
     try {
-      const body = route === 'create' ? { name: form.name, digits: form.digits } : { name: form.name, room: form.code };
+      const body = route === 'create' ? { name: form.name, digits: form.digits, size: form.size } : { name: form.name, room: form.code };
       const s = await post(route, body);
       err = '';
       setSess(s);
@@ -154,8 +162,8 @@
     } catch (e) { err = e.message; render(); }
   }
   async function act(type, extra) {
-    err = '';
-    if (local) return localAct(type, extra && extra.value);
+    err = ''; notice = '';
+    if (local && ['secret', 'guess', 'forfeit'].includes(type)) return localAct(type, extra && extra.value);
     try { await post('action', { ...sess, type, ...extra }); } catch (e) {
       if (e.message === 'errRoom') return goHome('errRoom');
       err = e.message; render();
@@ -170,27 +178,50 @@
   const opts = (list, cur) => list.map(([v, label]) => `<option value="${v}"${String(v) === String(cur) ? ' selected' : ''}>${esc(label)}</option>`).join('');
   const digitOpts = (cur) => opts([3, 4, 5, 6].map((n) => [n, n]), cur);
 
-  function homeHtml() {
+  const sizeOpts = (cur) => opts([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => [n, `${n} : ${n}`]), cur);
+  function loginHtml() {
     return `<section class="card">
       <p class="sub">${esc(t('sub'))}</p>
+      <p class="status">${esc(t('loginHint'))}</p>
       <div class="row">
-        <label class="grow">${esc(t('name'))}<input id="fName" maxlength="12" value="${esc(form.name)}" autocomplete="off"></label>
-        <label>${esc(t('digits'))}<select id="fDigits">${digitOpts(form.digits)}</select></label>
+        <input id="fName" class="grow" maxlength="12" placeholder="${esc(t('name'))}" value="${esc(form.name)}" autocomplete="off">
+        <button class="primary" data-act="login">${esc(t('login'))}</button>
       </div>
-      <h3>${esc(t('vsCpu'))}</h3>
-      <div class="row">
-        <select id="fLevel" aria-label="${esc(t('level'))}">${opts([['easy', t('easy')], ['normal', t('normal')], ['hard', t('hard')]], form.level)}</select>
-        <button class="primary grow" data-act="cpu">${esc(t('start'))}</button>
-      </div>
-      <h3>${esc(t('online'))}</h3>
-      <div class="row"><button class="grow" data-act="create">${esc(t('create'))}</button></div>
+      <div class="row"><button class="link" data-act="rules">${esc(t('rules'))}</button></div>
+    </section>`;
+  }
+  function homeHtml() {
+    const list = roomList.length
+      ? `<ul class="rooms">${roomList.map((r) => `<li><span class="grow"><b>${esc(r.host)}</b> <small>${esc(t('digits'))} ${r.digits} · ${r.size}:${r.size} · ${r.count}/${r.size * 2}</small></span><button data-act="joinRoom" data-v="${esc(r.code)}">${esc(t('join'))}</button></li>`).join('')}</ul>`
+      : `<p class="status">${esc(t('noRooms'))}</p>`;
+    return `<section class="card">
+      <div class="row between"><span>👤 <b>${esc(form.name)}</b></span><button class="link" data-act="logout">${esc(t('logout'))}</button></div>
+      <h3>${esc(t('rooms'))}</h3>
+      ${list}
       <div class="row">
         <input id="fCode" class="grow code" maxlength="5" placeholder="${esc(t('roomCode'))}" value="${esc(form.code)}" autocomplete="off">
         <button data-act="join">${esc(t('join'))}</button>
       </div>
       ${errLine()}
+      <h3>${esc(t('create'))}</h3>
+      <div class="row">
+        <label>${esc(t('digits'))}<select id="fDigits">${digitOpts(form.digits)}</select></label>
+        <label>${esc(t('teamSize'))}<select id="fSize">${sizeOpts(form.size)}</select></label>
+        <button class="primary grow" data-act="create">${esc(t('create'))}</button>
+      </div>
+      <h3>${esc(t('vsCpu'))}</h3>
+      <div class="row">
+        <select id="fLevel" aria-label="${esc(t('level'))}">${opts([['easy', t('easy')], ['normal', t('normal')], ['hard', t('hard')]], form.level)}</select>
+        <button class="grow" data-act="cpu">${esc(t('start'))}</button>
+      </div>
       <div class="row"><button class="link" data-act="rules">${esc(t('rules'))}</button></div>
     </section>`;
+  }
+  function chatHtml() {
+    if (!sess || !ov) return '';
+    const log = ov.chat.map((m) => `<p><b>${esc(m.n)}</b> ${esc(m.t)}</p>`).join('');
+    return `<section class="card chat"><h3>${esc(t('chat'))}</h3><div id="chatLog">${log}</div>
+      <div class="row"><input id="cIn" class="grow" maxlength="200" placeholder="${esc(t('chatPh'))}" autocomplete="off"><button data-act="chat">➤</button></div></section>`;
   }
 
   function lobbyHtml() {
@@ -208,13 +239,17 @@
         <button data-act="copy">${esc(t(copied ? 'copied' : 'copyLink'))}</button>
       </div>
       <div class="row"><label>${esc(t('digits'))}
-        ${host ? `<select id="rDigits">${digitOpts(view.digits)}</select>` : ` <b>${view.digits}</b>`}</label></div>
+        ${host ? `<select id="rDigits">${digitOpts(view.digits)}</select>` : ` <b>${view.digits}</b>`}</label>
+        <label>${esc(t('teamSize'))}
+        ${host ? `<select id="rSize">${sizeOpts(view.size)}</select>` : ` <b>${view.size} : ${view.size}</b>`}</label></div>
+      <p class="tiny">${esc(t('autoStart'))}</p>
       <div class="teams">${col('A')}${col('B')}</div>
       ${errLine()}
       <div class="row">
         ${host ? `<button class="primary grow" data-act="start">${esc(t('start'))}</button>` : `<span class="grow status">${esc(t('waitHost'))}</span>`}
         <button data-act="home">${esc(t('leave'))}</button>
       </div>
+      <div class="row"><button class="grow" data-act="practice">🤖 ${esc(t('practice'))}</button></div>
       <div class="row"><button class="link" data-act="rules">${esc(t('rules'))}</button></div>
     </section>`;
   }
@@ -268,27 +303,43 @@
     if (over && view.duels.length > 1) {
       final = `<p class="banner final">${esc(view.result === 'draw' ? t('teamDraw') : t('teamWin', { t: teamName(view.result) }))} (${view.score.A} : ${view.score.B})</p>`;
     }
+    const back = esc(t(view.local ? (sess ? 'backLobby' : 'home') : 'leave'));
+    let wait = '';
+    if (view.local && sess && ov) {
+      wait = `<p class="banner wait">⏳ ${esc(t('waitingIn', { c: ov.code, a: ov.players.length, b: ov.size * 2 }))}</p>`;
+    } else if (notice) {
+      wait = `<p class="banner final">${esc(t(notice))}</p>`;
+    }
     let btns = '';
     if (over) {
       btns = (view.local || host ? `<button class="primary grow" data-act="again">${esc(t('again'))}</button>` : `<span class="grow status">${esc(t('waitHost'))}</span>`)
-        + `<button data-act="home">${esc(t(view.local ? 'home' : 'leave'))}</button>`;
+        + `<button data-act="home">${back}</button>`;
     } else {
       btns = (d && !d.done && d.me.secret ? `<button data-act="forfeit">${esc(t('forfeit'))}</button>` : '')
         + `<span class="grow"></span><button class="link" data-act="rules">${esc(t('rules'))}</button>`
-        + (view.local || !d || d.done ? `<button data-act="home">${esc(t(view.local ? 'home' : 'leave'))}</button>` : '');
+        + (view.local || !d || d.done ? `<button data-act="home">${back}</button>` : '');
     }
-    return `<section class="card">${final}${boardHtml()}${duelHtml()}<div class="row">${btns}</div></section>`;
+    return `<section class="card">${wait}${final}${boardHtml()}${duelHtml()}<div class="row">${btns}</div></section>`;
   }
 
   function render() {
     const app = $('#app');
+    view = local ? local.view : ov;
     const keep = {};
-    if (!wipeInputs) for (const id of ['gIn', 'sIn']) { const el = document.getElementById(id); if (el) keep[id] = el.value; }
-    wipeInputs = false;
+    for (const id of ['gIn', 'sIn', 'cIn']) { const el = document.getElementById(id); if (el && !wipe.has(id)) keep[id] = el.value; }
+    wipe.clear();
     const focusId = document.activeElement && document.activeElement.id;
-    app.innerHTML = !view ? homeHtml() : view.phase === 'lobby' ? lobbyHtml() : gameHtml();
+    const log = document.getElementById('chatLog');
+    const stick = !log || log.scrollHeight - log.scrollTop - log.clientHeight < 30;
+    const logTop = log ? log.scrollTop : 0;
+    app.innerHTML = !view ? (form.name.trim() && form.in ? homeHtml() : loginHtml())
+      : (view.phase === 'lobby' ? lobbyHtml() : gameHtml()) + chatHtml();
     for (const id in keep) { const el = document.getElementById(id); if (el) el.value = keep[id]; }
-    const f = (focusId && document.getElementById(focusId)) || document.getElementById('gIn') || document.getElementById('sIn');
+    const log2 = document.getElementById('chatLog');
+    if (log2) log2.scrollTop = stick ? log2.scrollHeight : logTop;
+    // Keep the caret where it was; on desktop also jump to the number box so you can just type.
+    const f = (focusId && document.getElementById(focusId))
+      || (coarse ? null : document.getElementById('gIn') || document.getElementById('sIn') || (!view ? document.getElementById('fName') : null));
     if (f && f !== document.activeElement && !$('#rulesDlg').open && $('#boss').hidden) f.focus();
     mirrorFx();
   }
@@ -310,6 +361,19 @@
     $('#bossHint').textContent = t('boss');
     $('#xlTabs').innerHTML = t('xlTabs').split(',').map((s, i) => `<span class="${i === 1 ? 'on' : ''}">${esc(s)}</span>`).join('');
     if (local) syncLocal();
+    const url = (window.NB_CONFIG && window.NB_CONFIG.donateUrl) || '';
+    const d = $('#donate');
+    d.hidden = !/^https:\/\//.test(url);
+    if (!d.hidden) { d.href = url; d.textContent = '☕ ' + t('donate'); }
+  }
+  async function pollRooms() {
+    if (view || !form.in || document.hidden) return;
+    let list = [];
+    try { const r = await fetch('api/rooms'); if (r.ok) list = (await r.json()).rooms || []; } catch { /* no game server */ }
+    const key = JSON.stringify(list);
+    if (key === roomsKey) return;
+    roomsKey = key; roomList = list;
+    if (!view && form.in) render();
   }
 
   // ---------- events ----------
@@ -318,11 +382,27 @@
     if (!el) return;
     const v = el.value.trim();
     if (!validNum(v, view.digits)) { err = 'errInvalid'; render(); return; }
-    wipeInputs = true;
+    wipe.add(id);
     act(type, { value: v });
   }
   const actions = {
-    cpu: () => { err = ''; startLocal(); render(); },
+    login: () => {
+      form.name = form.name.trim();
+      if (!form.name) return;
+      store.set('name', form.name); form.in = true; err = '';
+      render(); pollRooms();
+    },
+    logout: () => { form.in = false; render(); },
+    joinRoom: (v) => { form.code = v; enterRoom('join'); },
+    practice: () => { err = ''; memo = {}; startLocal(ov.digits); render(); },
+    chat: () => {
+      const el = $('#cIn');
+      const text = el ? el.value.trim() : '';
+      if (!text) return;
+      wipe.add('cIn');
+      post('action', { ...sess, type: 'chat', text }).catch(() => {});
+    },
+    cpu: () => { err = ''; memo = {}; startLocal(form.digits); render(); },
     create: () => enterRoom('create'),
     join: () => { if (form.code.length < 5) { err = 'errRoom'; render(); } else enterRoom('join'); },
     rules: () => $('#rulesDlg').showModal(),
@@ -339,8 +419,12 @@
     guess: () => submitNum('gIn', 'guess'),
     forfeit: () => act('forfeit'),
     memo: (v) => { memo[v] = memo[v] === 'no' ? 'yes' : memo[v] === 'yes' ? '' : 'no'; render(); },
-    again: () => { if (local) { startLocal(); render(); } else act('lobby'); },
-    home: () => { if (sess) post('action', { ...sess, type: 'leave' }).catch(() => {}); goHome(); },
+    again: () => { if (local) { memo = {}; startLocal(local.digits); render(); } else act('lobby'); },
+    home: () => {
+      if (local && sess) { local = null; memo = {}; wipe.add('gIn').add('sIn'); render(); return; } // back to the waiting room
+      if (sess) post('action', { ...sess, type: 'leave' }).catch(() => {});
+      goHome(); pollRooms();
+    },
   };
   $('#app').addEventListener('click', (e) => {
     const b = e.target.closest('[data-act]');
@@ -349,14 +433,16 @@
   $('#app').addEventListener('input', (e) => {
     const el = e.target;
     if (el.id === 'gIn' || el.id === 'sIn') { el.value = el.value.replace(/\D/g, ''); mirrorFx(); }
-    else if (el.id === 'fName') { form.name = el.value; store.set('name', el.value); }
+    else if (el.id === 'fName') { form.name = el.value; }
     else if (el.id === 'fCode') { form.code = el.value = el.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }
   });
   $('#app').addEventListener('change', (e) => {
     const el = e.target;
     if (el.id === 'fDigits') { form.digits = Number(el.value); store.set('digits', el.value); }
     else if (el.id === 'fLevel') { form.level = el.value; store.set('level', el.value); }
+    else if (el.id === 'fSize') { form.size = Number(el.value); store.set('size', el.value); }
     else if (el.id === 'rDigits') act('config', { digits: Number(el.value) });
+    else if (el.id === 'rSize') act('config', { size: Number(el.value) });
   });
   $('#app').addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
@@ -364,6 +450,8 @@
     if (id === 'gIn') actions.guess();
     else if (id === 'sIn') actions.secret();
     else if (id === 'fCode') actions.join();
+    else if (id === 'fName') actions.login();
+    else if (id === 'cIn' && !e.isComposing) actions.chat();
   });
   $('#rulesBtn').addEventListener('click', actions.rules);
   $('#sheetChk').addEventListener('change', (e) => { sheet = e.target.checked; store.set('sheet', sheet ? '1' : '0'); applyStatic(); });
@@ -401,6 +489,9 @@
   $('#xlCols').innerHTML = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((c) => `<span>${c}</span>`).join('');
   applyStatic();
   try { sess = JSON.parse(sessionStorage.getItem('nb_sess')); } catch { sess = null; }
+  form.in = !!form.name.trim();
   if (sess && sess.room) connect(); else sess = null;
   render();
+  pollRooms();
+  setInterval(pollRooms, 3000);
 })();

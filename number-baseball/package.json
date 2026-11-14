@@ -1,0 +1,8 @@
+{
+  "name": "number-baseball",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Number Baseball web game (vs computer, online, team play)",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

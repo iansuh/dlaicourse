@@ -70,7 +70,7 @@ function finishDuel(room, d, winner) {
 function viewFor(room, me) {
   const over = room.phase === 'done';
   const v = {
-    code: room.code, digits: room.digits, phase: room.phase, host: room.host, you: me.id,
+    code: room.code, digits: room.digits, size: room.size, chat: room.chat, phase: room.phase, host: room.host, you: me.id,
     players: [...room.players.values()].map((p) => ({ id: p.id, name: p.name, team: p.team, online: p.online && !p.left })),
     duels: room.duels.map((d) => ({ a: d.p[0], b: d.p[1], rounds: d.hist[0].length, winner: d.winner, done: d.done })),
     score: scoreOf(room), result: room.result, duel: null,
@@ -113,31 +113,46 @@ function removePlayer(room, p) {
   push(room);
 }
 
+function startGame(room) {
+  const a = shuffle(teamIds(room, 'A')), b = shuffle(teamIds(room, 'B'));
+  if (!a.length || a.length !== b.length) return 'needEven';
+  for (const p of room.players.values()) p.secret = null;
+  room.duels = a.map((pa, i) => ({ p: [pa, b[i]], hist: [[], []], pending: [null, null], winner: null, done: false }));
+  room.phase = 'play';
+  room.result = null;
+  return null;
+}
+const isFull = (room) => teamIds(room, 'A').length >= room.size && teamIds(room, 'B').length >= room.size;
+
 function act(room, me, m) {
   const isHost = room.host === me.id;
   switch (m.type) {
     case 'team': {
       if (room.phase !== 'lobby') return 'errStarted';
       if (m.team !== 'A' && m.team !== 'B') return 'errInvalid';
-      if (me.team !== m.team && teamIds(room, m.team).length >= MAX_TEAM) return 'errFull';
+      if (me.team !== m.team && teamIds(room, m.team).length >= room.size) return 'errFull';
       me.team = m.team;
       break;
     }
     case 'config': {
       if (!isHost || room.phase !== 'lobby') return 'errInvalid';
-      const n = Number(m.digits);
-      if (![3, 4, 5, 6].includes(n)) return 'errInvalid';
-      room.digits = n;
+      if (m.digits !== undefined) {
+        const n = Number(m.digits);
+        if (![3, 4, 5, 6].includes(n)) return 'errInvalid';
+        room.digits = n;
+      }
+      if (m.size !== undefined) {
+        const z = Number(m.size);
+        if (!Number.isInteger(z) || z < 1 || z > MAX_TEAM) return 'errInvalid';
+        if (teamIds(room, 'A').length > z || teamIds(room, 'B').length > z) return 'errFull';
+        room.size = z;
+      }
       break;
     }
     case 'start': {
       if (!isHost || room.phase !== 'lobby') return 'errInvalid';
-      const a = shuffle(teamIds(room, 'A')), b = shuffle(teamIds(room, 'B'));
-      if (!a.length || a.length !== b.length) return 'needEven';
-      for (const p of room.players.values()) p.secret = null;
-      room.duels = a.map((pa, i) => ({ p: [pa, b[i]], hist: [[], []], pending: [null, null], winner: null, done: false }));
-      room.phase = 'play';
-      room.result = null;
+      const e = startGame(room);
+      if (e) return e;
       break;
     }
     case 'secret': {
@@ -177,6 +192,15 @@ function act(room, me, m) {
       room.phase = 'lobby'; room.duels = []; room.result = null;
       break;
     }
+    case 'chat': {
+      const text = String(m.text || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 200);
+      const now = Date.now();
+      if (!text || now - (me.lastChat || 0) < 400) return 'errInvalid';
+      me.lastChat = now;
+      room.chat.push({ id: ++room.chatSeq, n: me.name, t: text });
+      if (room.chat.length > 50) room.chat.shift();
+      break;
+    }
     case 'leave':
       removePlayer(room, me);
       return null;
@@ -190,7 +214,7 @@ function act(room, me, m) {
 function addPlayer(room, name) {
   const p = { id: rid(4), token: rid(12), name: cleanName(name), team: null, secret: null, stream: null, online: false, left: false, timer: null };
   const a = teamIds(room, 'A').length, b = teamIds(room, 'B').length;
-  if (room.phase === 'lobby') p.team = a <= b ? (a < MAX_TEAM ? 'A' : null) : 'B';
+  p.team = a <= b ? (a < room.size ? 'A' : 'B') : (b < room.size ? 'B' : 'A');
   room.players.set(p.id, p);
   // A player who never opens the event stream is cleaned up like one who disconnected.
   p.timer = setTimeout(() => removePlayer(room, p), LOBBY_GRACE);
@@ -237,12 +261,25 @@ async function api(req, res, url) {
   if (req.method === 'GET' && route === 'check') {
     return auth(Object.fromEntries(url.searchParams)).room ? send(res, 200, { ok: true }) : send(res, 404, { error: 'errRoom' });
   }
+  if (req.method === 'GET' && route === 'rooms') {
+    // Public list of rooms that are waiting for players.
+    const list = [];
+    for (const room of rooms.values()) {
+      if (room.phase !== 'lobby' || isFull(room)) continue;
+      const host = room.players.get(room.host);
+      list.push({ code: room.code, host: host ? host.name : '', digits: room.digits, size: room.size, count: teamIds(room, 'A').length + teamIds(room, 'B').length, at: room.created });
+    }
+    list.sort((x, y) => y.at - x.at);
+    return send(res, 200, { rooms: list.slice(0, 50) });
+  }
   if (req.method !== 'POST') return send(res, 404, { error: 'errInvalid' });
   const m = await readBody(req);
   if (route === 'create') {
     if (rooms.size >= MAX_ROOMS) return send(res, 503, { error: 'errFull' });
     const digits = [3, 4, 5, 6].includes(Number(m.digits)) ? Number(m.digits) : 3;
-    const room = { code: roomCode(), digits, phase: 'lobby', players: new Map(), host: null, duels: [], result: null, touched: Date.now() };
+    const z = Number(m.size);
+    const size = Number.isInteger(z) && z >= 1 && z <= MAX_TEAM ? z : 1;
+    const room = { code: roomCode(), digits, size, phase: 'lobby', players: new Map(), host: null, duels: [], result: null, chat: [], chatSeq: 0, created: Date.now(), touched: Date.now() };
     rooms.set(room.code, room);
     const p = addPlayer(room, m.name);
     room.host = p.id;
@@ -252,8 +289,10 @@ async function api(req, res, url) {
     const room = rooms.get(String(m.room || '').trim().toUpperCase());
     if (!room) return send(res, 404, { error: 'errRoom' });
     if (room.phase === 'play') return send(res, 409, { error: 'errStarted' });
-    if (room.players.size >= MAX_TEAM * 2 + 10) return send(res, 409, { error: 'errFull' });
+    if (isFull(room)) return send(res, 409, { error: 'errFull' });
     const p = addPlayer(room, m.name);
+    // The room starts by itself as soon as every seat is taken.
+    if (room.phase === 'lobby' && isFull(room)) startGame(room);
     push(room);
     return send(res, 200, { room: room.code, pid: p.id, token: p.token });
   }
