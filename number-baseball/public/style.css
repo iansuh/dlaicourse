@@ -198,3 +198,5 @@ body.xl #chatLog { height: 80px; padding: 0 3px; }
   body.xl input, body.xl select, body.xl button, body.xl .chip { height: 28px; }
   body.xl #langSel { height: 22px; }
 }
+
+.rec { color: var(--mute); font-weight: 400; }

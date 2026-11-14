@@ -19,6 +19,9 @@
     code: (new URLSearchParams(location.search).get('room') || '').toUpperCase().slice(0, 5),
   };
   form.size = Number(store.get('size')) || 1;
+  form.name = '';
+  let auth = store.get('auth') || '';   // login token
+  let acct = null;                       // signed-in account {name, stats}; null while playing as a guest
   let view = null;      // what is on screen: the vs-computer game if one is running, else the online room
   let ov = null;        // online room view pushed by the server
   let local = null;     // vs-computer game state (also used to practise while waiting in a room)
@@ -156,12 +159,43 @@
   }
   async function enterRoom(route) {
     try {
-      const body = route === 'create' ? { name: form.name, digits: form.digits, size: form.size } : { name: form.name, room: form.code };
+      const body = route === 'create' ? { auth, digits: form.digits, size: form.size } : { auth, room: form.code };
       const s = await post(route, body);
       err = '';
       setSess(s);
       history.replaceState(null, '', '?room=' + s.room);
       connect();
+    } catch (e) {
+      if (e.message === 'errLogin') signOut();
+      err = e.message; render();
+    }
+  }
+  function setAccount(data) {
+    if (data.auth) { auth = data.auth; store.set('auth', auth); }
+    acct = { name: data.name, stats: data.stats };
+    form.name = data.name; form.in = true;
+  }
+  function signOut() {
+    auth = ''; store.set('auth', ''); acct = null; form.name = ''; form.in = false; roomList = []; roomsKey = '';
+  }
+  async function refreshMe() {
+    if (!auth) return;
+    try {
+      const r = await fetch('api/me', { headers: { Authorization: 'Bearer ' + auth } });
+      if (r.status === 401) signOut();
+      else if (r.ok && (r.headers.get('content-type') || '').includes('json')) setAccount(await r.json());
+      else return;
+    } catch { return; }
+    if (!view) render();
+  }
+  async function authCall(route) {
+    const u = $('#fUser'), p = $('#fPass');
+    if (!u || !p) return;
+    try {
+      const data = await post(route, { username: u.value.trim(), password: p.value });
+      err = ''; wipe.add('fUser').add('fPass');
+      setAccount(data);
+      render(); pollRooms();
     } catch (e) { err = e.message; render(); }
   }
   async function act(type, extra) {
@@ -186,19 +220,34 @@
     return `<section class="card">
       <p class="sub">${esc(t('sub'))}</p>
       <p class="status">${esc(t('loginHint'))}</p>
+      <div class="row"><input id="fUser" class="grow" maxlength="12" placeholder="${esc(t('userId'))}" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
+      <div class="row"><input id="fPass" class="grow" type="password" maxlength="72" placeholder="${esc(t('password'))}" autocomplete="current-password"></div>
+      ${errLine()}
       <div class="row">
-        <input id="fName" class="grow" maxlength="12" placeholder="${esc(t('name'))}" value="${esc(form.name)}" autocomplete="off">
-        <button class="primary" data-act="login">${esc(t('login'))}</button>
+        <button class="primary grow" data-act="signin">${esc(t('login'))}</button>
+        <button class="grow" data-act="signup">${esc(t('signup'))}</button>
       </div>
-      <div class="row"><button class="link" data-act="rules">${esc(t('rules'))}</button></div>
+      <div class="row between"><button class="link" data-act="guest">${esc(t('guest'))}</button><button class="link" data-act="rules">${esc(t('rules'))}</button></div>
     </section>`;
   }
   function homeHtml() {
+    const cpu = `<h3>${esc(t('vsCpu'))}</h3>
+      <div class="row">
+        ${acct ? '' : `<label>${esc(t('digits'))}<select id="fDigits">${digitOpts(form.digits)}</select></label>`}
+        <select id="fLevel" aria-label="${esc(t('level'))}">${opts([['easy', t('easy')], ['normal', t('normal')], ['hard', t('hard')]], form.level)}</select>
+        <button class="grow${acct ? '' : ' primary'}" data-act="cpu">${esc(t('start'))}</button>
+      </div>
+      <div class="row"><button class="link" data-act="rules">${esc(t('rules'))}</button></div>`;
+    if (!acct) {
+      return `<section class="card">
+        <div class="row between"><span class="status">${esc(t('loginHint'))}</span><button class="link" data-act="logout">${esc(t('login'))}</button></div>
+        ${cpu}</section>`;
+    }
     const list = roomList.length
       ? `<ul class="rooms">${roomList.map((r) => `<li><span class="grow"><b>${esc(r.host)}</b> <small>${esc(t('digits'))} ${r.digits} · ${r.size}:${r.size} · ${r.count}/${r.size * 2}</small></span><button data-act="joinRoom" data-v="${esc(r.code)}">${esc(t('join'))}</button></li>`).join('')}</ul>`
       : `<p class="status">${esc(t('noRooms'))}</p>`;
     return `<section class="card">
-      <div class="row between"><span>👤 <b>${esc(form.name)}</b></span><button class="link" data-act="logout">${esc(t('logout'))}</button></div>
+      <div class="row between"><span>👤 <b>${esc(acct.name)}</b> <small class="rec">${esc(t('record', acct.stats))}</small></span><button class="link" data-act="logout">${esc(t('logout'))}</button></div>
       <h3>${esc(t('rooms'))}</h3>
       ${list}
       <div class="row">
@@ -212,19 +261,14 @@
         <label>${esc(t('teamSize'))}<select id="fSize">${sizeOpts(form.size)}</select></label>
         <button class="primary grow" data-act="create">${esc(t('create'))}</button>
       </div>
-      <h3>${esc(t('vsCpu'))}</h3>
-      <div class="row">
-        <select id="fLevel" aria-label="${esc(t('level'))}">${opts([['easy', t('easy')], ['normal', t('normal')], ['hard', t('hard')]], form.level)}</select>
-        <button class="grow" data-act="cpu">${esc(t('start'))}</button>
-      </div>
-      <div class="row"><button class="link" data-act="rules">${esc(t('rules'))}</button></div>
+      ${cpu}
     </section>`;
   }
   function chatHtml() {
     if (!sess || !ov) return '';
     const log = ov.chat.map((m) => `<p><b>${esc(m.n)}</b> ${esc(m.t)}</p>`).join('');
     return `<section class="card chat"><h3>${esc(t('chat'))}</h3><div id="chatLog">${log}</div>
-      <div class="row"><input id="cIn" class="grow" maxlength="200" placeholder="${esc(t('chatPh'))}" autocomplete="off"><button data-act="chat">➤</button></div></section>`;
+      <div class="row"><input id="cIn" class="grow" maxlength="200" placeholder="${esc(t('chatPh'))}" autocomplete="off"><button data-act="chat">➤</button></div><p class="tiny">${esc(t('chatRule'))}</p></section>`;
   }
 
   function lobbyHtml() {
@@ -329,20 +373,20 @@
     const app = $('#app');
     view = local ? local.view : ov;
     const keep = {};
-    for (const id of ['gIn', 'sIn', 'cIn']) { const el = document.getElementById(id); if (el && !wipe.has(id)) keep[id] = el.value; }
+    for (const id of ['gIn', 'sIn', 'cIn', 'fUser', 'fPass']) { const el = document.getElementById(id); if (el && !wipe.has(id)) keep[id] = el.value; }
     wipe.clear();
     const focusId = document.activeElement && document.activeElement.id;
     const log = document.getElementById('chatLog');
     const stick = !log || log.scrollHeight - log.scrollTop - log.clientHeight < 30;
     const logTop = log ? log.scrollTop : 0;
-    app.innerHTML = !view ? (form.name.trim() && form.in ? homeHtml() : loginHtml())
+    app.innerHTML = !view ? (form.in ? homeHtml() : loginHtml())
       : (view.phase === 'lobby' ? lobbyHtml() : gameHtml()) + chatHtml();
     for (const id in keep) { const el = document.getElementById(id); if (el) el.value = keep[id]; }
     const log2 = document.getElementById('chatLog');
     if (log2) log2.scrollTop = stick ? log2.scrollHeight : logTop;
     // Keep the caret where it was; on desktop also jump to the number box so you can just type.
     const f = (focusId && document.getElementById(focusId))
-      || (coarse ? null : document.getElementById('gIn') || document.getElementById('sIn') || (!view ? document.getElementById('fName') : null));
+      || (coarse ? null : document.getElementById('gIn') || document.getElementById('sIn') || (!view ? document.getElementById('fUser') : null));
     if (f && f !== document.activeElement && !$('#rulesDlg').open && $('#boss').hidden) f.focus();
     mirrorFx();
   }
@@ -371,13 +415,13 @@
     if (!d.hidden) { d.href = url; d.textContent = '☕ ' + t('donate'); }
   }
   async function pollRooms() {
-    if (view || !form.in || document.hidden) return;
+    if (view || !acct || document.hidden) return;
     let list = [];
     try { const r = await fetch('api/rooms'); if (r.ok) list = (await r.json()).rooms || []; } catch { /* no game server */ }
     const key = JSON.stringify(list);
     if (key === roomsKey) return;
     roomsKey = key; roomList = list;
-    if (!view && form.in) render();
+    if (!view && acct) render();
   }
 
   // ---------- events ----------
@@ -390,18 +434,20 @@
     act(type, { value: v });
   }
   const actions = {
-    login: () => {
-      form.name = form.name.trim();
-      if (!form.name) return;
-      store.set('name', form.name); form.in = true; err = '';
-      render(); pollRooms();
+    signin: () => authCall('login'),
+    signup: () => authCall('signup'),
+    guest: () => { err = ''; acct = null; form.name = ''; form.in = true; render(); },
+    logout: () => {
+      if (auth) post('logout', { auth }).catch(() => {});
+      signOut(); err = ''; render();
     },
-    logout: () => { form.in = false; render(); },
     joinRoom: (v) => { form.code = v; enterRoom('join'); },
     practice: () => { err = ''; memo = {}; startLocal(ov.digits); render(); },
     chat: () => {
       const el = $('#cIn');
-      const text = el ? el.value.trim() : '';
+      // Text only: emoji never leave the browser (the server strips them again and masks swear words).
+      const text = el ? el.value.replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}\u200d\ufe0f\u20e3]/gu, '').trim() : '';
+      if (el && !text) { wipe.add('cIn'); render(); }
       if (!text) return;
       wipe.add('cIn');
       post('action', { ...sess, type: 'chat', text }).catch(() => {});
@@ -427,7 +473,7 @@
     home: () => {
       if (local && sess) { local = null; memo = {}; wipe.add('gIn').add('sIn'); render(); return; } // back to the waiting room
       if (sess) post('action', { ...sess, type: 'leave' }).catch(() => {});
-      goHome(); pollRooms();
+      goHome(); refreshMe(); pollRooms();
     },
   };
   $('#app').addEventListener('click', (e) => {
@@ -437,7 +483,6 @@
   $('#app').addEventListener('input', (e) => {
     const el = e.target;
     if (el.id === 'gIn' || el.id === 'sIn') { el.value = el.value.replace(/\D/g, ''); mirrorFx(); }
-    else if (el.id === 'fName') { form.name = el.value; }
     else if (el.id === 'fCode') { form.code = el.value = el.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }
   });
   $('#app').addEventListener('change', (e) => {
@@ -454,7 +499,7 @@
     if (id === 'gIn') actions.guess();
     else if (id === 'sIn') actions.secret();
     else if (id === 'fCode') actions.join();
-    else if (id === 'fName') actions.login();
+    else if (id === 'fPass' || id === 'fUser') actions.signin();
     else if (id === 'cIn' && !e.isComposing) actions.chat();
   });
   $('#rulesBtn').addEventListener('click', actions.rules);
@@ -493,7 +538,8 @@
   $('#xlCols').innerHTML = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((c) => `<span>${c}</span>`).join('');
   applyStatic();
   try { sess = JSON.parse(sessionStorage.getItem('nb_sess')); } catch { sess = null; }
-  form.in = !!form.name.trim();
+  form.in = false;
+  refreshMe().then(pollRooms);
   if (sess && sess.room) connect(); else sess = null;
   render();
   pollRooms();

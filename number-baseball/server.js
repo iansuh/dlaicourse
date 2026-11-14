@@ -15,6 +15,99 @@ const ROOM_TTL = 2 * 3600e3;  // idle rooms are dropped
 
 const rooms = new Map();
 
+// ---------- accounts ----------
+// Stored in one JSON file. Passwords are salted scrypt hashes; login tokens are stored hashed.
+const { promisify } = require('util');
+const { hasBad, mask, stripEmoji } = require('./filter');
+const scrypt = promisify(crypto.scrypt);
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const SESSION_TTL = 30 * 24 * 3600e3;
+let users = {};
+try { users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')); } catch { /* first run */ }
+const tokenOwner = new Map(); // sha256(token) -> user key
+for (const k in users) for (const h in users[k].sessions) tokenOwner.set(h, k);
+let saveTimer = null;
+function saveUsers() {
+  if (saveTimer) return;
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    try {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+      fs.writeFileSync(USERS_FILE + '.tmp', JSON.stringify(users));
+      fs.renameSync(USERS_FILE + '.tmp', USERS_FILE);
+    } catch (e) { console.error('Could not save accounts:', e.message); }
+  }, 300);
+}
+const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
+const userKey = (name) => name.normalize('NFKC').toLowerCase();
+const publicUser = (u) => ({ name: u.name, stats: { w: u.w, l: u.l, d: u.d } });
+function openSession(key) {
+  const u = users[key], now = Date.now();
+  const drop = (h) => { delete u.sessions[h]; tokenOwner.delete(h); };
+  for (const h in u.sessions) if (u.sessions[h] < now) drop(h);
+  const live = Object.keys(u.sessions).sort((a, b) => u.sessions[a] - u.sessions[b]);
+  while (live.length >= 5) drop(live.shift());
+  const token = crypto.randomBytes(24).toString('hex');
+  u.sessions[sha(token)] = now + SESSION_TTL;
+  tokenOwner.set(sha(token), key);
+  saveUsers();
+  return token;
+}
+function userByToken(token) {
+  if (typeof token !== 'string' || !token) return null;
+  const h = sha(token), key = tokenOwner.get(h), u = key && users[key];
+  if (!u || !(u.sessions[h] > Date.now())) return null;
+  return { key, u, h };
+}
+// Fixed-window limiter per client address, to slow down password guessing and signup spam.
+const hits = new Map();
+function limited(req, kind, max, windowMs) {
+  const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || '?';
+  const k = kind + '|' + ip, now = Date.now();
+  let e = hits.get(k);
+  if (!e || e.reset < now) { e = { n: 0, reset: now + windowMs }; hits.set(k, e); }
+  return ++e.n > max;
+}
+async function authApi(req, res, route, m) {
+  const name = typeof m.username === 'string' ? m.username.trim().normalize('NFKC') : '';
+  const pass = typeof m.password === 'string' ? m.password : '';
+  if (route === 'signup') {
+    if (limited(req, 'signup', 10, 3600e3)) return send(res, 429, { error: 'errRate' });
+    if (!/^[\p{L}\p{N}_]{2,12}$/u.test(name)) return send(res, 400, { error: 'errName' });
+    if (hasBad(name)) return send(res, 400, { error: 'errBadName' });
+    if (pass.length < 6 || pass.length > 72) return send(res, 400, { error: 'errPass' });
+    const key = userKey(name);
+    if (users[key]) return send(res, 409, { error: 'errTaken' });
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = (await scrypt(pass, salt, 32)).toString('hex');
+    if (users[key]) return send(res, 409, { error: 'errTaken' });
+    users[key] = { name, salt, hash, created: Date.now(), w: 0, l: 0, d: 0, sessions: {} };
+    return send(res, 200, { auth: openSession(key), ...publicUser(users[key]) });
+  }
+  if (route === 'login') {
+    if (limited(req, 'login', 10, 60e3)) return send(res, 429, { error: 'errRate' });
+    const key = userKey(name), u = users[key];
+    // Hash even for unknown names so the response time does not reveal which names exist.
+    const got = await scrypt(pass.slice(0, 72), u ? u.salt : '00', 32);
+    if (!u || !crypto.timingSafeEqual(got, Buffer.from(u.hash, 'hex'))) return send(res, 401, { error: 'errAuth' });
+    return send(res, 200, { auth: openSession(key), ...publicUser(u) });
+  }
+  if (route === 'logout') {
+    const s = userByToken(m.auth);
+    if (s) { delete s.u.sessions[s.h]; tokenOwner.delete(s.h); saveUsers(); }
+    return send(res, 200, { ok: true });
+  }
+}
+function recordResult(room, d) {
+  d.p.forEach((pid, i) => {
+    const u = users[room.players.get(pid).acct];
+    if (!u) return;
+    if (d.winner === 'draw') u.d++; else if (d.winner === i) u.w++; else u.l++;
+  });
+  saveUsers();
+}
+
 const rid = (n) => crypto.randomBytes(n).toString('hex');
 function roomCode() {
   const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -22,7 +115,6 @@ function roomCode() {
   do { c = Array.from(crypto.randomBytes(5), (b) => abc[b % abc.length]).join(''); } while (rooms.has(c));
   return c;
 }
-const cleanName = (s) => String(s || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 12) || 'Player';
 const validNum = (v, n) => typeof v === 'string' && v.length === n && /^\d+$/.test(v) && new Set(v).size === n;
 function judge(secret, guess) {
   let s = 0, hit = 0;
@@ -64,6 +156,7 @@ function finishDuel(room, d, winner) {
   if (d.done) return;
   d.done = true;
   d.winner = winner;
+  recordResult(room, d);
   checkMatch(room);
 }
 
@@ -193,7 +286,8 @@ function act(room, me, m) {
       break;
     }
     case 'chat': {
-      const text = String(m.text || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 200);
+      // Text only: emoji are removed and listed swear words are masked.
+      const text = mask(stripEmoji(String(m.text || '')).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 200));
       const now = Date.now();
       if (!text || now - (me.lastChat || 0) < 400) return 'errInvalid';
       me.lastChat = now;
@@ -211,8 +305,8 @@ function act(room, me, m) {
   return null;
 }
 
-function addPlayer(room, name) {
-  const p = { id: rid(4), token: rid(12), name: cleanName(name), team: null, secret: null, stream: null, online: false, left: false, timer: null };
+function addPlayer(room, acct) {
+  const p = { id: rid(4), token: rid(12), name: users[acct].name, acct, team: null, secret: null, stream: null, online: false, left: false, timer: null };
   const a = teamIds(room, 'A').length, b = teamIds(room, 'B').length;
   p.team = a <= b ? (a < room.size ? 'A' : 'B') : (b < room.size ? 'B' : 'A');
   room.players.set(p.id, p);
@@ -272,8 +366,16 @@ async function api(req, res, url) {
     list.sort((x, y) => y.at - x.at);
     return send(res, 200, { rooms: list.slice(0, 50) });
   }
+  if (req.method === 'GET' && route === 'me') {
+    const s = userByToken(String(req.headers.authorization || '').replace(/^Bearer /, ''));
+    return s ? send(res, 200, publicUser(s.u)) : send(res, 401, { error: 'errLogin' });
+  }
   if (req.method !== 'POST') return send(res, 404, { error: 'errInvalid' });
   const m = await readBody(req);
+  if (route === 'signup' || route === 'login' || route === 'logout') return authApi(req, res, route, m);
+  // Online rooms are for signed-in accounts only.
+  const who = route === 'create' || route === 'join' ? userByToken(m.auth) : null;
+  if ((route === 'create' || route === 'join') && !who) return send(res, 401, { error: 'errLogin' });
   if (route === 'create') {
     if (rooms.size >= MAX_ROOMS) return send(res, 503, { error: 'errFull' });
     const digits = [3, 4, 5, 6].includes(Number(m.digits)) ? Number(m.digits) : 3;
@@ -281,16 +383,19 @@ async function api(req, res, url) {
     const size = Number.isInteger(z) && z >= 1 && z <= MAX_TEAM ? z : 1;
     const room = { code: roomCode(), digits, size, phase: 'lobby', players: new Map(), host: null, duels: [], result: null, chat: [], chatSeq: 0, created: Date.now(), touched: Date.now() };
     rooms.set(room.code, room);
-    const p = addPlayer(room, m.name);
+    const p = addPlayer(room, who.key);
     room.host = p.id;
     return send(res, 200, { room: room.code, pid: p.id, token: p.token });
   }
   if (route === 'join') {
     const room = rooms.get(String(m.room || '').trim().toUpperCase());
     if (!room) return send(res, 404, { error: 'errRoom' });
+    // Same account joining again (another tab or device) gets its existing seat back.
+    const seat = [...room.players.values()].find((x) => x.acct === who.key && !x.left);
+    if (seat) return send(res, 200, { room: room.code, pid: seat.id, token: seat.token });
     if (room.phase === 'play') return send(res, 409, { error: 'errStarted' });
     if (isFull(room)) return send(res, 409, { error: 'errFull' });
-    const p = addPlayer(room, m.name);
+    const p = addPlayer(room, who.key);
     // The room starts by itself as soon as every seat is taken.
     if (room.phase === 'lobby' && isFull(room)) startGame(room);
     push(room);
