@@ -40,8 +40,16 @@ Why: one less screen before the first game, no passwords to leak, no email to co
 ### Chat safety (Play UGC policy)
 Profanity masking, rate limit, report a message or a player, block a player (hides their chat and avoids matching), mute all chat, preset quick phrases.
 
-### Monetization
-None in v1. No external donation links (Play payments policy). A Play Billing tip jar or ads can be reviewed later.
+### Monetization: ads (Google AdMob)
+The owner asked for Google ads. On Android that is **AdMob** (AdSense is for websites).
+- **Never during a match.** No ad may cover, interrupt or appear next to the board while a duel or the secret entry is on screen, including the online waiting practice game.
+- **Banner** (adaptive, anchored) only on calm screens: home, results, profile/stats. Not in the room lobby while players are joining, not in chat.
+- **Interstitial** at most after a finished vs-computer match, never after an online match, with a frequency cap (at most one every 3 finished matches and 4 minutes apart), never on app start or exit.
+- **Silent.** Ads are muted app-wide (fits "quiet quick match"); no rewarded ads that give an advantage online.
+- **Consent.** Google UMP consent form where required (EEA/UK/Switzerland and US states), a "Privacy options" entry in Settings, ads still work (non-personalized) when consent is refused.
+- **Store and policy.** "Contains ads" declared, Data safety updated (advertising ID / device identifiers collected and shared with Google for ads), privacy policy updated, `app-ads.txt` served by our server on the developer website domain.
+- Test ad unit IDs in debug builds; real IDs only from build configuration, never committed.
+- No external donation links (Play payments policy).
 
 ## Layout
 
