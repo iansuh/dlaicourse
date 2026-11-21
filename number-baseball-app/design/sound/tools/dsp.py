@@ -337,10 +337,20 @@ def normalize(x: np.ndarray, target_lufs: float, metric: str, tp_ceiling: float 
     """Gain to target loudness (metric 'momentary' = max 400 ms loudness, 'integrated' = gated I),
     then limit true peaks above tp_ceiling and re-trim the gain (2 passes)."""
     meas = (lambda s: sliding_max_loudness(s, 0.4)) if metric == "momentary" else integrated_loudness
-    y = x.copy()
-    for _ in range(3):
-        y = y * 10 ** ((target_lufs - meas(y)) / 20)
-        if true_peak_db(y) > tp_ceiling:
-            y = limiter(y, tp_ceiling - 0.2)
-    y = y * 10 ** ((target_lufs - meas(y)) / 20)
-    return y
+    g0 = target_lufs - meas(x)
+    y = x * 10 ** (g0 / 20)
+    if true_peak_db(y) <= tp_ceiling:
+        return y
+
+    def render(gain_db):
+        return limiter(x * 10 ** (gain_db / 20), tp_ceiling - 0.3)
+
+    # loudness after limiting rises monotonically with input gain: bisect for the target
+    lo, hi = g0, g0 + 12.0
+    for _ in range(18):
+        mid = 0.5 * (lo + hi)
+        if meas(render(mid)) < target_lufs:
+            lo = mid
+        else:
+            hi = mid
+    return render(hi)

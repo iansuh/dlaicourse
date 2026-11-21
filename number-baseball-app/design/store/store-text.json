@@ -1,11 +1,13 @@
 {
-  "_note": "Replaceable text layer for store graphics. The artwork never contains a brand word; names and captions come only from here. Names are placeholders until the owner and release lead confirm them (README: localized 'Number Baseball' style name). Regenerate the PNG/JPG files after editing.",
+  "_note": "Replaceable text layer for store graphics. The artwork never contains a brand word; names and captions come only from here (owner decision 2026-11-21, names from docs/play/STORE_LISTING.md). Regenerate the PNG/JPG files after editing.",
   "ko": {
     "name": "숫자야구",
+    "subtitle": "조용한 한판",
     "captions": ["비밀 숫자를 먼저 맞히면 승리", "스트라이크·볼로 좁혀 가는 추리", "빠른 대결로 바로 1:1 매칭", "방 코드로 친구와 최대 5:5 팀전", "무음·한 손·화면 분할도 OK", "신고·차단·채팅 끄기로 안심"]
   },
   "en": {
     "name": "Number Baseball",
+    "subtitle": "Quiet Duel",
     "captions": ["Crack the secret number first", "Narrow it down with strikes and balls", "Quick Match finds you a rival", "Room codes for 1v1 or up to 5v5", "Silent, one-handed, split-screen ready", "Report, block or mute chat anytime"]
   }
 }

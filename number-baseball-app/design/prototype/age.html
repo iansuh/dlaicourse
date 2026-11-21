@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Age</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/proto.css">
+<style>
+  .body { flex: 1 1 auto; padding: 32px 16px 0; display: flex; flex-direction: column; }
+  .eyebrow { display: flex; align-items: center; gap: 10px; font: var(--t-label-small); color: var(--c-text2); }
+  .eyebrow .nm { display: flex; flex-direction: column; }
+  .eyebrow .nm span:last-child { font: var(--t-caption); color: var(--c-text3); }
+  .body h1 { font: var(--t-headline); margin-top: 24px; }
+  .body .lead { font: var(--t-body); color: var(--c-text2); margin-top: 8px; }
+  .yr { margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .yr .cap { font: var(--t-label-small); color: var(--c-text3); }
+  .yr .err { font: var(--t-caption); color: var(--c-out); min-height: 18px; }
+  .spacer { flex: 1 1 auto; }
+  .entry { border-top: 0; padding-bottom: 12px; }
+  .key.ok { grid-column: span 4; background: var(--c-chalk); color: var(--c-on-chalk); font: var(--t-label); }
+  .key.ok.is-disabled { background: var(--c-surface2); color: var(--c-text-disabled); }
+  .na { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 32px; gap: 16px; }
+  .na .brandmark { width: 33px; height: 48px; opacity: .55; }
+  .na h1 { font: var(--t-title); margin-top: 8px; }
+  .na p { font: var(--t-body); color: var(--c-text2); }
+  .na .link { margin-top: 24px; font: var(--t-label-small); color: var(--c-text2); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--c-outline); min-height: 48px; display: flex; align-items: center; }
+</style>
+<script src="js/strings.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/proto.js"></script>
+<script>
+window.build = function (qs) {
+  const t = P.t, st = qs.get('state') || 'entry';
+  if (st === 'na') {
+    document.getElementById('app').innerHTML = `<div class="sysbar"></div>
+      <section class="na">${P.mark()}<h1>${t('naTitle')}</h1><p>${t('naBody')}</p><a class="link">${t('privacyPolicy')}</a></section>
+      <div class="gesture"></div>`;
+    return;
+  }
+  const err = st === 'error';
+  const e = (qs.get('entry') || (err ? '2091' : '199')).split('');
+  let slots = '';
+  for (let i = 0; i < 4; i++) slots += `<div class="slot ${e[i] != null ? 'filled' : i === e.length ? 'active' : ''}${err ? ' error' : ''}" aria-label="${i + 1}">${e[i] != null ? e[i] : ''}</div>`;
+  let keys = '';
+  for (const d of '0123456789') keys += `<button class="key">${d}</button>`;
+  keys += `<button class="key fn" aria-label="${t('backspace')}">${P.icon('backspace')}</button><button class="key ok${e.length === 4 && !err ? '' : ' is-disabled'}">${t('ageConfirm')}</button>`;
+  document.getElementById('app').innerHTML = `<div class="sysbar"></div>
+    <section class="body">
+      <div class="eyebrow">${P.mark()}<span class="nm"><span>${t('appName')}</span><span>${t('appSub')}</span></span></div>
+      <h1>${t('ageTitle')}</h1>
+      <p class="lead">${t('ageLead')}</p>
+      <div class="yr" role="group" aria-label="${t('ageYear')}">
+        <span class="cap">${t('ageYear')}</span>
+        <div class="slots">${slots}</div>
+        <span class="err">${err ? t('ageInvalid') : ''}</span>
+      </div>
+      <div class="spacer"></div>
+    </section>
+    <section class="entry"><div class="keypad">${keys}</div></section>
+    <div class="gesture"></div>`;
+};
+</script>
+</head>
+<body>
+<div class="app" id="app"></div>
+</body>
+</html>

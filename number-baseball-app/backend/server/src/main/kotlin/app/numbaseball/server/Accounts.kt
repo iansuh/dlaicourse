@@ -36,6 +36,7 @@ data class Account(
     val draws: Int,
     val termsVersion: String?,
     val termsAcceptedAt: Long?,
+    val ageConfirmedAt: Long?,
     val deletionRequestedAt: Long?,
     val deletionNoticeAt: Long?,
     val bannedAt: Long?,
@@ -117,6 +118,7 @@ class AccountService(
         draws = rs.getInt("draws"),
         termsVersion = rs.getString("terms_version"),
         termsAcceptedAt = rs.longOrNull("terms_accepted_at"),
+        ageConfirmedAt = rs.longOrNull("age_confirmed_at"),
         deletionRequestedAt = rs.longOrNull("deletion_requested_at"),
         deletionNoticeAt = rs.longOrNull("deletion_notice_at"),
         bannedAt = rs.longOrNull("banned_at"),
@@ -142,6 +144,7 @@ class AccountService(
         createdAt = a.createdAt,
         termsVersion = a.termsVersion,
         termsAcceptedAt = a.termsAcceptedAt,
+        ageConfirmedAt = a.ageConfirmedAt,
         deletionRequestedAt = a.deletionNoticeAt,
         chatRestrictedUntil = a.chatRestrictedUntil?.takeIf { it > clock.now() },
     )
@@ -234,11 +237,18 @@ class AccountService(
         return reload(id)!!
     }
 
-    fun acceptTerms(id: String, version: String): Account {
+    /** Stores the accepted terms version together with the minimum-age confirmation (both required). */
+    fun acceptTerms(id: String, version: String, ageConfirmed: Boolean): Account {
+        if (!ageConfirmed) {
+            throw ApiException(HttpStatusCode.BadRequest, ErrorCodes.AGE_CONFIRMATION_REQUIRED, "the minimum age must be confirmed")
+        }
         if (version != currentTermsVersion) {
             throw ApiException(HttpStatusCode.Conflict, ErrorCodes.TERMS_OUTDATED, "current terms version is $currentTermsVersion")
         }
-        db.tx { c -> c.update("UPDATE accounts SET terms_version = ?, terms_accepted_at = ? WHERE id = ?", version, clock.now(), id) }
+        val now = clock.now()
+        db.tx { c ->
+            c.update("UPDATE accounts SET terms_version = ?, terms_accepted_at = ?, age_confirmed_at = ? WHERE id = ?", version, now, now, id)
+        }
         return reload(id)!!
     }
 

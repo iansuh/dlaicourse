@@ -27,6 +27,12 @@ val signingValues = listOf("NB_RELEASE_STORE_FILE", "NB_RELEASE_STORE_PASSWORD",
     .associateWith { config(it) }
 val releaseSigningConfigured = signingValues.values.all { it != null }
 
+// Owner decision: minimum age 14 (Korean PIPA). Max ad content rating must not exceed the IARC rating (expected G).
+val minimumAge = config("NB_MINIMUM_AGE")?.toInt() ?: 14
+val maxAdContentRating = (config("NB_MAX_AD_CONTENT_RATING") ?: "G").also {
+    require(it in setOf("G", "PG", "T", "MA")) { "NB_MAX_AD_CONTENT_RATING must be G, PG, T or MA" }
+}
+
 android {
     namespace = "app.numbaseball"
     compileSdk = 36
@@ -37,6 +43,8 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        buildConfigField("int", "MINIMUM_AGE", minimumAge.toString())
+        buildConfigField("String", "MAX_AD_CONTENT_RATING", "\"$maxAdContentRating\"")
     }
 
     signingConfigs {
@@ -157,6 +165,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.play.services.ads)
     implementation(libs.google.ump)
+    implementation(libs.play.age.signals)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 

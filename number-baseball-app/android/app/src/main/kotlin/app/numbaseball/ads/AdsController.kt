@@ -1,6 +1,7 @@
 package app.numbaseball.ads
 
 import android.app.Activity
+import app.numbaseball.data.age.AdAgeTreatment
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,8 +33,14 @@ interface AdsController {
     val bannerAdUnitId: String?
     val interstitials: InterstitialController
 
-    /** Runs the UMP consent flow (form only where required) and starts the SDK when allowed. Call from the activity. */
-    fun gatherConsent(activity: Activity)
+    /**
+     * Runs the UMP consent flow (form only where required) and starts the SDK when allowed. Call from the activity, and
+     * only after the age screen: [treatment] must be known before any ad request (policy review R20).
+     */
+    fun gatherConsent(activity: Activity, treatment: AdAgeTreatment)
+
+    /** Play Age Signals can tighten the treatment later; applies to the following ad requests. */
+    fun updateAgeTreatment(treatment: AdAgeTreatment)
 
     fun showPrivacyOptions(activity: Activity)
 }
@@ -47,6 +54,7 @@ object DisabledAdsController : AdsController {
         override fun showIfDue(activity: Activity, resultVisibleMillis: Long, onContinue: () -> Unit) = onContinue()
     }
 
-    override fun gatherConsent(activity: Activity) = Unit
+    override fun gatherConsent(activity: Activity, treatment: AdAgeTreatment) = Unit
+    override fun updateAgeTreatment(treatment: AdAgeTreatment) = Unit
     override fun showPrivacyOptions(activity: Activity) = Unit
 }

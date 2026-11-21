@@ -29,6 +29,7 @@ These are fixed for v1. Change them here first if the team agrees on something e
 
 ### Accounts (reviewed and changed)
 Decision: **no ID, no password, no email.**
+- The account token is stored in the app's private storage (DataStore), not in Keystore-encrypted storage, because Keystore keys do not survive Auto Backup restore. Auto Backup data is encrypted by Google with the user's account.
 - First launch creates a device account automatically. The player only picks a nickname (2–12 letters/digits, profanity-checked). Display form is `Nickname#1234`, so nicknames never collide.
 - The server returns a long random account token. The app stores it and includes it in Android Auto Backup, so a new phone signed in to the same Google account restores the player.
 - Settings has a **transfer code** (one-time, expires in 10 minutes) to move the account to another device by hand.
@@ -40,9 +41,9 @@ Why: one less screen before the first game, no passwords to leak, no email to co
 ### Online rules
 - Quick match (automatic pairing by digit count) and private rooms with a 5-character code.
 - Team sizes 1 to 5 per side. Private rooms only for team play.
-- Round timer: 60 s in quick match; room host picks 30 / 60 / 120 s or none. Two missed rounds in a row forfeit that duel.
+- Round timer: 60 s in quick match; room host picks 30 / 60 / 120 s or **relaxed (10 minutes)**. There is no untimed option, so an idle player can never stall a duel. Two missed rounds in a row forfeit that duel.
 - Disconnect: 60 s to come back before the duel is forfeited.
-- Records: wins / losses / draws per account.
+- Records: wins / losses / draws per account. In team play every player gets the **team** result, except a player who left the match (or forfeited by leaving), who gets a loss.
 
 ### Chat safety (Play UGC policy)
 Profanity masking, rate limit, report a message or a player, block a player (hides their chat and avoids matching), mute all chat, preset quick phrases.
@@ -51,21 +52,21 @@ Profanity masking, rate limit, report a message or a player, block a player (hid
 
 ### Terms, deletion and review (from the release lead's policy review, `docs/play/POLICY_REVIEW.md`)
 - **Terms gate** before the first online match or chat; cannot be skipped; acceptance stored with the terms version; shown again when the version changes. Server pages `/`, `/privacy`, `/terms`, `/delete-account` built from `docs/play/*.md`.
-- **Deletion without the app**: the web page also accepts a request without an in-app code; the account is deleted after 30 days unless it is used again, and the app shows the pending request.
+- **Deletion without the app**: the web page also accepts a request without an in-app code; the account is deleted after 30 days unless it is used again, and the app shows the pending request. Accepted risk: someone could file a request for an inactive account using its public `Nickname#1234`; mitigations are the 30-day wait, cancellation on any use, an in-app notice, one pending request per account, rate limits, and the admin can see and cancel requests.
 - Reports: resolved reports purged after 180 days; deleted players are anonymised in other reports' snapshots.
 - No chat text, tokens, codes or IP addresses in logs or the database (rate-limit IPs in memory only).
 - A review room behind `REVIEW_ROOM_CODE` so Play reviewers always find an opponent.
-- **Audience (owner decision 2026-11-21): 13 and over; minimum age 14 recommended by the release lead because of Korean law (owner to confirm).** Restrict Minor Access stays off. A neutral age screen at first launch (before any ad or account) asks for the birth year; the age band is kept on the device only. Minimum age comes from build config (default 14). Chat safety above is mandatory, not optional.
+- **Audience (owner decision 2026-11-21): minimum age 14** (Korean PIPA guardian-consent rule for under-14s). Restrict Minor Access stays off. A neutral age screen at first launch (before any ad or account) asks for the birth year; the age band is kept on the device only. Minimum age comes from build config (default 14). Chat safety above is mandatory, not optional.
 - **Ad content:** the maximum ad content rating must not exceed the app's own IARC rating (expected Everyone, so `G`); value from build config. Users under 16 get AdMob's under-age / child treatment (no personalized ads), 16–17 the teen treatment; sensitive ad categories blocked. Play Age Signals API integrated (US state app-store age laws).
 - **Distribution (owner decision 2026-11-21): worldwide including EEA/UK, with ads.** The owner accepts declaring as a trader, so legal name, address, phone and email will be shown on the store page.
-- **App name (owner decision 2026-11-21): a "숫자야구" (Number Baseball) style name**, localized per language; the release lead proposes the names. Keep the name in resources so it is easy to change.
+- **App name (owner decision 2026-11-21): "숫자야구: 조용한 한판" / "Number Baseball: Quiet Duel"**, localized per `docs/play/STORE_LISTING.md`. Check KIPRIS before launch. Keep the name in resources so it is easy to change.
 
 ### Monetization: ads (Google AdMob)
 The owner asked for Google ads. On Android that is **AdMob** (AdSense is for websites).
 - **Never during a match.** No ad may cover, interrupt or appear next to the board while a duel or the secret entry is on screen, including the online waiting practice game.
 - **Banner** (adaptive, anchored) only on calm screens: home, results, profile/stats. Not in the room lobby while players are joining, not in chat.
 - **Interstitial** at most after a finished vs-computer match, never after an online match, with a frequency cap (at most one every 3 finished matches and 4 minutes apart), never on app start or exit.
-- **Silent.** Ads are muted app-wide (fits "quiet quick match"); no rewarded ads that give an advantage online.
+- **Silent.** Ads are always muted app-wide, whatever the game sound setting (fits "quiet quick match"); no rewarded ads that give an advantage online.
 - **Consent.** Google UMP consent form where required (EEA/UK/Switzerland and US states), a "Privacy options" entry in Settings, ads still work (non-personalized) when consent is refused.
 - **Store and policy.** "Contains ads" declared, Data safety updated (advertising ID / device identifiers collected and shared with Google for ads), privacy policy updated, `app-ads.txt` served by our server on the developer website domain.
 - Test ad unit IDs in debug builds; real IDs only from build configuration, never committed.

@@ -8,7 +8,9 @@
 <link rel="stylesheet" href="css/proto.css">
 <style>
   .h-head { flex: none; height: 56px; display: flex; align-items: center; padding: 0 4px 0 16px; gap: 12px; }
-  .brand { font: var(--t-title); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* localized app_name, system font */
+  .brand { flex: 1; min-width: 0; display: flex; flex-direction: column; } /* localized app name, system font */
+  .brand .n { font: var(--t-subtitle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brand .s { font: var(--t-caption); color: var(--c-text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .dialog { position: absolute; left: 24px; right: 24px; top: 50%; transform: translateY(-50%); background: var(--c-surface3); border-radius: var(--r-l); box-shadow: var(--shadow-3); padding: 24px 24px 16px; }
   .dialog .dic { color: var(--c-strike); margin-bottom: 16px; }
   .dialog h2 { font: var(--t-title); }
@@ -27,6 +29,8 @@
   .formrow { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
   .formrow .cap { flex: none; }
   .spacer { flex: 1 1 auto; min-height: 16px; }
+  .scroller { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+  .scroller.tight .formrow { display: none; }
   .modes .sec-head { padding-left: 16px; }
   .row .lead-box { width: 40px; height: 40px; border-radius: var(--r-m); background: var(--c-surface2); display: grid; place-items: center; color: var(--c-chalk); flex: none; }
   .row + .row::before { left: 72px; }
@@ -46,6 +50,8 @@ window.build = function (qs) {
     const t = P.t;
     document.querySelector('.app').insertAdjacentHTML('beforeend', `<div class="scrim"></div><section class="dialog" role="alertdialog"><span class="dic">${P.icon('error')}</span><h2>${t('delReqT')}</h2><p>${t('delReqP')}</p><div class="acts"><button class="btn btn-primary">${t('delCancel')}</button><button class="btn btn-text danger" style="width:100%;height:48px;font:var(--t-label)">${t('delNow')}</button></div></section>`);
   }
+  // Fit rule: if the upper area overflows, hide the form row first; if it still overflows, it scrolls.
+  requestAnimationFrame(() => { const sc = document.querySelector('.scroller'); if (sc.scrollHeight > sc.clientHeight + 1) sc.classList.add('tight'); });
   const form = 'WWLWDLWWLW'; // oldest -> newest
   document.querySelector('.form').innerHTML = form.split('').map((r) => `<span class="lamp ${r === 'W' ? 'on st' : r === 'D' ? 'draw' : ''}"></span>`).join('');
 };
@@ -55,11 +61,12 @@ window.build = function (qs) {
 <div class="app">
   <div class="sysbar"></div>
   <header class="h-head">
-    <span class="brand" data-t="appName"></span>
+    <span class="brand"><span class="n" data-t="appName"></span><span class="s" data-t="appSub"></span></span>
     <button class="iconbtn dim" data-icon="help" data-al="howTo"></button>
     <button class="iconbtn dim" data-icon="settings" data-al="settings"></button>
   </header>
 
+  <div class="scroller">
   <section class="hero">
     <span class="cap" data-t="record"></span>
     <span class="pname">새벽투수<span class="ptag">#4821</span></span>
@@ -94,6 +101,7 @@ window.build = function (qs) {
       </button>
     </div>
   </nav>
+  </div>
 
   <section class="dock">
     <div class="dh"><span class="t" data-t="quickTitle"></span><span class="s" data-t="quickSub"></span></div>

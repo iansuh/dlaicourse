@@ -9,6 +9,9 @@ import app.numbaseball.audio.AndroidGameAudio
 import app.numbaseball.audio.GameAudio
 import app.numbaseball.audio.SilentGameAudio
 import app.numbaseball.data.account.AccountRepository
+import app.numbaseball.data.age.AgeRepository
+import app.numbaseball.data.age.DataStoreAgeStore
+import app.numbaseball.data.age.PlayAgeSignalsSource
 import app.numbaseball.data.account.DataStoreAccountStore
 import app.numbaseball.data.online.ConnectionState
 import app.numbaseball.data.online.OnlineClient
@@ -35,6 +38,8 @@ data class AppConfig(
     val serverUrl: String,
     val versionName: String,
     val contactEmail: String,
+    val minimumAge: Int,
+    val maxAdContentRating: String,
     val adsEnabled: Boolean,
     val audioEnabled: Boolean,
     val bannerAdUnitId: String,
@@ -49,6 +54,8 @@ data class AppConfig(
             serverUrl = BuildConfig.SERVER_URL,
             versionName = BuildConfig.VERSION_NAME,
             contactEmail = BuildConfig.CONTACT_EMAIL,
+            minimumAge = BuildConfig.MINIMUM_AGE,
+            maxAdContentRating = BuildConfig.MAX_AD_CONTENT_RATING,
             adsEnabled = true,
             audioEnabled = true,
             bannerAdUnitId = BuildConfig.ADMOB_BANNER_ID,
@@ -60,6 +67,7 @@ data class AppConfig(
 /** Manual dependency container: one instance per process, created by [NumBaseballApp]. */
 interface AppContainer {
     val config: AppConfig
+    val ageRepository: AgeRepository
     val accountRepository: AccountRepository
     val settingsRepository: SettingsRepository
     val languageSettings: LanguageSettings
@@ -90,6 +98,9 @@ class DefaultAppContainer(context: Context, override val config: AppConfig) : Ap
     private val endpoints by lazy { ServerEndpoints(config.serverUrl) }
     private val restApi by lazy { RestApi(httpClient, endpoints, config.versionName) }
 
+    override val ageRepository by lazy {
+        AgeRepository(DataStoreAgeStore(appContext), PlayAgeSignalsSource(appContext), config.minimumAge, appScope)
+    }
     override val accountRepository by lazy { AccountRepository(DataStoreAccountStore(appContext), restApi, appScope) }
     override val settingsRepository: SettingsRepository by lazy { DataStoreSettingsRepository(appContext) }
     override val languageSettings: LanguageSettings by lazy { AppCompatLanguageSettings() }
@@ -130,6 +141,7 @@ class DefaultAppContainer(context: Context, override val config: AppConfig) : Ap
                 bannerAdUnitId = config.bannerAdUnitId,
                 interstitialAdUnitId = config.interstitialAdUnitId,
                 scope = appScope,
+                maxAdContentRating = config.maxAdContentRating,
             )
         } else {
             DisabledAdsController

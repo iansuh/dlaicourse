@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Number Baseball</string>
+    <string name="app_name">Number Baseball: Quiet Duel</string>
 
     <!-- Common -->
     <string name="action_back">Back</string>
@@ -18,7 +18,7 @@
     <string name="language_name_ko" translatable="false">한국어</string>
 
     <!-- First run -->
-    <string name="first_run_title">Welcome to Number Baseball</string>
+    <string name="first_run_title">Welcome to %1$s</string>
     <string name="first_run_subtitle">Pick a nickname and play. No ID, password or email.</string>
     <string name="first_run_nickname_label">Nickname</string>
     <string name="first_run_nickname_hint">2–12 letters or digits</string>
@@ -304,4 +304,13 @@
     <string name="settings_contact">Contact us</string>
     <string name="report_block_offer">Do you also want to block this player?</string>
     <string name="report_block_button">Block too</string>
+
+    <!-- First-launch age screen (policy review R19). Neutral: never mention the required age here. -->
+    <string name="age_title">Before you start</string>
+    <string name="age_question">What year were you born?</string>
+    <string name="age_select_year">Select a year</string>
+    <string name="age_privacy_note">Your answer stays on this device.</string>
+    <string name="age_continue">Continue</string>
+    <string name="not_available_title">Sorry, this game is not available</string>
+    <string name="not_available_body">This game is for players aged %1$d and over. Thank you for your interest.</string>
 </resources>

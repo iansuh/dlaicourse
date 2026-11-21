@@ -93,7 +93,7 @@ fun FirstRunScreen(
     onSubmit: () -> Unit,
 ) {
     ScreenScaffold(title = stringResource(R.string.app_name), onBack = null) {
-        Text(stringResource(R.string.first_run_title), style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.first_run_title, stringResource(R.string.app_name)), style = MaterialTheme.typography.headlineMedium)
         Text(stringResource(R.string.first_run_subtitle), color = NbColors.text2)
         if (state.transferMode) {
             OutlinedTextField(

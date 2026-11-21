@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         val container = (application as NumBaseballApp).container
-        container.ads.gatherConsent(this)
+        // Ad consent and SDK start wait for the age screen (NbApp), so nothing ad-related happens before it.
         setContent {
             NumBaseballTheme {
                 CompositionLocalProvider(
@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
                     LocalAdsController provides container.ads,
                     LocalGameAudio provides container.audio,
                 ) {
-                    NbApp(container.accountRepository)
+                    NbApp(container.ageRepository, container.accountRepository)
                 }
             }
         }

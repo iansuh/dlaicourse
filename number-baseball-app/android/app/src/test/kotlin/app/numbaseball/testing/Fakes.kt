@@ -15,6 +15,8 @@ import app.numbaseball.data.account.AccountStore
 import app.numbaseball.data.account.ApiResult
 import app.numbaseball.data.account.Profile
 import app.numbaseball.data.account.StoredAccount
+import app.numbaseball.data.age.AgeBand
+import app.numbaseball.data.age.AgeStore
 import app.numbaseball.data.online.ConnectionState
 import app.numbaseball.data.online.OnlineClient
 import app.numbaseball.data.online.SafetyApi
@@ -134,5 +136,13 @@ class FakeLanguageSettings(var tag: String? = null) : LanguageSettings {
     override fun current(): String? = tag
     override fun set(tag: String?) {
         this.tag = tag
+    }
+}
+
+class FakeAgeStore(initial: AgeBand? = null) : AgeStore {
+    val value = MutableStateFlow(initial)
+    override val band: Flow<AgeBand?> = value
+    override suspend fun save(band: AgeBand) {
+        value.value = band
     }
 }

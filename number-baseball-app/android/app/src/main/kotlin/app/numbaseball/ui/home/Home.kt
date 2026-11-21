@@ -29,6 +29,8 @@ import app.numbaseball.core.protocol.Stats
 import app.numbaseball.data.account.AccountRepository
 import app.numbaseball.data.account.AccountState
 import app.numbaseball.data.account.RegistrationResult
+import app.numbaseball.data.age.AgeRepository
+import app.numbaseball.data.age.AgeState
 import app.numbaseball.ui.common.ErrorText
 import app.numbaseball.ui.common.PrimaryButton
 import app.numbaseball.ui.common.ScreenScaffold
@@ -55,6 +57,8 @@ data class HomeUiState(
     val nicknameRejected: Boolean = false,
     /** A deletion request was made on the website and is pending (README "Terms, deletion and review"). */
     val deletionPending: Boolean = false,
+    /** Play Age Signals can refuse online features (policy review R21). */
+    val onlineAllowed: Boolean = true,
     val error: UiError? = null,
 ) {
     val roomCodeComplete: Boolean get() = roomCode.length == Limits.ROOM_CODE_LENGTH
@@ -68,10 +72,11 @@ object RoomCodes {
         raw.uppercase().filter { it in ALPHABET }.take(Limits.ROOM_CODE_LENGTH)
 }
 
-class HomeViewModel(private val accounts: AccountRepository) : ViewModel() {
+class HomeViewModel(private val accounts: AccountRepository, ages: AgeRepository) : ViewModel() {
     private val local = MutableStateFlow(HomeUiState())
 
-    val state: StateFlow<HomeUiState> = combine(accounts.state, accounts.deletionRequestedAt, local) { account, deletion, ui ->
+    val state: StateFlow<HomeUiState> = combine(accounts.state, accounts.deletionRequestedAt, ages.state, local) { account, deletion, age, base ->
+        val ui = base.copy(onlineAllowed = (age as? AgeState.Known)?.onlineAllowed ?: false)
         when (account) {
             is AccountState.Registered -> ui.copy(
                 displayName = account.profile.displayName,
@@ -146,8 +151,9 @@ fun HomeScreen(
             Text(stringResource(R.string.home_not_registered), color = NbColors.text3, style = MaterialTheme.typography.bodySmall)
             if (state.nicknameRejected) SecondaryButton(stringResource(R.string.home_choose_nickname_again), onChooseNickname)
         }
-        SecondaryButton(stringResource(R.string.home_quick_match), onQuickMatch, enabled = state.registered)
-        SecondaryButton(stringResource(R.string.home_create_room), onCreateRoom, enabled = state.registered)
+        val online = state.registered && state.onlineAllowed
+        SecondaryButton(stringResource(R.string.home_quick_match), onQuickMatch, enabled = online)
+        SecondaryButton(stringResource(R.string.home_create_room), onCreateRoom, enabled = online)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(NbSpace.s8)) {
             OutlinedTextField(
                 value = state.roomCode,
@@ -158,7 +164,7 @@ fun HomeScreen(
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Go),
                 modifier = Modifier.weight(1f).testTag("roomCode"),
             )
-            TextButton(onClick = { onJoinRoom(state.roomCode) }, enabled = state.registered && state.roomCodeComplete) {
+            TextButton(onClick = { onJoinRoom(state.roomCode) }, enabled = online && state.roomCodeComplete) {
                 Text(stringResource(R.string.home_join_room))
             }
         }

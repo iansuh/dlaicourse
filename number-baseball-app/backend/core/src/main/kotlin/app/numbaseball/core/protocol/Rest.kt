@@ -28,6 +28,8 @@ data class AccountDto(
     /** Terms of Use version this account accepted, or null. Compare with [ServerInfo.termsVersion]. */
     val termsVersion: String? = null,
     val termsAcceptedAt: Long? = null,
+    /** When the player confirmed the minimum age (stored with the terms acceptance). */
+    val ageConfirmedAt: Long? = null,
     /**
      * Set when someone asked on the web page to delete this account. Using the account cancels that request, so when
      * the app sees this it should say "A deletion request was made on the web on <date> and was cancelled because you
@@ -48,8 +50,9 @@ data class AuthResponse(val token: String, val account: AccountDto)
 @Serializable
 data class RenameRequest(val nickname: String)
 
+/** [ageConfirmed] must be true: the player confirmed they are at least [ServerInfo.minimumAge] (no birth date is sent). */
 @Serializable
-data class AcceptTermsRequest(val version: String)
+data class AcceptTermsRequest(val version: String, val ageConfirmed: Boolean = false)
 
 /** A one-time code. [expiresAt] is epoch milliseconds. */
 @Serializable
@@ -94,6 +97,8 @@ data class ServerInfo(
     val termsVersion: String = "",
     /** False: quick-match rooms allow quick phrases only (free text gives `chat_not_allowed`). */
     val quickMatchFreeChat: Boolean = false,
+    /** Minimum age the player confirms together with the terms. */
+    val minimumAge: Int = 14,
 )
 
 // ---- admin (Authorization: Bearer <ADMIN_TOKEN>) ----

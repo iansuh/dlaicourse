@@ -63,6 +63,7 @@ class Database(file: File) : AutoCloseable {
                     draws INTEGER NOT NULL DEFAULT 0,
                     terms_version TEXT,
                     terms_accepted_at INTEGER,
+                    age_confirmed_at INTEGER,
                     deletion_requested_at INTEGER,
                     deletion_notice_at INTEGER,
                     banned_at INTEGER,
@@ -129,6 +130,9 @@ class Database(file: File) : AutoCloseable {
             )
             st.execute("CREATE INDEX IF NOT EXISTS reports_target ON reports(target_id, created_at)")
         }
+        // Columns added after the first schema version.
+        val columns = c.query("PRAGMA table_info(accounts)") { it.getString("name") }.toSet()
+        if ("age_confirmed_at" !in columns) c.update("ALTER TABLE accounts ADD COLUMN age_confirmed_at INTEGER")
     }
 }
 

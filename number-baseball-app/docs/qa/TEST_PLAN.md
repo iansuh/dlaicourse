@@ -4,9 +4,11 @@ Owner: QA lead. Status: **v0.3, phase 1** (2026-11-21). Inputs: `README.md` (pro
 owner decisions of 2026-11-21), `docs/protocol.md` v1 draft, `docs/play/POLICY_REVIEW.md`, `:core` code as of today.
 Defects: [`DEFECTS.md`](DEFECTS.md). Adversarial data: [`corpora/`](corpora/).
 
-Owner decisions that change testing (2026-11-21): **audience 13 and over** (Play target audience 13–15, 16–17, 18+; AdMob max ad
-content rating **T / Teen**), **worldwide distribution** (EEA/UK/CH consent rules apply), **localized app name** in resources
-("숫자야구" style per language), **sound** (effects on, music off by default).
+Owner decisions that change testing (2026-11-21): **audience 13 and over** with a **minimum age from build config, default 14**
+(POLICY_REVIEW R19, owner to confirm), a neutral **age screen** before any ad or account, age band kept on the device, AdMob
+**max ad content rating = the app's IARC rating** (expected Everyone → **G**, from build config; R20), under-16 child/under-age ad
+treatment, **Play Age Signals** (R21), **worldwide distribution** (EEA/UK/CH consent rules apply), **localized app name** in
+resources ("숫자야구" style per language), **sound** (effects on, music off by default).
 
 ---
 
@@ -188,7 +190,7 @@ Effort follows risk: R1–R4 get exhaustive automated tests; R5–R9 get device 
 
 ### 5.12 Terms gate (TERMS)
 - **AC-TERMS-01** (P1, A) Given the current terms version is not accepted, when the player opens quick match, a room or chat, then the terms screen (summary, link to `/terms`, Agree) appears and cannot be bypassed by Back, Home, recents, rotation, split-screen relaunch, deep link or process death.
-- **AC-TERMS-02** (P1, S) The server refuses `queue_join`, `room_create`, `room_join`, `chat` and `phrase` with `terms_required` until `PUT /api/v1/me/terms {version}` stores the current version and time; an old version does not unlock.
+- **AC-TERMS-02** (P1, S) The server refuses `queue_join`, `room_create`, `room_join`, `chat` and `phrase` with `terms_required` until `PUT /api/v1/me/terms {version, age confirmation}` stores the current version and time; an old version does not unlock; a request without the age confirmation (the player confirms being at least the minimum age) is refused and stores nothing.
 - **AC-TERMS-03** (P1, A+S) When the terms version changes, the gate appears again before the next online action.
 - **AC-TERMS-04** (P1, M) `/terms` exists in ko and en, has a `#child-safety` section that prohibits CSAE and names the contact; reachable from Settings and the store listing.
 - **AC-TERMS-05** (P1, A) Offline vs-computer and the rules tutorial never require terms acceptance.
@@ -291,8 +293,8 @@ Banner screens (whitelist): **home, results, profile/stats**. Every other screen
 - **AC-ADS-11** (P1, A) Never an interstitial after an online match (quick, private, team), after practice, after the review room, on app start, on resume from background, or on exit; no app-open ads; no rewarded ads.
 - **AC-ADS-12** (P1, A) An interstitial is shown only if already loaded; navigation never waits for an ad; closing it (or Back) lands on the screen the player chose.
 - **AC-ADS-13** (P1, A) Ads are always muted (`setAppMuted(true)`, volume 0) — README Sound: "Ads stay muted" (DEF-044 notes the conflicting POLICY_REVIEW R11 wording); no audio focus request by ads; verified with `dumpsys audio`.
-- **AC-ADS-14** (P1, A) `setMaxAdContentRating(T)` (owner: audience 13+); no ads for under-13 audiences are configured since 13+ is the minimum.
-- **AC-ADS-15** (P1, M) UMP: `requestConsentInfoUpdate` on every launch; with debug geography EEA (and UK) the consent form appears before any ad request; `MobileAds` is initialized only when `canRequestAds()`.
+- **AC-ADS-14** (P1, A) The max ad content rating comes from build configuration and equals the app's IARC rating (G for Everyone/3+, PG for E10+, T for Teen); release check fails if it is higher than the rating recorded in the build config; sensitive categories (gambling, dating, alcohol, sexual, get-rich-quick) are blocked in AdMob (R20).
+- **AC-ADS-15** (P1, M) For 18+ users, UMP: `requestConsentInfoUpdate` on every launch; with debug geography EEA (and UK) the consent form appears before any ad request; `MobileAds` is initialized only when `canRequestAds()`. For 14–17 the age treatment of AC-AGE-05 applies first (14–15: no consent form, no personalized ads).
 - **AC-ADS-16** (P1, M) Refusing consent: the whole app works; ads are limited/non-personalized; no repeated nagging beyond UMP's own logic.
 - **AC-ADS-17** (P1, M) US regulated-state geography: the US state message appears where configured; opt-out honored.
 - **AC-ADS-18** (P1, A) Settings shows "Privacy options" only when `privacyOptionsRequirementStatus == REQUIRED`; it opens the UMP privacy options form; changes apply to later requests.
@@ -353,6 +355,17 @@ Thresholds marked † are QA defaults until the sound designer's `design/sound/R
 - **AC-PROTO-06** (P1, S) Malformed frames get an error and the connection stays open; 2048 bytes processed, 2049 → `message_too_large`, > 16 KB frame → close 1009, binary frames ignored, a fragmented message > 16 KB is not buffered without limit.
 - **AC-PROTO-07** (P1, S) With `rid` the server answers exactly once (`ack` or `error`); `room_state.version` strictly increases; the app ignores a lower version.
 
+### 5.30 Age screen and age-based treatment (AGE) — POLICY_REVIEW R19–R21
+- **AC-AGE-01** (P1, A) First launch shows a neutral age screen (birth year; no pre-selected adult year, no hint of the cut-off, no "I am over 18" shortcut) before anything else: until it is answered there is no MobileAds/UMP initialization, no ad request, no account creation and no request to our server (verified with a debug proxy and a fake ads provider).
+- **AC-AGE-02** (P1, A) The minimum age comes from build configuration (default 14); builds with 13 and 14 behave accordingly at the boundary (age computed from birth year conservatively: a player who may not have reached the minimum this year is treated as under-age, or the screen asks for the month; rule documented).
+- **AC-AGE-03** (P1, A) An under-age answer stops the app with a neutral message (no retry button, no "try another year"); the result persists across restart, process death and app update, so the screen does not simply reappear for another try (reinstall/clear data is the accepted limit, DEF-046).
+- **AC-AGE-04** (P1, A+M) The birth year/age band stays on the device: it is never sent to our server, logged, or included in analytics; the only effect outside the device is the ad treatment flags of AC-AGE-05 (traffic capture, AC-PRIV-03); whether it is in Auto Backup is decided in DEF-046.
+- **AC-AGE-05** (P1, A+M) Ad treatment is set before the Mobile Ads SDK initializes: 14–15 → child/under-age treatment (no personalized ads, no advertising ID sent, no UMP consent form), 16–17 → teen treatment, 18+ → normal UMP flow; checked on the outgoing ad requests in a debug proxy for each band.
+- **AC-AGE-06** (P1, A) Play Age Signals: when it reports a minor (or a supervised user), the stricter of signal and age screen applies; supervised users do not get features Play treats as "significant changes" until approved; when the API is unavailable, errors, times out or returns no signal (non-US, old Play services, offline), the app falls back to the age screen answer without delay or crash (Play test responses for each case).
+- **AC-AGE-07** (P1, S) The server's terms acceptance requires the age confirmation (AC-TERMS-02); an account that has not confirmed cannot enter online play or chat.
+- **AC-AGE-08** (P2, A) The age screen is localized, accessible (TalkBack, large fonts, small windows) and shown only once per install for an eligible answer.
+- **AC-AGE-09** (P2, M) Store listing, Terms and in-app text state the same minimum age as the build config (no "18+" leftovers).
+
 ---
 
 ## 6. Non-functional budgets
@@ -394,9 +407,9 @@ Thresholds marked † are QA defaults until the sound designer's `design/sound/R
 | --- | --- | --- |
 | POL-01 | Account deletion | in-app path ≤ 3 taps from Settings; web resource that works without the app and without a code (AC-DEL-03); listed in Data safety |
 | POL-02 | UGC | terms gate (AC-TERMS), report message/player, block, mute, filter, timely moderation (admin checks daily), auto restriction |
-| POL-03 | Child safety (audience 13+) | published standards prohibiting CSAE (`/terms#child-safety`), in-app reporting, contact, compliance with local law; quick match phrases only (random-chat rule) |
-| POL-04 | Target audience | Play Console 13–15, 16–17, 18+; content rating questionnaire (users interact, ads); no Families program |
-| POL-05 | Ads | no ads interfering with play; interstitials only at natural breaks with ≥ 1 s pause; "Contains ads" declared; app-ads.txt; max rating T; consent (UMP) |
+| POL-03 | Child safety (audience 13+, minimum age 14 by default) | published standards prohibiting CSAE (`/terms#child-safety`), in-app reporting, contact, compliance with local law; quick match phrases only (random-chat rule) |
+| POL-04 | Target audience and age | Play Console 13–15, 16–17, 18+; content rating questionnaire (users interact, ads); no Families program; age screen and minimum age (AC-AGE); Play Age Signals for US state laws (R21); "significant change" notification decided before releases that change social features |
+| POL-05 | Ads | no ads interfering with play; interstitials only at natural breaks with ≥ 1 s pause; "Contains ads" declared; app-ads.txt; max ad rating = IARC rating (G expected); under-16 treatment; consent (UMP) |
 | POL-06 | Data safety | answers match AC-PRIV-03 capture and `PRIVACY_POLICY.md` (incl. AdMob data) |
 | POL-07 | Target SDK | targetSdk 36 (required since 2026-08-31); large-screen resizability; 16 KB pages for native libs |
 | POL-08 | Payments | no donation links or buttons; no "ad-free" claims |
@@ -489,9 +502,9 @@ gap), **Trivial** (cosmetic, wording).
 | TIME, RECON (engine) | `DuelEngineQaTest` (17) | pass |
 | TEAM (engine) | `TeamMatchQaTest` (6) | pass |
 | CHAT (core) | `ChatFilterCorpusQaTest` (7) | pass (DEF-006, DEF-037 fixed during phase 1) |
-| ACC nickname (core) | `NicknameCorpusQaTest` (4) | pass (DEF-007 marks, DEF-035 partly, DEF-039 fixed) |
+| ACC nickname (core) | `NicknameCorpusQaTest` (4) | pass (DEF-007 marks, DEF-035, DEF-039 fixed during phase 1) |
 | PROTO (core) | `ProtocolDecodingQaTest` (7) | pass |
 | Oracle / corpora | `QaOracleSelfTest` (8), `QaCorporaWellFormedTest` (9) | pass |
 | Server: SEC, PROTO, QM, ROOM, TIME, RECON, CHAT, SAFE, TERMS, DEL, ACC, PRIV, REV, ADS-24, STAT | `ProtocolSecurityQaTest` (12), `MatchFlowQaTest` (13), `ChatSafetyQaTest` (8), `AccountLifecycleQaTest` (7) | ignored: server not implemented yet; policy items also wait for protocol.md (DEF-011) |
 | Server corpus loader | `ServerCorpusSmokeQaTest` (3) | pass |
-| Android (OFF, PRAC, ADS, SND, L10N, A11Y, WIN, FONT, NET, BAK) | to be written in `android/app/src/test` and `androidTest` | pending: next phase, once screens land |
+| Android (AGE, OFF, PRAC, ADS, SND, L10N, A11Y, WIN, FONT, NET, BAK) | to be written in `android/app/src/test` and `androidTest` | pending: next phase; `:app:testDebugUnitTest` currently cannot resolve Robolectric's runtime jar (host `gcp.mirrors.maven.org` blocked by the network allowlist) |

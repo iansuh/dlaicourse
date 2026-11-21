@@ -169,4 +169,6 @@ object ErrorCodes {
     const val TERMS_REQUIRED = "terms_required"
     /** PUT /api/v1/me/terms named a version that is not the current one. */
     const val TERMS_OUTDATED = "terms_outdated"
+    /** PUT /api/v1/me/terms without `ageConfirmed: true`. */
+    const val AGE_CONFIRMATION_REQUIRED = "age_confirmation_required"
 }

@@ -19,6 +19,8 @@ data class Config(
     val termsVersion: String? = null,
     /** Redirect plain HTTP (as reported by the proxy's X-Forwarded-Proto) to HTTPS on the same host. */
     val forceHttps: Boolean = true,
+    /** Minimum age players confirm with the terms (shown by the app; no birth date is collected). */
+    val minimumAge: Int = 14,
     /** Optional Google Play link shown on the landing page. */
     val storeUrl: String? = null,
     /** How often timers (round deadlines, disconnect grace, bot moves) are checked. */
@@ -42,6 +44,7 @@ data class Config(
                 quickMatchFreeChat = bool("QUICK_MATCH_FREE_CHAT", false),
                 termsVersion = str("TERMS_VERSION"),
                 forceHttps = bool("FORCE_HTTPS", true),
+                minimumAge = str("MIN_AGE")?.toIntOrNull()?.takeIf { it in 1..99 } ?: 14,
                 storeUrl = str("STORE_URL")?.takeIf { it.startsWith("https://") },
             )
         }

@@ -130,6 +130,6 @@
     return s.replace('#', `<b>${n}</b>`);
   };
   window.P = { mark, fit, digitsLabel, qs, lang, t, icon, judge, logHtml, memoHtml, slotsHtml, keypadHtml, apply };
-  document.addEventListener('DOMContentLoaded', () => { if (window.build) window.build(qs); apply(); sysbar(); fit(); });
+  document.addEventListener('DOMContentLoaded', () => { document.title = t('appTitle') + ' · ' + document.title; if (window.build) window.build(qs); apply(); sysbar(); fit(); });
   window.addEventListener('resize', fit);
 })();

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">숫자 야구</string>
+    <string name="app_name">숫자야구: 조용한 한판</string>
 
     <!-- Common -->
     <string name="action_back">뒤로</string>
@@ -11,7 +11,7 @@
     <string name="action_copy">복사</string>
 
     <!-- First run -->
-    <string name="first_run_title">숫자 야구에 오신 걸 환영해요</string>
+    <string name="first_run_title">%1$s에 오신 걸 환영해요</string>
     <string name="first_run_subtitle">닉네임만 정하면 바로 시작해요. 아이디, 비밀번호, 이메일은 필요 없어요.</string>
     <string name="first_run_nickname_label">닉네임</string>
     <string name="first_run_nickname_hint">글자 또는 숫자 2~12자</string>
@@ -291,4 +291,13 @@
     <string name="settings_contact">문의하기</string>
     <string name="report_block_offer">이 플레이어도 차단할까요?</string>
     <string name="report_block_button">차단하기</string>
+
+    <!-- First-launch age screen (policy review R19). Neutral: never mention the required age here. -->
+    <string name="age_title">시작하기 전에</string>
+    <string name="age_question">몇 년도에 태어났나요?</string>
+    <string name="age_select_year">연도 선택</string>
+    <string name="age_privacy_note">답변은 이 기기에만 저장돼요.</string>
+    <string name="age_continue">계속</string>
+    <string name="not_available_title">죄송해요, 이 게임을 이용할 수 없어요</string>
+    <string name="not_available_body">이 게임은 만 %1$d세 이상만 이용할 수 있어요. 관심 가져 주셔서 고마워요.</string>
 </resources>

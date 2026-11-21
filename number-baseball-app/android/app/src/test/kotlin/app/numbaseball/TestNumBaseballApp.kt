@@ -5,11 +5,13 @@ import app.numbaseball.ads.DisabledAdsController
 import app.numbaseball.audio.GameAudio
 import app.numbaseball.audio.SilentGameAudio
 import app.numbaseball.data.account.AccountRepository
+import app.numbaseball.data.age.AgeRepository
 import app.numbaseball.data.online.OnlineSession
 import app.numbaseball.data.online.SafetyRepository
 import app.numbaseball.game.offline.OfflineGame
 import app.numbaseball.testing.FakeAccountApi
 import app.numbaseball.testing.FakeAccountStore
+import app.numbaseball.testing.FakeAgeStore
 import app.numbaseball.testing.FakeLanguageSettings
 import app.numbaseball.testing.FakeOnlineClient
 import app.numbaseball.testing.FakeSafetyApi
@@ -25,6 +27,7 @@ class TestNumBaseballApp : NumBaseballApp() {
 }
 
 class TestAppContainer(
+    val ageStore: FakeAgeStore = FakeAgeStore(),
     val accountStore: FakeAccountStore = FakeAccountStore(),
     val client: FakeOnlineClient = FakeOnlineClient(),
 ) : AppContainer {
@@ -33,11 +36,14 @@ class TestAppContainer(
         serverUrl = "https://nb.example.com",
         versionName = "test",
         contactEmail = "support@example.com",
+        minimumAge = 14,
+        maxAdContentRating = "G",
         adsEnabled = false,
         audioEnabled = false,
         bannerAdUnitId = "",
         interstitialAdUnitId = "",
     )
+    override val ageRepository = AgeRepository(ageStore, { null }, minimumAge = 14, scope, currentYear = { 2026 })
     override val accountRepository = AccountRepository(accountStore, FakeAccountApi(), scope)
     override val settingsRepository = FakeSettingsRepository()
     override val languageSettings = FakeLanguageSettings()

@@ -28,6 +28,12 @@ import app.numbaseball.core.protocol.RoomKind
 import app.numbaseball.core.protocol.RoomPhase
 import app.numbaseball.data.account.AccountRepository
 import app.numbaseball.data.account.AccountState
+import app.numbaseball.data.age.AgeBand
+import app.numbaseball.data.age.AgeRepository
+import app.numbaseball.data.age.AgeState
+import app.numbaseball.ui.age.AgeScreen
+import app.numbaseball.ui.age.AgeViewModel
+import app.numbaseball.ui.age.NotAvailableScreen
 import app.numbaseball.ui.chat.ChatScreen
 import app.numbaseball.ui.chat.ChatViewModel
 import app.numbaseball.ui.common.ConnectionStatus
@@ -62,16 +68,49 @@ import app.numbaseball.ui.team.TeamBoardScreen
 import app.numbaseball.ui.terms.TermsGate
 import app.numbaseball.ui.theme.NbColors
 
-/** Waits for the stored account, then starts at first run (no nickname yet) or home. */
+/**
+ * App entry: the neutral age screen comes first (before any ad SDK call or account), then ads consent, then first run
+ * (no nickname yet) or home.
+ */
 @Composable
-fun NbApp(accountRepository: AccountRepository) {
+fun NbApp(ageRepository: AgeRepository, accountRepository: AccountRepository) {
+    val container = LocalAppContainer.current
+    val age by ageRepository.state.collectAsStateWithLifecycle()
     val account by accountRepository.state.collectAsStateWithLifecycle()
-    if (account == AccountState.Loading) {
-        Box(Modifier.fillMaxSize().background(NbColors.bg))
-        return
+    when (val current = age) {
+        AgeState.Loading -> Blank()
+        AgeState.Unknown -> {
+            val vm = containerViewModel { AgeViewModel(ageRepository) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            AgeScreen(state, vm::onYearSelected, vm::onContinue)
+        }
+        is AgeState.Known -> if (current.band == AgeBand.UNDER_MINIMUM) {
+            NotAvailableScreen(container.config.minimumAge)
+        } else {
+            AdsAfterAgeCheck(current)
+            if (account == AccountState.Loading) {
+                Blank()
+            } else {
+                val startOnFirstRun = remember { account == AccountState.NeedsNickname }
+                NbNavHost(startOnFirstRun)
+            }
+        }
     }
-    val startOnFirstRun = remember { account == AccountState.NeedsNickname }
-    NbNavHost(startOnFirstRun)
+}
+
+@Composable
+private fun Blank() = Box(Modifier.fillMaxSize().background(NbColors.bg))
+
+/** Starts UMP + Mobile Ads only now that the age treatment is known, and refines it with Play Age Signals. */
+@Composable
+private fun AdsAfterAgeCheck(age: AgeState.Known) {
+    val container = LocalAppContainer.current
+    val activity = LocalContext.current.findActivity()
+    LaunchedEffect(Unit) {
+        activity?.let { container.ads.gatherConsent(it, age.adTreatment) }
+        container.ageRepository.refreshSignals()
+    }
+    LaunchedEffect(age.adTreatment) { container.ads.updateAgeTreatment(age.adTreatment) }
 }
 
 @Composable
@@ -89,7 +128,7 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
         }
 
         composable<HomeRoute> {
-            val vm = containerViewModel { HomeViewModel(accountRepository) }
+            val vm = containerViewModel { HomeViewModel(accountRepository, ageRepository) }
             val state by vm.state.collectAsStateWithLifecycle()
             HomeScreen(
                 state = state,

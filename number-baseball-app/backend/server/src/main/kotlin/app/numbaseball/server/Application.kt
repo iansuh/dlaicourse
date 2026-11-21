@@ -401,6 +401,7 @@ private fun io.ktor.server.routing.Route.apiRoutes(services: Services) {
                     quickPhrases = QuickPhrases.ALL,
                     termsVersion = accounts.currentTermsVersion,
                     quickMatchFreeChat = services.config.quickMatchFreeChat,
+                    minimumAge = services.config.minimumAge,
                 ),
                 ServerInfo.serializer(),
             )
@@ -430,7 +431,7 @@ private fun io.ktor.server.routing.Route.apiRoutes(services: Services) {
         put("/me/terms") {
             val a = me(services)
             val req = call.body(AcceptTermsRequest.serializer())
-            call.respondJson(HttpStatusCode.OK, accounts.toDto(accounts.acceptTerms(a.id, req.version)), app.numbaseball.core.protocol.AccountDto.serializer())
+            call.respondJson(HttpStatusCode.OK, accounts.toDto(accounts.acceptTerms(a.id, req.version, req.ageConfirmed)), app.numbaseball.core.protocol.AccountDto.serializer())
         }
         delete("/me/deletion-request") {
             val a = me(services, allowBanned = true)
