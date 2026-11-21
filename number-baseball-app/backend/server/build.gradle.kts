@@ -9,10 +9,6 @@ application {
     mainClass.set("app.numbaseball.server.MainKt")
 }
 
-kotlin {
-    jvmToolchain(21)
-}
-
 dependencies {
     implementation(project(":core"))
     implementation(libs.ktor.server.core)
