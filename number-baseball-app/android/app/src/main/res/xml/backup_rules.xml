@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and lower. Only the account token store is backed up; everything else is rebuilt or refetched.
+     Keep the path in sync with AccountStore (AccountStoreFiles.ACCOUNT); BackupRulesTest checks it. -->
+<full-backup-content>
+    <include domain="file" path="datastore/account.preferences_pb" />
+</full-backup-content>

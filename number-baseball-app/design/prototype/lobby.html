@@ -7,17 +7,16 @@
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/proto.css">
 <style>
-  .invite { flex: none; padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .invite { flex: none; padding: 8px 16px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
   .invite .cap { font: var(--t-caption); color: var(--c-text3); }
-  .code-row { display: flex; align-items: center; gap: 8px; }
-  .code { display: flex; gap: 4px; }
-  .code span { width: 40px; height: 52px; border-radius: var(--r-m); background: var(--c-surface2); display: grid; place-items: center; font: var(--t-num-code); }
-  .code-row .btn-small { margin-left: auto; }
+  .code { display: flex; gap: 8px; }
+  .code span { width: 48px; height: 60px; border-radius: var(--r-m); background: var(--c-surface2); display: grid; place-items: center; font: var(--t-num-code); }
+  .invite .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 4px; }
   .rules { flex: none; height: 48px; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 16px; background: var(--c-surface1); border-top: 1px solid var(--c-line); border-bottom: 1px solid var(--c-line); }
   .rules .v { flex: 1; min-width: 0; font: var(--t-body-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .fill { flex: none; display: flex; align-items: center; gap: 12px; padding: 16px 16px 12px; }
+  .fill { flex: none; display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 2px; align-items: center; padding: 16px 16px 12px; }
   .fill .v { font: var(--t-body-strong); white-space: nowrap; }
-  .fill .s { font: var(--t-caption); color: var(--c-text3); flex: 1; min-width: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fill .s { grid-column: 1 / -1; font: var(--t-caption); color: var(--c-text3); }
   .teams { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 16px; }
   .team { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .team-h { height: 36px; display: flex; align-items: center; gap: 8px; }
@@ -32,6 +31,8 @@
   .seat.mine { box-shadow: inset 0 0 0 1px var(--c-outline); }
   .seat.empty { background: transparent; box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-text3); font: var(--t-caption); align-items: center; flex-direction: row; justify-content: center; gap: 6px; }
   .seat.empty .lamp { width: 6px; height: 6px; }
+  .seat.move { background: transparent; box-shadow: inset 0 0 0 1px var(--c-outline); color: var(--c-chalk); font: var(--t-label-small); }
+  .seat.move .ic { width: 20px; height: 20px; }
   .team .btn-small { width: 100%; margin-top: 4px; }
   .spacer { flex: 1 1 auto; }
   .practice { flex: none; padding: 16px; }
@@ -53,19 +54,16 @@ window.build = function (qs) {
     <div class="sysbar"></div>
     <header class="topbar">
       <button class="iconbtn" aria-label="${t('leave')}">${P.icon('arrow_back')}</button>
-      <span class="tb-title">${t('roomCodeTitle', { code: '' }).trim()}</span>
+      <span class="tb-title">${t('modeRoom')}</span>
       <button class="iconbtn" aria-label="${t('more')}">${P.icon('more_vert')}</button>
     </header>
     <section class="invite">
       <span class="cap">${t('inviteCode')}</span>
-      <div class="code-row">
-        <div class="code" aria-label="K 7 Q 2 M">${'K7Q2M'.split('').map((c) => `<span>${c}</span>`).join('')}</div>
-        <button class="btn btn-small btn-secondary" style="height:40px">${P.icon('content_copy')}${t('copy')}</button>
-        <button class="iconbtn" style="margin-right:-12px" aria-label="${t('share')}">${P.icon('share')}</button>
-      </div>
+      <div class="code" aria-label="K 7 Q 2 M">${'K7Q2M'.split('').map((c) => `<span>${c}</span>`).join('')}</div>
+      <div class="btns"><button class="btn btn-tonal">${P.icon('content_copy')}${t('copy')}</button><button class="btn btn-tonal">${P.icon('share')}${t('share')}</button></div>
     </section>
     <section class="rules">
-      ${P.icon('tune' in ICONS ? 'tune' : 'settings', 'ic sm')}
+      ${P.icon('tune', 'ic sm')}
       <span class="v">${t('roomRule', { n: 4, a: 3, s: 60 })}</span>
       <button class="btn-text" style="height:48px;padding:0 12px">${t('edit')}</button>
     </section>
@@ -85,8 +83,7 @@ window.build = function (qs) {
         <div class="team-h"><span class="tbadge b">B</span><span class="n">${t('teamB')}</span><span class="c">2/3</span></div>
         ${seat('민트초코', '0912')}
         ${seat('Größenwahn', '7731')}
-        ${empty}
-        <button class="btn btn-small btn-secondary">${P.icon('swap_horiz')}${t('moveHere')}</button>
+        <button class="seat empty move">${P.icon('swap_horiz')}${t('moveHereSeat')}</button>
       </div>
     </section>
     <div class="spacer"></div>

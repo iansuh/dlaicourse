@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108">
+  <!-- Adaptive icon BACKGROUND layer. Full bleed 108dp. Night (#0C1210) with a soft floodlight lift. -->
+  <defs><radialGradient id="lift" cx="54" cy="40" r="62" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#1A2420"/><stop offset="1" stop-color="#0C1210"/></radialGradient></defs>
+  <rect width="108" height="108" fill="url(#lift)"/>
+</svg>

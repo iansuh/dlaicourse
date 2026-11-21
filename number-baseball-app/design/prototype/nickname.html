@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nickname</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/proto.css">
+<style>
+  .body { flex: 1 1 auto; padding: 32px 16px 0; display: flex; flex-direction: column; }
+  .eyebrow { display: flex; align-items: center; gap: 10px; font: var(--t-label-small); color: var(--c-text2); }
+  .body h1 { font: var(--t-headline); margin-top: 16px; }
+  .body .lead { font: var(--t-body); color: var(--c-text2); margin-top: 8px; }
+  .field { margin-top: 32px; }
+  .field label { display: block; font: var(--t-label-small); color: var(--c-text2); margin-bottom: 8px; }
+  .input { height: var(--z-text-field-h); border-radius: var(--r-m); background: var(--c-surface2); box-shadow: inset 0 0 0 2px var(--c-chalk); display: flex; align-items: center; padding: 0 16px; font: 400 18px/24px var(--font-sans); }
+  .input .caret { width: 2px; height: 24px; background: var(--c-chalk); margin-left: 1px; }
+  .input .clear { margin-left: auto; margin-right: -12px; color: var(--c-text3); }
+  .input.error { box-shadow: inset 0 0 0 2px var(--c-out); }
+  .help { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; font: var(--t-caption); color: var(--c-text3); }
+  .help .count { font: var(--t-num-tag); font-feature-settings: "tnum" 1; }
+  .help.error { color: var(--c-out); }
+  .preview { margin-top: 24px; padding: 16px 0 0; border-top: 1px solid var(--c-line); }
+  .preview .cap { font: var(--t-caption); color: var(--c-text3); }
+  .preview .chipline { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+  .preview .pname { font: var(--t-title); }
+  .preview .ptag { font-size: 20px; line-height: 28px; }
+  .preview .note { font: var(--t-caption); color: var(--c-text3); margin-top: 4px; }
+  .actions { flex: none; padding: 16px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .terms { font: var(--t-caption); color: var(--c-text3); text-align: center; }
+  .terms u { color: var(--c-text2); text-underline-offset: 3px; }
+</style>
+<script src="js/strings.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/proto.js"></script>
+<script>
+window.build = function (qs) {
+  const t = P.t, err = qs.get('state') === 'error';
+  const nick = err ? '야' : '새벽투수';
+  document.getElementById('app').innerHTML = `
+    <div class="sysbar"></div>
+    <section class="body">
+      <div class="eyebrow">${P.mark()}${t('welcome')}</div>
+      <h1>${t('nickTitle')}</h1>
+      <p class="lead">${t('nickBody')}</p>
+      <div class="field">
+        <label>${t('nickLabel')}</label>
+        <div class="input${err ? ' error' : ''}"><span>${nick}</span><span class="caret"></span><button class="iconbtn clear" aria-label="clear">${P.icon('close', 'ic sm')}</button></div>
+        <div class="help${err ? ' error' : ''}"><span>${err ? (P.lang === 'ko' ? '2자 이상 입력해 주세요' : 'Use at least 2 characters') : t('nickHelper')}</span><span class="count">${[...nick].length} / 12</span></div>
+      </div>
+      <div class="preview">
+        <div class="cap">${t('nickPreview')}</div>
+        <div class="chipline"><span class="pname">${nick}<span class="ptag">#····</span></span></div>
+        <div class="note">${t('tagLater')}</div>
+      </div>
+    </section>
+    <section class="actions">
+      <button class="btn btn-primary${err ? ' is-disabled' : ''}">${t('nickStart')}</button>
+      <p class="terms">${t('nickTerms')}</p>
+    </section>
+    ${P.qs.get('ime') === '0' ? '' : `<div class="ime">${t('imeNote')}</div>`}
+    <div class="gesture"></div>`;
+};
+</script>
+</head>
+<body>
+<div class="app" id="app"></div>
+</body>
+</html>

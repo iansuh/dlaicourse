@@ -120,7 +120,8 @@ Definitions used: "collected" = sent off the device; "shared" = transferred to a
 | Personal info → Name | Nickname (Play's "Name" includes nicknames) | Yes | No | No | Required | App functionality, Account management |
 | Personal info → User IDs | Random account ID, `#1234` tag, account token (we store only a hash) | Yes | No | No | Required | App functionality, Account management, Fraud prevention/security |
 | App activity → Other actions | Win/loss/draw records, block list, reports filed | Yes | No | No | Required | App functionality, Fraud prevention/security/compliance |
-| Messages → Other in-app messages | Room chat (relayed, held in memory) and **snapshots of reported messages (stored)** | Yes | No | No (because report snapshots are stored) | Optional (chat can be muted / not used) | App functionality, Fraud prevention/security/compliance |
+| App activity → Other user-generated content | Optional free-text note in a report (max 500 characters) | Yes | No | No | Optional | Fraud prevention/security/compliance |
+| Messages → Other in-app messages | Room chat (relayed; last 50 lines per room kept in memory only while the room exists) and **report snapshots: the reported message plus the last 20 room messages (stored)** | Yes | No | No (because report snapshots are stored) | Optional (chat can be muted / not used) | App functionality, Fraud prevention/security/compliance |
 | Location → Approximate location | IP-derived location used by the **Google Mobile Ads SDK** | Yes | Yes | No | Required | Advertising or marketing, Analytics, Fraud prevention/security |
 | App activity → App interactions | Ad interactions (launches, taps, video views) sent by the Ads SDK | Yes | Yes | No | Required | Advertising or marketing, Analytics, Fraud prevention |
 | App info and performance → Diagnostics | SDK performance data sent by the Ads SDK | Yes | Yes | No | Required | Analytics, Fraud prevention |
@@ -138,7 +139,8 @@ Source: Understanding Google Play's app account deletion requirements, https://s
 
 - Apps that let users create an account must offer **(a) an in-app path** to delete the account and associated data and **(b) a web link** where users can request deletion without reinstalling. The web page must work, be easy to find, and **name the app or developer exactly as on the store listing**. The URL goes into the Data safety form.
 - Deactivating or freezing is not deletion. Data kept for security, fraud prevention or legal reasons must be disclosed (privacy policy).
-- **Our design:** Settings → Delete account (immediate). Web: `/delete-account` page, see `DELETE_ACCOUNT_PAGE.md`. Because we have no email or password, the web flow uses either a transfer code (immediate) or a 30-day pending request that is cancelled if the account is used again (protects players from malicious deletion requests). Exact server requirements are in `POLICY_REVIEW.md` section "Requirements for teammates".
+- **Our design (from `docs/protocol.md`):** Settings → Delete account calls `DELETE /api/v1/me` (immediate). The web page `/delete-account` accepts a 24-hour **deletion code** shown in the app's Settings and deletes at once.
+- **Gap:** a deletion code needs the app. A player who already uninstalled the app (the main reason to use a web link) has no way to get one. Because we have no email or password, the web page must also offer a **request without the app**: the player enters `Nickname#1234`; the account is deleted 30 days later unless it is used again in that time (the app then shows "A deletion request was made on the web" with Cancel/Delete now). This protects players from malicious requests and still lets a lost-device player delete. A contact-email route is the minimum fallback. See `POLICY_REVIEW.md` R5 and `DELETE_ACCOUNT_PAGE.md`.
 
 ## 7. User Generated Content (chat)
 
@@ -305,7 +307,7 @@ Screenshots must show the real app; never show an ad covering the board (we neve
 Sources: Prepare your app for review, https://support.google.com/googleplay/android-developer/answer/9859455 ; Requirements for providing sign-in details, https://support.google.com/googleplay/android-developer/answer/15748846
 
 - Reviewers need access that works from any location, at any time, for the whole review. If parts of the app depend on our server, **the server must be running and reachable 24/7** during review (no free tier that sleeps).
-- We have no login, so credentials are not needed, but online play needs an opponent. Choose "All or some functionality is restricted" and provide instructions (draft in `RELEASE_GUIDE.md` section 9), plus a **review room** on the server: a reserved room code where a test bot joins, plays, and sends one chat message so the reviewer can test Report and Block.
+- We have no login, so credentials are not needed, but online play needs an opponent. Choose "All or some functionality is restricted" and provide instructions (draft in `RELEASE_GUIDE.md` section 6), plus a **review room** on the server: a reserved room code where a test bot joins, plays, and sends one chat message so the reviewer can test Report and Block.
 - Never give reviewers a real player's account or data.
 
 ## 16. Privacy policy (Play + Korean law)

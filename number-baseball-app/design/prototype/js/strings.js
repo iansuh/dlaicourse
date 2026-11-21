@@ -2,6 +2,10 @@
    Placeholders: {n}, {a}, {b}, {name}, {s}. Plurals are simplified here; Android must use <plurals>. */
 window.STR = {
   ko: {
+    legendTitle: '판정 읽는 법', legS: '<b>스트라이크</b> · 숫자와 자리가 모두 맞음', legB: '<b>볼</b> · 숫자는 있지만 자리가 다름', legO: '<b>아웃</b> · 맞는 숫자가 하나도 없음',
+    recentForm: '최근 10경기', otherModes: '다른 방법으로 하기', lineScore: '회별 스트라이크', backToRoom: '방으로 돌아가기',
+    bestLabel: '최고', moveHereSeat: '이 자리로 이동', winRateV: '승률',
+    imeNote: '시스템 키보드 (IME)', cpuShort: '컴퓨터',
     appName: '숫자 야구',
     round: '{n}회', digitsN: '{n}자리', modeQuick: '빠른 대전', modeCpu: '컴퓨터 대전', modeRoom: '친구 방',
     oppThinking: '생각 중', oppPitched: '던짐', mySecret: '내 숫자',
@@ -14,7 +18,7 @@ window.STR = {
     // home
     record: '내 기록', win: '승', loss: '패', draw: '무', winRate: '승률',
     cpuTitle: '컴퓨터와 대결', cpuSub: '오프라인 · 쉬움 · 보통 · 어려움',
-    roomTitle: '방 만들기', roomSub: '친구와 1:1 또는 팀전 (최대 5 대 5)',
+    roomTitle: '방 만들기', roomSub: '친구와 1:1 또는 팀전, 최대 5 대 5',
     joinTitle: '코드로 참가', joinSub: '친구에게 받은 5자리 코드',
     quickTitle: '빠른 대전', quickSub: '비슷한 상대와 바로 한 판 · 60초 제한',
     quickStart: '빠른 대전 시작', howTo: '게임 방법', settings: '설정', profile: '프로필',
@@ -50,6 +54,9 @@ window.STR = {
     on: '켜짐', off: '꺼짐'
   },
   en: {
+    legendTitle: 'Reading the hints', legS: '<b>Strike</b> · right digit, right place', legB: '<b>Ball</b> · right digit, wrong place', legO: '<b>Out</b> · no digit matches',
+    recentForm: 'Last 10', otherModes: 'More ways to play', lineScore: 'Strikes by round', backToRoom: 'Back to room',
+    bestLabel: 'Best', moveHereSeat: 'Move here', imeNote: 'System keyboard (IME)', cpuShort: 'Computer',
     appName: 'Number Baseball',
     round: 'Round {n}', digitsN: '{n} digits', modeQuick: 'Quick match', modeCpu: 'vs Computer', modeRoom: 'Private room',
     oppThinking: 'Thinking', oppPitched: 'Pitched', mySecret: 'My number',
@@ -61,7 +68,7 @@ window.STR = {
     leave: 'Leave', more: 'More', timeLeft: 'Time left',
     record: 'My record', win: 'W', loss: 'L', draw: 'D', winRate: 'Win rate',
     cpuTitle: 'vs Computer', cpuSub: 'Offline · Easy · Normal · Hard',
-    roomTitle: 'Create room', roomSub: '1 vs 1 or teams with friends (up to 5 vs 5)',
+    roomTitle: 'Create room', roomSub: '1 vs 1 or teams with friends, up to 5 vs 5',
     joinTitle: 'Join with code', joinSub: 'The 5-character code from a friend',
     quickTitle: 'Quick match', quickSub: 'Play a similar opponent now · 60 s turns',
     quickStart: 'Start quick match', howTo: 'How to play', settings: 'Settings', profile: 'Profile',
@@ -91,6 +98,12 @@ window.STR = {
     on: 'On', off: 'Off'
   },
   de: {
+    legendTitle: 'So liest du die Hinweise', legS: '<b>Strike</b> · richtige Ziffer, richtige Stelle', legB: '<b>Ball</b> · richtige Ziffer, falsche Stelle', legO: '<b>Out</b> · keine Ziffer stimmt',
+    recentForm: 'Letzte 10', cpuShort: 'Computer', otherModes: 'Weitere Spielarten', lineScore: 'Strikes pro Runde', backToRoom: 'Zurück zum Raum', bestLabel: 'Bestes', moveHereSeat: 'Hierher wechseln',
+    resWin: 'Gewonnen', resLose: 'Verloren', resDraw: 'Unentschieden', resWinSub: 'In Runde {n} geknackt', resLoseSub: 'Dein Gegner war in Runde {n} schneller', resDrawSub: 'Beide in Runde {n} geknackt',
+    oppSecret: 'Seine Zahl', rounds: 'Runden', time: 'Zeit', oppBest: 'Sein Bestes', rematch: 'Nochmal spielen', home: 'Startseite', adNotice: 'Vor dem nächsten Bildschirm kommt kurz Werbung',
+    roomCodeTitle: 'Raum {code}', inviteCode: 'Einladungscode', copy: 'Kopieren', share: 'Teilen', roomRule: '{n} Ziffern · {a} gegen {a} · {s} s', edit: 'Ändern',
+    filled: '{a} / {b} Spieler', autoStart: 'Startet automatisch, sobald alle da sind', teamA: 'Team A', teamB: 'Team B', host: 'Host', me: 'Du', emptySeat: 'Freier Platz', practice: 'Üben, während du wartest', chat: 'Chat', chatPreview: 'Viel Glück!',
     appName: 'Zahlen-Baseball',
     round: 'Runde {n}', digitsN: '{n} Ziffern', modeQuick: 'Schnelles Spiel', modeCpu: 'Gegen Computer', modeRoom: 'Privater Raum',
     oppThinking: 'Überlegt', oppPitched: 'Geworfen', mySecret: 'Meine Zahl',
@@ -102,13 +115,17 @@ window.STR = {
     leave: 'Verlassen', more: 'Mehr', timeLeft: 'Restzeit',
     record: 'Meine Bilanz', win: 'S', loss: 'N', draw: 'U', winRate: 'Siegquote',
     cpuTitle: 'Gegen Computer', cpuSub: 'Offline · Leicht · Normal · Schwer',
-    roomTitle: 'Raum erstellen', roomSub: '1 gegen 1 oder Teams mit Freunden (bis 5 gegen 5)',
+    roomTitle: 'Raum erstellen', roomSub: '1 gegen 1 oder Teams mit Freunden, bis 5 gegen 5',
     joinTitle: 'Mit Code beitreten', joinSub: 'Der 5-stellige Code von Freunden',
     quickTitle: 'Schnelles Spiel', quickSub: 'Sofort gegen einen ähnlichen Gegner · 60 s pro Runde',
     quickStart: 'Schnelles Spiel starten', howTo: 'Spielregeln', settings: 'Einstellungen', profile: 'Profil',
     digitPick: 'Ziffern', adLabel: 'Anzeige'
   },
   ru: {
+    legendTitle: 'Как читать подсказки', legS: '<b>Страйк</b> · цифра и место верны', legB: '<b>Болл</b> · цифра есть, место другое', legO: '<b>Аут</b> · ни одна цифра не совпала',
+    recentForm: 'Последние 10', cpuShort: 'Компьютер', otherModes: 'Другие режимы', lineScore: 'Страйки по раундам', backToRoom: 'Вернуться в комнату', bestLabel: 'Лучшее', moveHereSeat: 'Перейти сюда',
+    roomCodeTitle: 'Комната {code}', inviteCode: 'Код приглашения', copy: 'Копировать', share: 'Поделиться', roomRule: '{n} цифры · {a} на {a} · {s} с', edit: 'Изменить',
+    filled: '{a} / {b} игроков', autoStart: 'Игра начнётся сама, когда все соберутся', teamA: 'Команда A', teamB: 'Команда B', host: 'Хост', me: 'Вы', emptySeat: 'Свободно', practice: 'Тренироваться, пока ждёте', chat: 'Чат', chatPreview: 'Удачи!',
     appName: 'Числовой бейсбол',
     round: 'Раунд {n}', digitsN: '{n} цифры', modeQuick: 'Быстрая игра', modeCpu: 'Против компьютера', modeRoom: 'Своя комната',
     oppThinking: 'Думает', oppPitched: 'Бросил', mySecret: 'Моё число',
@@ -120,7 +137,7 @@ window.STR = {
     leave: 'Выйти', more: 'Ещё', timeLeft: 'Осталось',
     record: 'Мой счёт', win: 'П', loss: 'Пр', draw: 'Н', winRate: 'Доля побед',
     cpuTitle: 'Против компьютера', cpuSub: 'Офлайн · Легко · Средне · Сложно',
-    roomTitle: 'Создать комнату', roomSub: '1 на 1 или командами с друзьями (до 5 на 5)',
+    roomTitle: 'Создать комнату', roomSub: '1 на 1 или командами с друзьями, до 5 на 5',
     joinTitle: 'Войти по коду', joinSub: 'Код из 5 символов от друга',
     quickTitle: 'Быстрая игра', quickSub: 'Сразу с похожим соперником · 60 с на ход',
     quickStart: 'Начать быструю игру', howTo: 'Как играть', settings: 'Настройки', profile: 'Профиль',

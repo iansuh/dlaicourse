@@ -1,0 +1,88 @@
+# Chat emoji corpus (QA-owned). Used by ChatFilterCorpusQaTest and the server chat tests.
+# Columns: id, expect, input, must_remain ('|' separated substrings that must survive, '-' = none), exact (the exact cleaned
+# text, '-' = not fixed), note.
+# expect: KEEP         cleaned text == input exactly.
+#         STRIP        cleaned text (if accepted) contains no forbidden code point (QaTextOracle.isForbiddenInChat) and every
+#                      must_remain; if must_remain is '-' the server may also answer chat_empty.
+#         CLEANED      universal chat invariants hold (QaTextOracle.chatViolations), must_remain survive, exact if given.
+#         REJECT_EMPTY server answers error chat_empty, nothing is broadcast.
+#         REJECT_LONG  server answers error chat_too_long (more than 100 code points AFTER cleaning), nothing is broadcast.
+# Spec: docs/protocol.md 9.1 (emoji, control and zero-width characters removed, whitespace collapsed, trimmed, 100 code points).
+# QA definition of "emoji" (DEFECTS.md DEF-006): any Emoji_Presentation code point, anything in U+1F000..U+1FAFF, regional
+# indicators, skin-tone modifiers, U+FE0F, U+20E3, U+200D and tag characters. Text-presentation symbols WITHOUT U+FE0F
+# (heart suit, copyright, trade mark, music note, stars, arrows, check mark) are text and must survive.
+# Format: UTF-8, tab-separated, '#' starts a comment line, first non-comment line is the header.
+# Escapes in text columns (decoded by the QA loaders, QaCorpus.kt):
+#   \uXXXX (4 hex)   \U{X..X} (1-6 hex, any code point)   \n \r \t \0   \s (space)   \\ (backslash)
+#   \R[N:TEXT] repeats TEXT N times (inside TEXT write \] for ']').
+# Invisible, control, bidi and confusable characters are ALWAYS written as escapes so a reviewer can see them;
+# QaCorporaWellFormedTest fails if a raw invisible/control/bidi character appears in this file.
+id	expect	input	must_remain	exact	note
+E-001	STRIP	gg \U{1F600}	gg	gg	grinning face
+E-002	STRIP	\U{1F44D}\U{1F3FD} nice	nice	nice	thumbs up + medium skin tone
+E-003	STRIP	fam \U{1F468}\U{200D}\U{1F469}\U{200D}\U{1F467}\U{200D}\U{1F466}	fam	fam	ZWJ family
+E-004	STRIP	\U{1F3F3}\U{FE0F}\U{200D}\U{1F308} flag	flag	flag	rainbow flag (VS16 + ZWJ)
+E-005	STRIP	\U{1F1F0}\U{1F1F7} vs \U{1F1EF}\U{1F1F5}	vs	vs	regional indicator flags KR, JP
+E-006	STRIP	\U{1F3F4}\U{E0067}\U{E0062}\U{E0073}\U{E0063}\U{E0074}\U{E007F} scot	scot	scot	tag sequence flag (Scotland)
+E-007	STRIP	1\U{FE0F}\U{20E3}2\U{FE0F}\U{20E3}3\U{FE0F}\U{20E3}	-	-	keycaps 1 2 3: base digits may stay ('123') or go (chat_empty)
+E-008	STRIP	#\U{FE0F}\U{20E3} *\U{FE0F}\U{20E3}	-	-	keycaps # and *
+E-009	STRIP	love \U{2764}\U{FE0F}	love	-	red heart = U+2764 + VS16; the bare U+2764 may stay as text
+E-010	STRIP	\U{263A}\U{FE0F} ok	ok	-	smiling face with VS16
+E-011	STRIP	time \U{231A}	time	time	watch: BMP Emoji_Presentation
+E-012	STRIP	\U{2B50} star	star	star	white medium star: BMP Emoji_Presentation
+E-013	STRIP	\U{2705} done	done	done	check mark button
+E-014	STRIP	\U{26BD} ball	ball	ball	soccer ball
+E-015	STRIP	\U{1FAE0} melt	melt	melt	Unicode 14 emoji
+E-016	STRIP	\U{1FAE8} shake	shake	shake	Unicode 15 emoji
+E-017	STRIP	\U{1FAE9} face	face	face	Unicode 16 emoji: unknown to JDK 21 Character.isEmoji; must still go
+E-018	STRIP	\U{1F9D1}\U{200D}\U{1F9D1}\U{200D}\U{1F9D2}	-	-	Unicode 15.1 family; only emoji -> chat_empty expected
+E-019	STRIP	\U{1F642}\U{200D}\U{2194}\U{FE0F} no	no	-	head shaking (15.1, ZWJ + arrow + VS16)
+E-020	STRIP	x\U{1F3FB}y	x|y	xy	lone skin-tone modifier
+E-021	STRIP	x\U{1F1E6}y	x|y	xy	lone regional indicator
+E-022	REJECT_EMPTY	\U{1F600}	-	-	only an emoji
+E-023	REJECT_EMPTY	\U{1F4A9}\U{1F4A9}\U{1F4A9}	-	-	only emoji
+E-024	STRIP	a\U{FE0F}b	a|b	ab	stray VS16
+E-025	STRIP	\U{1F595} lol	lol	lol	middle finger emoji
+E-026	STRIP	\U{1F004} mahjong	mahjong	mahjong	U+1F004 (Emoji_Presentation in the 1F000 block)
+E-027	STRIP	\U{1F170}\U{FE0F} grade	grade	grade	negative squared A + VS16
+E-028	STRIP	hi\U{1F600}there	hi|there	-	emoji between words; 'hithere' or 'hi there' both fine
+E-101	KEEP	^^	-	^^	must survive (README)
+E-102	KEEP	:)	-	:)	
+E-103	KEEP	:-)	-	:-)	
+E-104	KEEP	;)	-	;)	
+E-105	KEEP	:D	-	:D	
+E-106	KEEP	XD	-	XD	
+E-107	KEEP	T_T	-	T_T	
+E-108	KEEP	ㅠㅠ	-	ㅠㅠ	Korean crying
+E-109	KEEP	ㅋㅋㅋ	-	ㅋㅋㅋ	Korean laughter
+E-110	KEEP	^_^	-	^_^	
+E-111	KEEP	<3	-	<3	
+E-112	KEEP	-_-	-	-_-	
+E-113	KEEP	o_O	-	o_O	
+E-114	KEEP	(╯°□°)╯︵ ┻━┻	-	(╯°□°)╯︵ ┻━┻	table flip kaomoji
+E-115	KEEP	¯\\_(ツ)_/¯	-	¯\\_(ツ)_/¯	shrug (backslash escaped)
+E-116	KEEP	(ノ◕ヮ◕)ノ	-	(ノ◕ヮ◕)ノ	
+E-117	KEEP	♪	-	♪	U+266A: Extended_Pictographic but NOT emoji (a regex on Extended_Pictographic wrongly strips it)
+E-118	KEEP	♥	-	♥	U+2665 text presentation, no VS16
+E-119	KEEP	☆	-	☆	U+2606
+E-120	KEEP	★	-	★	U+2605: Extended_Pictographic but NOT emoji
+E-121	KEEP	※	-	※	
+E-122	KEEP	→ ←	-	→ ←	
+E-123	KEEP	©	-	©	U+00A9 text presentation
+E-124	KEEP	™	-	™	U+2122 text presentation
+E-125	KEEP	✓	-	✓	U+2713 (not emoji)
+E-126	KEEP	①②③	-	①②③	circled digits
+E-127	KEEP	#1	-	#1	plain number sign and digit (keycap base without U+20E3)
+E-128	KEEP	:v	-	:v	Vietnamese smiley
+E-129	KEEP	)))	-	)))	Russian smiley
+E-130	KEEP	jajaja	-	jajaja	
+E-131	KEEP	kkkkk	-	kkkkk	
+E-132	KEEP	mdr	-	mdr	
+E-133	KEEP	（＾ω＾）	-	（＾ω＾）	
+E-134	KEEP	orz	-	orz	
+E-135	KEEP	ʕ•ᴥ•ʔ	-	ʕ•ᴥ•ʔ	
+E-136	KEEP	2333	-	2333	Chinese laughter
+E-137	KEEP	123 4S0B!	-	123 4S0B!	
+E-138	KEEP	☺	-	☺	U+263A text presentation, no VS16
+E-139	KEEP	↔	-	↔	U+2194 text presentation, no VS16
+E-140	KEEP	‼	-	‼	U+203C text presentation, no VS16

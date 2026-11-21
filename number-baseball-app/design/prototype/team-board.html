@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Team board</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/proto.css">
+<style>
+  .score { flex: none; padding: 8px 16px 20px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+  .score .side { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .score .side.b { justify-content: flex-end; }
+  .score .side .n { font: var(--t-subtitle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .score .mid { display: flex; align-items: center; gap: 12px; }
+  .score .v { font: var(--t-num-score); font-feature-settings: "tnum" 1; min-width: 32px; text-align: center; }
+  .score .v.lead { color: var(--c-chalk); }
+  .score .v.trail { color: var(--c-text3); }
+  .score .colon { font: 600 32px/40px var(--font-num); color: var(--c-text3); }
+  .score-sub { flex: none; text-align: center; font: var(--t-caption); color: var(--c-text3); margin-top: -12px; padding-bottom: 16px; }
+  .final { flex: none; padding: 20px 16px 8px; text-align: center; }
+  .final h1 { font: var(--t-display); }
+  .duels { flex: none; border-top: 1px solid var(--c-line); }
+  .duels-h { height: 28px; display: grid; grid-template-columns: 1fr 88px 1fr; align-items: center; padding: 0 16px; font: var(--t-label-small); color: var(--c-text3); }
+  .duels-h span:nth-child(2) { text-align: center; } .duels-h span:nth-child(3) { text-align: right; }
+  .duel-row { position: relative; display: grid; grid-template-columns: 1fr 88px 1fr; align-items: center; height: 72px; padding: 0 16px; border-top: 1px solid var(--c-line); }
+  .duel-row::before, .duel-row::after { content: ""; position: absolute; top: 12px; bottom: 12px; width: var(--z-stripe-w); border-radius: 0 2px 2px 0; }
+  .duel-row::before { left: 0; background: var(--c-team-a); }
+  .duel-row::after { right: 0; background: var(--c-team-b); border-radius: 2px 0 0 2px; }
+  .duel-row.me { background: var(--c-surface1); }
+  .p { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .p.b { align-items: flex-end; text-align: right; }
+  .p .pname { font: var(--t-body-strong); max-width: 100%; display: flex; min-width: 0; }
+  .p .pname .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .p .pname .ptag { flex: none; }
+  .p .best .lbl { font: var(--t-caption); color: var(--c-text3); }
+  .p .best { display: flex; align-items: center; gap: 6px; font: var(--t-num-tag); color: var(--c-text2); }
+  .p.lost .pname, .p.lost .best { color: var(--c-text3); }
+  .p .won { display: inline-flex; align-items: center; gap: 4px; font: var(--t-micro); color: var(--c-strike); }
+  .p .won .lamp { width: 6px; height: 6px; }
+  .st { display: flex; flex-direction: column; align-items: center; gap: 2px; font: var(--t-caption); color: var(--c-text2); text-align: center; }
+  .st .rn { font: var(--t-num-label); letter-spacing: var(--t-num-label-track); color: var(--c-text3); }
+  .st.live .dot { display: flex; align-items: center; gap: 6px; }
+  .st.warn { color: var(--c-strike); }
+  .spacer { flex: 1 1 auto; }
+  .foot { flex: none; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 8px; }
+  .watch-note { flex: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; border-top: 1px solid var(--c-line); font: var(--t-caption); color: var(--c-text3); }
+</style>
+<script src="js/strings.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/proto.js"></script>
+<script>
+window.build = function (qs) {
+  const t = P.t, final = qs.get('state') === 'final';
+  const hint = (s, b) => (s === 0 && b === 0) ? '<span class="h-out" style="height:18px;font-size:11px;padding:0 4px">OUT</span>' : `<span>${s}S ${b}B</span>`;
+  const won = `<span class="won"><span class="lamp on st"></span>${t('wonTag')}</span>`;
+  const rows = final ? [
+    { a: ['새벽투수', '4821'], b: ['민트초코', '0912'], st: `<span class="rn">R7</span>`, win: 'a', me: true, bestA: [4, 0], bestB: [2, 1] },
+    { a: ['Kestrel', '2048'], b: ['Größenwahn', '7731'], st: `<span class="rn">R9</span>`, win: 'b', bestA: [2, 2], bestB: [4, 0] },
+    { a: ['밤하늘', '5530'], b: ['Volna', '1187'], st: `<span class="rn">R6</span>`, win: 'a', bestA: [4, 0], bestB: [1, 2] }
+  ] : [
+    { a: ['새벽투수', '4821'], b: ['민트초코', '0912'], st: `<span class="rn">R7</span>`, win: 'a', me: true, bestA: [4, 0], bestB: [2, 1] },
+    { a: ['Kestrel', '2048'], b: ['Größenwahn', '7731'], st: `<span class="rn">R5</span><span class="dot"><span class="lamp s on ch"></span>${t('playing')}</span>`, live: true, bestA: [2, 1], bestB: [1, 2] },
+    { a: ['밤하늘', '5530'], b: ['Volna', '1187'], st: `<span class="rn">R4</span><span>${t('disconnected', { s: '0:41' })}</span>`, warn: true, bestA: [1, 1], bestB: [0, 0] }
+  ];
+  if (final) document.getElementById('app').classList.add('tint-win');
+  const scoreA = rows.filter((r) => r.win === 'a').length, scoreB = rows.filter((r) => r.win === 'b').length;
+  const rowHtml = (r) => `
+    <div class="duel-row${r.me ? ' me' : ''}">
+      <div class="p a${r.win === 'b' ? ' lost' : ''}"><span class="pname"><span class="nm">${r.a[0]}</span><span class="ptag">#${r.a[1]}</span></span><span class="best">${r.win === 'a' ? won : `<span class="lbl">${t('bestLabel')}</span>${hint(...r.bestA)}`}</span></div>
+      <div class="st${r.live ? ' live' : ''}${r.warn ? ' warn' : ''}">${r.st}</div>
+      <div class="p b${r.win === 'a' ? ' lost' : ''}"><span class="pname"><span class="nm">${r.b[0]}</span><span class="ptag">#${r.b[1]}</span></span><span class="best">${r.win === 'b' ? won : `<span class="lbl">${t('bestLabel')}</span>${hint(...r.bestB)}`}</span></div>
+    </div>`;
+  document.getElementById('app').innerHTML = `
+    <div class="sysbar"></div>
+    <header class="topbar">
+      <button class="iconbtn" aria-label="${final ? t('home') : t('backToDuel')}">${P.icon(final ? 'close' : 'arrow_back')}</button>
+      <span class="tb-title">${t('teamMatch')}</span>
+      <button class="iconbtn" aria-label="${t('chat')}">${P.icon('chat')}</button>
+    </header>
+    ${final ? `<section class="final win"><span class="lamps l" style="justify-content:center;margin-bottom:12px">${'<span class="lamp l on st"></span>'.repeat(2)}<span class="lamp l"></span></span><h1>${t('resWin')}</h1></section>` : ''}
+    <section class="score">
+      <div class="side a"><span class="tbadge a">A</span><span class="n">${t('teamA')}</span></div>
+      <div class="mid"><span class="v ${scoreA >= scoreB ? 'lead' : 'trail'}">${scoreA}</span><span class="colon">:</span><span class="v ${scoreB >= scoreA ? 'lead' : 'trail'}">${scoreB}</span></div>
+      <div class="side b"><span class="n">${t('teamB')}</span><span class="tbadge b">B</span></div>
+    </section>
+    <div class="score-sub">${t('bestOf', { a: 3, b: 2 })}</div>
+    <section class="duels">
+      ${rows.map(rowHtml).join('')}
+    </section>
+    ${final ? '' : `<p class="watch-note">${P.icon('visibility', 'ic sm')}${t('watching')}</p>`}
+    <div class="spacer"></div>
+    <section class="foot">
+      ${final ? `<button class="btn btn-primary">${t('backToRoom')}</button><button class="btn btn-secondary">${t('home')}</button>` : ''}
+    </section>
+    ${final ? '<div class="adslot"><div class="creative"><i>AD</i>Sample banner creative · adaptive 360×50</div></div>' : ''}
+    <div class="gesture"></div>`;
+};
+</script>
+</head>
+<body>
+<div class="app" id="app"></div>
+</body>
+</html>

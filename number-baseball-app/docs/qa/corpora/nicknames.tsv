@@ -1,0 +1,139 @@
+# Nickname corpus (QA-owned). Spec: README (2-12 letters/digits, profanity-checked) and docs/protocol.md 9.3
+# (NFKC, trim, every character a Unicode letter or digit, listed profanity anywhere, reserved names).
+# expect: VALID      accepted; 'stored' (if not '-') is the exact nickname the server must store and return.
+#         INVALID    400 invalid_nickname. reason: LENGTH | CHARSET | INVISIBLE | RESERVED (informational).
+#         PROFANITY  400 nickname_profanity.
+#         EITHER     undecided by the spec (see DEFECTS.md); only 'no crash, no 500, nothing stored un-normalized'.
+# QA rules beyond the spec text (DEF-007): length counts code points after NFKC; Hangul fillers U+3164/U+115F/U+1160/U+FFA0
+# are letters in Unicode but render blank and must be rejected (INVISIBLE).
+# Format: UTF-8, tab-separated, '#' starts a comment line, first non-comment line is the header.
+# Escapes in text columns (decoded by the QA loaders, QaCorpus.kt):
+#   \uXXXX (4 hex)   \U{X..X} (1-6 hex, any code point)   \n \r \t \0   \s (space)   \\ (backslash)
+#   \R[N:TEXT] repeats TEXT N times (inside TEXT write \] for ']').
+# Invisible, control, bidi and confusable characters are ALWAYS written as escapes so a reviewer can see them;
+# QaCorporaWellFormedTest fails if a raw invisible/control/bidi character appears in this file.
+id	expect	reason	input	stored	note
+N-001	VALID	-	ab	ab	minimum length
+N-002	VALID	-	Kim	Kim	
+N-003	VALID	-	김철수	김철수	Hangul
+N-004	VALID	-	たなか	たなか	hiragana
+N-005	VALID	-	タナカ	タナカ	katakana
+N-006	VALID	-	李明	李明	CJK
+N-007	VALID	-	Иван	Иван	Cyrillic
+N-008	VALID	-	Ёжик	Ёжик	Cyrillic yo
+N-009	VALID	-	Nguyễn	Nguyễn	Vietnamese precomposed
+N-010	VALID	-	Nguye\U{0302}\U{0303}n	Nguyễn	Vietnamese decomposed; NFKC composes
+N-011	VALID	-	José	José	
+N-012	VALID	-	Müller	Müller	
+N-013	VALID	-	Weiß	Weiß	
+N-014	VALID	-	abcdefghijkl	abcdefghijkl	maximum length 12
+N-015	VALID	-	user123	user123	
+N-016	VALID	-	ㅋㅋ	ㅋㅋ	compatibility jamo are letters
+N-017	VALID	-	ラーメン	ラーメン	prolonged sound mark U+30FC is a letter (Lm)
+N-018	VALID	-	가나다라마바사아자차카타	가나다라마바사아자차카타	12 Hangul syllables
+N-019	VALID	-	\U{1100}\U{1161}\U{1102}\U{1161}\U{1103}\U{1161}\U{1105}\U{1161}\U{1106}\U{1161}\U{1107}\U{1161}\U{1109}\U{1161}\U{110B}\U{1161}\U{110C}\U{1161}\U{110E}\U{1161}\U{110F}\U{1161}\U{1110}\U{1161}	가나다라마바사아자차카타	same 12 syllables as 24 conjoining jamo: length counted after normalization
+N-020	VALID	-	\R[12:\U{20000}]	\R[12:\U{20000}]	12 supplementary CJK characters = 24 UTF-16 units: length is code points (DEF-007)
+N-021	VALID	-	ＡＢＣ	ABC	full-width letters folded by NFKC
+N-022	VALID	-	ab①	ab1	circled digit folded to 1 by NFKC
+N-023	VALID	-	abⅫ	abXII	roman numeral folded to XII by NFKC
+N-024	VALID	-	\sab\s	ab	trimmed (protocol 9.3)
+N-025	VALID	-	\tab	ab	tab trimmed
+N-026	VALID	-	1234	1234	digits only are allowed by the spec (display 1234#0420 is odd; DEF-007)
+N-027	VALID	-	ΑΒΓ	ΑΒΓ	Greek
+N-028	VALID	-	Ñoño	Ñoño	
+N-029	VALID	-	\U{1D400}\U{1D401}	AB	mathematical bold letters folded by NFKC
+N-030	VALID	-	ﾐﾅ	ミナ	half-width katakana folded by NFKC
+N-101	INVALID	LENGTH		-	empty
+N-102	INVALID	LENGTH	a	-	1 character
+N-103	INVALID	LENGTH	김	-	1 syllable
+N-104	INVALID	LENGTH	abcdefghijklm	-	13 characters
+N-105	INVALID	LENGTH	가나다라마바사아자차카타파	-	13 syllables
+N-106	INVALID	LENGTH	\R[13:\U{20000}]	-	13 supplementary characters
+N-107	INVALID	LENGTH	   	-	only spaces: empty after trim
+N-108	INVALID	LENGTH	abcdefghij㍿	-	11 before NFKC, 14 after (U+337F expands to 4 letters)
+N-031	VALID	-	ﬀ	ff	ligature expands to 2 letters after NFKC: length is measured after normalization
+N-110	INVALID	CHARSET	a b	-	inner space
+N-111	INVALID	CHARSET	a_b	-	underscore (the web prototype allowed it)
+N-112	INVALID	CHARSET	a-b	-	
+N-113	INVALID	CHARSET	a.b	-	
+N-114	INVALID	CHARSET	ab!	-	
+N-115	INVALID	CHARSET	ab#1234	-	'#' would fake the display tag
+N-116	INVALID	CHARSET	ab@	-	
+N-117	INVALID	CHARSET	ab\U{1F600}	-	emoji
+N-118	INVALID	CHARSET	ab♥	-	symbol
+N-119	INVALID	CHARSET	ab★	-	symbol
+N-120	INVALID	CHARSET	ab½	-	NFKC gives 1 FRACTION SLASH 2: the slash is a symbol
+N-121	INVALID	CHARSET	a\U{0301}\U{0301}\U{0301}b	-	combining marks left after NFKC
+N-122	INVALID	CHARSET	a\tb	-	inner tab
+N-123	INVALID	CHARSET	ab\ncd	-	inner newline
+N-124	INVALID	CHARSET	<b>x</b>	-	HTML
+N-125	INVALID	CHARSET	' OR 1=1--	-	SQL
+N-126	INVALID	CHARSET	${jndi:x}	-	log injection
+N-127	INVALID	CHARSET	../etc	-	path
+N-128	INVALID	CHARSET	ab\U{0000}	-	NUL
+N-129	INVALID	CHARSET	李·明	-	middle dot
+N-130	INVALID	CHARSET	O'Brien	-	apostrophe
+N-131	INVALID	CHARSET	María José	-	space
+N-132	INVALID	CHARSET	たなか・ゆう	-	katakana middle dot U+30FB
+N-133	INVALID	CHARSET	ab\U{D800}	-	lone surrogate
+N-134	INVALID	CHARSET	a\U{20E3}b	-	combining enclosing keycap
+N-135	INVALID	CHARSET	ﷺ	-	U+FDFA expands to a phrase with spaces under NFKC
+N-136	INVALID	CHARSET	ab\U{E0041}	-	tag character
+N-201	INVALID	INVISIBLE	ab\U{200B}	-	zero-width space
+N-202	INVALID	INVISIBLE	a\U{200D}b	-	zero-width joiner
+N-203	INVALID	INVISIBLE	\U{200B}ab	-	leading zero-width space (not removed by trim)
+N-204	INVALID	INVISIBLE	ab\U{202E}	-	bidi override
+N-205	INVALID	INVISIBLE	ab\U{2066}	-	bidi isolate
+N-206	INVALID	INVISIBLE	ab\U{00AD}	-	soft hyphen
+N-207	INVALID	INVISIBLE	ab\U{FEFF}	-	BOM
+N-208	INVALID	INVISIBLE	\U{3164}\U{3164}	-	Hangul filler x2: Unicode letters that render blank (blank nickname)
+N-209	INVALID	INVISIBLE	ab\U{3164}	-	looks exactly like 'ab'
+N-210	INVALID	INVISIBLE	\U{115F}\U{1160}ab	-	choseong + jungseong fillers
+N-211	INVALID	INVISIBLE	\U{FFA0}\U{FFA0}	-	half-width Hangul filler
+N-212	INVALID	INVISIBLE	a\U{2800}b	-	braille blank
+N-213	INVALID	INVISIBLE	a\U{034F}b	-	combining grapheme joiner
+N-214	INVALID	INVISIBLE	ab\U{180E}	-	Mongolian vowel separator
+N-301	INVALID	RESERVED	admin	-	reserved (protocol 9.3)
+N-302	INVALID	RESERVED	Admin	-	case-insensitive
+N-303	INVALID	RESERVED	ADMIN	-	
+N-304	INVALID	RESERVED	ａｄｍｉｎ	-	full-width, NFKC gives admin
+N-305	INVALID	RESERVED	system	-	
+N-306	INVALID	RESERVED	moderator	-	
+N-307	EITHER	RESERVED	\U{0410}dmin	-	Cyrillic A + Latin: mixed-script look-alike (DEF-007)
+N-308	EITHER	RESERVED	운영자	-	'operator' in Korean: localized reserved names undefined
+N-309	EITHER	RESERVED	管理员	-	'administrator' in Chinese
+N-310	EITHER	RESERVED	админ	-	'admin' in Russian
+N-311	EITHER	RESERVED	admin1	-	prefix of a reserved name
+N-312	EITHER	RESERVED	GM	-	'game master'
+N-401	PROFANITY	-	fuck	-	
+N-402	PROFANITY	-	Fuck	-	
+N-403	PROFANITY	-	fuck123	-	
+N-404	PROFANITY	-	xXfuckXx	-	anywhere in the name
+N-405	PROFANITY	-	ｆｕｃｋ	-	full-width, NFKC
+N-406	PROFANITY	-	fuuuck	-	stretched
+N-407	PROFANITY	-	sh1t	-	leet
+N-408	PROFANITY	-	시발	-	
+N-409	PROFANITY	-	씨발놈	-	
+N-410	PROFANITY	-	tlqkf	-	QWERTY Korean
+N-411	PROFANITY	-	병신	-	
+N-412	PROFANITY	-	ㅅㅂ	-	
+N-413	PROFANITY	-	死ね	-	
+N-414	PROFANITY	-	ｼﾈ	-	half-width katakana
+N-415	PROFANITY	-	傻逼	-	
+N-416	PROFANITY	-	сука	-	
+N-417	PROFANITY	-	блядь	-	
+N-418	PROFANITY	-	puta	-	
+N-419	PROFANITY	-	Hurensohn	-	
+N-420	PROFANITY	-	putain	-	
+N-421	PROFANITY	-	caralho	-	
+N-422	PROFANITY	-	địt	-	
+N-423	PROFANITY	-	Bitch99	-	
+N-424	PROFANITY	-	nigga	-	slur
+N-425	PROFANITY	-	ﾊﾞｶﾔﾛｳ	-	half-width; NFKC gives バカヤロウ
+N-426	PROFANITY	-	f\U{0443}ck	-	Cyrillic u look-alike inside a Latin name
+N-501	EITHER	-	Scunthorpe	-	substring rule may reject it; acceptable for names
+N-502	EITHER	-	시발점	-	substring rule may reject it
+N-503	EITHER	-	สมศ\U{0E31}กด\U{0E34}\U{0E4C}	-	Thai with combining vowel signs (Mn): rejected by a strict letter rule; not a target language
+N-504	EITHER	-	राम	-	Devanagari with a spacing mark (Mc)
+N-505	EITHER	-	P\U{0430}\U{0443}pal	-	mixed Latin/Cyrillic look-alike
+N-506	EITHER	-	١٢٣ab	-	Arabic-Indic digits are Unicode digits (Nd)

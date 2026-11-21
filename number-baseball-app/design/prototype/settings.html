@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/proto.css">
+<style>
+  .scroll { flex: 1 1 auto; overflow: hidden; }
+  .sec-head { height: 48px; }
+  .scroll > .sec-head:first-child { height: 40px; }
+  .row .rt .t.danger { color: var(--c-out); }
+  .row .ext { color: var(--c-text3); width: 20px; height: 20px; }
+  .acct { padding: 4px 16px 12px; display: flex; align-items: baseline; gap: 2px; }
+  .acct .pname { font: var(--t-title); }
+</style>
+<script src="js/strings.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/proto.js"></script>
+<script>
+window.build = function (qs) {
+  const t = P.t;
+  const nav = (ic, k, sub, val, extra = '') => `<button class="row${sub ? '' : ' single'}" style="width:100%;text-align:left">${P.icon(ic, 'ic lead')}<span class="rt"><span class="t${extra}">${t(k)}</span>${sub ? `<span class="s">${t(sub)}</span>` : ''}</span>${val ? `<span class="val">${val}</span>` : ''}${P.icon('chevron_right', 'ic chev')}</button>`;
+  const ext = (ic, k) => `<button class="row single" style="width:100%;text-align:left">${P.icon(ic, 'ic lead')}<span class="rt"><span class="t">${t(k)}</span></span>${P.icon('open_in_new', 'ic ext')}</button>`;
+  const sw = (ic, k, sub, on) => `<div class="row" role="switch" aria-checked="${on}">${P.icon(ic, 'ic lead')}<span class="rt"><span class="t">${t(k)}</span>${sub ? `<span class="s">${t(sub)}</span>` : ''}</span><span class="switch${on ? ' on' : ''}"></span></div>`;
+  document.getElementById('app').innerHTML = `
+    <div class="sysbar"></div>
+    <header class="topbar">
+      <button class="iconbtn" aria-label="back">${P.icon('arrow_back')}</button>
+      <span class="tb-title">${t('settings')}</span>
+    </header>
+    <div class="scroll">
+      <div class="sec-head"><span class="sec-label">${t('secGame')}</span></div>
+      <div class="list">
+        ${nav('language', 'language', null, t('languageVal'))}
+        ${sw('volume_off', 'sound', 'soundSub', false)}
+        ${sw('mobile_vibrate', 'haptics', 'hapticsSub', true)}
+      </div>
+      <div class="sec-head"><span class="sec-label">${t('secChat')}</span></div>
+      <div class="list">
+        ${sw('notifications_off', 'muteChat', 'muteChatSub', false)}
+        ${nav('block', 'blocked', null, t('blockedVal'))}
+      </div>
+      <div class="sec-head"><span class="sec-label">${t('secAccount')}</span></div>
+      <div class="list">
+        ${nav('person', 'nickname', null, '새벽투수<span class="ptag">#4821</span>')}
+        ${nav('key', 'transfer', 'transferSub')}
+        ${nav('delete', 'deleteAcc', 'deleteSub', '', ' danger')}
+      </div>
+      <div class="sec-head"><span class="sec-label">${t('secAbout')}</span></div>
+      <div class="list">
+        ${nav('shield', 'privacyOptions', 'privacyOptionsSub')}
+        ${ext('policy', 'privacyPolicy')}
+        ${nav('description', 'licences')}
+        <div class="row single">${P.icon('info', 'ic lead')}<span class="rt"><span class="t">${t('version')}</span></span><span class="val num" style="font:var(--t-num-tag)">1.0.0 (1)</span></div>
+      </div>
+    </div>
+    <div class="gesture"></div>`;
+  if (qs.get('scroll')) { const sc = document.querySelector('.scroll'); document.querySelector('.topbar').classList.add('scrolled'); document.querySelector('.sysbar').classList.add('scrolled'); requestAnimationFrame(() => { sc.scrollTop = qs.get('scroll') === 'end' ? sc.scrollHeight : +qs.get('scroll'); }); }
+};
+</script>
+</head>
+<body>
+<div class="app" id="app"></div>
+</body>
+</html>

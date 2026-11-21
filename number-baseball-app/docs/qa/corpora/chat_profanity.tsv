@@ -25,29 +25,29 @@ P-EN-007	en	MASK	fuck	f_u_c_k	underscores
 P-EN-008	en	MASK	fuck	f*u*c*k	asterisks between letters
 P-EN-009	en	MASK	fuck	fuuuuuuck	stretched vowel (protocol 9.1 example)
 P-EN-010	en	MASK	fuck	ffffuuuucccckkkk	every letter stretched
-P-EN-011	en	MASK	fuck	f​uck	ZERO WIDTH SPACE
-P-EN-012	en	MASK	fuck	f‌uck	ZERO WIDTH NON-JOINER
-P-EN-013	en	MASK	fuck	f‍uck	ZERO WIDTH JOINER
-P-EN-014	en	MASK	fuck	f⁠uck	WORD JOINER
-P-EN-015	en	MASK	fuck	f­uck	SOFT HYPHEN
-P-EN-016	en	MASK	fuck	f﻿uck	ZERO WIDTH NO-BREAK SPACE (BOM)
+P-EN-011	en	MASK	fuck	f\U{200B}uck	ZERO WIDTH SPACE
+P-EN-012	en	MASK	fuck	f\U{200C}uck	ZERO WIDTH NON-JOINER
+P-EN-013	en	MASK	fuck	f\U{200D}uck	ZERO WIDTH JOINER
+P-EN-014	en	MASK	fuck	f\U{2060}uck	WORD JOINER
+P-EN-015	en	MASK	fuck	f\U{00AD}uck	SOFT HYPHEN
+P-EN-016	en	MASK	fuck	f\U{FEFF}uck	ZERO WIDTH NO-BREAK SPACE (BOM)
 P-EN-017	en	MASK	fuck	ｆｕｃｋ	full-width Latin
 P-EN-018	en	MASK	fuck	\U{1D41F}\U{1D42E}\U{1D41C}\U{1D424}	mathematical bold letters
 P-EN-019	en	MASK	fuck	ⓕⓤⓒⓚ	circled letters
-P-EN-020	en	MASK	fuck	fuсk	Cyrillic es U+0441 for c (mixed script)
-P-EN-021	en	MASK	fuck	fսck	Armenian seh U+057D for u
+P-EN-020	en	MASK	fuck	fu\U{0441}k	Cyrillic es U+0441 for c (mixed script)
+P-EN-021	en	MASK	fuck	f\U{057D}ck	Armenian seh U+057D for u
 P-EN-022	en	MASK	fuck	fúck	accented vowel
-P-EN-023	en	MASK	fuck	f̷u̷c̷k̷	combining short solidus overlay on every letter
+P-EN-023	en	MASK	fuck	f\U{0337}u\U{0337}c\U{0337}k\U{0337}	combining short solidus overlay on every letter
 P-EN-024	en	MASK	fuck	fvck	v for u
 P-EN-025	en	MASK	fuck	f\nu\nc\nk	single letters on separate lines (newline is a control char)
-P-EN-026	en	MASK	fuck	f‮u‬ck	bidi override inside the word
+P-EN-026	en	MASK	fuck	f\U{202E}u\U{202C}ck	bidi override inside the word
 P-EN-027	en	MASK	fuck	fuk	common misspelling; see F-EN Fukuoka trap
 P-EN-028	en	MASK	shit	shit	plain
 P-EN-029	en	MASK	shit	sh1t	leet 1
 P-EN-030	en	MASK	shit	$hit	leet $
 P-EN-031	en	MASK	shit	5h!t	leet 5 and !
 P-EN-032	en	MASK	shit	shiiiiit	stretched
-P-EN-033	en	MASK	shit	ѕhіt	Cyrillic dze U+0455 and byelorussian i U+0456
+P-EN-033	en	MASK	shit	\U{0455}h\U{0456}t	Cyrillic dze U+0455 and byelorussian i U+0456
 P-EN-034	en	MASK	shit	s h i t	spaced
 P-EN-035	en	MASK	bitch	bitch	plain
 P-EN-036	en	MASK	bitch	b1tch	leet
@@ -84,8 +84,8 @@ P-KO-013	ko	MASK	ㅅㅂ	ㅅ.ㅂ	initial consonants dotted
 P-KO-014	ko	MASK	tlqkf	tlqkf	시발 typed on a QWERTY layout with the Korean IME off
 P-KO-015	ko	MASK	sibal	sibal	romanized
 P-KO-016	ko	MASK	ssibal	ssibal	romanized tense
-P-KO-017	ko	MASK	시발	시​발	zero-width space
-P-KO-018	ko	MASK	시발	시발	conjoining jamo (NFD form of 시발); NFC must compose it
+P-KO-017	ko	MASK	시발	시\U{200B}발	zero-width space
+P-KO-018	ko	MASK	시발	\U{1109}\U{1175}\U{1107}\U{1161}\U{11AF}	conjoining jamo (NFD form of 시발); NFC must compose it
 P-KO-019	ko	MASK	시발	ㅅㅣㅂㅏㄹ	compatibility jamo spelled out
 P-KO-020	ko	MASK	씨발	씌발	vowel variant
 P-KO-021	ko	MASK	병신	병신	plain
@@ -114,7 +114,7 @@ P-KO-043	ko	MASK	ㅗ	ㅗㅗㅗ	obscene gesture jamo
 P-KO-044	ko	MASK	한남충	한남충	hate term
 P-KO-045	ko	MASK	김치녀	김치녀	hate term
 P-KO-046	ko	MASK	씨발	씨발놈아	inflected
-P-KO-047	ko	MASK	시발	ﾺￜ발	half-width Hangul letters (U+FFBA, U+FFDC) for 시 jamo; NFKC folds them
+P-KO-047	ko	MASK	시발	\U{FFB5}\U{FFDC}발	half-width Hangul letters (U+FFB5 SIOS, U+FFDC I) for 시; NFKC folds them
 P-KO-048	ko	EITHER	졸라	졸라 짜증나	mild slang; collides with 허리띠를 졸라 매고 (F-KO-010)
 P-KO-049	ko	EITHER	꺼져	꺼져	mild; collides with 불이 꺼져 있어 (F-KO-008)
 P-JA-001	ja	MASK	死ね	死ね	plain
@@ -124,7 +124,7 @@ P-JA-004	ja	MASK	シネ	ｼﾈ	half-width katakana (NFKC)
 P-JA-005	ja	MASK	氏ね	氏ね	classic forum evasion
 P-JA-006	ja	MASK	死ね	死 ね	spaced
 P-JA-007	ja	MASK	しね	し ね	spaced hiragana
-P-JA-008	ja	MASK	死ね	死​ね	zero-width space
+P-JA-008	ja	MASK	死ね	死\U{200B}ね	zero-width space
 P-JA-009	ja	MASK	くそ	くそ	plain
 P-JA-010	ja	MASK	クソ	クソ	katakana
 P-JA-011	ja	MASK	クソ	ｸｿ	half-width katakana
@@ -138,7 +138,7 @@ P-ZH-001	zh-CN	MASK	傻逼	傻逼	plain
 P-ZH-002	zh-CN	MASK	傻逼	傻b	Latin b
 P-ZH-003	zh-CN	MASK	傻逼	傻B	Latin B
 P-ZH-004	zh-CN	MASK	傻逼	傻 逼	spaced
-P-ZH-005	zh-CN	MASK	傻逼	傻​逼	zero-width
+P-ZH-005	zh-CN	MASK	傻逼	傻\U{200B}逼	zero-width
 P-ZH-006	zh-CN	MASK	煞笔	煞笔	homophone
 P-ZH-007	zh-CN	MASK	傻屄	傻屄	original character
 P-ZH-008	zh-CN	MASK	操你妈	操你妈	plain
@@ -164,12 +164,12 @@ P-ES-009	es	MASK	mierda	mierdaaaa	stretched
 P-ES-010	es	MASK	joder	joder	plain
 P-ES-011	es	MASK	joder	j0der	leet
 P-ES-012	es	MASK	cabron	cabrón	accented
-P-ES-013	es	MASK	cabron	cabrón	decomposed accent (NFD)
+P-ES-013	es	MASK	cabron	cabro\U{0301}n	decomposed accent (NFD)
 P-ES-014	es	MASK	cabron	cabron	no accent
 P-ES-015	es	MASK	pendejo	pendej0	leet
 P-ES-016	es	MASK	gilipollas	gilipollas	plain
 P-ES-017	es	MASK	coño	coño	plain
-P-ES-018	es	MASK	coño	coño	decomposed tilde (NFD)
+P-ES-018	es	MASK	coño	con\U{0303}o	decomposed tilde (NFD)
 P-ES-019	es	MASK	maricon	maricón	slur
 P-ES-020	es	MASK	chinga	chinga tu madre	phrase
 P-FR-001	fr	MASK	putain	putain	plain
@@ -183,13 +183,13 @@ P-FR-008	fr	MASK	salope	sal0pe	leet
 P-FR-009	fr	MASK	fdp	fdp	abbreviation (fils de pute)
 P-FR-010	fr	MASK	nique	nique ta mère	phrase
 P-FR-011	fr	MASK	encule	enculé	plain
-P-FR-012	fr	MASK	encule	enculé	decomposed accent
+P-FR-012	fr	MASK	encule	encule\U{0301}	decomposed accent
 P-FR-013	fr	MASK	pute	pute	plain
 P-FR-014	fr	MASK	merde	MERDE!!!	upper with punctuation
 P-DE-001	de	MASK	scheisse	scheiße	plain with sharp s
 P-DE-002	de	MASK	scheisse	scheisse	ss spelling
 P-DE-003	de	MASK	scheisse	SCHEISSE	upper
-P-DE-004	de	MASK	scheisse	scheiẞe	capital sharp s U+1E9E
+P-DE-004	de	MASK	scheisse	schei\U{1E9E}e	capital sharp s U+1E9E
 P-DE-005	de	MASK	arschloch	Arschloch	plain
 P-DE-006	de	MASK	arschloch	A r s c h l o c h	spaced
 P-DE-007	de	MASK	arschloch	arschl0ch	leet
@@ -217,8 +217,8 @@ P-PT-015	pt-BR	MASK	cuzao	cuzão	plain
 P-RU-001	ru	MASK	сука	сука	plain
 P-RU-002	ru	MASK	сука	СУКА	upper
 P-RU-003	ru	MASK	сука	с у к а	spaced
-P-RU-004	ru	MASK	сука	сyка	Latin y inside Cyrillic word
-P-RU-005	ru	MASK	сука	cуka	Latin c, k, a with Cyrillic u
+P-RU-004	ru	MASK	сука	с\U{0079}ка	Latin y inside Cyrillic word
+P-RU-005	ru	MASK	сука	c\U{0443}ka	Latin c, k, a with Cyrillic u
 P-RU-006	ru	MASK	suka	suka	transliterated; see Asuka trap
 P-RU-007	ru	MASK	сука	сууука	stretched
 P-RU-008	ru	MASK	блядь	блядь	plain
@@ -226,11 +226,11 @@ P-RU-009	ru	MASK	блядь	бл@дь	leet
 P-RU-010	ru	MASK	блять	блять	variant; see употреблять trap
 P-RU-011	ru	MASK	бля	бля	short
 P-RU-012	ru	MASK	хуй	хуй	plain; see застрахуйте trap
-P-RU-013	ru	MASK	хуй	xуй	Latin x
-P-RU-014	ru	MASK	хуй	хyй	Latin y
+P-RU-013	ru	MASK	хуй	\U{0078}уй	Latin x
+P-RU-014	ru	MASK	хуй	х\U{0079}й	Latin y
 P-RU-015	ru	MASK	хуй	х у й	spaced
 P-RU-016	ru	MASK	пизда	пизда	plain
-P-RU-017	ru	MASK	пизда	пиzда	Latin z
+P-RU-017	ru	MASK	пизда	пи\U{007A}да	Latin z
 P-RU-018	ru	MASK	пиздец	пиздец	plain
 P-RU-019	ru	MASK	ебаный	ёбаный	with yo
 P-RU-020	ru	MASK	ебаный	ебаный	with e
@@ -241,7 +241,7 @@ P-RU-024	ru	MASK	хуйня	хуйня	plain
 P-VI-001	vi	MASK	địt	địt	plain
 P-VI-002	vi	MASK	địt	đ1t	leet
 P-VI-003	vi	MASK	địt	đ.ị.t	dotted
-P-VI-004	vi	MASK	địt	địt	decomposed dot below (NFD)
+P-VI-004	vi	MASK	địt	đi\U{0323}t	decomposed dot below (NFD)
 P-VI-005	vi	MASK	địt mẹ	địt mẹ	phrase
 P-VI-006	vi	MASK	đụ má	đụ má	phrase
 P-VI-007	vi	MASK	đm	đm	abbreviation (with đ)
@@ -259,4 +259,4 @@ P-MX-002	mixed	MASK	сука|fuck	сука fuck	Cyrillic + Latin
 P-MX-003	mixed	MASK	fuck	\R[94:a] fuck	99 code points: profanity right at the end of a near-limit line
 P-MX-004	mixed	MASK	fuck|shit	fuck fuck shit fuck	repeated profanity, every occurrence masked
 P-MX-005	mixed	MASK	fuck	ｆ ｕ ｃ ｋ	full-width AND spaced
-P-MX-006	mixed	MASK	시발	ㅅㅤㅂ	Hangul filler (a Unicode letter!) as separator
+P-MX-006	mixed	MASK	시발	ㅅ\U{3164}ㅂ	Hangul filler (a Unicode letter!) as separator

@@ -7,36 +7,38 @@
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/proto.css">
 <style>
-  .h-head { flex: none; height: 56px; display: flex; align-items: center; padding: 0 4px 0 16px; gap: 8px; }
-  .mark { display: grid; grid-template-columns: repeat(3, 6px); gap: 3px; padding: 2px; }
+  .h-head { flex: none; height: 56px; display: flex; align-items: center; padding: 0 4px 0 16px; gap: 12px; }
   .brand { font: var(--t-subtitle); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .me-band { flex: none; padding: 8px 16px 20px; display: flex; align-items: flex-end; gap: 16px; }
-  .me-band .who { flex: 1; min-width: 0; }
-  .me-band .who .cap { font: var(--t-caption); color: var(--c-text3); }
-  .me-band .who .pname { font: var(--t-title); }
-  .line { display: flex; gap: 0; flex: none; }
-  .line > div { display: flex; flex-direction: column; align-items: center; min-width: 44px; padding: 0 8px; }
-  .line > div + div { border-left: 1px solid var(--c-line); }
-  .line .v { font: var(--t-num-stat); font-feature-settings: "tnum" 1; }
-  .line .k { font: var(--t-micro); color: var(--c-text3); }
-  .modes { flex: none; }
+  .hero { flex: none; padding: 12px 16px 0; }
+  .hero .cap { font: var(--t-caption); color: var(--c-text3); }
+  .hero .pname { font: var(--t-title); display: block; margin-top: 2px; }
+  .hero .ptag { font-size: 18px; line-height: 28px; }
+  .record { display: flex; align-items: flex-end; margin-top: 16px; }
+  .record > div { display: flex; flex-direction: column; gap: 2px; padding-right: 20px; }
+  .record > div + div { padding-left: 20px; border-left: 1px solid var(--c-line); }
+  .record .v { font: var(--t-num-stat); font-feature-settings: "tnum" 1; }
+  .record .v.sm { color: var(--c-text2); }
+  .record .k { font: var(--t-caption); color: var(--c-text3); }
+  .formrow { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+  .formrow .cap { flex: none; }
+  .spacer { flex: 1 1 auto; min-height: 16px; }
+  .modes .sec-head { padding-left: 16px; }
   .row .lead-box { width: 40px; height: 40px; border-radius: var(--r-m); background: var(--c-surface2); display: grid; place-items: center; color: var(--c-chalk); flex: none; }
   .row + .row::before { left: 72px; }
-  .spacer { flex: 1 1 auto; min-height: 16px; }
-  .dock { flex: none; padding: 16px 16px 24px; border-top: 1px solid var(--c-line); background: var(--c-surface1); display: flex; flex-direction: column; gap: 12px; }
-  .dock .dh { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-  .dock .dh .t { font: var(--t-subtitle); }
-  .dock .dh .s { font: var(--t-caption); color: var(--c-text3); text-align: right; }
-  .howto { display: flex; justify-content: center; padding: 0 0 4px; }
+  .dock { flex: none; padding: 16px 16px 24px; margin-top: 8px; border-top: 1px solid var(--c-line); background: var(--c-surface1); display: flex; flex-direction: column; gap: 12px; }
+  .dock .dh .t { font: var(--t-subtitle); display: block; }
+  .dock .dh .s { font: var(--t-caption); color: var(--c-text3); display: block; margin-top: 2px; }
 </style>
 <script src="js/strings.js"></script>
 <script src="js/icons.js"></script>
 <script src="js/proto.js"></script>
 <script>
 window.build = function (qs) {
-  const noAd = qs.get('ad') === 'none';
-  if (noAd) document.querySelector('.adslot').remove();
+  if (qs.get('ad') === 'none') document.querySelector('.adslot').remove();
   document.querySelectorAll('.seg [data-n]').forEach((b) => { b.innerHTML = P.digitsLabel(+b.dataset.n); });
+  document.querySelector('.h-head').insertAdjacentHTML('afterbegin', P.mark());
+  const form = 'WWLWDLWWLW'; // oldest -> newest
+  document.querySelector('.form').innerHTML = form.split('').map((r) => `<span class="lamp ${r === 'W' ? 'on st' : r === 'D' ? 'draw' : ''}"></span>`).join('');
 };
 </script>
 </head>
@@ -44,43 +46,45 @@ window.build = function (qs) {
 <div class="app">
   <div class="sysbar"></div>
   <header class="h-head">
-    <span class="mark" aria-hidden="true"><span class="lamp s on st"></span><span class="lamp s on st"></span><span class="lamp s on st"></span></span>
     <span class="brand" data-t="appName"></span>
     <button class="iconbtn dim" data-icon="help" data-al="howTo"></button>
     <button class="iconbtn dim" data-icon="settings" data-al="settings"></button>
   </header>
 
-  <section class="me-band">
-    <div class="who">
-      <div class="cap" data-t="record"></div>
-      <div class="pname">새벽투수<span class="ptag">#4821</span></div>
+  <section class="hero">
+    <span class="cap" data-t="record"></span>
+    <span class="pname">새벽투수<span class="ptag">#4821</span></span>
+    <div class="record">
+      <div><span class="v">12</span><span class="k" data-t="win"></span></div>
+      <div><span class="v">8</span><span class="k" data-t="loss"></span></div>
+      <div><span class="v">3</span><span class="k" data-t="draw"></span></div>
+      <div><span class="v sm">52%</span><span class="k" data-t="winRate"></span></div>
     </div>
-    <div class="line" aria-label="12승 8패 3무">
-      <div><span class="v num">12</span><span class="k" data-t="win"></span></div>
-      <div><span class="v num">8</span><span class="k" data-t="loss"></span></div>
-      <div><span class="v num">3</span><span class="k" data-t="draw"></span></div>
-    </div>
+    <div class="formrow"><span class="cap" data-t="recentForm"></span><span class="form" role="img" aria-label="승 승 패 승 무 패 승 승 패 승"></span></div>
   </section>
 
-  <nav class="modes list">
-    <button class="row" style="width:100%;text-align:left">
-      <span class="lead-box" data-icon="memory"></span>
-      <span class="rt"><span class="t" data-t="cpuTitle"></span><span class="s" data-t="cpuSub"></span></span>
-      <span data-icon="chevron_right" data-icon-cls="ic chev"></span>
-    </button>
-    <button class="row" style="width:100%;text-align:left">
-      <span class="lead-box" data-icon="group"></span>
-      <span class="rt"><span class="t" data-t="roomTitle"></span><span class="s" data-t="roomSub"></span></span>
-      <span data-icon="chevron_right" data-icon-cls="ic chev"></span>
-    </button>
-    <button class="row" style="width:100%;text-align:left">
-      <span class="lead-box" data-icon="login"></span>
-      <span class="rt"><span class="t" data-t="joinTitle"></span><span class="s" data-t="joinSub"></span></span>
-      <span data-icon="chevron_right" data-icon-cls="ic chev"></span>
-    </button>
-  </nav>
-
   <div class="spacer"></div>
+
+  <nav class="modes">
+    <div class="sec-head"><span class="sec-label" data-t="otherModes"></span></div>
+    <div class="list">
+      <button class="row" style="width:100%;text-align:left">
+        <span class="lead-box" data-icon="memory"></span>
+        <span class="rt"><span class="t" data-t="cpuTitle"></span><span class="s" data-t="cpuSub"></span></span>
+        <span data-icon="chevron_right" data-icon-cls="ic chev"></span>
+      </button>
+      <button class="row" style="width:100%;text-align:left">
+        <span class="lead-box" data-icon="group"></span>
+        <span class="rt"><span class="t" data-t="roomTitle"></span><span class="s" data-t="roomSub"></span></span>
+        <span data-icon="chevron_right" data-icon-cls="ic chev"></span>
+      </button>
+      <button class="row" style="width:100%;text-align:left">
+        <span class="lead-box" data-icon="login"></span>
+        <span class="rt"><span class="t" data-t="joinTitle"></span><span class="s" data-t="joinSub"></span></span>
+        <span data-icon="chevron_right" data-icon-cls="ic chev"></span>
+      </button>
+    </div>
+  </nav>
 
   <section class="dock">
     <div class="dh"><span class="t" data-t="quickTitle"></span><span class="s" data-t="quickSub"></span></div>

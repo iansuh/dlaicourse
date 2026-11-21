@@ -1,0 +1,169 @@
+# Malformed / hostile WebSocket messages (QA-owned). Spec: docs/protocol.md sections 4, 5, 11, 12.
+# Columns: id, layer, state, expect, frame, note.
+# layer:  DECODE    ProtocolJson.decodeFromString<ClientMessage>(frame) must throw; the server answers error malformed_message
+#                   and keeps the connection open.                           (core test: ProtocolDecodingQaTest)
+#         TOLERATED either malformed_message, or processed exactly like the canonical message (expect = canonical answer).
+#         SERVER    decodes; the server must answer error <expect> (alternatives separated by '|'), keep the connection open,
+#                   and change no state (a following resync shows the same room version / queue state).
+#         SIZE      size limits: expect is an error code, 'pong' (processed), or close:<code>.
+# state:  ANY (fresh connection, no seat) | QUEUED | LOBBY_HOST (private room host, alone, teamSize 2) |
+#         CHOOSING (quick 3-digit duel, nobody chose) | GUESSING (quick 3-digit duel, round 1, nobody guessed yet).
+# expect 'ok' = the server must accept the message (ack when rid is set).
+# Binary frames, fragmented messages and frames over 16 KB are produced by test code (MalformedFrameQaTest), not listed here.
+# Format: UTF-8, tab-separated, '#' starts a comment line, first non-comment line is the header.
+# Escapes in text columns (decoded by the QA loaders, QaCorpus.kt):
+#   \uXXXX (4 hex)   \U{X..X} (1-6 hex, any code point)   \n \r \t \0   \s (space)   \\ (backslash)
+#   \R[N:TEXT] repeats TEXT N times (inside TEXT write \] for ']').
+# Invisible, control, bidi and confusable characters are ALWAYS written as escapes so a reviewer can see them;
+# QaCorporaWellFormedTest fails if a raw invisible/control/bidi character appears in this file.
+id	layer	state	expect	frame	note
+M-001	DECODE	ANY	malformed_message		empty text frame
+M-002	DECODE	ANY	malformed_message	   	whitespace only
+M-003	DECODE	ANY	malformed_message	null	JSON null
+M-004	DECODE	ANY	malformed_message	true	
+M-005	DECODE	ANY	malformed_message	123	
+M-006	DECODE	ANY	malformed_message	"ping"	JSON string
+M-007	DECODE	ANY	malformed_message	[]	array root
+M-008	DECODE	ANY	malformed_message	[{"type":"ping"}]	array of messages
+M-009	DECODE	ANY	malformed_message	{	truncated
+M-010	DECODE	ANY	malformed_message	{"type":	truncated
+M-011	DECODE	ANY	malformed_message	{"type":"ping"	missing brace
+M-012	DECODE	ANY	malformed_message	{}	missing type
+M-013	DECODE	ANY	malformed_message	{"type":null}	
+M-014	DECODE	ANY	malformed_message	{"type":1}	
+M-015	DECODE	ANY	malformed_message	{"type":[]}	
+M-016	DECODE	ANY	malformed_message	{"type":{}}	
+M-017	DECODE	ANY	malformed_message	{"type":""}	
+M-018	DECODE	ANY	malformed_message	{"type":"no_such_type"}	unknown type (server side; clients ignore unknown types)
+M-019	DECODE	ANY	malformed_message	{"type":"PING"}	type is case-sensitive
+M-020	DECODE	ANY	malformed_message	{"type":"ping "}	trailing space in type
+M-021	DECODE	ANY	malformed_message	{'type':'ping'}	single quotes
+M-022	DECODE	ANY	malformed_message	{type:"ping"}	unquoted key (lenient JSON must be off)
+M-023	DECODE	ANY	malformed_message	{"type":ping}	unquoted value
+M-024	DECODE	ANY	malformed_message	{"type":"ping",}	trailing comma
+M-025	DECODE	ANY	malformed_message	/*c*/{"type":"ping"}	comment
+M-026	DECODE	ANY	malformed_message	{"type":"ping"}{"type":"ping"}	two objects in one frame
+M-027	DECODE	ANY	malformed_message	{"type":"ping"} x	trailing garbage
+M-028	DECODE	ANY	malformed_message	{"type":"queue_join"}	missing required field
+M-029	DECODE	ANY	malformed_message	{"type":"queue_join","digits":null}	null for Int
+M-030	DECODE	ANY	malformed_message	{"type":"queue_join","digits":99999999999}	Int overflow
+M-031	DECODE	ANY	malformed_message	{"type":"queue_join","digits":[3]}	array for Int
+M-032	DECODE	ANY	malformed_message	{"type":"queue_join","digits":true}	boolean for Int
+M-033	DECODE	ANY	malformed_message	{"type":"guess","guess":null,"round":1}	null for String
+M-034	DECODE	ANY	malformed_message	{"type":"guess","guess":["1","2","3"],"round":1}	array for String
+M-035	DECODE	ANY	malformed_message	{"type":"guess","guess":"123"}	missing round
+M-036	DECODE	ANY	malformed_message	{"type":"team_set","team":"C"}	unknown enum value
+M-037	DECODE	ANY	malformed_message	{"type":"team_set","team":"a"}	enum is case-sensitive
+M-038	DECODE	ANY	malformed_message	{"type":"room_create","settings":{"digits":3,"teamSize":1}}	missing roundSeconds
+M-039	DECODE	ANY	malformed_message	{"type":"room_create","settings":null}	null settings
+M-040	DECODE	ANY	malformed_message	{"type":"room_create","settings":"3,1,60"}	string for object
+M-041	DECODE	ANY	malformed_message	{"type":"ping","rid":"x"}	rid must be a number
+M-042	DECODE	ANY	malformed_message	{"type":"ping","rid":1.5}	fractional rid
+M-043	DECODE	ANY	malformed_message	{"type":"ping","rid":99999999999999999999}	rid overflows Long
+M-044	DECODE	ANY	malformed_message	{"type":"chat","text":"\\u00"}	broken JSON escape
+M-045	DECODE	ANY	malformed_message	{"type":"chat","text":"abc}	unterminated string
+M-046	DECODE	ANY	malformed_message	{"type":"ping","x":NaN}	NaN is not JSON
+M-047	DECODE	ANY	malformed_message	\U{FEFF}{"type":"ping"}	leading BOM
+M-048	DECODE	ANY	malformed_message	{"type":"queue_join","digits":3.5}	fractional Int
+T-001	TOLERATED	ANY	ok	{"type":"ping","extra":"field"}	unknown keys are ignored (protocol 1)
+T-002	TOLERATED	ANY	ok	{"type":"ping","x":{"y":[1,2,{"z":null}]}}	nested unknown key
+T-003	TOLERATED	ANY	ok	{"rid":5,"type":"ping"}	type not first
+T-004	TOLERATED	ANY	invalid_settings	{"type":"queue_join","digits":"7"}	quoted number
+T-005	TOLERATED	ANY	invalid_settings	{"type":"queue_join","digits":7.0}	integral float
+T-006	TOLERATED	ANY	invalid_settings	{"type":"queue_join","digits":7e0}	exponent
+T-007	TOLERATED	ANY	ok	{"type":"ping","type":"ping"}	duplicate key with same value
+T-008	TOLERATED	ANY	ok|not_queued	{"type":"ping","type":"queue_leave"}	duplicate type: any consistent interpretation, never a crash
+T-009	TOLERATED	ANY	ok	{"type":"ping","rid":-1}	negative rid (spec says positive; DEF)
+T-010	TOLERATED	ANY	ok	{"type":"ping","rid":0}	zero rid
+T-011	TOLERATED	GUESSING	ok	{"type":"guess","guess":123,"round":1}	unquoted number for a String field: rejected, or read as the guess "123"
+T-012	TOLERATED	LOBBY_HOST	chat_empty	{"type":"chat","text":"\\ud800"}	lone surrogate via JSON escape: must never be broadcast
+T-013	TOLERATED	LOBBY_HOST	ok	{"type":"chat","text":"a\U{0001}b"}	raw control character inside a JSON string (invalid JSON)
+T-014	TOLERATED	ANY	pong|malformed_message	{"type":"ping","pad":\R[900:[]\R[900:\]]}	deeply nested unknown value under the 2048-byte cap: no stack overflow
+V-001	SERVER	ANY	invalid_settings	{"type":"queue_join","digits":2}	
+V-002	SERVER	ANY	invalid_settings	{"type":"queue_join","digits":7}	
+V-003	SERVER	ANY	invalid_settings	{"type":"queue_join","digits":0}	
+V-004	SERVER	ANY	invalid_settings	{"type":"queue_join","digits":-1}	
+V-005	SERVER	ANY	invalid_settings	{"type":"queue_join","digits":2147483647}	
+V-006	SERVER	ANY	not_queued	{"type":"queue_leave"}	
+V-007	SERVER	ANY	not_in_room	{"type":"room_leave"}	
+V-008	SERVER	ANY	not_in_duel|not_in_room	{"type":"secret","secret":"123"}	error for duel messages without a seat is unspecified (DEF-034)
+V-009	SERVER	ANY	not_in_duel|not_in_room	{"type":"guess","guess":"123","round":1}	
+V-010	SERVER	ANY	not_in_duel|not_in_room	{"type":"forfeit"}	
+V-011	SERVER	ANY	not_in_room	{"type":"chat","text":"hi"}	
+V-012	SERVER	ANY	not_in_room	{"type":"phrase","phraseId":"hello"}	
+V-013	SERVER	ANY	not_in_room	{"type":"room_settings","settings":{"digits":3,"teamSize":1,"roundSeconds":60}}	unspecified in the table (DEF-034)
+V-014	SERVER	ANY	not_in_room	{"type":"team_set","team":"B"}	
+V-015	SERVER	ANY	not_in_room	{"type":"room_reset"}	
+V-016	SERVER	ANY	room_not_found	{"type":"room_join","code":""}	
+V-017	SERVER	ANY	room_not_found	{"type":"room_join","code":"ABCD"}	4 characters
+V-018	SERVER	ANY	room_not_found	{"type":"room_join","code":"ABCDEF"}	6 characters
+V-019	SERVER	ANY	room_not_found	{"type":"room_join","code":"%%%%%"}	
+V-020	SERVER	ANY	room_not_found	{"type":"room_join","code":"' OR 1=1"}	SQL
+V-021	SERVER	ANY	room_not_found	{"type":"room_join","code":"\R[1500:A]"}	very long code under the byte cap
+V-022	SERVER	ANY	room_not_found	{"type":"room_join","code":"\U{FF21}\U{FF22}\U{FF23}\U{FF24}\U{FF25}"}	full-width letters must not match a real code unless NFKC is applied consistently
+V-023	SERVER	ANY	invalid_settings	{"type":"room_create","settings":{"digits":7,"teamSize":1,"roundSeconds":60}}	
+V-024	SERVER	ANY	invalid_settings	{"type":"room_create","settings":{"digits":2,"teamSize":1,"roundSeconds":60}}	
+V-025	SERVER	ANY	invalid_settings	{"type":"room_create","settings":{"digits":3,"teamSize":0,"roundSeconds":60}}	
+V-026	SERVER	ANY	invalid_settings	{"type":"room_create","settings":{"digits":3,"teamSize":6,"roundSeconds":60}}	
+V-027	SERVER	ANY	invalid_settings	{"type":"room_create","settings":{"digits":3,"teamSize":1,"roundSeconds":45}}	
+V-028	SERVER	ANY	invalid_settings	{"type":"room_create","settings":{"digits":3,"teamSize":1,"roundSeconds":-30}}	
+V-029	SERVER	ANY	invalid_settings	{"type":"room_create","settings":{"digits":3,"teamSize":1,"roundSeconds":1}}	
+V-030	SERVER	ANY	invalid_settings	{"type":"room_create","settings":{"digits":3,"teamSize":-2147483648,"roundSeconds":60}}	
+V-101	SERVER	QUEUED	already_queued	{"type":"queue_join","digits":3}	
+V-102	SERVER	QUEUED	already_in_room	{"type":"room_create","settings":{"digits":3,"teamSize":1,"roundSeconds":60}}	protocol 5: also when queued
+V-103	SERVER	QUEUED	already_in_room	{"type":"room_join","code":"ABCDE"}	
+V-201	SERVER	LOBBY_HOST	already_in_room	{"type":"room_create","settings":{"digits":3,"teamSize":1,"roundSeconds":60}}	
+V-202	SERVER	LOBBY_HOST	already_in_room	{"type":"queue_join","digits":3}	
+V-203	SERVER	LOBBY_HOST	not_in_duel|wrong_phase	{"type":"secret","secret":"123"}	lobby has no duel
+V-204	SERVER	LOBBY_HOST	not_in_duel|wrong_phase	{"type":"guess","guess":"123","round":1}	
+V-205	SERVER	LOBBY_HOST	not_in_duel|wrong_phase	{"type":"forfeit"}	
+V-206	SERVER	LOBBY_HOST	invalid_settings	{"type":"room_settings","settings":{"digits":3,"teamSize":6,"roundSeconds":60}}	
+V-207	SERVER	LOBBY_HOST	invalid_settings	{"type":"room_settings","settings":{"digits":9,"teamSize":2,"roundSeconds":60}}	
+V-208	SERVER	LOBBY_HOST	not_found	{"type":"team_set","team":"B","playerId":"nobody000000"}	
+V-209	SERVER	LOBBY_HOST	wrong_phase	{"type":"room_reset"}	reset only when finished
+V-210	SERVER	LOBBY_HOST	unknown_phrase	{"type":"phrase","phraseId":"nope"}	
+V-211	SERVER	LOBBY_HOST	unknown_phrase	{"type":"phrase","phraseId":""}	
+V-212	SERVER	LOBBY_HOST	unknown_phrase	{"type":"phrase","phraseId":"HELLO"}	ids are case-sensitive
+V-213	SERVER	LOBBY_HOST	chat_empty	{"type":"chat","text":""}	
+V-214	SERVER	LOBBY_HOST	chat_empty	{"type":"chat","text":"   "}	
+V-215	SERVER	LOBBY_HOST	chat_empty	{"type":"chat","text":"\\u200b\\u200b"}	zero-width only
+V-216	SERVER	LOBBY_HOST	chat_too_long	{"type":"chat","text":"\R[101:a]"}	
+V-217	SERVER	LOBBY_HOST	chat_empty	{"type":"chat","text":"\\ud83d\\ude00"}	emoji only, sent as a JSON surrogate pair
+V-301	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"12"}	too short
+V-302	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"1234"}	too long
+V-303	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"112"}	repeated digit
+V-304	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"12a"}	letter
+V-305	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"\U{FF11}\U{FF12}\U{FF13}"}	full-width digits
+V-306	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"\U{0661}\U{0662}\U{0663}"}	Arabic-Indic digits (Char.isDigit() is true for them)
+V-307	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"\U{1D7CF}\U{1D7D0}\U{1D7D1}"}	mathematical bold digits
+V-308	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"\U{0967}\U{0968}\U{0969}"}	Devanagari digits
+V-309	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":" 123"}	leading space
+V-310	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"123 "}	trailing space
+V-311	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"1 3"}	inner space
+V-312	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"+12"}	
+V-313	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"-12"}	
+V-314	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"1.2"}	
+V-315	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":""}	
+V-316	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"12\\u200b3"}	zero-width inside
+V-317	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"0x1"}	
+V-318	SERVER	CHOOSING	invalid_secret	{"type":"secret","secret":"\\u0000123"}	NUL prefix
+V-319	SERVER	CHOOSING	wrong_phase	{"type":"guess","guess":"123","round":0}	guess while choosing
+V-320	SERVER	CHOOSING	not_host|wrong_phase	{"type":"room_settings","settings":{"digits":3,"teamSize":1,"roundSeconds":0}}	quick rooms have no host
+V-321	SERVER	CHOOSING	not_host|wrong_phase	{"type":"room_reset"}	
+V-322	SERVER	CHOOSING	not_host|wrong_phase	{"type":"team_set","team":"B"}	
+V-323	SERVER	CHOOSING	match_in_progress|already_in_room	{"type":"room_join","code":"ABCDE"}	
+V-401	SERVER	GUESSING	invalid_guess	{"type":"guess","guess":"12","round":1}	
+V-402	SERVER	GUESSING	invalid_guess	{"type":"guess","guess":"112","round":1}	
+V-403	SERVER	GUESSING	invalid_guess	{"type":"guess","guess":"\U{FF11}\U{FF12}\U{FF13}","round":1}	full-width digits
+V-404	SERVER	GUESSING	invalid_guess	{"type":"guess","guess":"\U{0661}\U{0662}\U{0663}","round":1}	Arabic-Indic digits
+V-405	SERVER	GUESSING	stale_round	{"type":"guess","guess":"123","round":0}	
+V-406	SERVER	GUESSING	stale_round	{"type":"guess","guess":"123","round":2}	
+V-407	SERVER	GUESSING	stale_round	{"type":"guess","guess":"123","round":-1}	
+V-408	SERVER	GUESSING	stale_round	{"type":"guess","guess":"123","round":2147483647}	
+V-409	SERVER	GUESSING	secret_already_set|wrong_phase	{"type":"secret","secret":"456"}	secret is immutable
+Z-001	SIZE	ANY	pong	{"type":"ping","pad":"\R[2024:a]"}	exactly 2048 UTF-8 bytes: processed
+Z-002	SIZE	ANY	message_too_large	{"type":"ping","pad":"\R[2025:a]"}	2049 bytes: error, connection stays open
+Z-003	SIZE	ANY	message_too_large	{"type":"ping","pad":"\R[675:가]"}	675 x 3 bytes + 24 = 2049 bytes: the cap is bytes, not characters
+Z-004	SIZE	LOBBY_HOST	message_too_large	{"type":"chat","text":"\R[3000:a]"}	oversized chat
+Z-005	SIZE	LOBBY_HOST	message_too_large	{"type":"chat","text":"\R[700:\\u200b]"}	700 escaped ZWSP = 4200 bytes on the wire
+Z-006	SIZE	ANY	close:1009	{"type":"ping","pad":"\R[17000:a]"}	frame over 16 KB closes with 1009

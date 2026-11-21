@@ -113,7 +113,7 @@ class ComputerPlayer(
     }
 
     /** Easy remembers a little more for long numbers so a game does not drag on forever. */
-    private fun easyMemory(): Int = if (digits <= 4) 2 else 3
+    private fun easyMemory(): Int = if (digits <= 4) 3 else 4
 
     // ---- NORMAL ----
 
@@ -209,8 +209,8 @@ class ComputerPlayer(
     }
 
     private companion object {
-        const val EASY_RANDOM = 0.25
-        const val NORMAL_WILD = 0.2
+        const val EASY_RANDOM = 0.3
+        const val NORMAL_WILD = 0.3
         /** Judge operations per hard move: ~300k keeps a 6-digit move at a few ms on a desktop JVM. */
         const val BUDGET = 300_000
         const val MAX_POOL = 400

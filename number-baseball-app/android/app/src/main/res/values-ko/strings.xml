@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">숫자 야구</string>
+
+    <!-- Common -->
+    <string name="action_back">뒤로</string>
+    <string name="action_ok">확인</string>
+    <string name="action_cancel">취소</string>
+    <string name="action_retry">다시 시도</string>
+    <string name="action_close">닫기</string>
+    <string name="action_copy">복사</string>
+
+    <!-- First run -->
+    <string name="first_run_title">숫자 야구에 오신 걸 환영해요</string>
+    <string name="first_run_subtitle">닉네임만 정하면 바로 시작해요. 아이디, 비밀번호, 이메일은 필요 없어요.</string>
+    <string name="first_run_nickname_label">닉네임</string>
+    <string name="first_run_nickname_hint">글자 또는 숫자 2~12자</string>
+    <string name="first_run_start">시작</string>
+    <string name="first_run_have_code">이전 코드가 있어요</string>
+    <string name="first_run_code_label">이전 코드</string>
+    <string name="first_run_redeem">내 계정 가져오기</string>
+    <string name="first_run_new_account">새 계정 만들기</string>
+    <string name="first_run_offline_note">지금은 컴퓨터와 대결할 수 있어요. 인터넷에 연결되면 온라인 계정이 만들어져요.</string>
+
+    <string name="nickname_error_too_short">2자 이상 입력하세요.</string>
+    <string name="nickname_error_too_long">12자 이하로 입력하세요.</string>
+    <string name="nickname_error_invalid">글자와 숫자만 쓸 수 있어요.</string>
+    <string name="nickname_error_profanity">다른 닉네임을 정해 주세요.</string>
+    <string name="nickname_error_unavailable">사용할 수 없는 닉네임이에요. 다른 닉네임을 정해 주세요.</string>
+
+    <!-- Home -->
+    <string name="home_tagline">상대의 비밀 숫자를 먼저 맞혀라</string>
+    <string name="home_vs_computer">컴퓨터와 대결</string>
+    <string name="home_quick_match">빠른 대전</string>
+    <string name="home_create_room">방 만들기</string>
+    <string name="home_room_code">방 코드</string>
+    <string name="home_join_room">참가</string>
+    <string name="home_how_to_play">게임 방법</string>
+    <string name="home_profile">프로필</string>
+    <string name="home_settings">설정</string>
+    <string name="home_record">승 %1$d · 패 %2$d · 무 %3$d</string>
+    <string name="home_not_registered">계정이 만들어지면 온라인 대전을 할 수 있어요. 인터넷 연결을 확인하세요.</string>
+    <string name="home_choose_nickname_again">다른 닉네임 정하기</string>
+
+    <!-- vs Computer setup -->
+    <string name="setup_title">컴퓨터와 대결</string>
+    <string name="setup_digits">숫자 개수</string>
+    <string name="setup_level">난이도</string>
+    <string name="level_easy">쉬움</string>
+    <string name="level_normal">보통</string>
+    <string name="level_hard">어려움</string>
+    <string name="setup_start">시작</string>
+
+    <!-- Match -->
+    <string name="match_title_computer">컴퓨터 · %1$s</string>
+    <string name="match_title_online">상대 %1$s</string>
+    <string name="match_title_practice">연습 · %1$s</string>
+    <plurals name="match_choose_secret">
+        <item quantity="other">비밀 숫자를 정하세요: 서로 다른 숫자 %d개, 0이 맨 앞이어도 돼요</item>
+    </plurals>
+    <string name="match_your_turn">추측할 숫자를 입력하세요.</string>
+    <string name="match_random">랜덤</string>
+    <string name="match_set_secret">확정</string>
+    <string name="match_guess">던지기</string>
+    <string name="match_delete">지우기</string>
+    <string name="match_my_secret">내 숫자 %1$s</string>
+    <string name="match_round">%1$d라운드</string>
+    <string name="match_me">나</string>
+    <string name="match_opponent">상대</string>
+    <string name="match_missed">놓침</string>
+    <string name="match_waiting_secret">상대가 숫자를 정하는 중…</string>
+    <string name="match_waiting_guess">제출했어요. 상대를 기다리는 중…</string>
+    <string name="match_computer_thinking">컴퓨터가 생각하는 중…</string>
+    <string name="match_forfeit">기권</string>
+    <string name="match_forfeit_confirm">이 대결을 기권할까요? 패배로 기록돼요.</string>
+    <plurals name="match_seconds_left">
+        <item quantity="other">%d초 남음</item>
+    </plurals>
+    <string name="match_practice_note">기다리는 동안 연습해요. 방이 다 차면 바로 실제 대결이 시작돼요.</string>
+    <plurals name="number_error_length">
+        <item quantity="other">숫자 %d개를 입력하세요.</item>
+    </plurals>
+    <string name="number_error_repeated">서로 다른 숫자를 쓰세요.</string>
+
+    <!-- Results -->
+    <string name="result_win">승리!</string>
+    <string name="result_lose">패배</string>
+    <string name="result_draw">무승부</string>
+    <string name="result_team_win">우리 팀 승리!</string>
+    <string name="result_team_lose">우리 팀 패배</string>
+    <string name="result_team_draw">팀 무승부</string>
+    <plurals name="result_rounds">
+        <item quantity="other">%d라운드 만에 끝났어요</item>
+    </plurals>
+    <string name="result_opponent_secret">상대 숫자</string>
+    <string name="result_reason_solved">숫자를 맞혔어요</string>
+    <string name="result_reason_both_solved">같은 라운드에 둘 다 맞혔어요</string>
+    <string name="result_reason_timeout">두 라운드 연속으로 놓쳤어요</string>
+    <string name="result_reason_both_timeout">둘 다 두 라운드 연속으로 놓쳤어요</string>
+    <string name="result_reason_disconnect">제시간에 돌아오지 않았어요</string>
+    <string name="result_reason_forfeit">기권했어요</string>
+    <string name="result_reason_cancelled">팀 승부가 이미 결정됐어요</string>
+    <string name="result_play_again">다시 하기</string>
+    <string name="result_home">처음으로</string>
+    <string name="result_back_to_room">방으로 돌아가기</string>
+
+    <!-- Quick match -->
+    <string name="quick_title">빠른 대전</string>
+    <string name="quick_rules">1:1, 라운드당 60초. 두 라운드 연속으로 놓치면 패배해요.</string>
+    <string name="quick_search">상대 찾기</string>
+    <string name="quick_searching">상대를 찾는 중…</string>
+    <string name="quick_cancel">찾기 그만두기</string>
+
+    <!-- Connection -->
+    <string name="connection_connecting">연결하는 중…</string>
+    <string name="connection_reconnecting">연결이 끊겼어요. 다시 연결하는 중…</string>
+    <string name="connection_paused">앱이 백그라운드에 있어서 연결을 멈췄어요.</string>
+    <string name="connection_no_account">온라인 대전에는 계정이 필요해요. 인터넷에 연결한 뒤 다시 시도하세요.</string>
+    <string name="connection_unauthorized">계정을 찾을 수 없어요. 삭제되었거나 다른 기기로 옮겨졌을 수 있어요.</string>
+    <string name="connection_banned">이 계정은 온라인 대전을 할 수 없어요.</string>
+    <string name="connection_replaced">다른 기기에서 접속했어요.</string>
+    <string name="connection_deleted">계정이 삭제되었어요.</string>
+    <string name="connection_play_here">여기서 하기</string>
+    <string name="connection_seat_lost">너무 오래 자리를 비워서 자리가 없어졌어요.</string>
+
+    <!-- Room lobby -->
+    <string name="lobby_title_new">새 방</string>
+    <string name="lobby_title">방 %1$s</string>
+    <string name="lobby_team_size">팀 인원</string>
+    <string name="lobby_round_timer">라운드 시간</string>
+    <string name="lobby_timer_none">없음</string>
+    <plurals name="lobby_timer_seconds">
+        <item quantity="other">%d초</item>
+    </plurals>
+    <string name="lobby_create">방 만들기</string>
+    <string name="lobby_code">방 코드</string>
+    <string name="lobby_share">친구에게 이 코드를 알려 주세요.</string>
+    <string name="lobby_team_a">A팀</string>
+    <string name="lobby_team_b">B팀</string>
+    <string name="lobby_host">방장</string>
+    <string name="lobby_you">나</string>
+    <string name="lobby_offline">오프라인</string>
+    <plurals name="lobby_waiting">
+        <item quantity="other">%d명을 더 기다리는 중…</item>
+    </plurals>
+    <string name="lobby_auto_start">양 팀이 다 차면 자동으로 시작돼요.</string>
+    <string name="lobby_switch_team">팀 바꾸기</string>
+    <string name="lobby_practice">컴퓨터와 연습하기</string>
+    <string name="lobby_chat">채팅</string>
+    <string name="lobby_board">대진표</string>
+    <string name="lobby_leave">방 나가기</string>
+
+    <!-- Team board -->
+    <string name="board_title">대진표</string>
+    <string name="board_choosing">숫자 정하는 중</string>
+    <string name="board_round">%1$d라운드</string>
+    <string name="board_won_a">A팀 승</string>
+    <string name="board_won_b">B팀 승</string>
+    <string name="board_draw">무승부</string>
+    <string name="board_cancelled">승부 결정됨</string>
+    <string name="board_waiting">대결이 시작되면 대진표가 나타나요.</string>
+
+    <!-- Chat -->
+    <string name="chat_title">채팅</string>
+    <string name="chat_hint">메시지 (글자만)</string>
+    <string name="chat_send">보내기</string>
+    <string name="chat_empty">아직 메시지가 없어요.</string>
+    <string name="chat_muted">채팅을 꺼 두었어요. 설정에서 켤 수 있어요.</string>
+    <string name="chat_deleted_player">삭제된 플레이어</string>
+    <string name="chat_counter">%1$d/%2$d</string>
+    <string name="chat_report">신고</string>
+    <string name="phrase_hello">안녕하세요!</string>
+    <string name="phrase_good_luck">행운을 빌어요!</string>
+    <string name="phrase_have_fun">재밌게 해요!</string>
+    <string name="phrase_nice_guess">좋은 추측이에요!</string>
+    <string name="phrase_close_one">아깝다!</string>
+    <string name="phrase_thinking">생각 중이에요…</string>
+    <string name="phrase_oops">앗!</string>
+    <string name="phrase_well_played">잘했어요!</string>
+    <string name="phrase_good_game">좋은 경기였어요!</string>
+    <string name="phrase_thanks">고마워요!</string>
+    <string name="phrase_rematch">한 판 더?</string>
+    <string name="phrase_bye">안녕히!</string>
+
+    <!-- Profile -->
+    <string name="profile_title">프로필</string>
+    <string name="profile_record">전적</string>
+    <string name="profile_wins">승</string>
+    <string name="profile_losses">패</string>
+    <string name="profile_draws">무</string>
+    <string name="profile_unregistered">아직 등록되지 않았어요. 온라인이 되면 계정이 만들어져요.</string>
+    <string name="profile_stats_unknown">온라인이 되면 전적이 표시돼요.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">설정</string>
+    <string name="settings_sound">소리</string>
+    <string name="settings_sound_summary">조용히 즐길 수 있게 기본은 꺼져 있어요</string>
+    <string name="settings_haptics">진동</string>
+    <string name="settings_mute_chat">모든 채팅 끄기</string>
+    <string name="settings_language">언어</string>
+    <string name="settings_language_system">시스템 설정</string>
+    <string name="settings_privacy_options">광고 개인정보 옵션</string>
+    <string name="settings_transfer">다른 기기로 옮기기</string>
+    <string name="settings_transfer_summary">10분 동안 쓸 수 있는 1회용 코드를 받아요</string>
+    <string name="settings_transfer_title">이전 코드</string>
+    <string name="settings_transfer_body">새 기기에서 10분 안에 이 코드를 입력하세요. 이 기기는 로그아웃돼요.</string>
+    <string name="settings_deletion_code">웹 삭제 요청용 코드</string>
+    <string name="settings_deletion_code_body">24시간 안에 계정 삭제 웹 페이지에서 이 코드를 입력하세요.</string>
+    <string name="settings_delete">계정 삭제</string>
+    <string name="settings_delete_title">계정을 삭제할까요?</string>
+    <string name="settings_delete_body">닉네임, 전적, 차단 목록이 바로 삭제되며 되돌릴 수 없어요.</string>
+    <string name="settings_delete_confirm">삭제</string>
+    <string name="settings_version">버전 %1$s</string>
+
+    <!-- Report / block -->
+    <string name="report_title">신고 및 차단</string>
+    <string name="report_target">대상: %1$s</string>
+    <string name="report_reason">사유</string>
+    <string name="report_reason_spam">스팸</string>
+    <string name="report_reason_harassment">괴롭힘</string>
+    <string name="report_reason_hate">혐오 발언</string>
+    <string name="report_reason_sexual">성적인 내용</string>
+    <string name="report_reason_cheating">부정행위</string>
+    <string name="report_reason_nickname">불쾌한 닉네임</string>
+    <string name="report_reason_other">기타</string>
+    <string name="report_note">자세한 내용 (선택)</string>
+    <string name="report_block_too">이 플레이어도 차단하기</string>
+    <string name="report_submit">신고하기</string>
+    <string name="report_block_only">차단만 하기</string>
+    <string name="report_sent">신고가 접수됐어요. 검토할게요.</string>
+    <string name="report_blocked">차단했어요. 이 플레이어의 채팅이 보이지 않고 매칭되지 않아요.</string>
+
+    <!-- How to play -->
+    <string name="rules_title">게임 방법</string>
+    <string name="rules_1">각자 서로 다른 숫자 3~6개로 비밀 숫자를 정해요. 0이 맨 앞에 와도 돼요.</string>
+    <string name="rules_2">매 라운드 두 사람이 동시에 상대의 숫자를 추측하고 판정을 받아요.</string>
+    <string name="rules_3">스트라이크(S): 숫자와 자리가 모두 맞음. 볼(B): 숫자는 맞지만 자리가 다름. 아웃(OUT): 맞는 숫자가 하나도 없음.</string>
+    <string name="rules_4">예) 비밀 숫자 0 4 7, 추측 0 7 5 → 1S 1B (0은 스트라이크, 7은 볼)</string>
+    <string name="rules_5">먼저 전부 스트라이크를 만들면 승리. 같은 라운드에 둘 다 맞히면 무승부예요.</string>
+    <string name="rules_6">팀전: 상대 팀과 1:1로 짝지어 대결하고, 더 많이 이긴 팀이 승리해요. 무승부도 있어요.</string>
+
+    <!-- Error codes from docs/protocol.md §11 -->
+    <string name="error_generic">문제가 생겼어요. 다시 시도해 주세요.</string>
+    <string name="error_network">게임 서버에 연결할 수 없어요.</string>
+    <string name="error_rate_limited">요청이 너무 많아요. 잠시 후 다시 시도하세요.</string>
+    <string name="error_room_not_found">방을 찾을 수 없어요. 코드를 확인하세요.</string>
+    <string name="error_room_full">방이 가득 찼어요.</string>
+    <string name="error_team_full">그 팀은 가득 찼어요.</string>
+    <string name="error_already_in_room">이미 방에 들어가 있어요.</string>
+    <string name="error_not_in_room">방에 들어가 있지 않아요.</string>
+    <string name="error_not_host">방장만 할 수 있어요.</string>
+    <string name="error_invalid_settings">허용되지 않는 방 설정이에요.</string>
+    <string name="error_match_in_progress">대결이 진행 중이에요. 나중에 다시 시도하세요.</string>
+    <string name="error_wrong_phase">지금은 할 수 없어요.</string>
+    <string name="error_already_queued">이미 상대를 찾는 중이에요.</string>
+    <string name="error_invalid_number">길이에 맞게 서로 다른 숫자를 입력하세요.</string>
+    <string name="error_secret_already_set">이미 숫자를 정했어요.</string>
+    <string name="error_already_guessed">이번 라운드에는 이미 추측했어요.</string>
+    <string name="error_stale_round">이미 끝난 라운드예요.</string>
+    <string name="error_chat_empty">메시지를 입력하세요.</string>
+    <string name="error_chat_too_long">메시지가 너무 길어요.</string>
+    <string name="error_chat_rate_limited">메시지를 너무 빨리 보내고 있어요.</string>
+    <string name="error_invalid_code">코드가 틀렸거나 만료됐어요.</string>
+    <string name="error_too_many_attempts">잘못된 코드를 너무 많이 입력했어요. 나중에 다시 시도하세요.</string>
+    <string name="error_unauthorized">계정을 찾을 수 없어요.</string>
+    <string name="error_banned">이용이 제한된 계정이에요.</string>
+    <string name="error_session_replaced">다른 기기에서 접속했어요.</string>
+    <string name="error_not_found">찾을 수 없어요.</string>
+    <string name="error_message_too_large">메시지가 너무 길어요.</string>
+</resources>

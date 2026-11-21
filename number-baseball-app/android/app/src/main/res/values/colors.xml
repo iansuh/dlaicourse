@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From design/tokens.json; Compose colors live in ui/theme/Tokens.kt. -->
+    <color name="nb_bg">#FF0C1210</color>
+    <color name="nb_chalk">#FFECEFE6</color>
+    <color name="nb_strike">#FFF5B83D</color>
+</resources>

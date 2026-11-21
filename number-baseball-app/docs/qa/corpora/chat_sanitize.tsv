@@ -1,0 +1,65 @@
+# Chat sanitizing corpus (QA-owned): controls, bidi, invisible characters, whitespace, length limits, injection strings.
+# Columns: id, expect, input, must_remain ('|' separated substrings that must survive, '-' = none), exact (the exact cleaned
+# text, '-' = not fixed), note.
+# expect: KEEP         cleaned text == input exactly.
+#         STRIP        cleaned text (if accepted) contains no forbidden code point (QaTextOracle.isForbiddenInChat) and every
+#                      must_remain; if must_remain is '-' the server may also answer chat_empty.
+#         CLEANED      universal chat invariants hold (QaTextOracle.chatViolations), must_remain survive, exact if given.
+#         REJECT_EMPTY server answers error chat_empty, nothing is broadcast.
+#         REJECT_LONG  server answers error chat_too_long (more than 100 code points AFTER cleaning), nothing is broadcast.
+# Spec: docs/protocol.md 9.1 (emoji, control and zero-width characters removed, whitespace collapsed, trimmed, 100 code points).
+# QA definition of "emoji" (DEFECTS.md DEF-006): any Emoji_Presentation code point, anything in U+1F000..U+1FAFF, regional
+# indicators, skin-tone modifiers, U+FE0F, U+20E3, U+200D and tag characters. Text-presentation symbols WITHOUT U+FE0F
+# (heart suit, copyright, trade mark, music note, stars, arrows, check mark) are text and must survive.
+# Format: UTF-8, tab-separated, '#' starts a comment line, first non-comment line is the header.
+# Escapes in text columns (decoded by the QA loaders, QaCorpus.kt):
+#   \uXXXX (4 hex)   \U{X..X} (1-6 hex, any code point)   \n \r \t \0   \s (space)   \\ (backslash)
+#   \R[N:TEXT] repeats TEXT N times (inside TEXT write \] for ']').
+# Invisible, control, bidi and confusable characters are ALWAYS written as escapes so a reviewer can see them;
+# QaCorporaWellFormedTest fails if a raw invisible/control/bidi character appears in this file.
+id	expect	input	must_remain	exact	note
+S-001	CLEANED	\U{202E}kcuf	kcuf	kcuf	RLO bidi override: displays as 'fuck' if not removed (filter bypass)
+S-002	CLEANED	see\U{202E}gnp.exe	see	-	RLO file-name spoof
+S-003	CLEANED	abc\U{2066}def\U{2069}	abc|def	abcdef	bidi isolates
+S-004	CLEANED	good\U{200B}game	good|game	goodgame	zero-width space removed
+S-005	CLEANED	line1\nline2	line1|line2	-	newline: removed or turned into a space (DEF-017)
+S-006	CLEANED	tab\there	tab|here	-	tab
+S-007	CLEANED	nul\U{0000}byte	nul|byte	-	NUL
+S-008	CLEANED	bell\U{0007}	bell	bell	BEL
+S-009	CLEANED	esc\U{001B}[31mred	red	-	ANSI escape sequence
+S-010	CLEANED	c1\U{0085}next	c1|next	-	NEL (C1 control)
+S-011	CLEANED	ls\U{2028}ps\U{2029}end	ls|ps|end	-	line/paragraph separators (break JS/JSON consumers)
+S-012	CLEANED	a   b	-	a b	whitespace collapsed
+S-013	CLEANED	\s\shi\s\s	-	hi	trimmed
+S-014	CLEANED	a\U{3000}\U{3000}b	-	a b	ideographic spaces collapse
+S-015	CLEANED	a\U{00A0}b	a|b	-	no-break space
+S-016	REJECT_EMPTY		-	-	empty
+S-017	REJECT_EMPTY	   	-	-	spaces only
+S-018	REJECT_EMPTY	\U{200B}\U{200B}	-	-	zero-width only
+S-019	REJECT_EMPTY	\U{3164}\U{3164}	-	-	Hangul filler only (a Unicode LETTER, renders blank)
+S-020	REJECT_EMPTY	\n\n\t	-	-	controls only
+S-021	REJECT_EMPTY	\U{2800}\U{2800}	-	-	braille blank only (renders blank)
+S-022	REJECT_EMPTY	\U{115F}\U{1160}\U{FFA0}	-	-	other Hangul fillers only
+S-023	KEEP	\R[100:a]	-	\R[100:a]	exactly 100 code points
+S-024	REJECT_LONG	\R[101:a]	-	-	101 code points
+S-025	KEEP	\R[100:가]	-	\R[100:가]	100 Hangul syllables
+S-026	KEEP	\R[100:\U{20000}]	-	\R[100:\U{20000}]	100 supplementary characters = 200 UTF-16 units: length is code points
+S-027	REJECT_LONG	\R[101:\U{20000}]	-	-	101 supplementary characters
+S-028	CLEANED	\R[100:a]\U{1F600}	-	\R[100:a]	limit applies after cleaning
+S-029	CLEANED	\R[100:a]\R[50:\U{200B}]	-	\R[100:a]	limit applies after cleaning
+S-030	CLEANED	a\U{D800}b	a|b	-	lone surrogate must never be broadcast (invalid UTF-8 on the wire)
+S-031	CLEANED	Zalgo h\U{0336}\U{0337}\U{0338}\U{0336}\U{0337}\U{0338}\U{0336}\U{0337}\U{0338}i	Zalgo	-	combining-mark flood; at most 4 marks per base (QA proposal, DEF-017)
+S-032	KEEP	<script>alert(1)</script>	-	<script>alert(1)</script>	plain text; escaping is the renderer's job (admin page must escape)
+S-033	KEEP	' OR 1=1 --	-	' OR 1=1 --	SQL meta characters stored as text
+S-034	KEEP	${jndi:ldap://x/a}	-	${jndi:ldap://x/a}	log4shell-style string must not be interpreted
+S-035	KEEP	{{7*7}} %s%n	-	{{7*7}} %s%n	template and format strings
+S-036	KEEP	https://example.com	-	https://example.com	URL is text; the app must not linkify chat (CHAT AC)
+S-037	KEEP	naïve café	-	naïve café	precomposed
+S-038	CLEANED	cafe\U{0301}	caf	café	NFD input; cleaned output is NFC (QA proposal: chat output is always NFC)
+S-039	KEEP	123 2S1B ㅋㅋ	-	123 2S1B ㅋㅋ	
+S-040	KEEP	Tiếng Việt có dấu	-	Tiếng Việt có dấu	
+S-041	KEEP	Ёлки-палки	-	Ёлки-палки	
+S-042	KEEP	日本語とEnglish混在	-	日本語とEnglish混在	
+S-043	CLEANED	hi\U{E0041}\U{E0042}	hi	hi	tag characters (invisible) removed
+S-044	CLEANED	a\U{034F}b	a|b	ab	combining grapheme joiner (invisible)
+S-045	CLEANED	\U{FEFF}hello	hello	hello	leading BOM

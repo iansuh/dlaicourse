@@ -39,6 +39,16 @@ Why: one less screen before the first game, no passwords to leak, no email to co
 
 ### Chat safety (Play UGC policy)
 Profanity masking, rate limit, report a message or a player, block a player (hides their chat and avoids matching), mute all chat, preset quick phrases.
+- **Quick match: quick phrases only.** Free text only in private rooms (people who shared a room code). Server flag `QUICK_MATCH_FREE_CHAT` (default off) can turn free text on later.
+- Moderation: admin can restrict a player's chat; automatic 24 h chat restriction after reports from 3 different players within 24 h.
+
+### Terms, deletion and review (from the release lead's policy review, `docs/play/POLICY_REVIEW.md`)
+- **Terms gate** before the first online match or chat; cannot be skipped; acceptance stored with the terms version; shown again when the version changes. Server pages `/`, `/privacy`, `/terms`, `/delete-account` built from `docs/play/*.md`.
+- **Deletion without the app**: the web page also accepts a request without an in-app code; the account is deleted after 30 days unless it is used again, and the app shows the pending request.
+- Reports: resolved reports purged after 180 days; deleted players are anonymised in other reports' snapshots.
+- No chat text, tokens, codes or IP addresses in logs or the database (rate-limit IPs in memory only).
+- A review room behind `REVIEW_ROOM_CODE` so Play reviewers always find an opponent.
+- Audience: 18 and over, Restrict Minor Access on (owner to confirm). EEA/UK distribution depends on the owner's choice in `POLICY_REVIEW.md` R1 (no code impact).
 
 ### Monetization: ads (Google AdMob)
 The owner asked for Google ads. On Android that is **AdMob** (AdSense is for websites).

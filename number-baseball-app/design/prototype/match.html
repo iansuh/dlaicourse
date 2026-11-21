@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/proto.css">
 <style>
+  .memo-toggle, .opp-compact { display: none !important; }
   /* Compact window (height < 480dp): one-screen layout without memo, 6-column keypad. */
   @media (max-height: 479px) {
     .sysbar, .gesture, .duel, .memo, .log-head { display: none; }
@@ -27,13 +28,20 @@
     .keypad.compact .key { height: 48px; font-size: 26px; }
     .keypad.compact .key.pitch { grid-column: auto; font: var(--t-label-small); padding: 0 4px; }
     .memo-toggle { display: grid !important; }
+    .opp-compact { display: flex !important; }
   }
-  .memo-toggle { display: none !important; }
-  .secret-head { padding: 24px 16px 8px; text-align: center; }
+  .opp-compact { align-items: center; gap: 6px; font: var(--t-caption); color: var(--c-text2); white-space: nowrap; overflow: hidden; }
+  .opp-compact .lamp { width: 6px; height: 6px; }
+  .secret-legend { flex: none; border-top: 1px solid var(--c-line); }
+  .secret-legend .log-head { display: flex; }
+  .secret-legend .lg-row { display: grid; grid-template-columns: 56px 1fr; align-items: center; height: var(--z-history-row-h); padding: 0 16px; border-top: 1px solid var(--c-line); }
+  .secret-legend .lg-row .k { display: flex; align-items: center; gap: 6px; }
+  .secret-legend .lg-row .k .hint { font: var(--t-num-hint); }
+  .secret-legend .lg-row .d { font: var(--t-caption); color: var(--c-text2); }
+  .secret-legend .lg-row .d b { color: var(--c-chalk); font-weight: 700; }
+  .secret-head { padding: 24px 16px 4px; text-align: center; }
   .secret-head h1 { font: var(--t-title); }
   .secret-head p { font: var(--t-caption); color: var(--c-text3); margin-top: 4px; }
-  .secret-actions { display: flex; gap: 8px; }
-  .secret-actions .btn { flex: 1; }
   .secret-opp { display: flex; align-items: center; justify-content: center; gap: 8px; font: var(--t-caption); color: var(--c-text2); padding: 8px 0 0; }
   .spacer { flex: 1 1 auto; }
 </style>
@@ -59,7 +67,7 @@ window.build = function (qs) {
   const top = `
     <header class="topbar m-top">
       <button class="iconbtn" aria-label="${t('leave')}">${P.icon('close')}</button>
-      <div class="tb-stack"><span class="round">${state === 'secret' ? t('secretTitle') : t('round', { n: roundNo })}</span><span class="mode">${t('modeQuick')} · ${t('digitsN', { n })}</span></div>
+      <div class="tb-stack"><span class="round">${state === 'secret' ? t('modeQuick') : t('round', { n: roundNo })}</span><span class="mode">${state === 'secret' ? t('digitsN', { n }) : t('modeQuick') + ' · ' + t('digitsN', { n })}</span><span class="opp-compact"><span class="lamp${state === 'waiting' ? '' : ' on bl'}"></span>${state === 'waiting' ? t('oppThinking') : t('oppPitched')}</span></div>
       <button class="iconbtn dim memo-toggle" aria-label="${t('memoShow')}">${P.icon('edit_note')}</button>
       <div class="clock ${clockCls}" role="timer" aria-label="${t('timeLeft')}">${P.icon('timer')}<span class="v">${clockVal}</span></div>
       <button class="iconbtn" aria-label="${t('more')}">${P.icon('more_vert')}</button>
@@ -70,18 +78,23 @@ window.build = function (qs) {
       <span class="vs">VS</span>
       <div class="opp"><span class="pname">Kestrel<span class="ptag">#2048</span></span>
         <span class="pstatus">${status === 'pitched' ? `<span class="lamp on bl"></span>${t('oppPitched')}` : status === 'picking' ? `<span class="lamp"></span>${t('oppPicking')}` : `<span class="lamp"></span>${t('oppThinking')}`}</span></div>
-      ${status !== 'picking' ? `<div class="mine"><span class="cap">${t('mySecret')}</span><span class="miniplates">${m.secretMine.split('').map((d) => `<span>${d}</span>`).join('')}</span></div>` : ''}
+      ${status !== 'picking' ? `<div class="mysecret"><span class="cap">${t('mySecret')}</span><span class="miniplates">${m.secretMine.split('').map((d) => `<span>${d}</span>`).join('')}</span></div>` : ''}
     </section>`;
   if (state === 'secret') {
     const e = (qs.get('entry') || '047').split('');
     m.entry = e;
     app.innerHTML = `<div class="sysbar"></div>${top}${duel('picking')}
+      <section class="secret-legend" aria-label="${t('legendTitle')}">
+        <div class="log-head"><span>${t('legendTitle')}</span></div>
+        <div class="lg-row"><span class="k lamps"><span class="lamp on st"></span><span class="hint h-s">1S</span></span><span class="d">${t('legS')}</span></div>
+        <div class="lg-row"><span class="k lamps"><span class="lamp on bl"></span><span class="hint h-b">1B</span></span><span class="d">${t('legB')}</span></div>
+        <div class="lg-row"><span class="k"><span class="h-out">OUT</span></span><span class="d">${t('legO')}</span></div>
+      </section>
       <div class="spacer"></div>
       <div class="secret-head"><h1>${t('secretTitle')}</h1><p>${t('secretRule', { n })}</p></div>
       <section class="entry" style="border-top:0">
         ${P.slotsHtml(n, e)}
-        <div class="secret-actions"><button class="btn btn-secondary" style="flex:0 0 auto;width:auto;padding:0 16px">${P.icon('shuffle')}${t('random')}</button></div>
-        ${P.keypadHtml({ ...m, memo: null }, { label: t('lockIn') })}
+        ${P.keypadHtml({ ...m, memo: null }, { label: t('lockIn'), secret: true })}
       </section>
       <div class="gesture"></div>`;
     return;
@@ -89,7 +102,7 @@ window.build = function (qs) {
   const waiting = state === 'waiting';
   if (waiting) m.entry = ['3', '9', '6', '1'];
   app.innerHTML = `<div class="sysbar"></div>${top}${duel(waiting ? 'thinking' : 'pitched')}
-    <section class="log">${P.logHtml(m)}</section>
+    <section class="log${n >= 5 ? ' wide' : ''}">${P.logHtml(m)}</section>
     <section class="memo">${P.memoHtml(m)}</section>
     <section class="entry">
       ${P.slotsHtml(n, m.entry, { locked: waiting })}

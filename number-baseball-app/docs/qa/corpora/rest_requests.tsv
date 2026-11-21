@@ -1,0 +1,63 @@
+# REST requests with bad input or missing auth (QA-owned). Spec: docs/protocol.md sections 3 and 14.
+# Columns: id, method, path, auth, body, status, code, note.
+# auth:   NONE | VALID (fresh account) | GARBAGE ('Bearer x') | BASIC ('Basic dXNlcjpwYXNz') | EMPTY ('Bearer ') |
+#         REVOKED (token revoked by a transfer) | DELETED (account deleted) | ADMIN_WITH_USER_TOKEN (account token on /admin).
+# status: expected HTTP status; alternatives with '|'. code: ErrorResponse.code ('-' = no JSON body checked).
+# {self} and {other} in a path are replaced by the caller's and another account's player id.
+# Format: UTF-8, tab-separated, '#' starts a comment line, first non-comment line is the header.
+# Escapes in text columns (decoded by the QA loaders, QaCorpus.kt):
+#   \uXXXX (4 hex)   \U{X..X} (1-6 hex, any code point)   \n \r \t \0   \s (space)   \\ (backslash)
+#   \R[N:TEXT] repeats TEXT N times (inside TEXT write \] for ']').
+# Invisible, control, bidi and confusable characters are ALWAYS written as escapes so a reviewer can see them;
+# QaCorporaWellFormedTest fails if a raw invisible/control/bidi character appears in this file.
+id	method	path	auth	body	status	code	note
+R-001	POST	/api/v1/accounts	NONE	-	400	bad_request	no body
+R-002	POST	/api/v1/accounts	NONE	{}	400	bad_request	missing nickname
+R-003	POST	/api/v1/accounts	NONE	{"nickname":null}	400	bad_request	
+R-004	POST	/api/v1/accounts	NONE	{"nickname":123}	400	bad_request|invalid_nickname	number
+R-005	POST	/api/v1/accounts	NONE	{"nickname":["Mina"]}	400	bad_request	array
+R-006	POST	/api/v1/accounts	NONE	nickname=Mina	400	bad_request	form encoding
+R-007	POST	/api/v1/accounts	NONE	{"nickname":"a"}	400	invalid_nickname	too short
+R-008	POST	/api/v1/accounts	NONE	{"nickname":"fuck"}	400	nickname_profanity	
+R-009	POST	/api/v1/accounts	NONE	{"nickname":"admin"}	400	invalid_nickname	reserved
+R-010	POST	/api/v1/accounts	NONE	{"nickname":"\R[5000:a]"}	413	message_too_large	body over 4 KB
+R-011	POST	/api/v1/accounts	NONE	{"nickname":"Mina","token":"attacker-chosen"}	201	-	extra fields ignored; the server never accepts a client-chosen token
+R-012	GET	/api/v1/me	NONE	-	401	unauthorized	
+R-013	GET	/api/v1/me	GARBAGE	-	401	unauthorized	
+R-014	GET	/api/v1/me	BASIC	-	401	unauthorized	
+R-015	GET	/api/v1/me	EMPTY	-	401	unauthorized	
+R-016	GET	/api/v1/me	REVOKED	-	401	unauthorized	after transfer the old token is dead
+R-017	GET	/api/v1/me	DELETED	-	401	unauthorized	after deletion the token is dead
+R-018	PATCH	/api/v1/me	NONE	{"nickname":"Leo"}	401	unauthorized	
+R-019	DELETE	/api/v1/me	NONE	-	401	unauthorized	
+R-020	POST	/api/v1/me/transfer-code	NONE	-	401	unauthorized	
+R-021	POST	/api/v1/me/deletion-code	NONE	-	401	unauthorized	
+R-022	GET	/api/v1/me/blocks	NONE	-	401	unauthorized	
+R-023	PUT	/api/v1/me/blocks/{other}	NONE	-	401	unauthorized	
+R-024	DELETE	/api/v1/me/blocks/{other}	NONE	-	401	unauthorized	
+R-025	POST	/api/v1/reports	NONE	{"targetId":"x","reason":"spam"}	401	unauthorized	
+R-026	PUT	/api/v1/me/blocks/{self}	VALID	-	400	bad_request	cannot block yourself
+R-027	PUT	/api/v1/me/blocks/nobody000000	VALID	-	404	not_found	
+R-028	PUT	/api/v1/me/blocks/..%2F..%2Fadmin	VALID	-	400|404	-	path traversal
+R-029	POST	/api/v1/reports	VALID	{"targetId":"nobody000000","reason":"spam"}	404	not_found	
+R-030	POST	/api/v1/reports	VALID	{"targetId":"{other}","reason":"nope"}	400	bad_request	unknown reason
+R-031	POST	/api/v1/reports	VALID	{"targetId":"{other}","reason":"spam","note":"\R[501:a]"}	400	bad_request	note over 500 characters
+R-032	POST	/api/v1/reports	VALID	{"targetId":"{other}","reason":"spam","messageId":1}	400	bad_request	messageId without roomId
+R-033	PATCH	/api/v1/me	VALID	{"nickname":"\\u3164\\u3164"}	400	invalid_nickname	blank Hangul-filler name (DEF-007)
+R-034	POST	/api/v1/transfer	NONE	{"code":""}	400	invalid_code	
+R-035	POST	/api/v1/transfer	NONE	{"code":"AAAA-AAAA-AAAA"}	400	invalid_code	
+R-036	POST	/api/v1/transfer	NONE	{"code":null}	400	bad_request|invalid_code	
+R-037	POST	/api/v1/transfer	NONE	{"code":"\R[3000:A]"}	400	invalid_code	very long code
+R-038	GET	/admin/v1/reports	NONE	-	401|404	-	no admin token
+R-039	GET	/admin/v1/reports	ADMIN_WITH_USER_TOKEN	-	401|403|404	-	an account token is never an admin token
+R-040	POST	/admin/v1/accounts/{other}/ban	ADMIN_WITH_USER_TOKEN	{"reason":"x"}	401|403|404	-	
+R-041	GET	/admin/v1/reports	GARBAGE	-	401|404	-	
+R-042	GET	/health	NONE	-	200	-	
+R-043	GET	/api/v1/config	NONE	-	200	-	
+R-044	GET	/api/v2/config	NONE	-	404	not_found|-	unknown version
+R-045	GET	/api/v1/accounts	NONE	-	404|405	-	wrong method
+R-046	GET	/api/v1/../../etc/passwd	NONE	-	400|404	-	path traversal
+R-047	POST	/delete-account	NONE	code=&confirm=yes	400|200	-	empty code: error page, nothing deleted
+R-048	POST	/delete-account	NONE	code=AAAA-AAAA-AAAA	400|200	-	missing confirm checkbox: nothing deleted
+R-049	GET	/app-ads.txt	NONE	-	200|404	-	200 text/plain with APP_ADS_TXT, 404 when unset
+R-050	POST	/api/v1/me/transfer-code	GARBAGE	-	401	unauthorized	
