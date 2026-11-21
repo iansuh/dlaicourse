@@ -48,7 +48,9 @@ Profanity masking, rate limit, report a message or a player, block a player (hid
 - Reports: resolved reports purged after 180 days; deleted players are anonymised in other reports' snapshots.
 - No chat text, tokens, codes or IP addresses in logs or the database (rate-limit IPs in memory only).
 - A review room behind `REVIEW_ROOM_CODE` so Play reviewers always find an opponent.
-- Audience: 18 and over, Restrict Minor Access on (owner to confirm). EEA/UK distribution depends on the owner's choice in `POLICY_REVIEW.md` R1 (no code impact).
+- **Audience (owner decision 2026-11-21): 13 and over.** Restrict Minor Access stays off. Ads use a maximum ad content rating suitable for teens; chat safety above is mandatory, not optional.
+- **Distribution (owner decision 2026-11-21): worldwide including EEA/UK, with ads.** The owner accepts declaring as a trader, so legal name, address, phone and email will be shown on the store page.
+- **App name (owner decision 2026-11-21): a "숫자야구" (Number Baseball) style name**, localized per language; the release lead proposes the names. Keep the name in resources so it is easy to change.
 
 ### Monetization: ads (Google AdMob)
 The owner asked for Google ads. On Android that is **AdMob** (AdSense is for websites).
