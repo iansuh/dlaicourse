@@ -72,7 +72,7 @@ class ViewModelTests {
     private fun accounts(store: FakeAccountStore = FakeAccountStore()) = AccountRepository(store, api, scope)
     private fun ages(band: AgeBand? = AgeBand.ADULT) = AgeRepository(FakeAgeStore(band), { null }, 14, scope, currentYear = { 2026 })
 
-    @Test fun firstRunValidatesLocallyThenRegisters() = runTest {
+    @Test fun firstRunValidatesLocallyThenRegisters() = runTest(main.dispatcher) {
         val vm = FirstRunViewModel(accounts())
         vm.onNicknameChange("a")
         vm.onSubmit()
@@ -85,7 +85,7 @@ class ViewModelTests {
         assertEquals(listOf("Mina"), api.createdNicknames)
     }
 
-    @Test fun firstRunShowsServerRejections() = runTest {
+    @Test fun firstRunShowsServerRejections() = runTest(main.dispatcher) {
         api.createResult = ApiResult.Failure(409, "nickname_unavailable")
         val vm = FirstRunViewModel(accounts())
         vm.onNicknameChange("Mina")
@@ -158,7 +158,7 @@ class ViewModelTests {
         assertEquals(Outcome.WIN, summary.outcome)
     }
 
-    @Test fun quickMatchSearchesAndNoticesTheQuickRoom() = runTest {
+    @Test fun quickMatchSearchesAndNoticesTheQuickRoom() = runTest(main.dispatcher) {
         val client = FakeOnlineClient()
         val session = OnlineSession(client, backgroundScope)
         val vm = QuickMatchViewModel(session)
@@ -172,7 +172,7 @@ class ViewModelTests {
         assertTrue(vm.state.value.matchFound)
     }
 
-    @Test fun chatIsPhrasesOnlyInQuickRoomsAndStripsEmoji() = runTest {
+    @Test fun chatIsPhrasesOnlyInQuickRoomsAndStripsEmoji() = runTest(main.dispatcher) {
         val client = FakeOnlineClient()
         val session = OnlineSession(client, backgroundScope)
         val vm = ChatViewModel(session, FakeSettingsRepository())
@@ -194,7 +194,7 @@ class ViewModelTests {
         assertEquals("", vm.state.value.input)
     }
 
-    @Test fun chatShowsServerErrors() = runTest {
+    @Test fun chatShowsServerErrors() = runTest(main.dispatcher) {
         val client = FakeOnlineClient().apply { errorFor = { ErrorMessage("chat_rate_limited", "slow down", it.rid, 2_000) } }
         val session = OnlineSession(client, backgroundScope)
         val vm = ChatViewModel(session, FakeSettingsRepository())
@@ -206,7 +206,7 @@ class ViewModelTests {
         assertEquals("hello", vm.state.value.input)
     }
 
-    @Test fun homeNormalizesRoomCodesAndFollowsAgeSignals() = runTest {
+    @Test fun homeNormalizesRoomCodesAndFollowsAgeSignals() = runTest(main.dispatcher) {
         assertEquals("K7QX2", RoomCodes.normalize("k7-qx 2!9"))
         val vm = HomeViewModel(accounts(FakeAccountStore.registered()), ages())
         backgroundScope.launch { vm.state.collect {} }
@@ -216,7 +216,7 @@ class ViewModelTests {
         assertTrue(vm.state.value.onlineAllowed)
     }
 
-    @Test fun homeOffersANewNicknameWhenTheOfflineOneIsRejected() = runTest {
+    @Test fun homeOffersANewNicknameWhenTheOfflineOneIsRejected() = runTest(main.dispatcher) {
         api.createResult = ApiResult.Failure(400, "nickname_profanity")
         val store = FakeAccountStore().apply { value.value = value.value.copy(nickname = "Mina") }
         val vm = HomeViewModel(accounts(store), ages())
@@ -225,7 +225,7 @@ class ViewModelTests {
         assertFalse(vm.state.value.registered)
     }
 
-    @Test fun settingsShowCodesWithDashesAndDeleteNeedsConfirmation() = runTest {
+    @Test fun settingsShowCodesWithDashesAndDeleteNeedsConfirmation() = runTest(main.dispatcher) {
         val language = FakeLanguageSettings()
         val settings = FakeSettingsRepository()
         val vm = SettingsViewModel(settings, accounts(FakeAccountStore.registered()), language)
@@ -243,7 +243,7 @@ class ViewModelTests {
         assertTrue(vm.state.value.deleted)
     }
 
-    @Test fun reportThenOfferBlock() = runTest {
+    @Test fun reportThenOfferBlock() = runTest(main.dispatcher) {
         val safetyApi = FakeSafetyApi()
         val client = FakeOnlineClient()
         val repo = accounts(FakeAccountStore.registered())
@@ -263,7 +263,7 @@ class ViewModelTests {
         assertEquals(listOf(SampleData.OPPONENT), safetyApi.blocked)
     }
 
-    @Test fun ageScreenStoresOnlyTheBand() = runTest {
+    @Test fun ageScreenStoresOnlyTheBand() = runTest(main.dispatcher) {
         val store = FakeAgeStore()
         val repo = AgeRepository(store, { null }, 14, backgroundScope, currentYear = { 2026 })
         val vm = AgeViewModel(repo)

@@ -50,13 +50,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * Round timers for private rooms (owner decision): 30 / 60 / 120 s and "relaxed" = 600 s; no untimed option.
- * TODO(core): use Limits.ROUND_SECONDS once :core and docs/protocol.md carry these values (they still list 0, 30, 60, 120).
- */
+/** Round timers for private rooms (owner decision): 30 / 60 / 120 s and "relaxed" = 600 s; no untimed option. */
 object RoundTimers {
     const val RELAXED = 600
-    val OPTIONS = listOf(30, 60, 120, RELAXED)
+    val OPTIONS: List<Int> = Limits.ROUND_SECONDS
 }
 
 data class LobbyPlayer(val id: String, val displayName: String, val team: Team, val host: Boolean, val you: Boolean, val connected: Boolean)

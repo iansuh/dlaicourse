@@ -10,6 +10,7 @@ import app.numbaseball.testing.account
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
@@ -97,10 +98,10 @@ class WebSocketOnlineClientTest {
         client.acquire()
         client.awaitState { it is ConnectionState.Connected }
         val ws = peer.socket.await()
+        val queued = async(start = CoroutineStart.UNDISPATCHED) { client.messages.first { it is Queued } as Queued }
         ws.send("""{"type":"something_new","x":1}""")
         ws.send(encode(Queued(digits = 4, since = 5)))
-        val queued = withTimeout(5_000) { client.messages.first { it is Queued } } as Queued
-        assertEquals(4, queued.digits)
+        assertEquals(4, withTimeout(5_000) { queued.await() }.digits)
 
         assertTrue(client.send(QueueJoin(digits = 4)))
         val text = withTimeout(5_000) { peer.received.receive() }

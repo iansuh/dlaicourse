@@ -1,6 +1,9 @@
 package app.numbaseball.ui
 
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -85,6 +88,7 @@ class ScreenBehaviourTest {
         }
         compose.onNodeWithText("Continue").assertIsNotEnabled()
         compose.onNodeWithTag("birthYear").performClick()
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("1990"))
         compose.onNodeWithText("1990").assertExists()
     }
 }
