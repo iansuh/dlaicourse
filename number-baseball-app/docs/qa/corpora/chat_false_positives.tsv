@@ -1,0 +1,136 @@
+# Chat FALSE-POSITIVE traps (QA-owned): innocent text that contains a bad substring, or that becomes one when spaces are
+# removed, or that is bad in another of our 10 languages. The chat filter is language-agnostic (players of every locale
+# share rooms), so every row must survive unchanged for everybody.
+# expect: CLEAN = cleaned text equals the input exactly. EITHER = undecided; invariants only.
+# Same columns and escapes as chat_profanity.tsv. term = the trap substring (informational).
+# Format: UTF-8, tab-separated, '#' starts a comment line, first non-comment line is the header.
+# Escapes in text columns (decoded by the QA loaders, QaCorpus.kt):
+#   \uXXXX (4 hex)   \U{X..X} (1-6 hex, any code point)   \n \r \t \0   \s (space)   \\ (backslash)
+#   \R[N:TEXT] repeats TEXT N times (inside TEXT write \] for ']').
+# Invisible, control, bidi and confusable characters are ALWAYS written as escapes so a reviewer can see them;
+# QaCorporaWellFormedTest fails if a raw invisible/control/bidi character appears in this file.
+id	lang	expect	term	input	note
+F-EN-001	en	CLEAN	cunt	Scunthorpe	classic Scunthorpe problem
+F-EN-002	en	CLEAN	penis	Penistone	town
+F-EN-003	en	CLEAN	sex	Sussex	county
+F-EN-004	en	CLEAN	sex	Middlesex	county
+F-EN-005	en	CLEAN	cock	cocktail	-
+F-EN-006	en	CLEAN	cock	cockpit	-
+F-EN-007	en	CLEAN	cock	peacock	-
+F-EN-008	en	CLEAN	dick	Dickens	author
+F-EN-009	en	CLEAN	ass	assassin	-
+F-EN-010	en	CLEAN	ass	classic	-
+F-EN-011	en	CLEAN	ass	bass guitar	-
+F-EN-012	en	CLEAN	ass	passion	-
+F-EN-013	en	CLEAN	rapist	therapist	-
+F-EN-014	en	CLEAN	shit	shiitake	-
+F-EN-015	en	CLEAN	shit	shitake mushrooms	common misspelling of shiitake
+F-EN-016	en	CLEAN	shit	Matsushita	Japanese surname
+F-EN-017	en	CLEAN	anal	analysis	-
+F-EN-018	en	CLEAN	rape	grape	-
+F-EN-019	en	CLEAN	crap	skyscraper	-
+F-EN-020	en	CLEAN	shit	push it	joins to 'pushit' if spaces are removed
+F-EN-021	en	CLEAN	shit	wash it	joins to 'washit'
+F-EN-022	en	CLEAN	shit	finish it	joins to 'finishit'
+F-EN-023	en	CLEAN	shit	this hit	joins to 'thishit'
+F-EN-024	en	CLEAN	bite	a bite to eat	'bite' is vulgar in French
+F-EN-025	en	CLEAN	fuk	Fukuoka	Japanese city
+F-EN-026	en	CLEAN	fuk	Fukushima	Japanese city
+F-EN-027	en	CLEAN	suka	Asuka	Japanese name; 'suka' is a Russian transliteration
+F-EN-028	en	CLEAN	nigger	snigger	legitimate English word
+F-EN-029	en	CLEAN	nig	Niger	country
+F-EN-030	en	CLEAN	nig	Nigeria	country
+F-EN-031	en	CLEAN	cum	document	-
+F-EN-032	en	CLEAN	cum	circumstance	-
+F-EN-033	en	CLEAN	arse	Arsenal	football club
+F-EN-034	en	CLEAN	tit	titanic	-
+F-EN-035	en	CLEAN	sb	Lisbon	'sb' is a Chinese insult abbreviation
+F-EN-036	en	CLEAN	dm	dm me	'dm' is a Vietnamese abbreviation
+F-EN-037	en	CLEAN	hell	hello	-
+F-EN-038	en	CLEAN	ass	pass	-
+F-EN-039	en	CLEAN	ass	assume	-
+F-EN-040	en	CLEAN	sex	sextet	-
+F-EN-041	en	CLEAN	hoe	shoe	-
+F-EN-042	en	CLEAN	-	nice guess, 2S1B	game talk
+F-EN-043	en	CLEAN	-	3S0B OUT strike ball	game words
+F-EN-044	en	EITHER	nigga	niggardly	legitimate but notorious; undecided
+F-NUM-001	en	CLEAN	18	123	digits must never be masked in a number game
+F-NUM-002	en	CLEAN	18	18	'18' sounds like a Korean swear word; still a number
+F-NUM-003	en	CLEAN	18	1818	-
+F-NUM-004	en	CLEAN	69	069 2S0B	-
+F-NUM-005	en	CLEAN	420	4205	-
+F-NUM-006	en	CLEAN	666	6660	-
+F-NUM-007	en	CLEAN	-	012345	six-digit guess
+F-NUM-008	en	CLEAN	88	88 1488	numbers are game input; codes are not filtered by digits
+F-KO-001	ko	CLEAN	시발	시발점	'starting point' (始發點)
+F-KO-002	ko	CLEAN	시발	시발역	'starting station'
+F-KO-003	ko	CLEAN	시발	발표 시 발음 주의	joins to 시발 if spaces are removed
+F-KO-004	ko	CLEAN	병신	병신년	year of the Fire Monkey (丙申年)
+F-KO-005	ko	CLEAN	새끼	새끼손가락	pinky finger
+F-KO-006	ko	CLEAN	새끼	새끼 고양이	kitten
+F-KO-007	ko	CLEAN	닥쳐	닥쳐오는 위기	'impending crisis'
+F-KO-008	ko	CLEAN	꺼져	불이 꺼져 있어	'the light is off'
+F-KO-009	ko	CLEAN	꺼져	화면이 꺼져요	'the screen turns off'
+F-KO-010	ko	CLEAN	졸라	허리띠를 졸라 매고	'tighten the belt'
+F-KO-011	ko	CLEAN	씹	껌을 씹어	'chew gum'
+F-KO-012	ko	CLEAN	씹	씹는 맛	'chewy texture'
+F-KO-013	ko	CLEAN	18	18명 모였어	'18 people gathered'
+F-KO-014	ko	CLEAN	개새	이 개 새로 샀어	joins to 개새 if spaces are removed
+F-KO-015	ko	CLEAN	니미	니미츠 항공모함	USS Nimitz
+F-KO-016	ko	CLEAN	씨바	시바견 귀여워	Shiba dog; trap for normalizers that fold 씨 to 시
+F-KO-017	ko	CLEAN	-	ㅋㅋㅋ 3스트라이크!	game talk
+F-KO-018	ko	CLEAN	미친	미친 듯이 좋아	'crazy good'
+F-JA-001	ja	CLEAN	ばか	ばかりです	'only / just'
+F-JA-002	ja	CLEAN	バカ	バカンスに行く	'go on vacation'
+F-JA-003	ja	CLEAN	くそ	ほくそ笑む	'to chuckle'
+F-JA-004	ja	CLEAN	シネ	シネマに行こう	'let's go to the cinema'
+F-JA-005	ja	CLEAN	くそ	行くそうです	'I hear they go'
+F-JA-006	ja	CLEAN	死	死角	'blind spot'
+F-ZH-001	zh-CN	CLEAN	妈的	妈妈的手机	'mom's phone'
+F-ZH-002	zh-CN	CLEAN	他妈|妈的	其他妈妈的孩子	'other mothers' children'
+F-ZH-003	zh-CN	CLEAN	操你	他在做体操你别打扰他	'he is doing gymnastics, don't disturb him'
+F-ZH-004	zh-CN	CLEAN	幹	幹嘛	'what are you doing' (Traditional)
+F-ZH-005	zh-CN	CLEAN	操	操作	'operate'
+F-ZH-006	zh-CN	CLEAN	草	草莓	'strawberry'
+F-ZH-007	zh-CN	CLEAN	日	日本	'Japan'
+F-ZH-008	zh-CN	CLEAN	傻	傻瓜	'silly', mild
+F-ES-001	es	CLEAN	puta	computadora	'computer'
+F-ES-002	es	CLEAN	puta	disputa	'dispute'
+F-ES-003	es	CLEAN	puta	diputado	'deputy'
+F-ES-004	es	CLEAN	puta	reputación	'reputation'
+F-ES-005	es	CLEAN	puta	imputado	'accused'
+F-ES-006	es	CLEAN	negro	el gato negro	'the black cat'
+F-ES-007	es	CLEAN	coger	coger el autobús	'take the bus' (Spain)
+F-FR-001	fr	CLEAN	salope	salopette	'dungarees'
+F-FR-002	fr	CLEAN	dit	il dit bonjour	'he says hello'
+F-FR-003	fr	CLEAN	con	concert	-
+F-FR-004	fr	CLEAN	con	connaissance	-
+F-FR-005	fr	CLEAN	pute	disputer	-
+F-DE-001	de	CLEAN	fotze	Fotzelschnitte	Swiss dish
+F-DE-002	de	CLEAN	scheisse	eine Scheibe Brot	'a slice of bread'; ß/b look alike
+F-DE-003	de	CLEAN	anal	Analyse	-
+F-DE-004	de	CLEAN	huren	Hurenkind	typography term
+F-DE-005	de	CLEAN	gift	Gift	'poison'
+F-PT-001	pt-BR	CLEAN	puta	computador	-
+F-PT-002	pt-BR	CLEAN	puta	disputa	-
+F-PT-003	pt-BR	CLEAN	cu	cuidado	'careful'
+F-PT-004	pt-BR	CLEAN	cu	acumular	-
+F-PT-005	pt-BR	CLEAN	cu	circuito	-
+F-PT-006	pt-BR	CLEAN	pica	pica-pau	'woodpecker'
+F-PT-007	pt-BR	CLEAN	negro	o cachorro negro	'the black dog'
+F-PT-008	pt-BR	CLEAN	kkk	kkkkk	Brazilian laughter, must not be read as a hate acronym
+F-RU-001	ru	CLEAN	блять	оскорблять	'to insult'
+F-RU-002	ru	CLEAN	блять	употреблять	'to use'
+F-RU-003	ru	CLEAN	хуй	застрахуйте машину	'insure the car'
+F-RU-004	ru	CLEAN	ебат	колебаться	'to hesitate'
+F-RU-005	ru	CLEAN	ебат	хлебать суп	'to slurp soup'
+F-RU-006	ru	CLEAN	манда	команда	'team' — a word used in this very game
+F-RU-007	ru	CLEAN	сука	сукно	'cloth'
+F-RU-008	ru	CLEAN	-	)))	Russian smiley
+F-VI-001	vi	CLEAN	cac	các bạn ơi	'hey everyone' (diacritic stripping makes 'cac')
+F-VI-002	vi	CLEAN	lồn	lồng đèn	'lantern'
+F-VI-003	vi	CLEAN	lon	lon bia	'beer can'
+F-VI-004	vi	CLEAN	huy	Huy ơi	common Vietnamese name; 'huy' is a Russian transliteration
+F-VI-005	vi	CLEAN	cặc	cặp sách	'school bag'
+F-VI-006	vi	CLEAN	đm	đậm đà	'rich (flavor)'
+F-VI-007	vi	CLEAN	-	đi thôi	'let's go'

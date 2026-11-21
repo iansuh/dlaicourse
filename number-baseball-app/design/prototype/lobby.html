@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Room lobby</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/proto.css">
+<style>
+  .invite { flex: none; padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .invite .cap { font: var(--t-caption); color: var(--c-text3); }
+  .code-row { display: flex; align-items: center; gap: 8px; }
+  .code { display: flex; gap: 4px; }
+  .code span { width: 40px; height: 52px; border-radius: var(--r-m); background: var(--c-surface2); display: grid; place-items: center; font: var(--t-num-code); }
+  .code-row .btn-small { margin-left: auto; }
+  .rules { flex: none; height: 48px; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 16px; background: var(--c-surface1); border-top: 1px solid var(--c-line); border-bottom: 1px solid var(--c-line); }
+  .rules .v { flex: 1; min-width: 0; font: var(--t-body-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fill { flex: none; display: flex; align-items: center; gap: 12px; padding: 16px 16px 12px; }
+  .fill .v { font: var(--t-body-strong); white-space: nowrap; }
+  .fill .s { font: var(--t-caption); color: var(--c-text3); flex: 1; min-width: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .teams { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 16px; }
+  .team { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .team-h { height: 36px; display: flex; align-items: center; gap: 8px; }
+  .team-h .n { font: var(--t-subtitle); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .team-h .c { font: var(--t-num-label); letter-spacing: var(--t-num-label-track); color: var(--c-text3); }
+  .seat { position: relative; height: 56px; border-radius: var(--r-m); background: var(--c-surface1); display: flex; flex-direction: column; justify-content: center; padding: 0 10px 0 13px; min-width: 0; overflow: hidden; }
+  .seat::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: var(--z-stripe-w); }
+  .team.a .seat.taken::before { background: var(--c-team-a); }
+  .team.b .seat.taken::before { background: var(--c-team-b); }
+  .seat .pname { font: var(--t-body-strong); }
+  .seat .meta { display: flex; gap: 4px; margin-top: 2px; }
+  .seat.mine { box-shadow: inset 0 0 0 1px var(--c-outline); }
+  .seat.empty { background: transparent; box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-text3); font: var(--t-caption); align-items: center; flex-direction: row; justify-content: center; gap: 6px; }
+  .seat.empty .lamp { width: 6px; height: 6px; }
+  .team .btn-small { width: 100%; margin-top: 4px; }
+  .spacer { flex: 1 1 auto; }
+  .practice { flex: none; padding: 16px; }
+  .chatbar { flex: none; height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--c-surface1); border-top: 1px solid var(--c-line); }
+  .chatbar .ic { color: var(--c-text2); }
+  .chatbar .msg { flex: 1; min-width: 0; font: var(--t-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--c-text2); }
+  .chatbar .msg b { color: var(--c-chalk); font-weight: 700; }
+  .badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--c-chalk); color: var(--c-on-chalk); font: 600 13px/20px var(--font-num); text-align: center; }
+</style>
+<script src="js/strings.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/proto.js"></script>
+<script>
+window.build = function (qs) {
+  const t = P.t;
+  const seat = (name, tag, tags = [], mine) => `<div class="seat taken${mine ? ' mine' : ''}"><span class="pname ellipsis">${name}<span class="ptag">#${tag}</span></span>${tags.length ? `<span class="meta">${tags.map((x) => `<span class="tag${x === 'me' ? ' solid' : ''}">${t(x)}</span>`).join('')}</span>` : ''}</div>`;
+  const empty = `<div class="seat empty"><span class="lamp"></span>${t('emptySeat')}</div>`;
+  document.getElementById('app').innerHTML = `
+    <div class="sysbar"></div>
+    <header class="topbar">
+      <button class="iconbtn" aria-label="${t('leave')}">${P.icon('arrow_back')}</button>
+      <span class="tb-title">${t('roomCodeTitle', { code: '' }).trim()}</span>
+      <button class="iconbtn" aria-label="${t('more')}">${P.icon('more_vert')}</button>
+    </header>
+    <section class="invite">
+      <span class="cap">${t('inviteCode')}</span>
+      <div class="code-row">
+        <div class="code" aria-label="K 7 Q 2 M">${'K7Q2M'.split('').map((c) => `<span>${c}</span>`).join('')}</div>
+        <button class="btn btn-small btn-secondary" style="height:40px">${P.icon('content_copy')}${t('copy')}</button>
+        <button class="iconbtn" style="margin-right:-12px" aria-label="${t('share')}">${P.icon('share')}</button>
+      </div>
+    </section>
+    <section class="rules">
+      ${P.icon('tune' in ICONS ? 'tune' : 'settings', 'ic sm')}
+      <span class="v">${t('roomRule', { n: 4, a: 3, s: 60 })}</span>
+      <button class="btn-text" style="height:48px;padding:0 12px">${t('edit')}</button>
+    </section>
+    <section class="fill">
+      <span class="lamps">${[1, 1, 1, 1, 0, 0].map((x) => `<span class="lamp${x ? ' on ch' : ''}"></span>`).join('')}</span>
+      <span class="v">${t('filled', { a: 4, b: 6 })}</span>
+      <span class="s">${t('autoStart')}</span>
+    </section>
+    <section class="teams">
+      <div class="team a">
+        <div class="team-h"><span class="tbadge a">A</span><span class="n">${t('teamA')}</span><span class="c">2/3</span></div>
+        ${seat('새벽투수', '4821', ['me', 'host'], true)}
+        ${seat('Kestrel', '2048')}
+        ${empty}
+      </div>
+      <div class="team b">
+        <div class="team-h"><span class="tbadge b">B</span><span class="n">${t('teamB')}</span><span class="c">2/3</span></div>
+        ${seat('민트초코', '0912')}
+        ${seat('Größenwahn', '7731')}
+        ${empty}
+        <button class="btn btn-small btn-secondary">${P.icon('swap_horiz')}${t('moveHere')}</button>
+      </div>
+    </section>
+    <div class="spacer"></div>
+    <section class="practice"><button class="btn btn-tonal">${P.icon('memory')}${t('practice')}</button></section>
+    <button class="chatbar" style="width:100%;text-align:left">${P.icon('chat')}<span class="msg"><b>민트초코</b>&nbsp;&nbsp;${t('chatPreview')}</span><span class="badge">2</span></button>
+    <div class="gesture"></div>`;
+};
+</script>
+</head>
+<body>
+<div class="app" id="app"></div>
+</body>
+</html>

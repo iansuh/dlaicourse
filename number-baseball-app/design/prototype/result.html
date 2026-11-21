@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Result</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/proto.css">
+<style>
+  .hero { flex: none; padding: 24px 16px 28px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; }
+  .hero.win { background: linear-gradient(to bottom, var(--c-strike-tint), transparent); }
+  .hero h1 { font: var(--t-display); }
+  .hero p { font: var(--t-body); color: var(--c-text2); }
+  .reveal { flex: none; padding: 0 16px; display: flex; flex-direction: column; gap: 20px; }
+  .rv { display: flex; align-items: center; gap: 12px; }
+  .rv .cap { width: 72px; font: var(--t-caption); color: var(--c-text3); flex: none; }
+  .rv .slots { justify-content: flex-start; }
+  .rv .slot { width: 48px; height: 56px; font: var(--t-num-slot-sm); }
+  .stats { flex: none; margin: 24px 16px 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--c-line); border-bottom: 1px solid var(--c-line); }
+  .stats > div { padding: 12px 0; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .stats > div + div { border-left: 1px solid var(--c-line); }
+  .stats .v { font: var(--t-num-timer); font-feature-settings: "tnum" 1; }
+  .stats .k { font: var(--t-caption); color: var(--c-text3); }
+  .spacer { flex: 1 1 auto; }
+  .actions { flex: none; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .adnote { display: flex; align-items: center; justify-content: center; gap: 6px; font: var(--t-caption); color: var(--c-text3); padding-bottom: 4px; }
+  .adnote .ic { width: 16px; height: 16px; }
+</style>
+<script src="js/strings.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/proto.js"></script>
+<script>
+window.build = function (qs) {
+  const t = P.t, outcome = qs.get('outcome') || 'win', mode = qs.get('mode') || 'online';
+  const n = 4, rounds = 6;
+  const lit = outcome === 'win';
+  let lamps = ''; for (let i = 0; i < n; i++) lamps += `<span class="lamp l${lit ? ' on st' : ''}"></span>`;
+  const head = { win: t('resWin'), lose: t('resLose'), draw: t('resDraw') }[outcome];
+  const sub = { win: t('resWinSub', { n: rounds }), lose: t('resLoseSub', { n: rounds }), draw: t('resDrawSub', { n: rounds }) }[outcome];
+  const opp = mode === 'cpu' ? `<span class="pname">${t('modeCpu')}</span>` : `<span class="pname">Kestrel<span class="ptag">#2048</span></span>`;
+  document.getElementById('app').innerHTML = `
+    <div class="sysbar"></div>
+    <header class="topbar">
+      <button class="iconbtn" aria-label="${t('home')}">${P.icon('close')}</button>
+      <span class="tb-title"></span>
+      ${mode === 'online' ? `<button class="iconbtn dim" aria-label="${t('report')}">${P.icon('flag')}</button>` : ''}
+    </header>
+    <section class="hero ${outcome}">
+      <span class="lamps l" aria-hidden="true">${lamps}</span>
+      <h1>${head}</h1>
+      <p>${sub}</p>
+    </section>
+    <section class="reveal">
+      <div class="rv"><span class="cap">${t('oppSecret')}</span>${P.slotsHtml(n, ['3', '9', '1', '6'], { cls: outcome === 'win' ? 'hit' : '' })}</div>
+      <div class="rv"><span class="cap">${t('mySecret')}</span>${P.slotsHtml(n, ['0', '4', '7', '2'])}</div>
+    </section>
+    <section class="stats">
+      <div><span class="v">${rounds}</span><span class="k">${t('rounds')}</span></div>
+      <div><span class="v">3:12</span><span class="k">${t('time')}</span></div>
+      <div><span class="v">1S 3B</span><span class="k">${t('oppBest')}</span></div>
+    </section>
+    <div class="spacer"></div>
+    <section class="actions">
+      ${mode === 'cpu' ? `<div class="adnote">${P.icon('info')}${t('adNotice')}</div>` : ''}
+      <button class="btn btn-primary">${t('rematch')}</button>
+      <button class="btn btn-secondary">${t('home')}</button>
+    </section>
+    <div class="adslot"><div class="creative"><i>AD</i>Sample banner creative · adaptive 360×50</div></div>
+    <div class="gesture"></div>`;
+};
+</script>
+</head>
+<body>
+<div class="app" id="app"></div>
+</body>
+</html>
