@@ -1,5 +1,7 @@
 package app.numbaseball.ui.navigation
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.os.SystemClock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -45,6 +47,8 @@ import app.numbaseball.ui.firstrun.FirstRunScreen
 import app.numbaseball.ui.firstrun.FirstRunViewModel
 import app.numbaseball.ui.home.HomeScreen
 import app.numbaseball.ui.home.HomeViewModel
+import app.numbaseball.ui.legal.LegalDocument
+import app.numbaseball.ui.legal.LegalTextScreen
 import app.numbaseball.ui.lobby.RoomLobbyScreen
 import app.numbaseball.ui.lobby.RoomLobbyViewModel
 import app.numbaseball.ui.match.ComputerMatchViewModel
@@ -117,6 +121,7 @@ private fun AdsAfterAgeCheck(age: AgeState.Known) {
 fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = rememberNavController()) {
     val container = LocalAppContainer.current
     val back: () -> Unit = { navController.popBackStack() }
+    val readTerms: () -> Unit = { navController.navigate(LegalRoute(LegalDocument.TERMS.name)) }
     val home: () -> Unit = { navController.navigate(HomeRoute) { popUpTo<HomeRoute> { inclusive = false } } }
 
     NavHost(navController, startDestination = if (startOnFirstRun) FirstRunRoute else HomeRoute) {
@@ -141,8 +146,6 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
                 onProfile = { navController.navigate(ProfileRoute) },
                 onSettings = { navController.navigate(SettingsRoute) },
                 onChooseNickname = { navController.resetTo(FirstRunRoute) },
-                onCancelDeletion = vm::onCancelDeletion,
-                onDeleteNow = { vm.onDeleteNow { navController.resetTo(FirstRunRoute) } },
             )
         }
 
@@ -180,7 +183,7 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
         }
 
         composable<QuickMatchRoute> {
-            TermsGate(onBack = back) {
+            TermsGate(onBack = back, onReadTerms = readTerms) {
                 val vm = containerViewModel { QuickMatchViewModel(onlineSession) }
                 val state by vm.state.collectAsStateWithLifecycle()
                 LaunchedEffect(state.matchFound) {
@@ -195,7 +198,7 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
 
         composable<RoomLobbyRoute> { entry ->
             val route = entry.toRoute<RoomLobbyRoute>()
-            TermsGate(onBack = back) {
+            TermsGate(onBack = back, onReadTerms = readTerms) {
                 val vm = containerViewModel { RoomLobbyViewModel(route.joinCode, onlineSession) }
                 val state by vm.state.collectAsStateWithLifecycle()
                 LaunchedEffect(vm) { vm.matchStarted.collect { navController.navigate(OnlineMatchRoute) { launchSingleTop = true } } }
@@ -265,7 +268,7 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
         }
 
         composable<ChatRoute> {
-            TermsGate(onBack = back) {
+            TermsGate(onBack = back, onReadTerms = readTerms) {
                 val vm = containerViewModel { ChatViewModel(onlineSession, settingsRepository) }
                 val state by vm.state.collectAsStateWithLifecycle()
                 ChatScreen(
@@ -290,6 +293,21 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
         }
 
         composable<SettingsRoute> { SettingsRoute(navController, back) }
+
+        composable<LegalRoute> { entry ->
+            val document = LegalDocument.valueOf(entry.toRoute<LegalRoute>().document)
+            val uriHandler = LocalUriHandler.current
+            LegalTextScreen(
+                document = document,
+                onBack = back,
+                // The only web link left in the app (README "App only"): the public privacy policy URL Play requires.
+                onWebVersion = if (document == LegalDocument.PRIVACY) {
+                    { uriHandler.openUri(container.config.privacyUrl) }
+                } else {
+                    null
+                },
+            )
+        }
 
         composable<ReportRoute> { entry ->
             val route = entry.toRoute<ReportRoute>()
@@ -379,21 +397,24 @@ private fun SettingsRoute(navController: NavHostController, back: () -> Unit) {
     val vm = containerViewModel { SettingsViewModel(settingsRepository, accountRepository, languageSettings) }
     val state by vm.state.collectAsStateWithLifecycle()
     val privacyOptionsRequired by container.ads.privacyOptionsRequired.collectAsStateWithLifecycle()
-    val activity = LocalContext.current.findActivity()
-    val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    val activity = context.findActivity()
     LaunchedEffect(state.deleted) { if (state.deleted) navController.resetTo(FirstRunRoute) }
     SettingsScreen(
         state = state,
         showPrivacyOptions = privacyOptionsRequired,
         versionName = container.config.versionName,
+        contactEmail = container.config.contactEmail,
         onSettingsChange = vm::onSettingsChange,
         onLanguageChange = vm::onLanguageChange,
         onPrivacyOptions = { activity?.let { container.ads.showPrivacyOptions(it) } },
-        onPrivacyPolicy = { uriHandler.openUri(container.config.privacyUrl) },
-        onTerms = { uriHandler.openUri(container.config.termsUrl) },
-        onContact = { uriHandler.openUri("mailto:${container.config.contactEmail}") },
+        onPrivacyPolicy = { navController.navigate(LegalRoute(LegalDocument.PRIVACY.name)) },
+        onTerms = { navController.navigate(LegalRoute(LegalDocument.TERMS.name)) },
+        onCopyContact = {
+            context.getSystemService(ClipboardManager::class.java)
+                ?.setPrimaryClip(ClipData.newPlainText("email", container.config.contactEmail))
+        },
         onTransferCode = vm::onTransferCode,
-        onDeletionCode = vm::onDeletionCode,
         onDismissCode = vm::onDismissCode,
         onDeleteRequest = vm::onDeleteRequest,
         onDeleteCancel = vm::onDeleteCancel,

@@ -18,7 +18,7 @@ Order on first launch: **age → nickname → tutorial → Home**. A restored ac
 | Keypad | pinned at the bottom: the digit keypad (5 × 2) with `⌫` and "확인" (4 columns, primary style); **repeated digits are allowed here** (no `used` state), unlike the game |
 
 - 확인 enabled at 4 digits. Valid years: 1900 to the current year. Invalid (shot `age-error-ko`): slots `error` state + "올바른 연도를 입력해 주세요"; slots clear on the next key.
-- Rule (year only, so age is known to ±1 year): **allowed when current year − birth year ≥ 14** (the player turns 14 at some point this calendar year). If the release lead wants the strict reading (≥ 15 until the birthday is certain), only the config value changes; the screen does not. The threshold lives in remote config with a bundled default, never in copy.
+- Rule (year only, so age is known to ±1 year): **allowed when current year − birth year ≥ 14** (the player turns 14 at some point this calendar year). The threshold lives in remote config with a bundled default, never in copy.
 - The result (allowed / not allowed) and the year are stored on the device; the screen is not shown again. There is no back from this screen and no way to re-enter the year after a "not available" result without clearing app data.
 - Accessibility: the slots are one group "태어난 해, 1 9 9 입력됨"; the keypad keys read digits.
 

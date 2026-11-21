@@ -70,7 +70,6 @@ class FakeAccountApi : AccountApi {
     override suspend fun deleteAccount(token: String) = deleteResult
     override suspend fun createTransferCode(token: String) = codeResult
     override suspend fun redeemTransferCode(code: String) = redeemResult
-    override suspend fun createDeletionCode(token: String) = codeResult
 }
 
 class FakeSafetyApi : SafetyApi {

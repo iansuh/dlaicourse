@@ -2,7 +2,7 @@
 
 Prototype: `prototype/settings.html` (`?scroll=end`, `?ump=0`). Shots: `settings-ko.png`, `settings-ko-end.png`, `settings-en.png`.
 
-**Purpose:** sound and vibration, chat safety, account and legal items. Required items come from README and the release lead (`docs/play/POLICY_REVIEW.md`). No ads on this screen.
+**Purpose:** sound and vibration, chat safety, account and legal items. Required items come from README (including "App only": no web pages, no web deletion code) and the release lead (`docs/play/POLICY_REVIEW.md`). No ads on this screen.
 
 ## 1. Layout
 
@@ -21,12 +21,11 @@ Top bar 56 dp: `arrow_back` · "설정". On scroll the top bar and the status-ba
 | | 차단한 플레이어 (`block`) | value "2명" + chevron | | list screen (below) |
 | 계정 | 닉네임 (`person`) | value "새벽투수#4821" + chevron | | nickname sheet (01 rules) |
 | | 다른 기기로 계정 옮기기 (`key`), sub "10분 동안 쓸 수 있는 코드를 만들어요" | chevron | | transfer-code sheet |
-| | 웹에서 삭제할 코드 받기 (`lock`), sub "앱 없이 웹에서 삭제할 때 쓰는 24시간 코드" | chevron | | deletion-code sheet |
 | | 계정 삭제 (`delete`, title in `out`), sub "기록과 닉네임이 영구히 지워져요" | chevron | | confirmation dialog |
 | 정보 및 지원 | 개인정보 보호 옵션 (`shield`), sub "광고 맞춤 설정 동의를 바꿔요" | chevron | **shown only when UMP reports `privacyOptionsRequirementStatus == REQUIRED`** (`?ump=0` hides it) | UMP privacy options form |
-| | 개인정보 처리방침 (`policy`) | `open_in_new` | | opens `/privacy` in Custom Tabs |
-| | 이용약관 (`description`) | `open_in_new` | | opens `/terms` |
-| | 문의하기 (`send`), sub "메일 앱에서 운영자에게 보내요" | `open_in_new` | | `mailto:` the dedicated address with subject "[숫자야구] 문의 (v1.0.0, Nickname#1234)" |
+| | 개인정보 처리방침 (`policy`) | chevron | | in-app reader (15) |
+| | 이용약관 (`description`) | chevron | | in-app reader (15) |
+| | 문의하기 (`send`), second line = the contact email address (`body` `text2`, selectable) | trailing copy icon button 48 dp (`content_copy`, `text2`) | | tap the copy button or long-press the row: copies the address, toast "이메일 주소를 복사했어요" (Android 13+ shows its own clipboard preview; then no toast). No mail app is opened (app only); the address comes from a resource so it never sits in the layout |
 | | 오픈소스 라이선스 (`info`) | chevron | | licences screen |
 | | 버전 | text only, no icon, text at x = 56, `body` `text3`, value `numTag` `text3` "1.0.0 (1)" | | long-press copies the version |
 
@@ -34,9 +33,8 @@ Top bar 56 dp: `arrow_back` · "설정". On scroll the top bar and the status-ba
 
 **Transfer code sheet:** title "다른 기기로 계정 옮기기"; body "새 기기에서 '코드로 계정 가져오기'에 입력하세요. 코드는 10분 뒤에 사라지고 한 번만 쓸 수 있어요."; code as 6 plates 40 × 52 dp `numCode` 28 sp; countdown `numTimer` `text2` "9:41 남음"; tonal "복사"; when expired: plates `textDisabled`, primary "새 코드 만들기". (The import side lives on the first-run screen as a text button "다른 기기에서 옮겨 오기" under the nickname field.)
 
-**Deletion code sheet:** same layout, 24-hour code, body "웹 페이지(주소)에서 이 코드를 입력하면 앱 없이 계정을 삭제할 수 있어요."
 
-**Delete account dialog:** title "계정을 삭제할까요?"; body "기록, 닉네임, 차단 목록이 바로 지워지고 되돌릴 수 없어요."; actions 취소 · 삭제 (`out`). On confirm: a 3-lamp chase in the button, then the app clears the token and returns to first run with the toast "계정을 삭제했어요".
+**Delete account dialog:** title "계정을 삭제할까요?"; body "기록, 닉네임, 차단 목록이 바로 지워지고 되돌릴 수 없어요. 앱이 없을 때는 문의하기의 이메일로 삭제를 요청할 수 있어요."; actions 취소 · 삭제 (`out`). On confirm: a 3-lamp chase in the button, then the app clears the token and returns to first run with the toast "계정을 삭제했어요".
 
 **Blocked players:** top bar "차단한 플레이어"; rows 56 dp: nickname + tag, trailing text button "차단 해제" (`labelSmall` chalk); unblocking asks nothing and shows the toast "차단을 해제했어요" with "되돌리기". Empty: "차단한 플레이어가 없어요" `caption` `text3`, centred, 48 dp below the top bar.
 

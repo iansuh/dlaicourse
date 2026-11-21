@@ -45,7 +45,6 @@ import app.numbaseball.ui.match.toMatchUiState
 import app.numbaseball.ui.quickmatch.QuickMatchViewModel
 import app.numbaseball.ui.report.ReportTarget
 import app.numbaseball.ui.report.ReportViewModel
-import app.numbaseball.ui.settings.CodeKind
 import app.numbaseball.ui.settings.SettingsViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -232,8 +231,7 @@ class ViewModelTests {
         val vm = SettingsViewModel(settings, accounts(FakeAccountStore.registered()), language)
         backgroundScope.launch { vm.state.collect {} }
         vm.onTransferCode()
-        assertEquals(CodeKind.TRANSFER, vm.state.value.code?.kind)
-        assertEquals("ABCD-2345-EFGH", vm.state.value.code?.code)
+        assertEquals("ABCD-2345-EFGH", vm.state.value.transferCode)
         vm.onSettingsChange { it.copy(musicEnabled = true, followSilentMode = false) }
         assertTrue(settings.value.value.musicEnabled)
         vm.onLanguageChange("ko")

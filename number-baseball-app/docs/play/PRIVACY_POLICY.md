@@ -2,7 +2,7 @@
 
 > **운영자 메모 (공개하지 마세요 / do not publish this box)**
 >
-> - 서버가 `GET /privacy` 에서 아래 "공개 본문" 두 개(한국어, English)를 HTML로 보여 줍니다. 같은 페이지에 두 언어를 함께 두거나 `/privacy?lang=en` 으로 나눠도 됩니다. PDF는 안 됩니다(Play 정책).
+> - **앱 전용(2026-11-21 결정)**: 방침은 앱의 설정 화면에서 보여 주고, Google이 공개 URL을 요구하므로 서버가 `GET /privacy` 에서 같은 글을 정적 페이지로도 보여 줍니다(웹사이트·폼 없음). 아래 "공개 본문" 두 개(한국어, English)를 씁니다. 같은 페이지에 두 언어를 함께 두거나 `/privacy?lang=en` 으로 나눠도 됩니다. PDF는 안 됩니다(Play 정책).
 > - `[대괄호]` 는 공개 전에 반드시 채우세요. **2026-11-21 결정(트레이더 신고)** 으로 운영자 성명·주소·전화·이메일은 Google Play에 공개되므로, 이 방침의 "운영자 정보"에도 같은 값을 넣습니다. 그 밖의 곳에는 개인 이메일·개인 전화번호를 쓰지 말고 게임 전용 이메일·번호를 쓰세요.
 > - 앱 이름은 추천안(숫자야구: 조용한 한판 / Number Baseball: Quiet Duel)으로 넣었습니다. 바뀌면 제목과 첫 문단만 고칩니다. 최소 나이 14세는 `POLICY_REVIEW.md` R19의 권고이며, 사장님이 다르게 정하면 9절을 고칩니다.
 > - **연락 방법(개인정보 노출 없이)**, 둘 중 하나 이상:
@@ -33,7 +33,7 @@
 - 앱에는 **Google AdMob 광고**가 있습니다. 광고를 위해 Google이 광고 ID 등 기기 정보를 수집합니다(7절).
 - 개인정보를 판매하지 않습니다.
 - **만 14세 이상만** 이용할 수 있으며, 만 18세 미만에게는 맞춤형 광고를 하지 않습니다.
-- 계정은 앱 설정 또는 웹 페이지에서 언제든 삭제할 수 있습니다.
+- 계정은 앱 설정에서 언제든 삭제할 수 있고, 앱이 없으면 이메일로 요청할 수 있습니다.
 
 ### 2. 처리하는 개인정보 항목과 목적
 
@@ -44,7 +44,8 @@
 | 차단 목록 | 내가 차단한 플레이어의 계정 번호 | 차단한 사람의 채팅 숨기기, 매칭 제외 | 이용자가 차단할 때 |
 | 신고 | 신고한 사람과 신고된 사람의 계정 번호, 신고 사유, 선택 입력한 메모(500자 이내), 방 번호, 신고된 메시지와 그 방의 직전 메시지 최대 20개(가려진 상태 그대로, 보낸 사람 닉네임 포함), 처리 결과 | 신고 검토, 이용 제한, 악용 방지 | 이용자가 신고할 때 |
 | 이용 제한 | 이용 정지 여부와 사유 | 이용약관 위반 대응 | 신고 처리 결과 |
-| 임시 코드 | 기기 이전 코드, 계정 삭제 코드 | 기기 이전, 웹에서 계정 삭제 | 이용자가 요청할 때 |
+| 임시 코드 | 기기 이전 코드 | 다른 휴대폰으로 계정 이동 | 이용자가 요청할 때 |
+| 삭제 요청 이메일 | 보낸 이메일 주소, `닉네임#태그`, 내용 | 앱 없이 계정 삭제 요청 처리 | 이용자가 이메일을 보낼 때 |
 | 채팅 | 방 안의 채팅 메시지 | 같은 방 사람에게 전달 | 이용자가 보낼 때 (메모리에서만 처리) |
 | 대결 정보 | 비밀 숫자, 추측, 남은 시간 | 판정과 진행 | 대결 중 (메모리에서만 처리, 결과만 전적에 반영) |
 | 접속 정보 | IP 주소, 앱 버전, 접속 시각 | 과도한 요청 차단(예: 시간당 계정 생성 횟수 제한), 장애 대응, 보안 | 서버 접속 시 자동 |
@@ -60,7 +61,7 @@
 | --- | --- |
 | 계정, 전적, 차단 목록, 약관 동의 기록 | 계정을 삭제할 때까지. 삭제하면 즉시 지웁니다. |
 | 기기 이전 코드 | 10분 또는 사용 즉시 |
-| 계정 삭제 코드 | 24시간 또는 사용 즉시 |
+| 삭제 요청 이메일 | 처리 완료 후 30일 |
 | 채팅 메시지 | 방이 있는 동안 서버 메모리에 최근 50개만. 방이 비거나 10분간 접속자가 없어 닫히면 사라지며 디스크에 저장하지 않습니다. |
 | 대결 정보 | 대결이 끝날 때까지 메모리에서만 |
 | 신고 기록과 대화 스냅샷 | 처리 완료 후 180일. 신고된 사람이 계정을 삭제하면 그 사람에 대한 신고와 스냅샷은 즉시 지웁니다. 신고한 사람이 계정을 삭제하면 신고 기록에서 그 사람의 계정 번호를 지웁니다. 다른 사람에 대한 신고 스냅샷에 들어 있는 삭제된 계정의 메시지는 닉네임 대신 "삭제된 플레이어"로 바꿔 같은 기간 보관합니다. |
@@ -106,9 +107,9 @@
 
 - **열람**: 앱의 프로필에서 닉네임, 태그, 전적을 볼 수 있습니다. 그 밖의 정보는 [연락처 이메일]로 요청하세요.
 - **정정**: 앱 설정에서 닉네임을 바꿀 수 있습니다.
-- **삭제**: 앱 **설정 → 계정 삭제**(즉시) 또는 웹 페이지 `https://[도메인]/delete-account`.
+- **삭제**: 앱 **설정 → 계정 삭제**(즉시). 앱이 없으면 [연락처 이메일]로 `닉네임#태그`를 보내 주세요(7일 안에 삭제). 안내: `https://[도메인]/delete-account`
 - **처리 정지·동의 철회**: 광고는 7절의 방법으로, 그 밖의 처리는 계정 삭제 또는 이메일 요청으로.
-- 요청은 [연락처 이메일]로 보내 주세요. 이메일이나 이름을 묻지 않는 서비스이므로, 계정 확인을 위해 앱 설정에 표시되는 `닉네임#태그`와 계정 삭제 코드 등을 요청할 수 있습니다. 10일 이내에 답변합니다.
+- 요청은 [연락처 이메일]로 보내 주세요. 이메일이나 이름을 묻지 않는 서비스이므로, 계정 확인을 위해 앱에 표시되는 `닉네임#태그`를 적어 주세요. 그 계정이 계속 앱에서 쓰이고 있으면 앱에서 직접 처리해 달라고 안내할 수 있습니다. 10일 이내에 답변합니다.
 
 ### 9. 아동과 청소년
 
@@ -165,7 +166,7 @@ Who we are: [운영자 성명] / address [운영자 주소] / phone [게임 전�
 - The app shows **Google AdMob ads**. Google collects device information such as the advertising ID for ads (section 7).
 - We do not sell personal data.
 - The app is for people **aged 14 and over**, and users under 18 do not get personalized ads.
-- You can delete your account at any time in the app or on our website.
+- You can delete your account at any time in the app, or by email if you no longer have the app.
 
 ### 2. What we process and why
 
@@ -176,7 +177,8 @@ Who we are: [운영자 성명] / address [운영자 주소] / phone [게임 전�
 | Block list | Account IDs of players you blocked | Hide their chat, avoid matching you | When you block someone |
 | Reports | Account IDs of the reporter and the reported player, reason, optional note (up to 500 characters), room ID, the reported message and up to 20 earlier messages in that room as delivered (masked, with sender nicknames), outcome | Review reports, enforce the Terms, prevent abuse | When someone files a report |
 | Enforcement | Whether an account is suspended, and why | Respond to Terms violations | Report outcomes |
-| Temporary codes | Device transfer code, account deletion code | Move your account, delete it on the web | When you request one |
+| Temporary code | Device transfer code | Move your account to another phone | When you request one |
+| Deletion request email | Your email address, `Nickname#tag`, message | Handle deletion requests made without the app | When you email us |
 | Chat | Messages in a room | Deliver them to the room | When you send them (memory only) |
 | Match data | Secret numbers, guesses, timers | Judge and run the match | During a match (memory only; only the result is saved) |
 | Connection data | IP address, app version, time | Rate limiting (e.g. account creations per hour), troubleshooting, security | Automatically when you connect |
@@ -192,7 +194,7 @@ The app stores your account token on your device. If Android Auto Backup is on, 
 | --- | --- |
 | Account, game record, block list, Terms acceptance | Until you delete your account; deleted immediately when you do |
 | Device transfer code | 10 minutes or until used |
-| Account deletion code | 24 hours or until used |
+| Deletion request email | 30 days after we handle it |
 | Chat messages | Only the last 50 per room, in server memory, while the room exists. Gone when the room closes (empty, or 10 minutes with nobody connected). Never written to disk. |
 | Match data | In memory until the match ends |
 | Reports and conversation snapshots | 180 days after the report is resolved. If the reported player deletes their account, reports about them and their snapshots are erased at once; if the reporter deletes theirs, their account ID is removed from their reports. A deleted player's messages inside snapshots attached to reports about someone else are kept for the same period with the nickname replaced by "deleted player". |
@@ -236,9 +238,9 @@ We do not sell or give your personal data to other companies or people, except w
 
 - **Access**: your profile in the app shows your nickname, tag and record. Ask us at [연락처 이메일] for anything else.
 - **Correction**: change your nickname in Settings.
-- **Deletion**: **Settings → Delete account** in the app (immediate), or `https://[도메인]/delete-account`.
+- **Deletion**: **Settings → Delete account** in the app (immediate). Without the app, email your `Nickname#tag` to [연락처 이메일] (deleted within 7 days). Instructions: `https://[도메인]/delete-account`
 - **Objection / withdrawing consent**: for ads, see section 7; for everything else, delete your account or email us.
-- Send requests to [연락처 이메일]. Because we never ask for your name or email, we may ask for your `Nickname#tag` and an account deletion code from the app's Settings to confirm the account is yours. We reply within 10 days.
+- Send requests to [연락처 이메일]. Because we never ask for your name or email, please include the `Nickname#tag` shown in the app. If that account is still being used in the app, we may ask you to handle it in the app instead. We reply within 10 days.
 
 ### 9. Children and teens
 

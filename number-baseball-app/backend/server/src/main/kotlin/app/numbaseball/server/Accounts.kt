@@ -37,8 +37,6 @@ data class Account(
     val termsVersion: String?,
     val termsAcceptedAt: Long?,
     val ageConfirmedAt: Long?,
-    val deletionRequestedAt: Long?,
-    val deletionNoticeAt: Long?,
     val bannedAt: Long?,
     val banReason: String?,
     val chatRestrictedUntil: Long?,
@@ -54,11 +52,10 @@ enum class MatchOutcome { WIN, LOSS, DRAW }
 
 enum class CodeKind(val key: String, val ttlMillis: Long) {
     TRANSFER("transfer", 10 * 60 * 1000L),
-    DELETION("deletion", 24 * 3600 * 1000L),
 }
 
 /**
- * Accounts, tokens, one-time codes, blocks, terms acceptance, deletion requests, moderation and reports.
+ * Accounts, tokens, transfer codes, blocks, terms acceptance, moderation and reports.
  * Thread-safe. Keeps a small in-memory cache so the real-time hub can check blocks, terms and chat restrictions
  * without touching the database.
  */
@@ -73,7 +70,6 @@ class AccountService(
 
     companion object {
         const val TAG_MAX = 9999
-        const val PENDING_DELETION_MILLIS = 30L * 24 * 3600 * 1000
         const val REPORT_RETENTION_MILLIS = 180L * 24 * 3600 * 1000
         const val AUTO_RESTRICT_REPORTERS = 3
         const val AUTO_RESTRICT_WINDOW_MILLIS = 24L * 3600 * 1000
@@ -119,8 +115,6 @@ class AccountService(
         termsVersion = rs.getString("terms_version"),
         termsAcceptedAt = rs.longOrNull("terms_accepted_at"),
         ageConfirmedAt = rs.longOrNull("age_confirmed_at"),
-        deletionRequestedAt = rs.longOrNull("deletion_requested_at"),
-        deletionNoticeAt = rs.longOrNull("deletion_notice_at"),
         bannedAt = rs.longOrNull("banned_at"),
         banReason = rs.getString("ban_reason"),
         chatRestrictedUntil = rs.longOrNull("chat_restricted_until"),
@@ -145,7 +139,6 @@ class AccountService(
         termsVersion = a.termsVersion,
         termsAcceptedAt = a.termsAcceptedAt,
         ageConfirmedAt = a.ageConfirmedAt,
-        deletionRequestedAt = a.deletionNoticeAt,
         chatRestrictedUntil = a.chatRestrictedUntil?.takeIf { it > clock.now() },
     )
 
@@ -206,24 +199,12 @@ class AccountService(
         return reload(id)!!
     }
 
-    /**
-     * Resolves a bearer token. Any authenticated use cancels a pending web deletion request; the request time is kept
-     * as a notice for the app (AccountDto.deletionRequestedAt) until acknowledged.
-     */
+    /** Resolves a bearer token to its account. */
     fun authenticate(token: String?): Account? {
         if (token.isNullOrBlank() || token.length > 200) return null
         val id = db.read { c -> c.query("SELECT account_id FROM tokens WHERE hash = ?", sha256(token)) { it.getString(1) }.firstOrNull() }
             ?: return null
-        val a = get(id) ?: return null
-        if (a.deletionRequestedAt != null) {
-            db.tx { c ->
-                c.update(
-                    "UPDATE accounts SET deletion_notice_at = deletion_requested_at, deletion_requested_at = NULL WHERE id = ?", id,
-                )
-            }
-            return reload(id)
-        }
-        return a
+        return get(id)
     }
 
     fun rename(id: String, rawNickname: String): Account {
@@ -250,11 +231,6 @@ class AccountService(
             c.update("UPDATE accounts SET terms_version = ?, terms_accepted_at = ?, age_confirmed_at = ? WHERE id = ?", version, now, now, id)
         }
         return reload(id)!!
-    }
-
-    fun acknowledgeDeletionNotice(id: String) {
-        db.tx { c -> c.update("UPDATE accounts SET deletion_notice_at = NULL WHERE id = ?", id) }
-        reload(id)
     }
 
     fun recordResults(results: Map<String, MatchOutcome>) {
@@ -355,7 +331,7 @@ class AccountService(
         return token to (authenticate(token) ?: return null)
     }
 
-    // ------------------------------------------------------------------ deletion requests without the app
+    // ------------------------------------------------------------------ lookup by handle (admin, email deletion requests)
 
     fun findByHandle(handle: String): Account? {
         val (nickname, tag) = parseHandle(handle) ?: return null
@@ -364,20 +340,6 @@ class AccountService(
                 .firstOrNull()
         } ?: return null
         return get(id)
-    }
-
-    /** Marks the account for deletion in 30 days unless it is used. Silent when the handle does not exist. */
-    fun requestDeletion(handle: String) {
-        val a = findByHandle(handle) ?: return
-        db.tx { c -> c.update("UPDATE accounts SET deletion_requested_at = ? WHERE id = ? AND deletion_requested_at IS NULL", clock.now(), a.id) }
-        reload(a.id)
-    }
-
-    /** Ids whose web deletion request is older than 30 days. */
-    fun dueDeletions(): List<String> = db.read { c ->
-        c.query("SELECT id FROM accounts WHERE deletion_requested_at IS NOT NULL AND deletion_requested_at <= ?", clock.now() - PENDING_DELETION_MILLIS) {
-            it.getString(1)
-        }
     }
 
     // ------------------------------------------------------------------ blocks
@@ -420,7 +382,7 @@ class AccountService(
         reload(id)
     }
 
-    fun adminView(a: Account) = AdminAccount(toDto(a), a.bannedAt, a.banReason, a.chatRestrictReason, a.deletionRequestedAt)
+    fun adminView(a: Account) = AdminAccount(toDto(a), a.bannedAt, a.banReason, a.chatRestrictReason)
 
     // ------------------------------------------------------------------ reports
 

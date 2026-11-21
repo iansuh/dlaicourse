@@ -64,8 +64,6 @@ class Database(file: File) : AutoCloseable {
                     terms_version TEXT,
                     terms_accepted_at INTEGER,
                     age_confirmed_at INTEGER,
-                    deletion_requested_at INTEGER,
-                    deletion_notice_at INTEGER,
                     banned_at INTEGER,
                     ban_reason TEXT,
                     chat_restricted_until INTEGER,

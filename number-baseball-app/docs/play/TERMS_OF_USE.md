@@ -2,7 +2,7 @@
 
 > **팀 메모 (공개하지 마세요 / do not publish this box)**
 >
-> - 서버가 `GET /terms` 에서 HTML로 보여 줍니다(현재 프로토콜에 없음, 백엔드에 추가 요청). 아동 안전 단락에는 `id="child-safety"` 앵커를 달아 `/terms#child-safety` 로 바로 열리게 합니다(Play 아동 안전 표준용 공개 문서).
+> - **앱 전용(2026-11-21 결정)**: 약관은 앱 안(약관 동의 화면, 설정)에서 보여 주고, 같은 글을 서버가 `GET /terms` 정적 페이지로도 보여 줍니다(Google·심사용 공개 URL). 아동 안전 단락에는 `id="child-safety"` 앵커를 달아 `/terms#child-safety` 로 바로 열리게 합니다(Play 아동 안전 표준용 공개 문서).
 > - Play UGC 정책: 이용자가 채팅하기 전에 약관에 동의해야 하고 이 단계를 건너뛸 수 없어야 합니다(https://support.google.com/googleplay/android-developer/answer/9876937). 앱은 첫 온라인 대결 또는 첫 채팅 전에 약관 요약과 링크, **동의** 버튼을 보여 주고, 서버는 동의한 약관 버전(`terms_version`)과 시각을 계정에 저장합니다. 약관 버전이 바뀌면 다시 동의받습니다.
 > - `[대괄호]` 값은 공개 전에 채웁니다. 약관 버전: `2026-11-v2` (v1에서 바뀐 점: 앱 이름, 최소 나이 14세, 운영자(트레이더) 정보).
 > - **앱 이름**은 추천안(숫자야구: 조용한 한판 / Number Baseball: Quiet Duel)으로 넣었습니다. 이름이 바뀌면 제목과 본문 첫 문단만 고치면 됩니다.
@@ -80,7 +80,7 @@
 
 ### 9. 계정 삭제
 
-앱 **설정 → 계정 삭제** 또는 `https://[도메인]/delete-account`에서 언제든 계정을 삭제할 수 있습니다.
+앱 **설정 → 계정 삭제**에서 언제든 계정을 삭제할 수 있습니다. 앱이 없으면 [연락처 이메일]로 `닉네임#태그`를 보내 요청할 수 있습니다.
 
 ### 10. 준거법
 
@@ -170,7 +170,7 @@ The app is free and sells nothing inside the app. It contains Google AdMob ads, 
 
 ### 9. Deleting your account
 
-You can delete your account at any time in **Settings → Delete account** or at `https://[도메인]/delete-account`.
+You can delete your account at any time in **Settings → Delete account**. Without the app, email your `Nickname#tag` to [연락처 이메일].
 
 ### 10. Governing law
 

@@ -1,6 +1,7 @@
 package app.numbaseball.ui.settings
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.AlertDialog
@@ -41,16 +42,13 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class CodeKind { TRANSFER, DELETION }
-
-data class ShownCode(val kind: CodeKind, val code: String)
-
 data class SettingsUiState(
     val settings: AppSettings = AppSettings(),
     /** null = follow the system language. */
     val language: String? = null,
     val registered: Boolean = false,
-    val code: ShownCode? = null,
+    /** Transfer code shown in a dialog, formatted XXXX-XXXX-XXXX. */
+    val transferCode: String? = null,
     val confirmDelete: Boolean = false,
     val busy: Boolean = false,
     val error: UiError? = null,
@@ -78,9 +76,20 @@ class SettingsViewModel(
         languages.set(tag)
     }
 
-    fun onTransferCode() = requestCode(CodeKind.TRANSFER)
-    fun onDeletionCode() = requestCode(CodeKind.DELETION)
-    fun onDismissCode() = local.update { it.copy(code = null) }
+    fun onTransferCode() {
+        local.update { it.copy(busy = true, error = null) }
+        viewModelScope.launch {
+            val result = accounts.createTransferCode()
+            local.update {
+                when (result) {
+                    is ApiResult.Success -> it.copy(busy = false, transferCode = formatCode(result.value.code))
+                    else -> it.copy(busy = false, error = result.toUiError())
+                }
+            }
+        }
+    }
+
+    fun onDismissCode() = local.update { it.copy(transferCode = null) }
 
     fun onDeleteRequest() = local.update { it.copy(confirmDelete = true) }
     fun onDeleteCancel() = local.update { it.copy(confirmDelete = false) }
@@ -90,19 +99,6 @@ class SettingsViewModel(
         viewModelScope.launch {
             val error = accounts.deleteAccount().toUiError()
             local.update { it.copy(busy = false, error = error, deleted = error == null) }
-        }
-    }
-
-    private fun requestCode(kind: CodeKind) {
-        local.update { it.copy(busy = true, error = null) }
-        viewModelScope.launch {
-            val result = if (kind == CodeKind.TRANSFER) accounts.createTransferCode() else accounts.createDeletionCode()
-            local.update {
-                when (result) {
-                    is ApiResult.Success -> it.copy(busy = false, code = ShownCode(kind, formatCode(result.value.code)))
-                    else -> it.copy(busy = false, error = result.toUiError())
-                }
-            }
         }
     }
 
@@ -117,14 +113,14 @@ fun SettingsScreen(
     state: SettingsUiState,
     showPrivacyOptions: Boolean,
     versionName: String,
+    contactEmail: String,
     onSettingsChange: ((AppSettings) -> AppSettings) -> Unit,
     onLanguageChange: (String?) -> Unit,
     onPrivacyOptions: () -> Unit,
     onPrivacyPolicy: () -> Unit,
     onTerms: () -> Unit,
-    onContact: () -> Unit,
+    onCopyContact: () -> Unit,
     onTransferCode: () -> Unit,
-    onDeletionCode: () -> Unit,
     onDismissCode: () -> Unit,
     onDeleteRequest: () -> Unit,
     onDeleteCancel: () -> Unit,
@@ -152,30 +148,23 @@ fun SettingsScreen(
         if (showPrivacyOptions) LinkRow(stringResource(R.string.settings_privacy_options), onPrivacyOptions)
         LinkRow(stringResource(R.string.settings_privacy_policy), onPrivacyPolicy)
         LinkRow(stringResource(R.string.settings_terms), onTerms)
-        LinkRow(stringResource(R.string.settings_contact), onContact)
+        ContactRow(contactEmail, onCopyContact)
         HorizontalDivider(color = NbColors.line)
         if (state.registered) {
             LinkRow(stringResource(R.string.settings_transfer), onTransferCode, stringResource(R.string.settings_transfer_summary), enabled = !state.busy)
-            LinkRow(stringResource(R.string.settings_deletion_code), onDeletionCode, enabled = !state.busy)
         }
         LinkRow(stringResource(R.string.settings_delete), onDeleteRequest, enabled = !state.busy, destructive = true)
         ErrorText(state.error)
         Text(stringResource(R.string.settings_version, versionName), color = NbColors.text3, style = MaterialTheme.typography.bodySmall)
     }
-    state.code?.let { shown ->
+    state.transferCode?.let { code ->
         AlertDialog(
             onDismissRequest = onDismissCode,
-            title = {
-                Text(stringResource(if (shown.kind == CodeKind.TRANSFER) R.string.settings_transfer_title else R.string.settings_deletion_code))
-            },
+            title = { Text(stringResource(R.string.settings_transfer_title)) },
             text = {
                 androidx.compose.foundation.layout.Column {
-                    Text(shown.code, style = NbType.numCode)
-                    Text(
-                        stringResource(
-                            if (shown.kind == CodeKind.TRANSFER) R.string.settings_transfer_body else R.string.settings_deletion_code_body,
-                        ),
-                    )
+                    SelectionContainer { Text(code, style = NbType.numCode) }
+                    Text(stringResource(R.string.settings_transfer_body))
                 }
             },
             confirmButton = { TextButton(onClick = onDismissCode) { Text(stringResource(R.string.action_ok)) } },
@@ -210,6 +199,18 @@ private fun SwitchRow(title: String, summary: String?, checked: Boolean, onChang
             summary?.let { Text(it, color = NbColors.text3, style = MaterialTheme.typography.bodySmall) }
         }
         Switch(checked = checked, onCheckedChange = onChange)
+    }
+}
+
+/** App only (README): no web form, so the contact address is shown as selectable text with a copy button. */
+@Composable
+private fun ContactRow(email: String, onCopy: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().heightIn(min = NbLayout.touchMin)) {
+        androidx.compose.foundation.layout.Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.settings_contact))
+            SelectionContainer { Text(email, color = NbColors.text2, style = MaterialTheme.typography.bodySmall) }
+        }
+        TextButton(onClick = onCopy) { Text(stringResource(R.string.action_copy)) }
     }
 }
 

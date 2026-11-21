@@ -120,6 +120,50 @@ roborazzi {
     outputDir.set(layout.projectDirectory.dir("screenshots"))
 }
 
+/**
+ * App only, no website (README): the terms and privacy policy are shown inside the app. Their public sections are taken
+ * from docs/play (the release lead's single source of truth) at build time as localized raw resources.
+ */
+abstract class LegalTextsTask : DefaultTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val sources: ConfigurableFileCollection
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun generate() {
+        val out = outputDir.get().asFile
+        out.deleteRecursively()
+        sources.files.forEach { file ->
+            val name = when (file.name) {
+                "TERMS_OF_USE.md" -> "legal_terms"
+                "PRIVACY_POLICY.md" -> "legal_privacy"
+                else -> error("unexpected ${file.name}")
+            }
+            val lines = file.readLines()
+            fun section(marker: String): String {
+                val start = lines.indexOfFirst { it.startsWith("## ") && marker in it }
+                check(start >= 0) { "${file.name}: no public section '$marker'" }
+                val body = lines.drop(start + 1).takeWhile { it.trim() != "---" && !it.startsWith("## ") }
+                return body.joinToString("\n").trim() + "\n"
+            }
+            File(out, "raw").apply { mkdirs() }.resolve("$name.md").writeText(section("English"))
+            File(out, "raw-ko").apply { mkdirs() }.resolve("$name.md").writeText(section("한국어"))
+        }
+    }
+}
+
+val legalTexts = tasks.register<LegalTextsTask>("generateLegalTexts") {
+    sources.from(layout.projectDirectory.file("../../docs/play/TERMS_OF_USE.md"), layout.projectDirectory.file("../../docs/play/PRIVACY_POLICY.md"))
+    outputDir.set(layout.buildDirectory.dir("generated/legal/res"))
+}
+
+androidComponents {
+    onVariants { variant -> variant.sources.res?.addGeneratedSourceDirectory(legalTexts, LegalTextsTask::outputDir) }
+}
+
 tasks.withType<Test>().configureEach {
     maxHeapSize = "3g"
 }

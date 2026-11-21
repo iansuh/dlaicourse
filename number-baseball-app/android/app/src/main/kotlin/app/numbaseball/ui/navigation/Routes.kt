@@ -44,6 +44,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object SettingsRoute
 
+/** [document] is a LegalDocument name: the bundled terms or privacy policy. */
+@Serializable data class LegalRoute(val document: String)
+
 /** [messageId] < 0 reports the player rather than a message. */
 @Serializable data class ReportRoute(
     val playerId: String,

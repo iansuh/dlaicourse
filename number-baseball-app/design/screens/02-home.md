@@ -1,6 +1,6 @@
 # 02 Home
 
-Prototype: `prototype/home.html` (`?ad=none`, `?state=deletion`). Shots: `home-ko.png`, `home-de.png`, `home-ru.png`, `home-deletion-ko.png`.
+Prototype: `prototype/home.html` (`?ad=none`). Shots: `home-ko.png`, `home-de.png`, `home-ru.png`.
 
 **Purpose:** see my record, start a quick match with one thumb, reach the other modes.
 
@@ -33,7 +33,6 @@ The 24 dp dock bottom padding is the clear space above the banner. Nothing else 
 | New player (no games) | record values show `0`, win rate `–`; form row replaced by `caption` `text3` "첫 경기를 기다리는 중" |
 | Record loading | numerals show `–` in `textDisabled` (no skeleton shimmer) |
 | Offline | 48 dp `surface3` band under the header: `cloud_off` 20 dp + "오프라인 · 컴퓨터 대결만 할 수 있어요" `caption`; 방 만들기 and 코드로 참가 rows disabled (`textDisabled`, subtitle "인터넷 연결 필요"); dock button disabled with label "연결을 기다리는 중"; no banner |
-| Deletion requested on the web | alert dialog over Home (shot `home-deletion-ko.png`): `error` 24 dp `strike`; title "웹에서 계정 삭제 요청이 있었어요"; body "11월 18일에 요청됐어요. 그대로 두면 12월 18일에 계정과 기록이 지워져요. 직접 요청한 게 아니라면 취소하세요." (dates from the server); stacked actions: primary "요청 취소하고 계속하기", text button in `out` "지금 삭제하기" (→ same confirmation as Settings > 계정 삭제). Not dismissible by scrim or back |
 | Long German / Russian | mode subtitles wrap to 2 lines (rows grow); dock title and caption stay stacked (shots `home-de`, `home-ru`) |
 | Content does not fit (long translations, windows shorter than about 760 dp) | the region from the hero to the mode rows is one scroll area; when it overflows, the form row hides first; if it still overflows it scrolls under the pinned dock (16 dp bottom fade). The dock and the ad band never scroll |
 | Small window (< 480 dp) | ADAPTIVE.md; no banner |

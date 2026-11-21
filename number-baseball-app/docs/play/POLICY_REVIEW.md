@@ -74,16 +74,11 @@ The README now limits quick match to preset quick phrases; free text exists only
 - Room codes can be shared publicly, so strangers can still meet in private rooms: keep the child-safety section, report/block/mute, the 3-reporter automatic restriction and daily review.
 - Recommended extra for teens: free text unlocks only after the account has finished one online match (anti-abuse; already suggested in R10).
 
-## R5. Web deletion only works with a code from the app — **High → adopted in README 2026-11-21** (backend/app still to implement)
+## R5. Account deletion without the app — **DECIDED: by email (owner, 2026-11-21, app only)**
 
-**Finding.** Play requires a web resource where users can **request** deletion, discoverable outside the app (Account deletion, https://support.google.com/googleplay/android-developer/answer/13327111). `protocol.md` §3.1/§14 only accepts a 24-hour deletion code generated in the app. The main web-page user is someone who already uninstalled the app; they cannot get a code, and we have no email or password to verify them.
+Play requires a web resource where users can request deletion outside the app, and Google accepts "a customer service email" as that resource, next to a link or a form (https://support.google.com/googleplay/android-developer/answer/13327111). So `/delete-account` is a short static page: in-app deletion, or email `Nickname#1234` to the contact address (`DELETE_ACCOUNT_PAGE.md`). No web form, deletion code or 30-day pending state; drop `POST /delete-account`, `/me/deletion-code` and the deletion-code UI from `protocol.md` and the app.
 
-**Exact change (server, `docs/protocol.md` §14):**
-- Add `POST /delete-account/request` with form field `handle` (`Nickname#1234`) and `confirm=yes`. Always answer with the same "request received" page whether or not the handle exists (no account enumeration). Rate limit per IP like transfer codes.
-- Mark the account `deletionRequestedAt`. If no authenticated request arrives for **30 days**, delete it exactly as `DELETE /me` does. Any authenticated use cancels the request.
-- Expose `deletionRequestedAt` in `AccountDto` (or a `welcome` field) so the app can show "A deletion request was made on the web" with **Cancel** / **Delete now**.
-- Keep the email route as a fallback: the page lists `[연락처 이메일]`; the owner deletes via the admin API.
-- Page text: `DELETE_ACCOUNT_PAGE.md` (already written with methods A, B and C).
+Operator rule (because we cannot verify an email sender): delete within 7 days unless the account was used in the app after the email arrived; in that case reply asking the player to use Settings → Delete account. Keep request emails 30 days after handling (stated in the privacy policy).
 
 ## R6. Terms acceptance, Terms page and child-safety text are missing — **High → adopted in README 2026-11-21** (implement)
 
@@ -110,7 +105,7 @@ The README now limits quick match to preset quick phrases; free text exists only
 **Change**
 - Buy a custom domain (WHOIS privacy on), point it at the server, and use it everywhere: developer website, `/privacy`, `/terms`, `/delete-account`, `/app-ads.txt`.
 - Never put the owner's real name in the domain, the Render service name, or the GitHub-visible config.
-- Server: serve `/` as a small landing page (app name, store link, Privacy, Terms, Delete account, contact email). Keep HTTP → HTTPS redirects on the same host.
+- No landing page (app only). The root `/` may 404 or redirect to `/privacy`. Keep HTTP → HTTPS redirects on the same host.
 
 ## R9. Report data retention and snapshot clean-up — **Medium → adopted in README 2026-11-21**
 
@@ -218,8 +213,8 @@ Google says Texas SB 2420 is in effect (injunction stayed by an appeals court); 
 ### Android engineer (`android/`)
 1. `targetSdk 36`; test large-screen orientation/resizability; check the release AAB for `.so` files (16 KB).
 2. **Terms gate** before the first online match or chat: summary, link to `/terms`, Agree; cannot be skipped; send `PUT /api/v1/me/terms`; show again when the version changes (R6).
-3. Settings must contain: Privacy policy (`/privacy`), Terms (`/terms`), **Privacy options** (only when UMP says required), Mute all chat, **Delete account** (with confirmation) and **Get a code to delete on the web**, **Contact** (opens email to the dedicated address), app version.
-4. Show "A deletion request was made on the web" with Cancel / Delete now when the server reports `deletionRequestedAt` (R5).
+3. Settings must contain: Privacy policy (`/privacy`), Terms (`/terms`), **Privacy options** (only when UMP says required), Mute all chat, **Delete account** (with confirmation), **Contact** (opens email to the dedicated address), app version.
+4. Show the Terms and Privacy policy texts inside the app (bundled), linking to the public URLs only as a fallback.
 5. Report and block from a long-press on a message and from the player card; offer "Block too" after reporting.
 6. Ads: UMP first, then `MobileAds` init only when `canRequestAds()`; `setMaxAdContentRating`; mute tied to the game sound setting; banner only on home / results / profile with clear space from controls and hidden in small windows; interstitial only when leaving the vs-computer result screen, ≥1 s after the result, cap 1 per 3 finished matches and 4 minutes; never during a match, secret entry, waiting practice, lobby, chat, app start or exit; test ad unit IDs in debug; real IDs from build config / CI secrets only; keep the AD_ID permission.
 7. Auto Backup: back up only the token/settings; clear the token on deletion; `dataExtractionRules`.
@@ -230,9 +225,9 @@ Google says Texas SB 2420 is in effect (injunction stayed by an appeals court); 
 12. **Play Age Signals API**: request on app open; 0–12 → refuse online features; 13–17 → minor ad treatment; respect `significantChangeStatus` for supervised users (R21).
 
 ### Backend engineer (`backend/`, `docs/protocol.md`)
-1. Web pages: `/` landing, `/privacy`, `/terms` (with `#child-safety`), `/delete-account` (methods A–C), `/app-ads.txt` (already specified). HTML from the `docs/play/*.md` texts, both languages; no cookies, no analytics; HTTPS with same-host HTTP→HTTPS redirect.
+1. Static pages only: `/privacy`, `/terms` (with `#child-safety`), `/delete-account` (text only), `/app-ads.txt`. Text from the `docs/play/*.md` files, both languages; no landing page, forms, cookies or analytics; HTTPS with same-host HTTP→HTTPS redirect.
 2. Terms acceptance: `termsVersion`, `termsAcceptedAt`, `PUT /api/v1/me/terms`, error `terms_required` (R6).
-3. Deletion request without the app: `POST /delete-account/request`, 30-day pending, cancelled by any authenticated use, `deletionRequestedAt` exposed to the app, identical responses, IP rate limit (R5).
+3. Deletion without the app is by email (R5): remove the web deletion code and form; the admin tool must delete an account by `Nickname#tag` and show its last-active time.
 4. Reports: purge resolved reports 180 days after resolution; on account deletion replace the player's id/nickname in other snapshots (R9).
 5. Moderation: chat-restrict admin endpoint; auto 24 h chat restriction after 3 distinct reporters in 24 h (R10).
 6. Logging: no chat text, tokens, codes or IP addresses in logs or the database (rate-limit IPs in memory only); tell the release lead the hosting provider's log retention and whether database backups exist and how long they are kept.
@@ -250,7 +245,7 @@ Google says Texas SB 2420 is in effect (injunction stayed by an appeals court); 
 ### QA lead (`docs/qa/`)
 - Ads never appear during a match, secret entry, waiting practice, lobby or chat; interstitial cap and timing; banner hidden in small windows.
 - UMP: EEA/UK debug geography shows the form; refusal still shows non-personalized ads; Privacy options entry appears only when required.
-- Deletion: in-app, web with code, web request without the app (30-day pending, cancel on use), email fallback.
+- Deletion: in-app; `/delete-account` page loads as plain text with app/developer name and the contact email; admin deletion by `Nickname#tag`.
 - Terms gate cannot be bypassed (app and server).
 - Report/block/mute flows; auto chat restriction.
 - Data safety answers match actual network traffic (proxy the app and check which hosts receive what).

@@ -230,8 +230,8 @@ Sheets and dialogs always come with the 64 % `scrim`, which carries most of the 
 | `flag`, `block` | Report, block |
 | `content_copy`, `share`, `tune`, `swap_horiz` | Room code copy and share, room rules, move seat |
 | `visibility` | Spectating note |
-| `language`, `volume_off`, `mobile_vibrate`, `notifications_off`, `person`, `key`, `lock`, `delete`, `shield`, `policy`, `description`, `info`, `open_in_new` | Settings rows |
-| `error`, `check` | Deletion notice, report sent |
+| `language`, `volume_off`, `mobile_vibrate`, `notifications_off`, `person`, `key`, `delete`, `shield`, `policy`, `description`, `info`, `send`, `content_copy`, `volume_up`, `music_note`, `do_not_disturb_on` | Settings rows |
+| `check`, `cloud_off`, `schedule` | Report sent, offline band, maintenance |
 
 ---
 
@@ -515,7 +515,8 @@ Each component lists anatomy, size and every state. "Prototype" points to a page
 Radius 8; icon 20 dp, 8 dp gap; horizontal padding 24 dp (12 small). One primary button per screen.
 
 ### 12.14 List row, switch, radio, text field
-- Row: see section 4; value text `body` `text2`; chevron 20 dp `text3`; external link `open_in_new` 20 dp `text3`.
+- Row: see section 4; value text `body` `text2`; chevron 20 dp `text3`. The app opens no external web pages (app only); trailing icon buttons (e.g. copy) are 48 dp, `text2`.
+- Long-text reader (Terms, Privacy policy): see [`screens/15-legal-reader.md`](screens/15-legal-reader.md); body 15 / 24 sp, max width 560 dp.
 - Switch 52 × 32 dp. Off: `surface2` track, 2 dp `outline` inset, 16 dp `text3` thumb at x = 8. On: `chalk` track, 24 dp `onChalk` thumb at x = 24. Whole row is the target.
 - Slider (volume): row 48 dp under its switch row, starts at x = 56 dp; track 4 dp radius 2, inactive `surface4`, active `chalk`; thumb 20 dp chalk disc; value `numTag` `text2` in a 28 dp right-aligned box. Disabled (its switch off): fill, thumb and value `textDisabled`. Steps of 5; TalkBack role slider with percentage; volume keys do not move it. A preview cue plays on release (effects slider) or music fades in at the new level (music slider), both obeying follow-silent-mode.
 - Radio 20 dp: 2 dp `outline` ring; selected: 2 dp chalk ring + 10 dp chalk dot. Row 48 dp.

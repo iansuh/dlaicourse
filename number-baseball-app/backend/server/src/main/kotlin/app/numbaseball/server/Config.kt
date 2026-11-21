@@ -21,8 +21,14 @@ data class Config(
     val forceHttps: Boolean = true,
     /** Minimum age players confirm with the terms (shown by the app; no birth date is collected). */
     val minimumAge: Int = 14,
-    /** Optional Google Play link shown on the landing page. */
-    val storeUrl: String? = null,
+    /** Test servers only: multiply REST rate limits by 1000 (QA black-box runs create many accounts). */
+    val relaxedRateLimits: Boolean = false,
+    /** Test servers only: enables /admin/v1/test/clock (move time forward) and /admin/v1/test/maintenance. */
+    val testHooks: Boolean = false,
+    /** Database file; default DATA_DIR/numbaseball.db. */
+    val dbFile: File? = null,
+    /** Optional log file in addition to stdout. */
+    val logFile: File? = null,
     /** How often timers (round deadlines, disconnect grace, bot moves) are checked. */
     val tickMillis: Long = 250,
     /** Interval of the clean-up job (pending deletions, report retention, expired codes). */
@@ -45,7 +51,10 @@ data class Config(
                 termsVersion = str("TERMS_VERSION"),
                 forceHttps = bool("FORCE_HTTPS", true),
                 minimumAge = str("MIN_AGE")?.toIntOrNull()?.takeIf { it in 1..99 } ?: 14,
-                storeUrl = str("STORE_URL")?.takeIf { it.startsWith("https://") },
+                relaxedRateLimits = bool("RELAXED_RATE_LIMITS", false),
+                testHooks = bool("TEST_HOOKS", false),
+                dbFile = str("DB_FILE")?.let { File(it) },
+                logFile = str("LOG_FILE")?.let { File(it) },
             )
         }
     }
@@ -58,6 +67,13 @@ fun interface Clock {
     companion object {
         val SYSTEM = Clock { System.currentTimeMillis() }
     }
+}
+
+/** A clock that can be moved forward (TEST_HOOKS only). */
+class OffsetClock(private val base: Clock) : Clock {
+    @Volatile private var offset = 0L
+    override fun now(): Long = base.now() + offset
+    fun advance(ms: Long) { require(ms >= 0) { "time only moves forward" }; offset += ms }
 }
 
 object RoomCodes {

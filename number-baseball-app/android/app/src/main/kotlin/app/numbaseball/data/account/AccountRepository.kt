@@ -9,7 +9,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -49,11 +48,6 @@ class AccountRepository(
         val accepted = stored.acceptedTermsVersion
         if (accepted != null && accepted >= currentTermsVersion) TermsState.Accepted else TermsState.Required(updated = accepted != null)
     }.stateIn(scope, SharingStarted.Eagerly, TermsState.Required(updated = false))
-
-    private val _deletionRequestedAt = MutableStateFlow<Long?>(null)
-
-    /** Epoch ms of a pending deletion request made on the website. TODO(protocol): fill from the account data. */
-    val deletionRequestedAt: StateFlow<Long?> = _deletionRequestedAt.asStateFlow()
 
     suspend fun token(): String? = store.account.first().token
 
@@ -115,22 +109,13 @@ class AccountRepository(
         return result
     }
 
-    suspend fun cancelDeletionRequest(): ApiResult<Unit> {
-        val result = withToken { policyApi.cancelDeletionRequest(it) }
-        if (result is ApiResult.Success) _deletionRequestedAt.value = null
-        return result
-    }
-
     suspend fun createTransferCode(): ApiResult<CodeResponse> = withToken { api.createTransferCode(it) }
-
-    suspend fun createDeletionCode(): ApiResult<CodeResponse> = withToken { api.createDeletionCode(it) }
 
     suspend fun deleteAccount(): ApiResult<Unit> {
         val token = token()
         val result = if (token == null) ApiResult.Success(Unit) else api.deleteAccount(token)
         if (result is ApiResult.Success || (result is ApiResult.Failure && result.status == 401)) {
             stats.value = null
-            _deletionRequestedAt.value = null
             store.clear()
             return ApiResult.Success(Unit)
         }

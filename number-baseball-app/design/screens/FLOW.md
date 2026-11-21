@@ -10,11 +10,7 @@ flowchart TD
   Age -- under age --> NA([01 Not available, final])
   Nick --> Tut[01 Tutorial, skippable]
   Tut --> Home
-  HasAcct -- yes --> DelReq{Web deletion pending?}
-  DelReq -- yes --> DelDlg[02 Deletion notice dialog]
-  DelDlg -- Cancel request --> Home
-  DelDlg -- Delete now --> Deleted([Account deleted, back to first run])
-  DelReq -- no --> Home[02 Home]
+  HasAcct -- yes --> Home[02 Home]
 
   Home --> CpuSetup[03 vs Computer setup sheet] --> Secret
   Home -- online action, first time --> Terms[13 Terms gate]
@@ -25,6 +21,8 @@ flowchart TD
   Home --> Join[07 Join with code] --> Lobby
   Home --> Profile[10 Profile and stats]
   Home --> Settings[11 Settings]
+  Settings --> Legal[15 In-app reader: Terms / Privacy]
+  Terms --> Legal
   Home --> Rules[01 How to play: replays the tutorial]
 
   Lobby -- host: practise --> Practice[05 Match vs Computer, practice banner]
@@ -48,7 +46,7 @@ flowchart TD
 
 - **Back:** system back always goes one level up the tree above. From a running online match, back opens the "leave match?" dialog (05); from the lobby it opens "leave room?"; from Home it leaves the app (no confirmation, no ad).
 - **Terms gate** appears before the first online action of an account (quick match, create room, join room, first chat) and again when the Terms version changes. vs Computer never needs it.
-- **Deletion notice** is checked on every launch before Home is interactive; it is an alert dialog over Home and cannot be dismissed without a choice.
+- **App only** (owner decision): no screen opens a web page. Terms and the privacy policy are read in-app (15); account deletion is in Settings; deletion without the app is by email (server's static `/delete-account` page, not part of the app).
 - **Process death / app switch during a match:** returning within 60 s restores the match screen with the reconnecting banner (14); after 60 s the duel is forfeited and the result screen shows the forfeit line.
 - **Deep link** `numbaseball://room/K7Q2M` (and the share link) opens Join with the code filled; Terms gate first if needed.
 - **Ads** appear only on Home, results and Profile (DESIGN_SYSTEM section 13). The interstitial is only between a vs-computer result and the next screen.
@@ -58,7 +56,7 @@ flowchart TD
 | # | File | Prototype | Shots |
 | --- | --- | --- | --- |
 | 01 | [01-first-run.md](01-first-run.md) | `age.html`, `nickname.html` | `age-ko/en`, `age-error-ko`, `age-na-ko`, `nickname-ko`, `nickname-error-ko` |
-| 02 | [02-home.md](02-home.md) | `home.html` | `home-ko/de/ru`, `home-deletion-ko` |
+| 02 | [02-home.md](02-home.md) | `home.html` | `home-ko/de/ru` |
 | 03 | [03-vs-computer-setup.md](03-vs-computer-setup.md) | — | — |
 | 04 | [04-quick-match.md](04-quick-match.md) | `search.html` | `search-ko`, `search-found-ko` |
 | 05 | [05-match.md](05-match.md) | `match.html` | `match-*` |
@@ -70,5 +68,6 @@ flowchart TD
 | 11 | [11-settings.md](11-settings.md) | `settings.html` | `settings-*` |
 | 12 | [12-safety-report-block.md](12-safety-report-block.md) | `report.html`, `chat.html?state=actions` | `report-*`, `chat-actions-ko` |
 | 13 | [13-terms-gate.md](13-terms-gate.md) | `terms.html` | `terms-ko/en` |
+| 15 | [15-legal-reader.md](15-legal-reader.md) | `legal.html` | `legal-ko` |
 | 14 | [14-connection-and-errors.md](14-connection-and-errors.md) | `match.html?state=reconnect` | `match-reconnect-ko` |
 | — | [ADAPTIVE.md](ADAPTIVE.md) | `match.html` at 360 × 320 | `match-small-ko/de` |

@@ -58,7 +58,7 @@ CUES = [
     dict(id="sfx_memo_mark", group="input", ko="메모 표시", en="Memo mark",
          trigger="Cycling a mark in the notes board (x / o / blank).", character="Tiny chalk tick on slate",
          pitch="Untuned (2.5-7 kHz grain)", target=-28, priority=0, streams=2, rate_var=0.04, vol_var=0.85,
-         haptic="memo_cycle", enum="MEMO_MARK", max_ms=60,
+         haptic="memo_cycle", enum="MEMO_MARK", max_ms=80,
          listen="Barely there. A dry scratch of chalk, quieter than the keypad."),
     # ---------------------------------------------------------------- pitch and hints
     dict(id="sfx_secret_locked", group="pitch", ko="내 숫자 확정", en="Secret locked",

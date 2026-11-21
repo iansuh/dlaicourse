@@ -30,12 +30,6 @@ data class AccountDto(
     val termsAcceptedAt: Long? = null,
     /** When the player confirmed the minimum age (stored with the terms acceptance). */
     val ageConfirmedAt: Long? = null,
-    /**
-     * Set when someone asked on the web page to delete this account. Using the account cancels that request, so when
-     * the app sees this it should say "A deletion request was made on the web on <date> and was cancelled because you
-     * used the app" and offer "Delete now" (DELETE /me) or "Keep" (DELETE /me/deletion-request clears this field).
-     */
-    val deletionRequestedAt: Long? = null,
     /** Chat is restricted until this time (epoch ms), or null. */
     val chatRestrictedUntil: Long? = null,
 )
@@ -146,5 +140,4 @@ data class AdminAccount(
     val bannedAt: Long?,
     val banReason: String?,
     val chatRestrictReason: String?,
-    val deletionRequestPendingSince: Long?,
 )

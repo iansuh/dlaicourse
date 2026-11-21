@@ -31,6 +31,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.ApplicationStopped
+import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.Hook
 import io.ktor.server.application.call
 import io.ktor.server.application.createApplicationPlugin
@@ -68,6 +69,7 @@ import io.ktor.websocket.readBytes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.io.readByteArray
 import kotlinx.serialization.KSerializer
 import org.slf4j.LoggerFactory
@@ -98,9 +100,8 @@ class Services(
         accounts.delete(id)
     }
 
-    /** Pending web deletions older than 30 days, report retention, code expiry, limiter clean-up. */
+    /** Report retention (180 days after resolution), code expiry, limiter clean-up. */
     suspend fun runMaintenance() {
-        for (id in accounts.dueDeletions()) deleteAccount(id)
         accounts.purge()
         limiter.sweep()
     }
@@ -119,9 +120,11 @@ private object EarlyResponseHook : Hook<suspend (ApplicationCall) -> Unit> {
     }
 }
 
-fun Application.module(config: Config = Config.fromEnv(), clock: Clock = Clock.SYSTEM) {
-    val db = Database(File(config.dataDir, "numbaseball.db"))
-    val pages = WebPages(storeUrl = config.storeUrl)
+fun Application.module(config: Config = Config.fromEnv(), baseClock: Clock = Clock.SYSTEM) {
+    // With TEST_HOOKS the clock can be moved forward through the admin API (QA tests of the 180-day rule etc.).
+    val clock: Clock = if (config.testHooks) OffsetClock(baseClock) else baseClock
+    val db = Database(config.dbFile ?: File(config.dataDir, "numbaseball.db"))
+    val pages = WebPages()
     val termsVersion = config.termsVersion ?: pages.termsVersion ?: DEFAULT_TERMS_VERSION
     val accounts = AccountService(db, clock, termsVersion)
     val random: Random = config.randomSeed?.let { Random(it) } ?: SecureRandom().asKotlinRandom()
@@ -209,6 +212,8 @@ fun Application.module(config: Config = Config.fromEnv(), clock: Clock = Clock.S
             delay(config.maintenanceMillis)
         }
     }
+    // Rooms live in memory: on a graceful stop players get room_left{closed} and close 1001; unfinished matches record nothing.
+    monitor.subscribe(ApplicationStopping) { runBlocking { hub.shutdown() } }
     monitor.subscribe(ApplicationStopped) { db.close() }
 }
 
@@ -310,8 +315,11 @@ private suspend fun <T> ApplicationCall.body(serializer: KSerializer<T>): T {
     }
 }
 
+/** REST rate limits; RELAXED_RATE_LIMITS (test servers only) multiplies every capacity by 1000. */
+private fun cap(services: Services, capacity: Int) = if (services.config.relaxedRateLimits) capacity * 1000 else capacity
+
 private fun limited(services: Services, key: String, capacity: Int, windowMillis: Long) {
-    val wait = services.limiter.acquire(key, capacity, windowMillis)
+    val wait = services.limiter.acquire(key, cap(services, capacity), windowMillis)
     if (wait > 0) throw ApiException(HttpStatusCode.TooManyRequests, ErrorCodes.RATE_LIMITED, "too many requests", (wait + 999) / 1000)
 }
 
@@ -340,7 +348,6 @@ private suspend fun ApplicationCall.html(status: HttpStatusCode, body: String) {
 
 private fun io.ktor.server.routing.Route.webRoutes(services: Services) {
     val pages = services.pages
-    get("/") { call.html(HttpStatusCode.OK, pages.landing()) }
     get("/privacy") { call.html(HttpStatusCode.OK, pages.privacy(preferEnglish(call))) }
     get("/terms") { call.html(HttpStatusCode.OK, pages.terms(preferEnglish(call))) }
     get("/delete-account") { call.html(HttpStatusCode.OK, pages.deleteAccount(preferEnglish(call))) }
@@ -348,36 +355,6 @@ private fun io.ktor.server.routing.Route.webRoutes(services: Services) {
         val text = services.config.appAdsTxt
         if (text == null) call.respondText("Not found", ContentType.Text.Plain, HttpStatusCode.NotFound)
         else call.respondText(text, ContentType.Text.Plain.withParameter("charset", "utf-8"))
-    }
-
-    // Method B: deletion code from the app.
-    post("/delete-account") {
-        val en = preferEnglish(call)
-        val form = parseQueryString(runCatching { readBody(call) }.getOrDefault(""))
-        if (form["confirm"] != "yes") return@post call.html(HttpStatusCode.BadRequest, pages.deleteAccount(en, pages.confirmStatus))
-        val ip = clientIp(call)
-        if (services.limiter.isExhausted("code:$ip", 10, 600_000)) {
-            return@post call.html(HttpStatusCode.TooManyRequests, pages.deleteAccount(en, pages.rateStatus))
-        }
-        val id = services.accounts.consumeCode(form["code"].orEmpty().take(64), CodeKind.DELETION)
-        if (id == null) {
-            services.limiter.acquire("code:$ip", 10, 600_000)
-            return@post call.html(HttpStatusCode.BadRequest, pages.deleteAccount(en, pages.badCodeStatus))
-        }
-        services.deleteAccount(id)
-        call.html(HttpStatusCode.OK, pages.deleteAccount(en, pages.deletedStatus))
-    }
-
-    // Method C: request without the app. The answer never reveals whether the account exists.
-    post("/delete-account/request") {
-        val en = preferEnglish(call)
-        val form = parseQueryString(runCatching { readBody(call) }.getOrDefault(""))
-        if (form["confirm"] != "yes") return@post call.html(HttpStatusCode.BadRequest, pages.deleteAccount(en, pages.confirmStatus))
-        if (services.limiter.acquire("delreq:${clientIp(call)}", 10, 600_000) > 0) {
-            return@post call.html(HttpStatusCode.TooManyRequests, pages.deleteAccount(en, pages.rateStatus))
-        }
-        services.accounts.requestDeletion(form["handle"].orEmpty().take(64))
-        call.html(HttpStatusCode.OK, pages.deleteAccount(en, pages.requestStatus))
     }
 }
 
@@ -433,33 +410,24 @@ private fun io.ktor.server.routing.Route.apiRoutes(services: Services) {
             val req = call.body(AcceptTermsRequest.serializer())
             call.respondJson(HttpStatusCode.OK, accounts.toDto(accounts.acceptTerms(a.id, req.version, req.ageConfirmed)), app.numbaseball.core.protocol.AccountDto.serializer())
         }
-        delete("/me/deletion-request") {
-            val a = me(services, allowBanned = true)
-            accounts.acknowledgeDeletionNotice(a.id)
-            call.respond(HttpStatusCode.NoContent)
-        }
         post("/me/transfer-code") {
             val a = me(services)
             limited(services, "issue:${a.id}", 5, 3_600_000)
             val (code, expires) = accounts.issueCode(a.id, CodeKind.TRANSFER)
             call.respondJson(HttpStatusCode.OK, CodeResponse(code, expires), CodeResponse.serializer())
         }
-        post("/me/deletion-code") {
-            val a = me(services, allowBanned = true)
-            limited(services, "issue:${a.id}", 5, 3_600_000)
-            val (code, expires) = accounts.issueCode(a.id, CodeKind.DELETION)
-            call.respondJson(HttpStatusCode.OK, CodeResponse(code, expires), CodeResponse.serializer())
-        }
         post("/transfer") {
             val req = call.body(RedeemTransferRequest.serializer())
             val ip = clientIp(call)
-            if (services.limiter.isExhausted("code:$ip", 10, 600_000) || services.limiter.isExhausted("code:*", 500, 600_000)) {
+            if (services.limiter.isExhausted("code:$ip", cap(services, 10), 600_000) ||
+                services.limiter.isExhausted("code:*", cap(services, 500), 600_000)
+            ) {
                 throw ApiException(HttpStatusCode.TooManyRequests, ErrorCodes.TOO_MANY_ATTEMPTS, "too many wrong codes", 600)
             }
             val result = accounts.redeemTransfer(req.code.take(64))
             if (result == null) {
-                services.limiter.acquire("code:$ip", 10, 600_000)
-                services.limiter.acquire("code:*", 500, 600_000)
+                services.limiter.acquire("code:$ip", cap(services, 10), 600_000)
+                services.limiter.acquire("code:*", cap(services, 500), 600_000)
                 throw ApiException(HttpStatusCode.BadRequest, ErrorCodes.INVALID_CODE, "wrong, used or expired code")
             }
             // The old device's token is revoked; close its connection (the seat stays for the new device).
@@ -522,11 +490,19 @@ private fun io.ktor.server.routing.Route.adminRoutes(services: Services) {
             accounts.resolveReport(id, req.resolution.take(500))
             call.respond(HttpStatusCode.NoContent)
         }
+        // Look up / delete by display handle ("Nickname#1234"), for deletion requests sent by email.
         get("/accounts") {
             requireAdmin()
             val a = accounts.findByHandle(call.request.queryParameters["handle"].orEmpty())
                 ?: throw ApiException(HttpStatusCode.NotFound, ErrorCodes.NOT_FOUND, "no such account")
             call.respondJson(HttpStatusCode.OK, accounts.adminView(a), app.numbaseball.core.protocol.AdminAccount.serializer())
+        }
+        delete("/accounts") {
+            requireAdmin()
+            val a = accounts.findByHandle(call.request.queryParameters["handle"].orEmpty())
+                ?: throw ApiException(HttpStatusCode.NotFound, ErrorCodes.NOT_FOUND, "no such account")
+            services.deleteAccount(a.id)
+            call.respond(HttpStatusCode.NoContent)
         }
         get("/accounts/{id}") {
             requireAdmin()
@@ -557,6 +533,23 @@ private fun io.ktor.server.routing.Route.adminRoutes(services: Services) {
         delete("/accounts/{id}") {
             requireAdmin()
             services.deleteAccount(target().id)
+            call.respond(HttpStatusCode.NoContent)
+        }
+        // QA hooks, only with TEST_HOOKS=true: move the server clock forward, run the clean-up job now.
+        post("/test/clock") {
+            requireAdmin()
+            val clock = services.clock as? OffsetClock ?: throw ApiException(HttpStatusCode.NotFound, ErrorCodes.NOT_FOUND, "not found")
+            val ms = parseQueryString(readBody(call)).let { it["advanceMs"] }?.toLongOrNull()
+                ?: call.request.queryParameters["advanceMs"]?.toLongOrNull()
+                ?: throw ApiException(HttpStatusCode.BadRequest, ErrorCodes.BAD_REQUEST, "advanceMs required")
+            clock.advance(ms)
+            services.hub.tick()
+            call.respondText("""{"serverTime":${clock.now()}}""", ContentType.Application.Json)
+        }
+        post("/test/maintenance") {
+            requireAdmin()
+            if (!services.config.testHooks) throw ApiException(HttpStatusCode.NotFound, ErrorCodes.NOT_FOUND, "not found")
+            services.runMaintenance()
             call.respond(HttpStatusCode.NoContent)
         }
     }

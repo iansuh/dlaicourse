@@ -116,7 +116,7 @@ Definitions used: "collected" = sent off the device; "shared" = transferred to a
 | --- | --- |
 | Does your app collect or share any of the required user data types? | Yes |
 | Is all user data encrypted in transit? | Yes (requires HTTPS/WSS only on our server; AdMob uses TLS) |
-| Do you provide a way for users to request that their data is deleted? | Yes (in-app Delete account + web page `/delete-account`) |
+| Do you provide a way for users to request that their data is deleted? | Yes (in-app Delete account; without the app by email, explained at `/delete-account`) |
 | Account creation method | "Other" / account created automatically by the app, no username/password (pick the closest option the form offers) |
 | Delete account URL | `https://[도메인]/delete-account` |
 
@@ -147,8 +147,8 @@ Source: Understanding Google Play's app account deletion requirements, https://s
 
 - Apps that let users create an account must offer **(a) an in-app path** to delete the account and associated data and **(b) a web link** where users can request deletion without reinstalling. The web page must work, be easy to find, and **name the app or developer exactly as on the store listing**. The URL goes into the Data safety form.
 - Deactivating or freezing is not deletion. Data kept for security, fraud prevention or legal reasons must be disclosed (privacy policy).
-- **Our design (from `docs/protocol.md`):** Settings → Delete account calls `DELETE /api/v1/me` (immediate). The web page `/delete-account` accepts a 24-hour **deletion code** shown in the app's Settings and deletes at once.
-- **Gap:** a deletion code needs the app. A player who already uninstalled the app (the main reason to use a web link) has no way to get one. Because we have no email or password, the web page must also offer a **request without the app**: the player enters `Nickname#1234`; the account is deleted 30 days later unless it is used again in that time (the app then shows "A deletion request was made on the web" with Cancel/Delete now). This protects players from malicious requests and still lets a lost-device player delete. A contact-email route is the minimum fallback. See `POLICY_REVIEW.md` R5 and `DELETE_ACCOUNT_PAGE.md`.
+- **Our design (owner decision 2026-11-21, app only):** Settings → Delete account calls `DELETE /api/v1/me` (immediate). Without the app: email the game's contact address with the `Nickname#1234`; the operator deletes with the admin tool within 7 days. `/delete-account` is a short static text page explaining both (`DELETE_ACCOUNT_PAGE.md`); no form, code or web login.
+- **Does an email route satisfy Play?** Yes. Google's account-deletion guidance lists, as acceptable web resources for requesting deletion, "an additional link that initiates account deletion, **a customer service email** or a form" (search extract of https://support.google.com/googleplay/android-developer/answer/13327111). Conditions we meet: the URL is entered in the Data safety form, the page works, it names the app/developer as on the listing, and it is easy to find. Requests must actually be handled (operator steps in `RELEASE_GUIDE.md` 10).
 
 ## 7. User Generated Content (chat)
 
@@ -273,7 +273,7 @@ Sources: Set up app-ads.txt, https://support.google.com/admob/answer/9363762 ; a
 - The file must be at the **root of the developer website domain listed in the Play store listing** (Store settings → contact details → website), returned with HTTP 200 as plain text, not blocked by robots.txt. Content: `google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0` (with our publisher ID).
 - AdMob's crawler builds the URL from the listed website and checks **up to one subdomain level** plus the root domain; `www.` and `m.` are skipped. Redirects within the same root domain are allowed. The app must be **published** before the crawler can verify; allow 24 hours or more.
 - Free subdomains: Google documents Firebase's `PROJECT_ID.web.app` as working. `onrender.com` is on the Public Suffix List (I checked the copy bundled with the JDK in this container), so `name.onrender.com` is its own registrable domain and the crawler should check `https://name.onrender.com/app-ads.txt`. Google does not document Render specifically: **[UNCONFIRMED]**.
-- **Recommendation: buy a custom domain** (about 10,000–20,000 KRW per year). It keeps the developer website, privacy URL, deletion URL and app-ads.txt stable if we ever move hosting, and keeps the owner's name out of URLs. Register it with WHOIS privacy (most registrars offer it; check that the .com/.app registrar hides the registrant name).
+- **Recommendation: buy a custom domain** (about 10,000–20,000 KRW per year). It keeps the developer website, privacy URL, deletion URL and app-ads.txt stable if we ever move hosting, and keeps the owner's name out of URLs. There is no landing page (app only); the root `/` may return 404 or redirect to `/privacy` — AdMob only fetches `/app-ads.txt`. Register it with WHOIS privacy (most registrars offer it; check that the .com/.app registrar hides the registrant name).
 
 ### 11.8 AdMob account for an individual in South Korea
 

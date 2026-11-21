@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Legal reader</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/proto.css">
+<style>
+  .doc { flex: 1 1 auto; overflow: hidden; padding: 4px 16px 32px; }
+  .doc .meta { font: var(--t-caption); color: var(--c-text3); }
+  .doc .meta .num { font: var(--t-num-tag); }
+  .toc { margin: 16px 0 8px; border-top: 1px solid var(--c-line); border-bottom: 1px solid var(--c-line); padding: 8px 0; }
+  .toc .cap { font: var(--t-label-small); color: var(--c-text3); display: block; padding: 4px 0 4px; }
+  .toc a { display: flex; align-items: center; min-height: 48px; font: var(--t-body); color: var(--c-text2); text-decoration: none; gap: 12px; }
+  .toc a .n { font: var(--t-num-label); color: var(--c-text3); width: 16px; }
+  .doc h2 { font: var(--t-subtitle); margin: 28px 0 8px; }
+  .doc p, .doc li { font: 400 15px/24px var(--font-sans); color: var(--c-chalk); }
+  .doc p + p { margin-top: 12px; }
+  .doc ul, .doc ol { margin: 8px 0 0; padding-left: 20px; }
+  .doc li + li { margin-top: 6px; }
+  .doc ul { list-style: disc; } .doc ol { list-style: decimal; }
+  .doc li::marker { color: var(--c-text3); }
+  .doc b { font-weight: 700; }
+</style>
+<script src="js/strings.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/proto.js"></script>
+<script>
+window.build = function (qs) {
+  const t = P.t;
+  document.getElementById('app').innerHTML = `
+    <div class="sysbar${qs.get('scroll') ? ' scrolled' : ''}"></div>
+    <header class="topbar${qs.get('scroll') ? ' scrolled' : ''}"><button class="iconbtn" aria-label="back">${P.icon('arrow_back')}</button><span class="tb-title">${t('terms')}</span></header>
+    <article class="doc">
+      <p class="meta">버전 <span class="num">2026-11-v1</span> · 시행일 [시행일]</p>
+      <nav class="toc" aria-label="목차"><span class="cap">목차</span>
+        <a><span class="n">1</span>이용 자격</a><a><span class="n">2</span>계정</a><a><span class="n">3</span>채팅과 행동 규칙</a><a><span class="n">4</span>아동 안전 (무관용)</a><a><span class="n">5</span>신고, 차단, 채팅 끄기</a>
+      </nav>
+      <p>이 약관은 [개발자 표시명](이하 "운영자")이 제공하는 숫자야구 게임 앱 <b>숫자야구: 조용한 한판</b>(이하 "앱")의 이용 조건입니다. 온라인 대결이나 채팅을 시작하기 전에 동의를 받으며, 동의하지 않으면 컴퓨터 대결만 이용할 수 있습니다.</p>
+      <h2>1. 이용 자격</h2>
+      <ul><li>앱은 모르는 사람과 채팅할 수 있어 정해진 나이 이상을 대상으로 합니다.</li><li>이용 정지된 사람이 새 계정을 만들어 계속 이용하는 것은 금지됩니다.</li></ul>
+      <h2>2. 계정</h2>
+      <ul><li>처음 실행할 때 기기에 계정이 자동으로 만들어지며, 닉네임만 정하면 됩니다.</li><li>계정은 휴대폰에 저장된 정보로 유지됩니다. 기기 이전 코드나 Google 자동 백업 없이 휴대폰을 바꾸거나 앱 데이터를 지우면 계정을 되찾을 수 없습니다.</li><li>계정을 사고팔거나 다른 사람에게 넘겨서는 안 됩니다.</li></ul>
+      <h2>3. 채팅과 행동 규칙</h2>
+      <p>다음 행동은 금지됩니다. 닉네임에도 똑같이 적용됩니다.</p>
+      <ol><li>괴롭힘, 모욕, 위협, 따돌림</li><li>인종, 민족, 국적, 종교, 성별, 성적 지향, 장애 등을 이유로 한 혐오 표현</li><li>성적인 내용, 성적 접근이나 만남 요구</li><li>자신이나 다른 사람의 개인정보 공개 또는 요구</li></ol>
+    </article>
+    <div class="gesture"></div>`;
+};
+</script>
+</head>
+<body>
+<div class="app" id="app"></div>
+</body>
+</html>

@@ -2,11 +2,9 @@ package app.numbaseball.ui.terms
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import app.numbaseball.LocalAppContainer
 import app.numbaseball.data.account.AccountRepository
 import app.numbaseball.data.account.TermsState
 import app.numbaseball.ui.common.UiError
@@ -43,18 +41,16 @@ class TermsViewModel(private val accounts: AccountRepository) : ViewModel() {
 
 /** Wraps every online destination (quick match, room, chat): [content] is composed only after the terms are accepted. */
 @Composable
-fun TermsGate(onBack: () -> Unit, content: @Composable () -> Unit) {
+fun TermsGate(onBack: () -> Unit, onReadTerms: () -> Unit, content: @Composable () -> Unit) {
     val vm = containerViewModel { TermsViewModel(accountRepository) }
     val state by vm.state.collectAsStateWithLifecycle()
-    val uriHandler = LocalUriHandler.current
-    val termsUrl = LocalAppContainer.current.config.termsUrl
     when (val terms = state.terms) {
         TermsState.Accepted -> content()
         is TermsState.Required -> TermsGateScreen(
             updated = terms.updated,
             submitting = state.submitting,
             error = state.error,
-            onReadTerms = { uriHandler.openUri(termsUrl) },
+            onReadTerms = onReadTerms,
             onAgree = vm::onAgree,
             onBack = onBack,
         )

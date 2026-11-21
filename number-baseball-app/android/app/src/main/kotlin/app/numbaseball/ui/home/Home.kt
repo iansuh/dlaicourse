@@ -3,7 +3,6 @@ package app.numbaseball.ui.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -15,8 +14,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.numbaseball.R
@@ -36,7 +33,6 @@ import app.numbaseball.ui.common.PrimaryButton
 import app.numbaseball.ui.common.ScreenScaffold
 import app.numbaseball.ui.common.SecondaryButton
 import app.numbaseball.ui.common.UiError
-import app.numbaseball.ui.common.toUiError
 import app.numbaseball.ui.theme.NbColors
 import app.numbaseball.ui.theme.NbSpace
 import app.numbaseball.ui.theme.NbType
@@ -55,8 +51,6 @@ data class HomeUiState(
     val roomCode: String = "",
     /** The server refused the nickname chosen offline: offer to pick another one. */
     val nicknameRejected: Boolean = false,
-    /** A deletion request was made on the website and is pending (README "Terms, deletion and review"). */
-    val deletionPending: Boolean = false,
     /** Play Age Signals can refuse online features (policy review R21). */
     val onlineAllowed: Boolean = true,
     val error: UiError? = null,
@@ -75,14 +69,13 @@ object RoomCodes {
 class HomeViewModel(private val accounts: AccountRepository, ages: AgeRepository) : ViewModel() {
     private val local = MutableStateFlow(HomeUiState())
 
-    val state: StateFlow<HomeUiState> = combine(accounts.state, accounts.deletionRequestedAt, ages.state, local) { account, deletion, age, base ->
+    val state: StateFlow<HomeUiState> = combine(accounts.state, ages.state, local) { account, age, base ->
         val ui = base.copy(onlineAllowed = (age as? AgeState.Known)?.onlineAllowed ?: false)
         when (account) {
             is AccountState.Registered -> ui.copy(
                 displayName = account.profile.displayName,
                 registered = true,
                 stats = account.stats,
-                deletionPending = deletion != null,
             )
             is AccountState.Unregistered -> ui.copy(displayName = account.nickname, registered = false, stats = null)
             AccountState.Loading, AccountState.NeedsNickname -> ui
@@ -104,17 +97,6 @@ class HomeViewModel(private val accounts: AccountRepository, ages: AgeRepository
 
     fun onRoomCodeChange(value: String) = local.update { it.copy(roomCode = RoomCodes.normalize(value)) }
 
-    fun onCancelDeletion() {
-        viewModelScope.launch { local.update { it.copy(error = accounts.cancelDeletionRequest().toUiError()) } }
-    }
-
-    fun onDeleteNow(onDeleted: () -> Unit) {
-        viewModelScope.launch {
-            val error = accounts.deleteAccount().toUiError()
-            local.update { it.copy(error = error) }
-            if (error == null) onDeleted()
-        }
-    }
 }
 
 @Composable
@@ -129,8 +111,6 @@ fun HomeScreen(
     onProfile: () -> Unit,
     onSettings: () -> Unit,
     onChooseNickname: () -> Unit,
-    onCancelDeletion: () -> Unit,
-    onDeleteNow: () -> Unit,
 ) {
     ScreenMusic(MusicTrack.MENU, LocalGameAudio.current)
     ScreenScaffold(
@@ -139,7 +119,6 @@ fun HomeScreen(
         actions = { TextButton(onClick = onSettings) { Text(stringResource(R.string.home_settings)) } },
         bottomBar = { AdBanner() },
     ) {
-        if (state.deletionPending) DeletionPendingCard(onCancelDeletion, onDeleteNow)
         Text(stringResource(R.string.home_tagline), color = NbColors.text2)
         TextButton(onClick = onProfile, modifier = Modifier.testTag("profile")) {
             Text(state.displayName, style = NbType.numTag.merge(MaterialTheme.typography.titleMedium))
@@ -169,19 +148,5 @@ fun HomeScreen(
             }
         }
         TextButton(onClick = onHowToPlay) { Text(stringResource(R.string.home_how_to_play)) }
-    }
-}
-
-@Composable
-private fun DeletionPendingCard(onCancel: () -> Unit, onDeleteNow: () -> Unit) {
-    Card {
-        Column(Modifier.padding(NbSpace.s16), verticalArrangement = Arrangement.spacedBy(NbSpace.s8)) {
-            Text(stringResource(R.string.deletion_pending_title), style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(R.string.deletion_pending_body), color = NbColors.text2)
-            Row(horizontalArrangement = Arrangement.spacedBy(NbSpace.s8)) {
-                TextButton(onClick = onCancel) { Text(stringResource(R.string.deletion_pending_cancel)) }
-                TextButton(onClick = onDeleteNow) { Text(stringResource(R.string.deletion_pending_delete_now), color = NbColors.out) }
-            }
-        }
     }
 }

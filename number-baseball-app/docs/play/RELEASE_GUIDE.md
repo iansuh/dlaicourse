@@ -226,7 +226,7 @@ No login or password is needed. On first launch, choose an age of 14 or older on
 - Online play without a second device: Home > Private room > Join, enter room code [REVIEW_ROOM_CODE]. A test bot joins, plays a 4-digit duel and sends a chat message.
 - Chat safety: long-press the bot's message to Report it or Block the player. Settings > Mute all chat hides all chat.
 - Quick Match pairs real players and allows preset quick phrases only; free-text chat is available in private rooms. Use two devices, or the room above.
-- Account deletion: Settings > Delete account (immediate). Web: https://[도메인]/delete-account
+- Account deletion: Settings > Delete account (immediate). Without the app: email the contact address, as explained at https://[도메인]/delete-account
 - Ads appear only on the home, results and profile screens, never during a match.
 - The game server runs 24/7. Contact: [연락처 이메일]
 ```
@@ -270,10 +270,9 @@ No login or password is needed. On first launch, choose an age of 14 or older on
 
 | 주소 | 확인할 것 |
 | --- | --- |
-| `https://[도메인]/` | 앱 이름과 아래 링크들이 있는 첫 페이지 |
 | `https://[도메인]/privacy` | `PRIVACY_POLICY.md`의 공개 본문(한국어·영어). 대괄호가 남아 있지 않은지 |
 | `https://[도메인]/terms` | `TERMS_OF_USE.md`의 공개 본문. `#child-safety` 부분 |
-| `https://[도메인]/delete-account` | 스토어와 같은 앱 이름과 개발자 이름이 보이는지, 삭제 코드 입력과 앱 없이 요청이 되는지 |
+| `https://[도메인]/delete-account` | 글자만 있는 안내 페이지. 스토어와 같은 앱 이름·개발자 이름, 게임 전용 이메일이 보이는지 |
 | `https://[도메인]/app-ads.txt` | 9장의 한 줄이 그대로 보이는지 |
 
 ---
@@ -343,6 +342,7 @@ AdMob → **개인정보 보호 및 메시지**:
 
 - **신고 확인 매일 1번 이상**(서버 관리 기능). 24시간 안에 조치하는 것이 목표, 늦어도 3일. 아동 관련 신고는 즉시 계정 정지 후 관계 기관에 신고.
 - 게임 전용 이메일 매일 확인(이용자 문의, Google 정책 메일).
+- **이메일 계정 삭제 요청 처리**: ① 받은 `닉네임#태그`를 관리 기능에서 찾습니다. ② 이메일을 받은 뒤에도 그 계정이 앱에서 쓰였다면 삭제하지 말고 "앱의 설정 → 계정 삭제를 이용해 주세요"라고 답장합니다(남의 계정을 지우려는 요청 방지). ③ 아니면 7일 안에 삭제하고 "삭제했습니다"라고 답장합니다. ④ 요청 이메일은 처리 후 30일이 지나면 지웁니다.
 - Play Console의 **정책 상태**와 받은편지함 확인. 경고가 오면 기한 안에 고칩니다.
 - 해마다 8월 말 전에 **목표 API 수준** 업데이트(2027년에는 API 37이 예상되지만 아직 공식 발표 전).
 - 트레이더 신고는 계정 설정에서 상태를 확인(2027-02-01 기한, 신규 계정은 가입 때 신고).
@@ -372,7 +372,7 @@ AdMob → **개인정보 보호 및 메시지**:
 
 **서버**
 - [ ] 항상 켜진 요금제 + 영구 디스크
-- [ ] `/`, `/privacy`, `/terms`, `/delete-account`, `/app-ads.txt` 열림, 대괄호 없음
+- [ ] `/privacy`, `/terms`, `/delete-account`, `/app-ads.txt` 열림, 대괄호 없음 (첫 페이지는 만들지 않음)
 - [ ] 심사용 방 코드 동작
 - [ ] 관리 기능으로 신고 목록을 볼 수 있음
 

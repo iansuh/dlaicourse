@@ -119,9 +119,9 @@ def leather_pop(rng, body_hz=130.0):
     L = n(0.16)
     slap = resonate(exciter(rng, 2.2, 0.6), L, [(900, 2.2, 1.0), (1500, 3.0, 0.6), (2600, 4.0, 0.25)])
     slap *= dsp.env_exp(L, 0.018)
-    body = dsp.pitch_drop_sine(body_hz, 0.16, 0.8, 0.006, 0.04)
-    mid = dsp.pitch_drop_sine(body_hz * 3.1, 0.16, 0.5, 0.004, 0.022) * 0.5   # audible on phone speakers
-    return dsp.lowpass(0.8 * pk(slap) + body + mid, 7000, 2)
+    body = dsp.pitch_drop_sine(body_hz, 0.16, 0.8, 0.006, 0.04) * 0.55
+    mid = dsp.pitch_drop_sine(body_hz * 3.1, 0.16, 0.5, 0.004, 0.026) * 0.75   # audible on phone speakers
+    return dsp.lowpass(1.0 * pk(slap) + body + mid, 7000, 2)
 
 
 def wood_knock(f, rng, tau=0.035):
@@ -210,8 +210,8 @@ def guess_sent():
 def hint_strike():
     rng = rng_for("strike")
     out = relay_click(rng, bright=1.12, weight=0.8) * 0.5
-    out = dsp.place(out, pk(bell(hz("A5"), 0.36, rng, tau=0.16)), 0.004)
-    return finish(dsp.fade_out(out, 40))
+    out = dsp.place(out, pk(bell(hz("A5"), 0.32, rng, tau=0.15)), 0.004)
+    return finish(dsp.fade_out(out, 60))
 
 
 def hint_ball():
@@ -462,11 +462,10 @@ def master_loop(dry: np.ndarray, ir: np.ndarray, wet: float, target: float, lp: 
         take = min(N, tail.shape[1] - k)
         loop[:, :take] += tail[:, k:k + take]
         k += take
-    loop = dsp.lowpass(loop, lp, 2)
     # the low-pass and DC filters are recursive: run them over three periods and keep the last one so
     # the filter state at the seam is the steady state (no seam transient)
     loop3 = np.concatenate([loop, loop, loop], axis=1)
-    loop3 = dsp.dc_block(loop3, 30)
+    loop3 = dsp.dc_block(dsp.lowpass(loop3, lp, 2), 30)
     loop = loop3[:, 2 * N:3 * N]
     return dsp.normalize(loop, target, "integrated", tp_ceiling=TP_CEILING)
 
@@ -602,6 +601,10 @@ def build(cue_id: str):
     if not music:
         x = dsp.normalize(x, cue["target"], "momentary", tp_ceiling=TP_CEILING, release_ms=4.0)
         x = dsp.fade_out(x, 3)  # guarantee the very last samples reach zero
+        if x.size < n(0.15):
+            # very short sounds: a little digital silence after the sound keeps Vorbis block smearing
+            # from leaving codec noise at the very end of the file (an audible tick when it stops)
+            x = np.concatenate([x, np.zeros(n(0.02))])
     TMP.mkdir(parents=True, exist_ok=True)
     OUT.mkdir(parents=True, exist_ok=True)
     wav = TMP / f"{cue_id}.wav"

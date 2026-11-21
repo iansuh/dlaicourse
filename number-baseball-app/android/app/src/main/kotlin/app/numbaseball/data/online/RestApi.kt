@@ -59,9 +59,6 @@ class RestApi(
     override suspend fun redeemTransferCode(code: String): ApiResult<AuthResponse> =
         call(request("transfer").post(body(RedeemTransferRequest.serializer(), RedeemTransferRequest(code))), AuthResponse.serializer())
 
-    override suspend fun createDeletionCode(token: String): ApiResult<CodeResponse> =
-        call(request("me/deletion-code", token).post(EMPTY_BODY), CodeResponse.serializer())
-
     override suspend fun blocks(token: String): ApiResult<BlockListResponse> =
         call(request("me/blocks", token).get(), BlockListResponse.serializer())
 

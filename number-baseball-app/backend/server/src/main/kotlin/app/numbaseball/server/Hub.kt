@@ -619,6 +619,17 @@ class Hub(
         ReportSnapshot(message, room.chat.toList().takeLast(RECENT_FOR_REPORT))
     }
 
+    /**
+     * Graceful stop: rooms live in memory only, so every seated player gets room_left{closed} and every connection is
+     * closed with 1001. Unfinished matches record no result; after the restart welcome.roomId is null.
+     */
+    suspend fun shutdown() = mutex.withLock {
+        for (room in rooms.values.toList()) closeRoom(room, LeaveReason.CLOSED)
+        queue.clear()
+        for (s in sessions.values) s.close(1001, "server restarting")
+        sessions.clear()
+    }
+
     /** Live counts for /health and tests. */
     suspend fun counts(): Map<String, Int> = mutex.withLock {
         mapOf("connections" to sessions.size, "queued" to queue.size, "rooms" to rooms.size)
