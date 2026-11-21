@@ -41,7 +41,7 @@ P-EN-023	en	MASK	fuck	f\U{0337}u\U{0337}c\U{0337}k\U{0337}	combining short solid
 P-EN-024	en	MASK	fuck	fvck	v for u
 P-EN-025	en	MASK	fuck	f\nu\nc\nk	single letters on separate lines (newline is a control char)
 P-EN-026	en	MASK	fuck	f\U{202E}u\U{202C}ck	bidi override inside the word
-P-EN-027	en	MASK	fuck	fuk	common misspelling; see F-EN Fukuoka trap
+P-EN-027	en	MASK	fuk	fuk	common misspelling; see F-EN Fukuoka trap
 P-EN-028	en	MASK	shit	shit	plain
 P-EN-029	en	MASK	shit	sh1t	leet 1
 P-EN-030	en	MASK	shit	$hit	leet $
@@ -87,7 +87,7 @@ P-KO-016	ko	MASK	ssibal	ssibal	romanized tense
 P-KO-017	ko	MASK	시발	시\U{200B}발	zero-width space
 P-KO-018	ko	MASK	시발	\U{1109}\U{1175}\U{1107}\U{1161}\U{11AF}	conjoining jamo (NFD form of 시발); NFC must compose it
 P-KO-019	ko	MASK	시발	ㅅㅣㅂㅏㄹ	compatibility jamo spelled out
-P-KO-020	ko	MASK	씨발	씌발	vowel variant
+P-KO-020	ko	MASK	씌발	씌발	vowel variant
 P-KO-021	ko	MASK	병신	병신	plain
 P-KO-022	ko	MASK	병신	병1신	digit inside
 P-KO-023	ko	MASK	븅신	븅신	variant

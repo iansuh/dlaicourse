@@ -50,7 +50,7 @@ fun AdBanner(modifier: Modifier = Modifier) {
 private fun AnchoredBanner(adUnitId: String, widthDp: Int) {
     val context = LocalContext.current
     var loaded by remember { mutableStateOf(false) }
-    val adSize = remember(widthDp) { AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, widthDp) }
+    val adSize = remember(widthDp) { AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, widthDp) }
     val adView = remember(adUnitId, adSize) {
         AdView(context).apply {
             setAdSize(adSize)

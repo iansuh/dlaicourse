@@ -59,6 +59,9 @@ class Duel(val config: DuelConfig, private val random: Random = Random.Default) 
         private set
     var endedAt: Long? = null
         private set
+    /** When the current phase or round began. */
+    var phaseStartedAt: Long = 0
+        private set
 
     private val secrets = arrayOfNulls<String>(2)
     private val pending = arrayOfNulls<String>(2)
@@ -79,6 +82,7 @@ class Duel(val config: DuelConfig, private val random: Random = Random.Default) 
         check(!started) { "already started" }
         started = true
         phase = DuelPhase.CHOOSING
+        phaseStartedAt = now
         deadline = config.roundMillis?.let { now + it }
     }
 
@@ -182,6 +186,7 @@ class Duel(val config: DuelConfig, private val random: Random = Random.Default) 
     private fun startRound(t: Long) {
         phase = DuelPhase.GUESSING
         round++
+        phaseStartedAt = t
         deadline = config.roundMillis?.let { t + it }
     }
 

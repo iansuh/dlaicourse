@@ -96,7 +96,7 @@ object QaTextOracle {
         // Cyrillic
         put(0x0430, 'a'); put(0x0435, 'e'); put(0x043E, 'o'); put(0x0440, 'p'); put(0x0441, 'c'); put(0x0443, 'y')
         put(0x0445, 'x'); put(0x043A, 'k'); put(0x0456, 'i'); put(0x0455, 's'); put(0x0458, 'j'); put(0x0501, 'd')
-        put(0x04CF, 'l'); put(0x043C, 'm'); put(0x0442, 't'); put(0x0432, 'b'); put(0x043D, 'h')
+        put(0x04CF, 'l'); put(0x043C, 'm'); put(0x0442, 't'); put(0x0432, 'b'); put(0x043D, 'h'); put(0x0437, 'z')
         // Greek
         put(0x03B1, 'a'); put(0x03B2, 'b'); put(0x03B5, 'e'); put(0x03B9, 'i'); put(0x03BA, 'k'); put(0x03BD, 'v')
         put(0x03BF, 'o'); put(0x03C1, 'p'); put(0x03C4, 't'); put(0x03C5, 'u'); put(0x03C7, 'x')
@@ -157,8 +157,29 @@ object QaTextOracle {
 
     enum class NickProblem { LENGTH, CHARSET, INVISIBLE }
 
-    /** protocol 9.3: trim, NFKC, trim. */
-    fun normalizeNickname(raw: String): String = Normalizer.normalize(raw.trim(), Normalizer.Form.NFKC).trim()
+    /**
+     * protocol 9.3: trim, NFKC, trim. QA rule (DEF-035): Hangul compatibility jamo U+3131..U+318E keep their form,
+     * because NFKC turns "ㅋㅋ" into conjoining jamo and composes "ㄱㅏ" into the syllable "가".
+     */
+    fun normalizeNickname(raw: String): String {
+        val src = raw.trim()
+        val out = StringBuilder()
+        val chunk = StringBuilder()
+        fun flush() {
+            out.append(Normalizer.normalize(chunk, Normalizer.Form.NFKC))
+            chunk.setLength(0)
+        }
+        for (cp in codePoints(src)) {
+            if (cp in 0x3131..0x318E) {
+                flush()
+                out.appendCodePoint(cp)
+            } else {
+                chunk.appendCodePoint(cp)
+            }
+        }
+        flush()
+        return out.toString().trim()
+    }
 
     /**
      * Structural rule only (no profanity, no reserved names): 2..12 code points after normalization, every code point a

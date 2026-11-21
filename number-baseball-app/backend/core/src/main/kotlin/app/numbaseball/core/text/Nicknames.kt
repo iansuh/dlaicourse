@@ -23,7 +23,29 @@ object Nicknames {
         "관리자", "운영자", "운영진", "시스템", "管理员", "管理者", "運営", "администратор", "модератор",
     )
 
-    fun normalize(raw: String): String = Normalizer.normalize(raw.trim(), Normalizer.Form.NFKC).trim()
+    /**
+     * Trim, NFKC, trim. NFKC turns compatibility jamo ("ㅋㅋ") into conjoining jamo, which render badly on their own,
+     * so jamo left standalone after composition are mapped back to their compatibility forms.
+     */
+    fun normalize(raw: String): String {
+        val nfkc = Normalizer.normalize(raw.trim(), Normalizer.Form.NFKC).trim()
+        if (nfkc.none { it in '\u1100'..'\u11FF' }) return nfkc
+        val sb = StringBuilder(nfkc.length)
+        for (ch in nfkc) {
+            sb.append(
+                when (ch) {
+                    in '\u1100'..'\u1112' -> LEAD_COMPAT[ch - '\u1100']
+                    in '\u1161'..'\u1175' -> '\u314F' + (ch - '\u1161')
+                    in '\u11A8'..'\u11C2' -> TAIL_COMPAT[ch - '\u11A8']
+                    else -> ch
+                },
+            )
+        }
+        return sb.toString()
+    }
+
+    private const val LEAD_COMPAT = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
+    private const val TAIL_COMPAT = "ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ"
 
     fun validate(raw: String): Result {
         val name = normalize(raw)

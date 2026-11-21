@@ -26,4 +26,13 @@ data class StoredAccount(
     val id: String?,
     val nickname: String?,
     val tag: String?,
+    /** Version of the terms the player agreed to (policy review R6); null = never. */
+    val acceptedTermsVersion: Int? = null,
 )
+
+sealed interface TermsState {
+    data object Accepted : TermsState
+
+    /** [updated] = an older version was accepted and the terms changed since. */
+    data class Required(val updated: Boolean) : TermsState
+}

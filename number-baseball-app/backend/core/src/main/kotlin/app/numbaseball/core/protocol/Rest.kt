@@ -25,6 +25,17 @@ data class AccountDto(
     val stats: Stats,
     /** Epoch milliseconds. */
     val createdAt: Long,
+    /** Terms of Use version this account accepted, or null. Compare with [ServerInfo.termsVersion]. */
+    val termsVersion: String? = null,
+    val termsAcceptedAt: Long? = null,
+    /**
+     * Set when someone asked on the web page to delete this account. Using the account cancels that request, so when
+     * the app sees this it should say "A deletion request was made on the web on <date> and was cancelled because you
+     * used the app" and offer "Delete now" (DELETE /me) or "Keep" (DELETE /me/deletion-request clears this field).
+     */
+    val deletionRequestedAt: Long? = null,
+    /** Chat is restricted until this time (epoch ms), or null. */
+    val chatRestrictedUntil: Long? = null,
 )
 
 @Serializable
@@ -36,6 +47,9 @@ data class AuthResponse(val token: String, val account: AccountDto)
 
 @Serializable
 data class RenameRequest(val nickname: String)
+
+@Serializable
+data class AcceptTermsRequest(val version: String)
 
 /** A one-time code. [expiresAt] is epoch milliseconds. */
 @Serializable
@@ -76,6 +90,10 @@ data class ServerInfo(
     val chatMaxLength: Int,
     val maxMessageBytes: Int,
     val quickPhrases: List<String>,
+    /** Current Terms of Use version; online play and chat need [AccountDto.termsVersion] to equal it. */
+    val termsVersion: String = "",
+    /** False: quick-match rooms allow quick phrases only (free text gives `chat_not_allowed`). */
+    val quickMatchFreeChat: Boolean = false,
 )
 
 // ---- admin (Authorization: Bearer <ADMIN_TOKEN>) ----
@@ -112,3 +130,16 @@ data class ResolveReportRequest(val resolution: String)
 
 @Serializable
 data class BanRequest(val reason: String)
+
+/** [hours] = 0 lifts the restriction. */
+@Serializable
+data class ChatRestrictRequest(val hours: Int, val reason: String)
+
+@Serializable
+data class AdminAccount(
+    val account: AccountDto,
+    val bannedAt: Long?,
+    val banReason: String?,
+    val chatRestrictReason: String?,
+    val deletionRequestPendingSince: Long?,
+)

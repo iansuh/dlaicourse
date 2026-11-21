@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
 // Client messages may carry "rid" (request id, any positive number). When present the server answers
 // exactly once with `ack` (same rid) or `error` (same rid). Without rid only errors are reported.
 
-@Serializable
+/** Decoded strictly by [ClientMessageSerializer] (RFC 8259 literals only, string "type"). */
+@Serializable(with = ClientMessageSerializer::class)
 sealed interface ClientMessage {
     val rid: Long?
 }
@@ -134,6 +135,8 @@ data class PlayerView(
     val connected: Boolean,
     /** Left the room during the current match (seat kept only to show results). */
     val left: Boolean,
+    /** The account was deleted: show "deleted player" ([nickname] and [tag] are empty). */
+    val deleted: Boolean = false,
 )
 
 @Serializable

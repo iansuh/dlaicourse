@@ -9,8 +9,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -34,12 +36,24 @@ class AccountRepository(
     private val store: AccountStore,
     private val api: AccountApi,
     scope: CoroutineScope,
+    private val policyApi: PolicyApi = PendingProtocolPolicyApi,
+    private val currentTermsVersion: Int = TermsPolicy.CURRENT_VERSION,
 ) {
     private val stats = MutableStateFlow<Stats?>(null)
     private val registrationLock = Mutex()
 
     val state: StateFlow<AccountState> = combine(store.account, stats) { stored, s -> stored.toState(s) }
         .stateIn(scope, SharingStarted.Eagerly, AccountState.Loading)
+
+    val terms: StateFlow<TermsState> = store.account.map { stored ->
+        val accepted = stored.acceptedTermsVersion
+        if (accepted != null && accepted >= currentTermsVersion) TermsState.Accepted else TermsState.Required(updated = accepted != null)
+    }.stateIn(scope, SharingStarted.Eagerly, TermsState.Required(updated = false))
+
+    private val _deletionRequestedAt = MutableStateFlow<Long?>(null)
+
+    /** Epoch ms of a pending deletion request made on the website. TODO(protocol): fill from the account data. */
+    val deletionRequestedAt: StateFlow<Long?> = _deletionRequestedAt.asStateFlow()
 
     suspend fun token(): String? = store.account.first().token
 
@@ -67,8 +81,8 @@ class AccountRepository(
     suspend fun redeemTransferCode(code: String): ApiResult<Profile> = registrationLock.withLock {
         when (val r = api.redeemTransferCode(code)) {
             is ApiResult.Success -> ApiResult.Success(save(r.value))
-            is ApiResult.Failure -> r
-            ApiResult.NetworkError -> r
+            is ApiResult.Failure -> ApiResult.Failure(r.status, r.code, r.retryAfterSeconds)
+            ApiResult.NetworkError -> ApiResult.NetworkError
         }
     }
 
@@ -95,6 +109,18 @@ class AccountRepository(
         store.clearToken()
     }
 
+    suspend fun acceptTerms(): ApiResult<Unit> {
+        val result = withToken { policyApi.acceptTerms(it, currentTermsVersion) }
+        if (result is ApiResult.Success) store.saveAcceptedTerms(currentTermsVersion)
+        return result
+    }
+
+    suspend fun cancelDeletionRequest(): ApiResult<Unit> {
+        val result = withToken { policyApi.cancelDeletionRequest(it) }
+        if (result is ApiResult.Success) _deletionRequestedAt.value = null
+        return result
+    }
+
     suspend fun createTransferCode(): ApiResult<CodeResponse> = withToken { api.createTransferCode(it) }
 
     suspend fun createDeletionCode(): ApiResult<CodeResponse> = withToken { api.createDeletionCode(it) }
@@ -104,6 +130,7 @@ class AccountRepository(
         val result = if (token == null) ApiResult.Success(Unit) else api.deleteAccount(token)
         if (result is ApiResult.Success || (result is ApiResult.Failure && result.status == 401)) {
             stats.value = null
+            _deletionRequestedAt.value = null
             store.clear()
             return ApiResult.Success(Unit)
         }

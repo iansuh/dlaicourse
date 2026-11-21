@@ -46,14 +46,17 @@ window.build = function (qs) {
       <div class="list">
         ${nav('person', 'nickname', null, '새벽투수<span class="ptag">#4821</span>')}
         ${nav('key', 'transfer', 'transferSub')}
+        ${nav('lock', 'webDeleteCode', 'webDeleteCodeSub')}
         ${nav('delete', 'deleteAcc', 'deleteSub', '', ' danger')}
       </div>
       <div class="sec-head"><span class="sec-label">${t('secAbout')}</span></div>
       <div class="list">
-        ${nav('shield', 'privacyOptions', 'privacyOptionsSub')}
+        ${qs.get('ump') === '0' ? '' : nav('shield', 'privacyOptions', 'privacyOptionsSub')}
         ${ext('policy', 'privacyPolicy')}
-        ${nav('description', 'licences')}
-        <div class="row single">${P.icon('info', 'ic lead')}<span class="rt"><span class="t">${t('version')}</span></span><span class="val num" style="font:var(--t-num-tag)">1.0.0 (1)</span></div>
+        ${ext('description', 'terms')}
+        <button class="row" style="width:100%;text-align:left">${P.icon('send', 'ic lead')}<span class="rt"><span class="t">${t('contact')}</span><span class="s">${t('contactSub')}</span></span>${P.icon('open_in_new', 'ic ext')}</button>
+        ${nav('info', 'licences')}
+        <div class="row single noicon" style="padding-left:56px">${''}<span class="rt"><span class="t" style="font:var(--t-body);color:var(--c-text3)">${t('version')}</span></span><span class="val num" style="font:var(--t-num-tag);color:var(--c-text3)">1.0.0 (1)</span></div>
       </div>
     </div>
     <div class="gesture"></div>`;

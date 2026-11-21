@@ -24,3 +24,24 @@ interface AccountApi {
     suspend fun redeemTransferCode(code: String): ApiResult<AuthResponse>
     suspend fun createDeletionCode(token: String): ApiResult<CodeResponse>
 }
+
+/**
+ * Terms acceptance and web deletion requests (policy review R5, R6).
+ * TODO(protocol): bind `PUT /api/v1/me/terms` and the deletion-request cancel call once docs/protocol.md defines their
+ * bodies, and read `deletionRequestedAt` / the current terms version from the account and server config.
+ */
+interface PolicyApi {
+    suspend fun acceptTerms(token: String, version: Int): ApiResult<Unit>
+    suspend fun cancelDeletionRequest(token: String): ApiResult<Unit>
+}
+
+/** Until the endpoints exist: acceptance is stored on the device only, and there is never a pending web deletion. */
+object PendingProtocolPolicyApi : PolicyApi {
+    override suspend fun acceptTerms(token: String, version: Int): ApiResult<Unit> = ApiResult.Success(Unit)
+    override suspend fun cancelDeletionRequest(token: String): ApiResult<Unit> = ApiResult.Success(Unit)
+}
+
+object TermsPolicy {
+    /** TODO(protocol): use the version the server reports. */
+    const val CURRENT_VERSION = 1
+}

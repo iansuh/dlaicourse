@@ -58,9 +58,15 @@ window.build = function (qs) {
     entry: (qs.get('entry') || '39').split('').filter(Boolean),
     memo: { '0': 'x', '2': 'x', '4': 'x', '5': 'x', '7': 'x', '8': 'x', '1': 'o', '3': 'o', '6': 'o', '9': 'o', '1:1': 'x', '3:3': 'x', '1:3': 'o', '2:1': 'x', '4:9': 'x' }
   };
+  if (state === 'late' || state === 'phrases') {
+    m.mine = ['1234', '5780', '3196', '3169', '3961', '3912'];
+    m.theirs = ['5832', '0291', '0724', '0742', '0427', '0471'];
+    m.entry = (qs.get('entry') || '391').split('');
+    m.memo = { '0': 'x', '2': 'x', '4': 'x', '5': 'x', '7': 'x', '8': 'x', '1': 'o', '3': 'o', '6': 'o', '9': 'o', '1:3': 'o', '2:9': 'o', '3:1': 'o', '4:2': 'x', '4:6': 'o', '1:1': 'x', '3:3': 'x' };
+  }
   if (n !== 4) { m.secretOpp = '391652'.slice(0, n); m.secretMine = '047281'.slice(0, n); m.mine = ['123456'.slice(0, n), '578042'.slice(0, n), '319620'.slice(0, n)]; m.theirs = ['583219'.slice(0, n), '029153'.slice(0, n), '072418'.slice(0, n)]; m.memo = { '7': 'x', '8': 'x', '1': 'o', '3': 'o' }; }
   const app = document.getElementById('app');
-  const clockCls = qs.get('clock') || '';
+  const clockCls = qs.get('clock') || (state === 'reconnect' ? 'paused' : '');
   const clockVal = clockCls === 'warn' ? '0:08' : clockCls === 'crit' ? '0:04' : '0:42';
   const clockPct = clockCls === 'warn' ? 13 : clockCls === 'crit' ? 7 : 70;
   const roundNo = state === 'secret' ? 0 : m.mine.length + 1;
@@ -78,6 +84,7 @@ window.build = function (qs) {
       <span class="vs">VS</span>
       <div class="opp"><span class="pname">Kestrel<span class="ptag">#2048</span></span>
         <span class="pstatus">${status === 'pitched' ? `<span class="lamp on bl"></span>${t('oppPitched')}` : status === 'picking' ? `<span class="lamp"></span>${t('oppPicking')}` : `<span class="lamp"></span>${t('oppThinking')}`}</span></div>
+      ${qs.get('mode') !== 'cpu' ? `<button class="iconbtn dim" aria-label="${t('phrases')}">${P.icon('chat')}</button>` : ''}
       ${status !== 'picking' ? `<div class="mysecret"><span class="cap">${t('mySecret')}</span><span class="miniplates">${m.secretMine.split('').map((d) => `<span>${d}</span>`).join('')}</span></div>` : ''}
     </section>`;
   if (state === 'secret') {
@@ -100,15 +107,21 @@ window.build = function (qs) {
     return;
   }
   const waiting = state === 'waiting';
+  const phraseSheet = state === 'phrases' ? `<div class="scrim"></div><section class="sheet" style="padding-bottom:24px"><div class="grab"></div>
+      <div style="display:flex;align-items:center;padding:4px 4px 0 16px"><span style="flex:1;font:var(--t-title)">${t('phrases')}</span><button class="iconbtn" aria-label="close">${P.icon('close')}</button></div>
+      <p style="padding:0 16px 12px;font:var(--t-caption);color:var(--c-text3)">${t('phrasesNote')}</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px">${['ph1', 'ph2', 'ph3', 'ph4', 'ph5', 'ph6'].map((k) => `<button class="btn btn-tonal" style="height:48px">${t(k)}</button>`).join('')}</div>
+    </section>` : '';
   if (waiting) m.entry = ['3', '9', '6', '1'];
-  app.innerHTML = `<div class="sysbar"></div>${top}${duel(waiting ? 'thinking' : 'pitched')}
+  const recon = state === 'reconnect' ? `<div class="conn" role="status"><span class="lamps"><span class="lamp on ch"></span><span class="lamp"></span><span class="lamp"></span></span><span class="tx"><b>${t('reconnecting')}</b><span>${t('reconnectSub', { s: '0:48' })}</span></span><span class="cd">0:48</span></div>` : '';
+  app.innerHTML = `<div class="sysbar"></div>${top}${recon}${duel(waiting ? 'thinking' : 'pitched')}
     <section class="log${n >= 5 ? ' wide' : ''}">${P.logHtml(m)}</section>
     <section class="memo">${P.memoHtml(m)}</section>
     <section class="entry">
       ${P.slotsHtml(n, m.entry, { locked: waiting })}
-      ${P.keypadHtml(m, { waiting })}
+      ${P.keypadHtml(m, { waiting, offline: state === 'reconnect' })}
     </section>
-    <div class="gesture"></div>`;
+    <div class="gesture"></div>${phraseSheet}`;
 };
 </script>
 </head>

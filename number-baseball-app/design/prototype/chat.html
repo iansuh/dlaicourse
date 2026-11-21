@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chat</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/proto.css">
+<style>
+  .behind { flex: 1 1 auto; padding: 72px 16px 0; color: var(--c-text3); font: var(--t-title); }
+  .sheet { top: 136px; display: flex; flex-direction: column; }
+  .sh-head { flex: none; height: 48px; display: flex; align-items: center; padding: 0 4px 0 16px; }
+  .sh-head .t { flex: 1; font: var(--t-title); }
+  .mute { display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 4px; font: var(--t-label-small); color: var(--c-text2); }
+  .msgs { flex: 1 1 auto; overflow: hidden; padding: 8px 16px; display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; }
+  .sys { align-self: center; font: var(--t-caption); color: var(--c-text3); text-align: center; }
+  .m { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; max-width: 80%; align-self: flex-start; }
+  .m .who .nm { display: inline-flex; align-items: baseline; }
+  .m .who { font: var(--t-micro); color: var(--c-text2); display: flex; align-items: center; gap: 6px; }
+  .m .who .ptag { font: var(--t-num-tag); font-size: 13px; line-height: 16px; }
+  .m .who .tbadge { width: 16px; height: 16px; font-size: 12px; border-radius: 3px; }
+  .bub { padding: 10px 12px; border-radius: var(--r-m); background: var(--c-surface4); font: var(--t-body); color: var(--c-chalk); }
+  .m.me { align-self: flex-end; align-items: flex-end; }
+  .m.me .bub { background: var(--c-chalk); color: var(--c-on-chalk); }
+  .m .time { font: var(--t-caption); font-size: 12px; color: var(--c-text3); }
+  .mask { letter-spacing: .1em; color: var(--c-text3); }
+  .m.held .bub { box-shadow: 0 0 0 2px var(--c-chalk); }
+  .quick { flex: none; display: flex; gap: 8px; padding: 8px 16px; overflow: hidden; border-top: 1px solid var(--c-line); }
+  .chip { flex: none; height: var(--z-chip-h); padding: 0 12px; border-radius: var(--r-s); box-shadow: inset 0 0 0 1px var(--c-outline); font: var(--t-label-small); color: var(--c-chalk); display: flex; align-items: center; white-space: nowrap; }
+  .chip-touch { padding: 8px 0; display: flex; }
+  .compose { flex: none; display: flex; align-items: center; gap: 8px; padding: 4px 4px 8px 16px; }
+  .field { flex: 1; height: 48px; border-radius: var(--r-m); background: var(--c-surface2); display: flex; align-items: center; padding: 0 12px; font: var(--t-body); color: var(--c-text3); }
+  .send { width: 48px; height: 48px; border-radius: var(--r-m); background: var(--c-chalk); color: var(--c-on-chalk); display: grid; place-items: center; }
+  .send.off { background: var(--c-surface2); color: var(--c-text-disabled); }
+  .limit { flex: none; padding: 0 16px 4px; font: var(--t-caption); color: var(--c-strike); display: flex; align-items: center; gap: 6px; }
+  .limit .ic { width: 16px; height: 16px; }
+  .menu { position: absolute; left: 0; right: 0; bottom: 0; background: var(--c-surface3); border-radius: var(--r-l) var(--r-l) 0 0; box-shadow: var(--shadow-3); padding-bottom: 24px; }
+  .menu .ctx { padding: 4px 16px 12px; font: var(--t-caption); color: var(--c-text3); border-bottom: 1px solid var(--c-line); }
+  .menu .ctx b { color: var(--c-chalk); font: var(--t-body-strong); display: block; margin-top: 2px; }
+  .menu .row { min-height: 56px; }
+  .menu .row .lead { color: var(--c-text2); }
+  .menu .row.danger .lead, .menu .row.danger .t { color: var(--c-out); }
+</style>
+<script src="js/strings.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/proto.js"></script>
+<script>
+const C = {
+  ko: { chat: '채팅', joined: '민트초코#0912 님이 들어왔어요', hi: '잘 부탁해요!', q: '몇 자리로 할까요?', masked: '그건 좀 <span class="mask" aria-label="가려진 말">***</span> 아닌가', mine: '4자리 좋아요', ph: '메시지 (최대 80자)', q1: '잘 부탁해요', q2: '좋은 게임!', q3: '잠깐만요', q4: '한 판 더?', q5: '준비됐어요', limit: '너무 빨라요. 3초 뒤에 보낼 수 있어요', muteChat: '전체 채팅 끄기', copy: '복사', report: '메시지 신고', block: '이 플레이어 차단', blockSub: '채팅이 보이지 않고 다시 매칭되지 않아요', from: '선택한 메시지', close: '닫기' },
+  en: { chat: 'Chat', joined: 'Mint#0912 joined the room', hi: 'Good luck!', q: 'How many digits?', masked: 'that is so <span class="mask" aria-label="hidden word">***</span>', mine: '4 digits works', ph: 'Message (max 80)', q1: 'Good luck', q2: 'Good game!', q3: 'One sec', q4: 'Again?', q5: 'Ready', limit: 'Too fast. You can send again in 3 s', muteChat: 'Mute all chat', copy: 'Copy', report: 'Report message', block: 'Block this player', blockSub: 'Hides their chat and never matches you again', from: 'Selected message', close: 'Close' }
+};
+window.build = function (qs) {
+  const c = C[P.lang] || C.en, st = qs.get('state') || '';
+  const who = (n, tag, team) => `<span class="who"><span class="tbadge ${team}">${team.toUpperCase()}</span><span class="nm">${n}<span class="ptag">#${tag}</span></span></span>`;
+  document.getElementById('app').innerHTML = `
+    <div class="sysbar"></div>
+    <div class="behind">${P.t('modeRoom')}</div>
+    <div class="scrim"></div>
+    <section class="sheet">
+      <div class="grab"></div>
+      <div class="sh-head"><span class="t">${c.chat}</span><label class="mute"><span>${c.muteChat}</span><span class="switch" role="switch" aria-checked="false"></span></label><button class="iconbtn" aria-label="${c.close}">${P.icon('close')}</button></div>
+      <div class="msgs">
+        <p class="sys">${c.joined}</p>
+        <div class="m">${who('민트초코', '0912', 'b')}<span class="bub">${c.hi}</span></div>
+        <div class="m">${who('Kestrel', '2048', 'a')}<span class="bub">${c.q}</span></div>
+        <div class="m${st === 'actions' ? ' held' : ''}">${who('Größenwahn', '7731', 'b')}<span class="bub">${c.masked}</span></div>
+        <div class="m me"><span class="bub">${c.mine}</span><span class="time">9:41</span></div>
+      </div>
+      <div class="quick">${[c.q1, c.q2, c.q3, c.q4, c.q5].map((q) => `<button class="chip">${q}</button>`).join('')}</div>
+      ${st === 'limit' ? `<div class="limit">${P.icon('timer')}${c.limit}</div>` : ''}
+      <div class="compose"><div class="field">${c.ph}</div><button class="send${st === 'limit' ? ' off' : ''}" aria-label="send">${P.icon('send')}</button></div>
+      <div class="gesture" style="height:16px"></div>
+    </section>
+    ${st === 'actions' ? `
+    <div class="scrim" style="background:rgba(0,0,0,.4)"></div>
+    <section class="menu">
+      <div class="grab sheet-grab" style="width:32px;height:4px;border-radius:2px;background:var(--c-outline);margin:12px auto 8px"></div>
+      <div class="ctx">${c.from}<b>Größenwahn#7731 · ${c.masked}</b></div>
+      <button class="row single" style="width:100%;text-align:left">${P.icon('content_copy', 'ic lead')}<span class="rt"><span class="t">${c.copy}</span></span></button>
+      <button class="row single" style="width:100%;text-align:left">${P.icon('flag', 'ic lead')}<span class="rt"><span class="t">${c.report}</span></span></button>
+      <button class="row danger" style="width:100%;text-align:left">${P.icon('block', 'ic lead')}<span class="rt"><span class="t">${c.block}</span><span class="s">${c.blockSub}</span></span></button>
+    </section>` : ''}`;
+};
+</script>
+</head>
+<body>
+<div class="app" id="app"></div>
+</body>
+</html>

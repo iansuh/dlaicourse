@@ -159,4 +159,14 @@ object ErrorCodes {
     const val CHAT_TOO_LONG = "chat_too_long"
     const val CHAT_RATE_LIMITED = "chat_rate_limited"
     const val UNKNOWN_PHRASE = "unknown_phrase"
+    /** Free text is not allowed in this room (quick match allows quick phrases only). */
+    const val CHAT_NOT_ALLOWED = "chat_not_allowed"
+    /** A moderator or the automatic report rule restricted this account's chat for a while. */
+    const val CHAT_RESTRICTED = "chat_restricted"
+
+    // terms
+    /** The current Terms of Use must be accepted (PUT /api/v1/me/terms) before online play or chat. */
+    const val TERMS_REQUIRED = "terms_required"
+    /** PUT /api/v1/me/terms named a version that is not the current one. */
+    const val TERMS_OUTDATED = "terms_outdated"
 }

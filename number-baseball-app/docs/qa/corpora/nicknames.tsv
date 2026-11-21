@@ -28,7 +28,8 @@ N-012	VALID	-	Müller	Müller
 N-013	VALID	-	Weiß	Weiß	
 N-014	VALID	-	abcdefghijkl	abcdefghijkl	maximum length 12
 N-015	VALID	-	user123	user123	
-N-016	VALID	-	ㅋㅋ	ㅋㅋ	compatibility jamo are letters
+N-016	VALID	-	ㅋㅋ	ㅋㅋ	compatibility jamo are letters and must be stored as typed (plain NFKC turns them into conjoining jamo; DEF-035)
+N-032	VALID	-	ㄱㅏ	ㄱㅏ	two compatibility jamo must not be composed into the syllable 가 by NFKC (DEF-035)
 N-017	VALID	-	ラーメン	ラーメン	prolonged sound mark U+30FC is a letter (Lm)
 N-018	VALID	-	가나다라마바사아자차카타	가나다라마바사아자차카타	12 Hangul syllables
 N-019	VALID	-	\U{1100}\U{1161}\U{1102}\U{1161}\U{1103}\U{1161}\U{1105}\U{1161}\U{1106}\U{1161}\U{1107}\U{1161}\U{1109}\U{1161}\U{110B}\U{1161}\U{110C}\U{1161}\U{110E}\U{1161}\U{110F}\U{1161}\U{1110}\U{1161}	가나다라마바사아자차카타	same 12 syllables as 24 conjoining jamo: length counted after normalization
@@ -130,7 +131,7 @@ N-422	PROFANITY	-	địt	-
 N-423	PROFANITY	-	Bitch99	-	
 N-424	PROFANITY	-	nigga	-	slur
 N-425	PROFANITY	-	ﾊﾞｶﾔﾛｳ	-	half-width; NFKC gives バカヤロウ
-N-426	PROFANITY	-	f\U{0443}ck	-	Cyrillic u look-alike inside a Latin name
+N-426	PROFANITY	-	f\U{057D}ck	-	Armenian seh U+057D looks like u inside a Latin name
 N-501	EITHER	-	Scunthorpe	-	substring rule may reject it; acceptable for names
 N-502	EITHER	-	시발점	-	substring rule may reject it
 N-503	EITHER	-	สมศ\U{0E31}กด\U{0E34}\U{0E4C}	-	Thai with combining vowel signs (Mn): rejected by a strict letter rule; not a target language

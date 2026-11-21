@@ -76,24 +76,24 @@
       return c.join(' ');
     };
     const full = m.entry.length === m.secretOpp.length;
-    const pitchLabel = opts.waiting ? `<span class="waiting-chase"><span class="lamp on ch"></span><span class="lamp"></span><span class="lamp"></span></span>${t('waitingOpp')}` : (opts.label || t('pitch'));
+    const pitchLabel = opts.offline ? t('pitch') : opts.waiting ? `<span class="waiting-chase"><span class="lamp on ch"></span><span class="lamp"></span><span class="lamp"></span></span>${t('waitingOpp')}` : (opts.label || t('pitch'));
     let k = '';
     for (const d of '01234') k += `<button class="key ${keyCls(d)}">${d}</button>`;
     for (const d of '56789') k += `<button class="key ${keyCls(d)}">${d}</button>`;
     k += `<button class="key fn" aria-label="${t('backspace')}">${icon('backspace')}</button>`;
     if (opts.secret) k += `<button class="key fn" aria-label="${t('random')}">${icon('shuffle')}</button>`;
-    k += `<button class="key pitch${opts.secret ? ' span3' : ''}${opts.waiting ? ' waiting' : full ? '' : ' is-disabled'}">${pitchLabel}</button>`;
+    k += `<button class="key pitch${opts.secret ? ' span3' : ''}${opts.offline ? ' is-disabled' : opts.waiting ? ' waiting' : full ? '' : ' is-disabled'}">${pitchLabel}</button>`;
     // compact (window height < 480dp): 2 rows x 6 columns
     let c = '';
     for (const d of '01234') c += `<button class="key ${keyCls(d)}">${d}</button>`;
     c += `<button class="key fn" aria-label="${t('backspace')}">${icon('backspace')}</button>`;
     for (const d of '56789') c += `<button class="key ${keyCls(d)}">${d}</button>`;
     c += `<button class="key pitch${full ? '' : ' is-disabled'}">${t('pitch')}</button>`;
-    return `<div class="keypad full${opts.waiting ? ' locked' : ''}">${k}</div><div class="keypad compact">${c}</div>`;
+    return `<div class="keypad full${opts.waiting || opts.offline ? ' locked' : ''}">${k}</div><div class="keypad compact">${c}</div>`;
   }
 
   // In-app brand mark: the icon's number plate, numeral and three strike lamps (viewBox crops the 108dp icon).
-  const mark = () => `<svg class="brandmark" viewBox="33 24 42 63" aria-hidden="true"><rect x="36" y="28" width="36" height="44" rx="6" fill="#1A231F" stroke="#3B4943"/><rect x="40" y="49.5" width="28" height="1" fill="#0C1210" opacity=".55"/><path fill="#ECEFE6" d="M61.53 54.9Q61.53 56.64 61.38 57.87Q61.06 60.72 59.18 62.36Q57.3 64 54.14 64Q50.86 64 48.8 62.26Q46.74 60.52 46.58 57.63Q46.47 56.56 46.47 55.34Q46.47 54.86 46.94 54.86H51.57Q52.04 54.86 52.04 55.34Q52.04 56.25 52.16 57.04Q52.28 58.07 52.79 58.64Q53.31 59.21 54.14 59.21Q54.93 59.21 55.44 58.66Q55.96 58.11 56.12 57.16Q56.23 55.77 56.23 54.31Q56.23 52.45 56.04 51.38Q55.88 50.47 55.38 49.98Q54.89 49.49 54.14 49.49Q53.55 49.49 52.95 50Q52.71 50.16 52.64 50.16Q52.48 50.16 52.28 49.96L49.91 47.55Q49.75 47.39 49.75 47.19Q49.75 47.03 49.87 46.88L54.65 40.98Q54.73 40.9 54.69 40.82Q54.65 40.75 54.53 40.75H47.42Q47.22 40.75 47.08 40.61Q46.94 40.47 46.94 40.27V36.47Q46.94 36.28 47.08 36.14Q47.22 36 47.42 36H61.02Q61.22 36 61.36 36.14Q61.49 36.28 61.49 36.47V40.43Q61.49 40.75 61.3 41.02L56.87 46.6Q56.83 46.68 56.83 46.76Q56.83 46.84 56.91 46.84Q58.65 46.99 59.85 48.42Q61.06 49.84 61.34 51.98Q61.53 53.48 61.53 54.9Z"/><circle cx="44.5" cy="81.5" r="3" fill="#F5B83D"/><circle cx="54" cy="81.5" r="3" fill="#F5B83D"/><circle cx="63.5" cy="81.5" r="3" fill="#F5B83D"/></svg>`;
+  const mark = () => `<svg class="brandmark" viewBox="33 24 42 63" aria-hidden="true"><rect x="36" y="28" width="36" height="44" rx="6" fill="#1A231F" stroke="#3B4943"/><path fill="#ECEFE6" d="M61.53 54.9Q61.53 56.64 61.38 57.87Q61.06 60.72 59.18 62.36Q57.3 64 54.14 64Q50.86 64 48.8 62.26Q46.74 60.52 46.58 57.63Q46.47 56.56 46.47 55.34Q46.47 54.86 46.94 54.86H51.57Q52.04 54.86 52.04 55.34Q52.04 56.25 52.16 57.04Q52.28 58.07 52.79 58.64Q53.31 59.21 54.14 59.21Q54.93 59.21 55.44 58.66Q55.96 58.11 56.12 57.16Q56.23 55.77 56.23 54.31Q56.23 52.45 56.04 51.38Q55.88 50.47 55.38 49.98Q54.89 49.49 54.14 49.49Q53.55 49.49 52.95 50Q52.71 50.16 52.64 50.16Q52.48 50.16 52.28 49.96L49.91 47.55Q49.75 47.39 49.75 47.19Q49.75 47.03 49.87 46.88L54.65 40.98Q54.73 40.9 54.69 40.82Q54.65 40.75 54.53 40.75H47.42Q47.22 40.75 47.08 40.61Q46.94 40.47 46.94 40.27V36.47Q46.94 36.28 47.08 36.14Q47.22 36 47.42 36H61.02Q61.22 36 61.36 36.14Q61.49 36.28 61.49 36.47V40.43Q61.49 40.75 61.3 41.02L56.87 46.6Q56.83 46.68 56.83 46.76Q56.83 46.84 56.91 46.84Q58.65 46.99 59.85 48.42Q61.06 49.84 61.34 51.98Q61.53 53.48 61.53 54.9Z"/><circle cx="44.5" cy="81.5" r="3" fill="#F5B83D"/><circle cx="54" cy="81.5" r="3" fill="#F5B83D"/><circle cx="63.5" cy="81.5" r="3" fill="#F5B83D"/></svg>`;
 
   // Layout fitting used by the match screen: fade the log when it overflows; collapse the memo grid
   // when the log cannot show the latest row plus one full row.

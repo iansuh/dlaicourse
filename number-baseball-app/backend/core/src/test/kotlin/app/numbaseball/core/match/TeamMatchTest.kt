@@ -88,13 +88,19 @@ class TeamMatchTest {
     @Test fun timeoutsAcrossDuelsAreProcessedInOrder() {
         val m = match(3, roundSeconds = 30)
         // Duel 1: B never guesses -> A wins at 60 s. Duel 2: A never guesses -> B wins at 60 s.
-        // Duel 3: both keep guessing wrong.
-        for (r in 1..2) {
-            m.guess("a1", "789", r, (r - 1) * 30_000L + 1)
-            m.guess("b2", "789", r, (r - 1) * 30_000L + 1)
-            m.guess("a3", "789", r, (r - 1) * 30_000L + 1)
-            m.guess("b3", "789", r, (r - 1) * 30_000L + 1)
+        // Duel 3: both keep guessing wrong (its rounds resolve as soon as both have guessed).
+        fun duel3(now: Long) {
+            val r = m.duels[2].round
+            m.guess("a3", "789", r, now)
+            m.guess("b3", "789", r, now)
         }
+        m.guess("a1", "789", 1, 1)
+        m.guess("b2", "789", 1, 1)
+        duel3(1)
+        duel3(20_000)
+        m.guess("a1", "789", 2, 30_001)
+        m.guess("b2", "789", 2, 30_001)
+        duel3(40_000)
         m.advance(60_000)
         assertEquals(DuelResult(Team.A, EndReason.TIMEOUT), m.duels[0].result)
         assertEquals(DuelResult(Team.B, EndReason.TIMEOUT), m.duels[1].result)

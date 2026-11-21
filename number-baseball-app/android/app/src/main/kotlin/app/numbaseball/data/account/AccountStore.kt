@@ -3,6 +3,7 @@ package app.numbaseball.data.account
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,7 @@ interface AccountStore {
     suspend fun saveNickname(nickname: String)
     suspend fun saveRegistered(token: String, profile: Profile)
     suspend fun saveProfile(profile: Profile)
+    suspend fun saveAcceptedTerms(version: Int)
     /** Forgets the token but keeps the nickname, so a new account can be created with it. */
     suspend fun clearToken()
     suspend fun clear()
@@ -30,7 +32,7 @@ class DataStoreAccountStore(context: Context) : AccountStore {
     private val store = context.applicationContext.accountDataStore
 
     override val account: Flow<StoredAccount> = store.data.map { p ->
-        StoredAccount(token = p[TOKEN], id = p[ID], nickname = p[NICKNAME], tag = p[TAG])
+        StoredAccount(token = p[TOKEN], id = p[ID], nickname = p[NICKNAME], tag = p[TAG], acceptedTermsVersion = p[TERMS])
     }
 
     override suspend fun saveNickname(nickname: String) {
@@ -46,6 +48,10 @@ class DataStoreAccountStore(context: Context) : AccountStore {
 
     override suspend fun saveProfile(profile: Profile) {
         store.edit { it.putProfile(profile) }
+    }
+
+    override suspend fun saveAcceptedTerms(version: Int) {
+        store.edit { it[TERMS] = version }
     }
 
     override suspend fun clearToken() {
@@ -71,5 +77,6 @@ class DataStoreAccountStore(context: Context) : AccountStore {
         val ID: Preferences.Key<String> = stringPreferencesKey("id")
         val NICKNAME: Preferences.Key<String> = stringPreferencesKey("nickname")
         val TAG: Preferences.Key<String> = stringPreferencesKey("tag")
+        val TERMS: Preferences.Key<Int> = intPreferencesKey("accepted_terms_version")
     }
 }

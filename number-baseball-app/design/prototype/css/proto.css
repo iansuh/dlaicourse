@@ -81,6 +81,8 @@ h1, h2, h3, p { margin: 0; }
 .clock .v { font: var(--t-num-timer); font-feature-settings: "tnum" 1; min-width: 38px; text-align: right; }
 .clock.warn, .clock.warn .ic { color: var(--c-strike); }
 .clock.crit, .clock.crit .ic { color: var(--c-out); }
+.clock.paused, .clock.paused .ic { color: var(--c-text-disabled); }
+.clockbar.paused > i { background: var(--c-text-disabled); }
 .clockbar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--c-line); }
 .clockbar > i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c-chalk); }
 .clockbar.warn > i { background: var(--c-strike); }
@@ -222,6 +224,14 @@ h1, h2, h3, p { margin: 0; }
 
 /* --- Focus ring (keyboard / switch access) --- */
 :focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+
+/* --- Connection banner (reconnecting / offline). Sits under the top bar, pushes content down. --- */
+.conn { flex: none; display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--c-surface3); border-bottom: 1px solid var(--c-line); }
+.conn .lamps { flex: none; }
+.conn .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.conn .tx b { font: var(--t-body-strong); }
+.conn .tx span { font: var(--t-caption); color: var(--c-text2); }
+.conn .cd { font: var(--t-num-timer); color: var(--c-strike); font-feature-settings: "tnum" 1; }
 
 /* --- Brand mark (in-app, from icon foreground) --- */
 .brandmark { width: 22px; height: 32px; flex: none; display: block; }
