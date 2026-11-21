@@ -24,7 +24,7 @@ data class DuelConfig(
     }
 
     companion object {
-        /** [roundSeconds] 0 means no timer. */
+        /** [roundSeconds] 0 means no timer (offline games only; online rooms always use [app.numbaseball.core.protocol.Limits.ROUND_SECONDS]). */
         fun of(digits: Int, roundSeconds: Int): DuelConfig =
             DuelConfig(digits, if (roundSeconds <= 0) null else roundSeconds * 1000L)
     }

@@ -23,8 +23,8 @@ val ProtocolJson: Json = Json {
 object Limits {
     val DIGITS = 3..6
     val TEAM_SIZE = 1..5
-    /** Allowed round timers for private rooms. 0 means "no timer". */
-    val ROUND_SECONDS = listOf(0, 30, 60, 120)
+    /** Allowed round timers for private rooms (600 = "relaxed"). Online rooms always have a timer. */
+    val ROUND_SECONDS = listOf(30, 60, 120, 600)
     const val QUICK_ROUND_SECONDS = 60
     /** Missed rounds in a row that forfeit a duel. */
     const val MISS_LIMIT = 2

@@ -16,7 +16,7 @@ sealed interface ClientMessage {
 @Serializable @SerialName("ping")
 data class Ping(override val rid: Long? = null) : ClientMessage
 
-/** Ask for a fresh `room_state` + `chat_history` (or `room_left` if not in a room). */
+/** Ask for a fresh `room_state` + `chat_history` (if seated) or `queued` (if queued); otherwise only `ack` (with rid). */
 @Serializable @SerialName("resync")
 data class Resync(override val rid: Long? = null) : ClientMessage
 
@@ -121,7 +121,7 @@ data class RoomSettings(
     val digits: Int,
     /** Players per team, 1..5. 1 means a 1:1 match. */
     val teamSize: Int,
-    /** One of 0 (no timer), 30, 60, 120. */
+    /** One of 30, 60, 120, 600 ([Limits.ROUND_SECONDS]). */
     val roundSeconds: Int,
 )
 
