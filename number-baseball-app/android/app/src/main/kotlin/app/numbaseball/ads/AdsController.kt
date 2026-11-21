@@ -11,8 +11,11 @@ fun interface ComputerMatchFinishedListener {
 }
 
 interface InterstitialController : ComputerMatchFinishedListener {
-    /** Shows an interstitial if one is loaded and the cap allows it, then calls [onContinue] (immediately if not). */
-    fun showIfDue(activity: Activity, onContinue: () -> Unit)
+    /**
+     * Call only when the player leaves a vs-computer result screen. Shows an interstitial if one is loaded and the cap
+     * allows it, then calls [onContinue] (immediately if not). [resultVisibleMillis]: how long the result was on screen.
+     */
+    fun showIfDue(activity: Activity, resultVisibleMillis: Long, onContinue: () -> Unit)
 }
 
 /**
@@ -41,7 +44,7 @@ object DisabledAdsController : AdsController {
     override val bannerAdUnitId: String? = null
     override val interstitials: InterstitialController = object : InterstitialController {
         override fun onComputerMatchFinished() = Unit
-        override fun showIfDue(activity: Activity, onContinue: () -> Unit) = onContinue()
+        override fun showIfDue(activity: Activity, resultVisibleMillis: Long, onContinue: () -> Unit) = onContinue()
     }
 
     override fun gatherConsent(activity: Activity) = Unit

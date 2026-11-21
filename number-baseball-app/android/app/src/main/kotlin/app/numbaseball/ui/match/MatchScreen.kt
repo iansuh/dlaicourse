@@ -28,6 +28,7 @@ import app.numbaseball.R
 import app.numbaseball.core.protocol.RoundEntry
 import app.numbaseball.core.rules.NumberProblem
 import app.numbaseball.ui.common.ErrorText
+import app.numbaseball.ui.computer.levelLabel
 import app.numbaseball.ui.common.PrimaryButton
 import app.numbaseball.ui.common.ScreenScaffold
 import app.numbaseball.ui.common.SecondaryButton

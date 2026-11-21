@@ -16,28 +16,36 @@ class ChatFilterCorpusQaTest {
     private fun show(s: String) = "<$s> [${QaTextOracle.hex(s)}]"
 
     /**
-     * protocol 9.1: profanity is replaced with '*', one per character. "Character" is read as a user-perceived character
-     * (extended grapheme cluster, so "f" + combining overlay or half-width "ﾊﾞ" is one). Every cluster of the sanitized
-     * text must appear unchanged or as exactly one '*'; nothing else may change (DEF-017 asks the spec to say this).
+     * protocol 9.1: profanity is replaced with '*', "one per character". Both readings of "character" are accepted
+     * (DEF-017 asks the spec to choose): a masked grapheme cluster becomes exactly one '*' OR one '*' per code point of
+     * the cluster. Every other cluster of the sanitized text must be unchanged and nothing may be added.
      */
     private fun maskAlignment(input: String, output: String): String? {
         val sanitized = ChatFilter.sanitize(input)
-        val it = java.text.BreakIterator.getCharacterInstance(java.util.Locale.ROOT)
-        it.setText(sanitized)
-        var pos = 0
-        var start = it.first()
-        var end = it.next()
+        val clusters = ArrayList<String>()
+        val bi = java.text.BreakIterator.getCharacterInstance(java.util.Locale.ROOT)
+        bi.setText(sanitized)
+        var start = bi.first()
+        var end = bi.next()
         while (end != java.text.BreakIterator.DONE) {
-            val cluster = sanitized.substring(start, end)
-            pos = when {
-                output.startsWith(cluster, pos) -> pos + cluster.length
-                pos < output.length && output[pos] == '*' -> pos + 1
-                else -> return "cluster '${cluster}' at $start neither kept nor replaced by one '*'"
-            }
+            clusters += sanitized.substring(start, end)
             start = end
-            end = it.next()
+            end = bi.next()
         }
-        return if (pos == output.length) null else "output has extra text after position $pos"
+        val memo = HashMap<Long, Boolean>()
+        fun ok(ci: Int, pos: Int): Boolean {
+            if (ci == clusters.size) return pos == output.length
+            val key = ci.toLong() * 100_000 + pos
+            memo[key]?.let { return it }
+            val c = clusters[ci]
+            val stars = c.codePointCount(0, c.length)
+            val r = (output.startsWith(c, pos) && ok(ci + 1, pos + c.length)) ||
+                (output.startsWith("*", pos) && ok(ci + 1, pos + 1)) ||
+                (stars > 1 && output.startsWith("*".repeat(stars), pos) && ok(ci + 1, pos + stars))
+            memo[key] = r
+            return r
+        }
+        return if (ok(0, 0)) null else "output is not the sanitized text with some characters replaced by '*'"
     }
 
     private fun runProfanityFile(file: String) {

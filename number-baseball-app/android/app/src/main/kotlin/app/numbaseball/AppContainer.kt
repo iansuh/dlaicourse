@@ -7,11 +7,13 @@ import app.numbaseball.ads.DisabledAdsController
 import app.numbaseball.ads.GoogleAdsController
 import app.numbaseball.data.account.AccountRepository
 import app.numbaseball.data.account.DataStoreAccountStore
+import app.numbaseball.data.online.ConnectionState
 import app.numbaseball.data.online.OnlineClient
 import app.numbaseball.data.online.OnlineSession
 import app.numbaseball.data.online.RestApi
-import app.numbaseball.data.online.SafetyApi
+import app.numbaseball.data.online.SafetyRepository
 import app.numbaseball.data.online.ServerEndpoints
+import app.numbaseball.data.online.StopReason
 import app.numbaseball.data.online.WebSocketOnlineClient
 import app.numbaseball.data.settings.AppCompatLanguageSettings
 import app.numbaseball.data.settings.DataStoreSettingsRepository
@@ -22,6 +24,7 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
@@ -29,14 +32,20 @@ import okhttp3.OkHttpClient
 data class AppConfig(
     val serverUrl: String,
     val versionName: String,
+    val contactEmail: String,
     val adsEnabled: Boolean,
     val bannerAdUnitId: String,
     val interstitialAdUnitId: String,
 ) {
+    /** Web pages served by our server (docs/protocol.md §14). */
+    val privacyUrl: String get() = serverUrl.trimEnd('/') + "/privacy"
+    val termsUrl: String get() = serverUrl.trimEnd('/') + "/terms"
+
     companion object {
         fun fromBuildConfig() = AppConfig(
             serverUrl = BuildConfig.SERVER_URL,
             versionName = BuildConfig.VERSION_NAME,
+            contactEmail = BuildConfig.CONTACT_EMAIL,
             adsEnabled = true,
             bannerAdUnitId = BuildConfig.ADMOB_BANNER_ID,
             interstitialAdUnitId = BuildConfig.ADMOB_INTERSTITIAL_ID,
@@ -52,7 +61,7 @@ interface AppContainer {
     val languageSettings: LanguageSettings
     val onlineClient: OnlineClient
     val onlineSession: OnlineSession
-    val safetyApi: SafetyApi
+    val safety: SafetyRepository
     val offlineGame: OfflineGame
     val ads: AdsController
 }
@@ -79,7 +88,7 @@ class DefaultAppContainer(context: Context, override val config: AppConfig) : Ap
     override val accountRepository by lazy { AccountRepository(DataStoreAccountStore(appContext), restApi, appScope) }
     override val settingsRepository: SettingsRepository by lazy { DataStoreSettingsRepository(appContext) }
     override val languageSettings: LanguageSettings by lazy { AppCompatLanguageSettings() }
-    override val safetyApi: SafetyApi get() = restApi
+    override val safety by lazy { SafetyRepository(restApi, accountRepository, onlineSession) }
     override val offlineGame by lazy { OfflineGame() }
 
     override val onlineClient: OnlineClient by lazy {
@@ -96,12 +105,28 @@ class DefaultAppContainer(context: Context, override val config: AppConfig) : Ap
     override val onlineSession by lazy {
         OnlineSession(onlineClient, appScope).also { session ->
             appScope.launch { session.welcomes.collect { accountRepository.onAccountUpdate(it.account) } }
+            // HTTP 401 / close 4004: the token is dead (deleted or moved); keep the nickname for a new account.
+            appScope.launch {
+                onlineClient.state.collect { state ->
+                    if (state is ConnectionState.Stopped &&
+                        (state.reason == StopReason.UNAUTHORIZED || state.reason == StopReason.ACCOUNT_DELETED)
+                    ) {
+                        accountRepository.onTokenRejected()
+                    }
+                }
+            }
         }
     }
 
     override val ads: AdsController by lazy {
         if (config.adsEnabled) {
-            GoogleAdsController(appContext, config.bannerAdUnitId, config.interstitialAdUnitId, appScope)
+            GoogleAdsController(
+                appContext = appContext,
+                bannerAdUnitId = config.bannerAdUnitId,
+                interstitialAdUnitId = config.interstitialAdUnitId,
+                scope = appScope,
+                soundEnabled = settingsRepository.settings.map { it.soundEnabled },
+            )
         } else {
             DisabledAdsController
         }

@@ -30,9 +30,10 @@ object Rules {
 
     fun isValid(value: String, digits: Int): Boolean = isValidDigitCount(digits) && problem(value, digits) == null
 
-    /** Judges [guess] against [secret]; both must be valid numbers of the same length. */
+    /** Judges [guess] against [secret]. Throws IllegalArgumentException unless both are valid numbers of the same length. */
     fun judge(secret: String, guess: String): Judgement {
         require(secret.length == guess.length) { "length mismatch" }
+        require(isValid(secret, secret.length) && isValid(guess, guess.length)) { "invalid number" }
         var strikes = 0
         var secretMask = 0
         var guessMask = 0

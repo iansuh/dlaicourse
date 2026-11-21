@@ -108,7 +108,7 @@ object ProfanityFilter {
         "개새끼", "개새", "개새기", "개색기", "새끼야", "미친놈", "미친년", "엿먹", "느금", "니애미", "창녀",
         "씹새끼", "씹새", "씹할", "씹년", "씹놈", "씹창", "염병", "섹스", "김치녀", "한남충", "ㅅㅂ", "ㅆㅂ", "ㅂㅅ", "ㅈㄹ", "ㅈㄴ", "ㅗ",
         // ja
-        "死ね", "氏ね", "くたばれ", "ばかやろう", "バカヤロー", "ちんこ", "チンコ", "ちんぽ", "チンポ", "まんこ", "マンコ",
+        "死ね", "氏ね", "くたばれ", "ばかやろう", "ばかやろー", "バカヤロウ", "バカヤロー", "ちんこ", "チンコ", "ちんぽ", "チンポ", "まんこ", "マンコ",
         "きちがい", "キチガイ", "ガイジ",
         // zh
         "傻逼", "傻屄", "傻b", "煞笔", "操你妈", "草你妈", "操你娘", "肏", "他妈的", "他媽的", "妈的", "媽的", "特么的",
@@ -148,8 +148,9 @@ object ProfanityFilter {
     fun containsProfanity(text: String, strict: Boolean = false): Boolean = findSegments(Segments(text), strict).any { it }
 
     /**
-     * Replaces every character of a listed word with '*' (one per character; whitespace inside a spaced-out word is
-     * kept, invisible characters inside a match are dropped). Text without listed words is returned unchanged.
+     * Replaces every character of a listed word with one '*' (a base character together with its combining marks, e.g.
+     * "f̷" or half-width "ﾊﾞ", is one character); whitespace inside a spaced-out word stays and invisible characters inside
+     * a match are dropped. Text without listed words is returned unchanged.
      */
     fun mask(text: String): String {
         val segs = Segments(text)
@@ -161,7 +162,7 @@ object ProfanityFilter {
             when {
                 !masked[s] -> sb.append(text, segs.start[s], segs.end[s])
                 isIgnorable(cp) -> Unit
-                isSpace(cp) -> sb.append(text, segs.start[s], segs.end[s])
+                isSpace(cp) -> sb.appendCodePoint(cp)
                 else -> sb.append('*')
             }
         }
@@ -290,7 +291,7 @@ object ProfanityFilter {
 
     /** Cyrillic, Greek and Armenian letters that look like Latin ones. */
     private val TO_LATIN: Map<Int, Int> = map(
-        'а' to 'a', 'с' to 'c', 'е' to 'e', 'ё' to 'e', 'о' to 'o', 'р' to 'p', 'х' to 'x', 'у' to 'y', 'к' to 'k',
+        'а' to 'a', 'с' to 'c', 'е' to 'e', 'ё' to 'e', 'о' to 'o', 'р' to 'p', 'х' to 'x', 'к' to 'k',
         'ѕ' to 's', 'і' to 'i', 'ї' to 'i', 'ј' to 'j', 'ԁ' to 'd', 'һ' to 'h', 'ӏ' to 'l', 'ԛ' to 'q', 'ԝ' to 'w',
         'α' to 'a', 'ο' to 'o', 'ε' to 'e', 'ι' to 'i', 'κ' to 'k', 'ν' to 'v', 'ρ' to 'p', 'τ' to 't', 'υ' to 'u',
         'χ' to 'x',
@@ -308,6 +309,8 @@ object ProfanityFilter {
         Fold.PLAIN to mapOf(
             '0' to "o", '1' to "il", '3' to "e", '4' to "a", '5' to "s", '7' to "t",
             '@' to "a", '$' to "s", '!' to "il", '|' to "li", '€' to "e",
+            // Cyrillic letters that stand in for more than one Latin letter ("fуck" with Cyrillic у).
+            'у' to "yu", 'п' to "n", 'ш' to "w", 'в' to "b", 'и' to "u",
         ).entries.associate { (k, v) -> k.code to v.codePoints().toArray() },
         Fold.CYRILLIC to mapOf(
             '0' to "о", '3' to "з", '6' to "б", '4' to "ч", '@' to "ая",
@@ -324,11 +327,8 @@ object ProfanityFilter {
             t == Character.COMBINING_SPACING_MARK.toInt() || cp == 0xFF9E || cp == 0xFF9F
     }
 
-    /** Invisible characters dropped before matching (zero-width, joiners, bidi controls, fillers, BOM, soft hyphen). */
-    internal fun isIgnorable(cp: Int): Boolean =
-        Character.getType(cp) == Character.FORMAT.toInt() ||
-            cp == 0x034F || cp == 0x115F || cp == 0x1160 || cp == 0x3164 || cp == 0xFFA0 ||
-            cp in 0xFE00..0xFE0F || cp in 0xE0100..0xE01EF
+    /** Invisible characters are dropped before matching (zero-width, joiners, bidi controls, fillers, ...). */
+    internal fun isIgnorable(cp: Int): Boolean = Invisible.isInvisible(cp)
 
     private fun isSpace(cp: Int): Boolean = Character.isWhitespace(cp) || Character.isSpaceChar(cp)
 

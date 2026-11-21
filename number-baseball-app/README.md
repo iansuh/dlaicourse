@@ -16,6 +16,13 @@ These are fixed for v1. Change them here first if the team agrees on something e
 - 10 languages: ko, en, ja, zh-CN, es, fr, de, pt-BR, ru, vi. A beginner can learn the rules inside the app.
 - Spirit: "a quiet quick match in a short break". Silent by default, one-handed, works in split-screen / pop-up windows, short reconnects survive an app switch.
 
+### Sound (owner request 2026-11-21)
+- **Sound effects**: keypad, sending a guess, the hint reveal (distinct for strike, ball and out), solving, win / lose / draw, match found, round timer warning, chat message, UI navigation. Short, crisp, ballpark-flavoured, never cartoonish.
+- **Music**: one calm menu loop and one low-key match loop, off by default.
+- Defaults keep the "quiet quick match" spirit: effects **on**, but muted automatically while the phone is in silent or vibrate mode (setting "Follow silent mode", on by default); music off. Separate volume for effects and music, plus haptics on/off.
+- Audio focus: pause music and stop effects when another app takes focus, when the app goes to the background, or during calls. Ads stay muted.
+- All audio is made in-house (synthesized) so licensing is clean; OGG Vorbis, loudness-normalized.
+
 ### Removed
 - Spreadsheet (Excel) disguise mode and the Esc boss key.
 - ID + password + email accounts and the password-reset mail flow.

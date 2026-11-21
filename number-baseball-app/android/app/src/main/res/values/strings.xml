@@ -217,7 +217,7 @@
     <string name="settings_transfer_summary">Get a one-time code, valid for 10 minutes</string>
     <string name="settings_transfer_title">Your transfer code</string>
     <string name="settings_transfer_body">Enter this code on the new device within 10 minutes. This device will be signed out.</string>
-    <string name="settings_deletion_code">Code for the web deletion form</string>
+    <string name="settings_deletion_code">Get a code to delete on the web</string>
     <string name="settings_deletion_code_body">Use this code on the account deletion web page within 24 hours.</string>
     <string name="settings_delete">Delete account</string>
     <string name="settings_delete_title">Delete your account?</string>
@@ -280,4 +280,24 @@
     <string name="error_session_replaced">You are now connected on another device.</string>
     <string name="error_not_found">Not found.</string>
     <string name="error_message_too_large">The message is too long.</string>
+
+    <!-- Added with the policy review (terms gate, deletion notice, chat rules) -->
+    <string name="match_duel_over">Your duel is over. Waiting for the other duels…</string>
+    <string name="lobby_open_match">Back to the match</string>
+    <string name="chat_quick_phrases">Quick phrases</string>
+    <string name="chat_phrases_only">Quick match chat uses quick phrases only.</string>
+    <string name="deletion_pending_title">A deletion request was made on the web</string>
+    <string name="deletion_pending_body">Your account will be deleted unless you cancel the request.</string>
+    <string name="deletion_pending_cancel">Cancel request</string>
+    <string name="deletion_pending_delete_now">Delete now</string>
+    <string name="terms_title">Terms of service</string>
+    <string name="terms_summary">Before you play online: be kind, do not cheat, and never share personal information in chat. Reported players can lose chat or online play.</string>
+    <string name="terms_read">Read the full terms</string>
+    <string name="terms_agree">Agree and continue</string>
+    <string name="terms_updated">The terms have changed. Please review them.</string>
+    <string name="settings_privacy_policy">Privacy policy</string>
+    <string name="settings_terms">Terms of service</string>
+    <string name="settings_contact">Contact us</string>
+    <string name="report_block_offer">Do you also want to block this player?</string>
+    <string name="report_block_button">Block too</string>
 </resources>

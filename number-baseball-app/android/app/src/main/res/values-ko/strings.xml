@@ -204,7 +204,7 @@
     <string name="settings_transfer_summary">10분 동안 쓸 수 있는 1회용 코드를 받아요</string>
     <string name="settings_transfer_title">이전 코드</string>
     <string name="settings_transfer_body">새 기기에서 10분 안에 이 코드를 입력하세요. 이 기기는 로그아웃돼요.</string>
-    <string name="settings_deletion_code">웹 삭제 요청용 코드</string>
+    <string name="settings_deletion_code">웹에서 삭제할 코드 받기</string>
     <string name="settings_deletion_code_body">24시간 안에 계정 삭제 웹 페이지에서 이 코드를 입력하세요.</string>
     <string name="settings_delete">계정 삭제</string>
     <string name="settings_delete_title">계정을 삭제할까요?</string>
@@ -267,4 +267,24 @@
     <string name="error_session_replaced">다른 기기에서 접속했어요.</string>
     <string name="error_not_found">찾을 수 없어요.</string>
     <string name="error_message_too_large">메시지가 너무 길어요.</string>
+
+    <!-- Added with the policy review (terms gate, deletion notice, chat rules) -->
+    <string name="match_duel_over">내 대결이 끝났어요. 다른 대결을 기다리는 중…</string>
+    <string name="lobby_open_match">대결로 돌아가기</string>
+    <string name="chat_quick_phrases">빠른 문구</string>
+    <string name="chat_phrases_only">빠른 대전에서는 빠른 문구만 쓸 수 있어요.</string>
+    <string name="deletion_pending_title">웹에서 계정 삭제 요청이 있었어요</string>
+    <string name="deletion_pending_body">요청을 취소하지 않으면 계정이 삭제돼요.</string>
+    <string name="deletion_pending_cancel">요청 취소</string>
+    <string name="deletion_pending_delete_now">지금 삭제</string>
+    <string name="terms_title">이용약관</string>
+    <string name="terms_summary">온라인 대전 전에 확인해 주세요: 서로 존중하고, 부정행위를 하지 말고, 채팅에 개인정보를 쓰지 마세요. 신고가 쌓이면 채팅이나 온라인 대전이 제한될 수 있어요.</string>
+    <string name="terms_read">약관 전체 보기</string>
+    <string name="terms_agree">동의하고 계속하기</string>
+    <string name="terms_updated">약관이 바뀌었어요. 확인해 주세요.</string>
+    <string name="settings_privacy_policy">개인정보처리방침</string>
+    <string name="settings_terms">이용약관</string>
+    <string name="settings_contact">문의하기</string>
+    <string name="report_block_offer">이 플레이어도 차단할까요?</string>
+    <string name="report_block_button">차단하기</string>
 </resources>

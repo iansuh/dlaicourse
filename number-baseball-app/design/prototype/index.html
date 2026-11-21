@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype index</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/proto.css">
+<style>
+  body { overflow: auto; height: auto; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font: var(--t-headline); margin-bottom: 8px; }
+  p { color: var(--c-text2); }
+  h2 { font: var(--t-label-small); color: var(--c-text3); margin: 32px 0 8px; }
+  a { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--c-line); color: var(--c-chalk); text-decoration: none; font: var(--t-body); }
+  a span { color: var(--c-text3); font: var(--t-caption); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Night Game prototype</h1>
+  <p>Open at 360 dp wide (device toolbar). Add <code>?lang=en|de|ru</code> to any page. Shots are in <code>../shots/</code>; specs in <code>../screens/</code>.</p>
+  <h2>CORE</h2>
+  <a href="nickname.html">First run: nickname <span>?state=error · ?ime=0</span></a>
+  <a href="home.html">Home <span>?ad=none · ?state=deletion</span></a>
+  <a href="search.html">Quick match search <span>?state=found</span></a>
+  <a href="match.html">Match: guessing <span>?state=secret|waiting|late|phrases|reconnect · ?digits=3..6 · ?clock=warn|crit · resize below 480 dp tall for compact</span></a>
+  <a href="result.html">Result: duel <span>?outcome=win|lose|draw · ?mode=online|cpu · ?ad=notdue</span></a>
+  <h2>ROOMS AND TEAMS</h2>
+  <a href="lobby.html">Private room lobby</a>
+  <a href="team-board.html">Team match board <span>?state=final</span></a>
+  <a href="chat.html">Chat panel <span>?state=actions|limit</span></a>
+  <h2>SAFETY AND SETTINGS</h2>
+  <a href="terms.html">Terms gate</a>
+  <a href="report.html">Player card, report, block <span>?state=card|reasons|done|dialog</span></a>
+  <a href="settings.html">Settings <span>?scroll=end · ?ump=0</span></a>
+</main>
+</body>
+</html>

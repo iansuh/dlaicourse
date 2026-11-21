@@ -6,8 +6,8 @@ import java.text.Normalizer
 import java.util.Locale
 
 /**
- * Nickname rules (protocol §9.3): after trimming and NFKC normalization, 2–12 code points, each a Unicode letter or
- * digit (combining marks allowed after a letter), no invisible fillers, no listed profanity anywhere, not reserved.
+ * Nickname rules (protocol §9.3): after trimming and NFKC normalization ([normalize]), 2–12 code points, each a Unicode
+ * letter or digit (no leftover combining marks), no invisible fillers, no listed profanity anywhere, not reserved.
  * The display form is `nickname#tag` with a four-digit tag.
  */
 object Nicknames {
@@ -24,11 +24,32 @@ object Nicknames {
     )
 
     /**
-     * Trim, NFKC, trim. NFKC turns compatibility jamo ("ㅋㅋ") into conjoining jamo, which render badly on their own,
-     * so jamo left standalone after composition are mapped back to their compatibility forms.
+     * Trim, NFKC, trim — except that Hangul compatibility jamo ("ㅋㅋ", "ㄱㅏ") are kept as typed (NFKC would turn them
+     * into conjoining jamo and compose "ㄱㅏ" into "가"); half-width Hangul letters become compatibility jamo, and
+     * conjoining jamo that do not compose into a syllable are shown as compatibility jamo.
      */
     fun normalize(raw: String): String {
-        val nfkc = Normalizer.normalize(raw.trim(), Normalizer.Form.NFKC).trim()
+        val trimmed = raw.trim()
+        val out = StringBuilder(trimmed.length)
+        val run = StringBuilder()
+        fun flush() {
+            if (run.isEmpty()) return
+            out.append(Normalizer.normalize(run, Normalizer.Form.NFKC))
+            run.setLength(0)
+        }
+        var i = 0
+        while (i < trimmed.length) {
+            val cp = trimmed.codePointAt(i)
+            i += Character.charCount(cp)
+            val jamo = when (cp) {
+                in 0x3131..0x318E -> cp
+                in 0xFFA1..0xFFDC -> HALFWIDTH_JAMO[cp - 0xFFA1].code.takeIf { it != '?'.code }
+                else -> null
+            }
+            if (jamo != null) { flush(); out.appendCodePoint(jamo) } else run.appendCodePoint(cp)
+        }
+        flush()
+        val nfkc = out.toString().trim()
         if (nfkc.none { it in '\u1100'..'\u11FF' }) return nfkc
         val sb = StringBuilder(nfkc.length)
         for (ch in nfkc) {
@@ -44,6 +65,10 @@ object Nicknames {
         return sb.toString()
     }
 
+    /** U+FFA1..U+FFDC -> compatibility jamo ('?' = unassigned slot). */
+    private const val HALFWIDTH_JAMO =
+        "ㄱㄲㄳㄴㄵㄶㄷㄸㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅃㅄㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ???ㅏㅐㅑㅒㅓㅔ??ㅕㅖㅗㅘㅙㅚ??ㅛㅜㅝㅞㅟㅠ??ㅡㅢㅣ"
+
     private const val LEAD_COMPAT = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
     private const val TAIL_COMPAT = "ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ"
 
@@ -53,15 +78,13 @@ object Nicknames {
         if (length < Limits.NICKNAME_MIN) return invalid("too short")
         if (length > Limits.NICKNAME_MAX) return invalid("too long")
         var i = 0
-        var first = true
         while (i < name.length) {
             val cp = name.codePointAt(i)
             i += Character.charCount(cp)
             val type = Character.getType(cp).toByte()
-            val mark = type == Character.NON_SPACING_MARK || type == Character.COMBINING_SPACING_MARK
-            val ok = (Character.isLetterOrDigit(cp) || (mark && !first)) && !ProfanityFilter.isIgnorable(cp) && !EmojiFilter.isEmoji(cp)
+            // Combining marks left after NFKC (stacked accents, zalgo) are refused; Vietnamese etc. compose fully.
+            val ok = Character.isLetterOrDigit(cp) && !Invisible.isInvisible(cp) && !EmojiFilter.isEmoji(cp)
             if (!ok) return invalid("only letters and digits")
-            first = false
         }
         val key = key(name)
         if (key in RESERVED || key.trimEnd { it.isDigit() } in RESERVED) return invalid("reserved")

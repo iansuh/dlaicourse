@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import app.numbaseball.core.protocol.DuelPhase
 import app.numbaseball.core.protocol.RoomView
 import app.numbaseball.core.protocol.Team
+import app.numbaseball.core.rules.NumberProblem
+import app.numbaseball.core.rules.Rules
 import app.numbaseball.data.online.OnlineSession
 import app.numbaseball.data.online.RequestResult
 import app.numbaseball.ui.common.UiError
@@ -22,7 +24,7 @@ import kotlinx.coroutines.launch
 /** Keypad state that only exists on this device; reset when the duel moves to another round. */
 data class LocalInput(
     val text: String = "",
-    val problem: app.numbaseball.core.rules.NumberProblem? = null,
+    val problem: NumberProblem? = null,
     val busy: Boolean = false,
     val error: UiError? = null,
     val round: Int = -1,
@@ -55,6 +57,10 @@ class OnlineMatchViewModel(private val session: OnlineSession) : ViewModel() {
 
     fun onDigit(digit: Char) = edit { current, digits -> NumberInput.append(current, digit, digits) }
     fun onDelete() = edit { current, _ -> NumberInput.deleteLast(current) }
+
+    fun onRandomSecret() {
+        if (state.value?.phase == MatchPhase.CHOOSING_SECRET) edit { _, digits -> Rules.randomNumber(digits) }
+    }
 
     fun onSubmit() {
         val ui = state.value ?: return

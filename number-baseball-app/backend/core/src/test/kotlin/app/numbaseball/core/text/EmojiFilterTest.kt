@@ -19,7 +19,7 @@ class EmojiFilterTest {
     }
 
     @Test fun keepsPlainText() {
-        for (s in listOf("^^", ":)", "ㅋㅋㅋ", "123 2S1B", "안녕하세요", "こんにちは", "你好", "Привет", "Xin chào", "a#b", "1*2")) {
+        for (s in listOf("^^", ":)", "♥", "©", "™", "♪", "★", "↔", "‼", "☺", "(╯°□°)╯︵ ┻━┻", "ㅋㅋㅋ", "123 2S1B", "안녕하세요", "こんにちは", "你好", "Привет", "Xin chào", "a#b", "1*2")) {
             assertEquals(s, EmojiFilter.strip(s))
             assertFalse(EmojiFilter.containsEmoji(s))
         }

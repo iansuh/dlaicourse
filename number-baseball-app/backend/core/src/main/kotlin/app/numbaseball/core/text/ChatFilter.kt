@@ -76,6 +76,6 @@ object ChatFilter {
         val type = Character.getType(cp).toByte()
         return type == Character.CONTROL || type == Character.FORMAT || type == Character.PRIVATE_USE ||
             type == Character.SURROGATE || type == Character.UNASSIGNED ||
-            ProfanityFilter.isIgnorable(cp)
+            Invisible.isInvisible(cp)
     }
 }

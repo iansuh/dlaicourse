@@ -1,0 +1,218 @@
+package app.numbaseball.ui.settings
+
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import app.numbaseball.R
+import app.numbaseball.data.account.AccountRepository
+import app.numbaseball.data.account.AccountState
+import app.numbaseball.data.account.ApiResult
+import app.numbaseball.data.settings.AppSettings
+import app.numbaseball.data.settings.LanguageSettings
+import app.numbaseball.data.settings.SettingsRepository
+import app.numbaseball.data.settings.SupportedLanguages
+import app.numbaseball.ui.common.ChoiceRow
+import app.numbaseball.ui.common.ErrorText
+import app.numbaseball.ui.common.ScreenScaffold
+import app.numbaseball.ui.common.SectionLabel
+import app.numbaseball.ui.common.UiError
+import app.numbaseball.ui.common.toUiError
+import app.numbaseball.ui.theme.NbColors
+import app.numbaseball.ui.theme.NbLayout
+import app.numbaseball.ui.theme.NbType
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+enum class CodeKind { TRANSFER, DELETION }
+
+data class ShownCode(val kind: CodeKind, val code: String)
+
+data class SettingsUiState(
+    val settings: AppSettings = AppSettings(),
+    /** null = follow the system language. */
+    val language: String? = null,
+    val registered: Boolean = false,
+    val code: ShownCode? = null,
+    val confirmDelete: Boolean = false,
+    val busy: Boolean = false,
+    val error: UiError? = null,
+    /** The account is gone: return to first run. */
+    val deleted: Boolean = false,
+)
+
+class SettingsViewModel(
+    private val settings: SettingsRepository,
+    private val accounts: AccountRepository,
+    private val languages: LanguageSettings,
+) : ViewModel() {
+    private val local = MutableStateFlow(SettingsUiState(language = languages.current()))
+
+    val state: StateFlow<SettingsUiState> = combine(local, settings.settings, accounts.state) { ui, prefs, account ->
+        ui.copy(settings = prefs, registered = account is AccountState.Registered)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), local.value)
+
+    fun onSoundChange(enabled: Boolean) = launch { settings.setSoundEnabled(enabled) }
+    fun onHapticsChange(enabled: Boolean) = launch { settings.setHapticsEnabled(enabled) }
+    fun onChatMutedChange(muted: Boolean) = launch { settings.setChatMuted(muted) }
+
+    fun onLanguageChange(tag: String?) {
+        local.update { it.copy(language = tag) }
+        languages.set(tag)
+    }
+
+    fun onTransferCode() = requestCode(CodeKind.TRANSFER)
+    fun onDeletionCode() = requestCode(CodeKind.DELETION)
+    fun onDismissCode() = local.update { it.copy(code = null) }
+
+    fun onDeleteRequest() = local.update { it.copy(confirmDelete = true) }
+    fun onDeleteCancel() = local.update { it.copy(confirmDelete = false) }
+
+    fun onDeleteConfirm() {
+        local.update { it.copy(confirmDelete = false, busy = true, error = null) }
+        viewModelScope.launch {
+            val error = accounts.deleteAccount().toUiError()
+            local.update { it.copy(busy = false, error = error, deleted = error == null) }
+        }
+    }
+
+    private fun requestCode(kind: CodeKind) {
+        local.update { it.copy(busy = true, error = null) }
+        viewModelScope.launch {
+            val result = if (kind == CodeKind.TRANSFER) accounts.createTransferCode() else accounts.createDeletionCode()
+            local.update {
+                when (result) {
+                    is ApiResult.Success -> it.copy(busy = false, code = ShownCode(kind, formatCode(result.value.code)))
+                    else -> it.copy(busy = false, error = result.toUiError())
+                }
+            }
+        }
+    }
+
+    private fun launch(block: suspend () -> Unit) {
+        viewModelScope.launch { block() }
+    }
+
+    companion object {
+        /** 12-character codes are shown as XXXX-XXXX-XXXX (docs/protocol.md §3.1); the server ignores the dashes. */
+        fun formatCode(code: String): String = code.chunked(4).joinToString("-")
+    }
+}
+
+@Composable
+fun SettingsScreen(
+    state: SettingsUiState,
+    showPrivacyOptions: Boolean,
+    versionName: String,
+    onSoundChange: (Boolean) -> Unit,
+    onHapticsChange: (Boolean) -> Unit,
+    onChatMutedChange: (Boolean) -> Unit,
+    onLanguageChange: (String?) -> Unit,
+    onPrivacyOptions: () -> Unit,
+    onPrivacyPolicy: () -> Unit,
+    onTerms: () -> Unit,
+    onContact: () -> Unit,
+    onTransferCode: () -> Unit,
+    onDeletionCode: () -> Unit,
+    onDismissCode: () -> Unit,
+    onDeleteRequest: () -> Unit,
+    onDeleteCancel: () -> Unit,
+    onDeleteConfirm: () -> Unit,
+    onBack: () -> Unit,
+) {
+    ScreenScaffold(title = stringResource(R.string.settings_title), onBack = onBack) {
+        SwitchRow(stringResource(R.string.settings_sound), stringResource(R.string.settings_sound_summary), state.settings.soundEnabled, onSoundChange)
+        SwitchRow(stringResource(R.string.settings_haptics), null, state.settings.hapticsEnabled, onHapticsChange)
+        SwitchRow(stringResource(R.string.settings_mute_chat), null, state.settings.chatMuted, onChatMutedChange)
+        SectionLabel(stringResource(R.string.settings_language))
+        ChoiceRow(listOf<String?>(null) + SupportedLanguages.TAGS, state.language, { languageLabel(it) }, onLanguageChange)
+        HorizontalDivider(color = NbColors.line)
+        if (showPrivacyOptions) LinkRow(stringResource(R.string.settings_privacy_options), onPrivacyOptions)
+        LinkRow(stringResource(R.string.settings_privacy_policy), onPrivacyPolicy)
+        LinkRow(stringResource(R.string.settings_terms), onTerms)
+        LinkRow(stringResource(R.string.settings_contact), onContact)
+        HorizontalDivider(color = NbColors.line)
+        if (state.registered) {
+            LinkRow(stringResource(R.string.settings_transfer), onTransferCode, stringResource(R.string.settings_transfer_summary), enabled = !state.busy)
+            LinkRow(stringResource(R.string.settings_deletion_code), onDeletionCode, enabled = !state.busy)
+        }
+        LinkRow(stringResource(R.string.settings_delete), onDeleteRequest, enabled = !state.busy, destructive = true)
+        ErrorText(state.error)
+        Text(stringResource(R.string.settings_version, versionName), color = NbColors.text3, style = MaterialTheme.typography.bodySmall)
+    }
+    state.code?.let { shown ->
+        AlertDialog(
+            onDismissRequest = onDismissCode,
+            title = {
+                Text(stringResource(if (shown.kind == CodeKind.TRANSFER) R.string.settings_transfer_title else R.string.settings_deletion_code))
+            },
+            text = {
+                androidx.compose.foundation.layout.Column {
+                    Text(shown.code, style = NbType.numCode)
+                    Text(
+                        stringResource(
+                            if (shown.kind == CodeKind.TRANSFER) R.string.settings_transfer_body else R.string.settings_deletion_code_body,
+                        ),
+                    )
+                }
+            },
+            confirmButton = { TextButton(onClick = onDismissCode) { Text(stringResource(R.string.action_ok)) } },
+        )
+    }
+    if (state.confirmDelete) {
+        AlertDialog(
+            onDismissRequest = onDeleteCancel,
+            title = { Text(stringResource(R.string.settings_delete_title)) },
+            text = { Text(stringResource(R.string.settings_delete_body)) },
+            confirmButton = {
+                TextButton(onClick = onDeleteConfirm) { Text(stringResource(R.string.settings_delete_confirm), color = NbColors.out) }
+            },
+            dismissButton = { TextButton(onClick = onDeleteCancel) { Text(stringResource(R.string.action_cancel)) } },
+        )
+    }
+}
+
+@Composable
+private fun languageLabel(tag: String?): String = when (tag) {
+    null -> stringResource(R.string.settings_language_system)
+    "ko" -> stringResource(R.string.language_name_ko)
+    "en" -> stringResource(R.string.language_name_en)
+    else -> tag
+}
+
+@Composable
+private fun SwitchRow(title: String, summary: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().heightIn(min = NbLayout.touchMin)) {
+        androidx.compose.foundation.layout.Column(Modifier.weight(1f)) {
+            Text(title)
+            summary?.let { Text(it, color = NbColors.text3, style = MaterialTheme.typography.bodySmall) }
+        }
+        Switch(checked = checked, onCheckedChange = onChange)
+    }
+}
+
+@Composable
+private fun LinkRow(title: String, onClick: () -> Unit, summary: String? = null, enabled: Boolean = true, destructive: Boolean = false) {
+    TextButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = NbLayout.touchMin)) {
+        androidx.compose.foundation.layout.Column(Modifier.fillMaxWidth()) {
+            Text(title, color = if (destructive) NbColors.out else NbColors.chalk)
+            summary?.let { Text(it, color = NbColors.text3, style = MaterialTheme.typography.bodySmall) }
+        }
+    }
+}

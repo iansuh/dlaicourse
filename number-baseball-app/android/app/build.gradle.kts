@@ -18,7 +18,7 @@ val testAdMobAppId = "ca-app-pub-3940256099942544~3347511713"
 val testBannerId = "ca-app-pub-3940256099942544/9214589741"
 val testInterstitialId = "ca-app-pub-3940256099942544/1033173712"
 
-val releaseValues = listOf("NB_SERVER_URL", "NB_ADMOB_APP_ID", "NB_ADMOB_BANNER_ID", "NB_ADMOB_INTERSTITIAL_ID")
+val releaseValues = listOf("NB_SERVER_URL", "NB_CONTACT_EMAIL", "NB_ADMOB_APP_ID", "NB_ADMOB_BANNER_ID", "NB_ADMOB_INTERSTITIAL_ID")
     .associateWith { config(it) }
 val missingReleaseValues = releaseValues.filterValues { it == null }.keys.toList()
 // CI builds an unsigned release bundle without real values to check R8 and resource shrinking.
@@ -54,6 +54,7 @@ android {
         debug {
             // 10.0.2.2 is the host machine seen from the emulator; override with -PNB_SERVER_URL=...
             buildConfigField("String", "SERVER_URL", "\"${config("NB_SERVER_URL") ?: "http://10.0.2.2:8080"}\"")
+            buildConfigField("String", "CONTACT_EMAIL", "\"${config("NB_CONTACT_EMAIL") ?: "support@example.com"}\"")
             manifestPlaceholders["admobAppId"] = testAdMobAppId
             buildConfigField("String", "ADMOB_BANNER_ID", "\"$testBannerId\"")
             buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"$testInterstitialId\"")
@@ -66,6 +67,7 @@ android {
             signingConfig = signingConfigs.findByName("release")
             // Placeholders below are only reachable when checkReleaseConfig allows them (see that task).
             buildConfigField("String", "SERVER_URL", "\"${releaseValues["NB_SERVER_URL"] ?: "https://placeholder.invalid"}\"")
+            buildConfigField("String", "CONTACT_EMAIL", "\"${releaseValues["NB_CONTACT_EMAIL"] ?: "support@example.com"}\"")
             manifestPlaceholders["admobAppId"] = releaseValues["NB_ADMOB_APP_ID"] ?: testAdMobAppId
             buildConfigField("String", "ADMOB_BANNER_ID", "\"${releaseValues["NB_ADMOB_BANNER_ID"] ?: testBannerId}\"")
             buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"${releaseValues["NB_ADMOB_INTERSTITIAL_ID"] ?: testInterstitialId}\"")

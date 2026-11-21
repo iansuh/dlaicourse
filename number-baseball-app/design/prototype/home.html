@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="css/proto.css">
 <style>
   .h-head { flex: none; height: 56px; display: flex; align-items: center; padding: 0 4px 0 16px; gap: 12px; }
-  .brand { font: 700 22px/28px var(--font-num); letter-spacing: .06em; text-transform: uppercase; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brand { font: var(--t-title); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* localized app_name, system font */
   .dialog { position: absolute; left: 24px; right: 24px; top: 50%; transform: translateY(-50%); background: var(--c-surface3); border-radius: var(--r-l); box-shadow: var(--shadow-3); padding: 24px 24px 16px; }
   .dialog .dic { color: var(--c-strike); margin-bottom: 16px; }
   .dialog h2 { font: var(--t-title); }
@@ -55,7 +55,7 @@ window.build = function (qs) {
 <div class="app">
   <div class="sysbar"></div>
   <header class="h-head">
-    <span class="brand" data-t="brand"></span>
+    <span class="brand" data-t="appName"></span>
     <button class="iconbtn dim" data-icon="help" data-al="howTo"></button>
     <button class="iconbtn dim" data-icon="settings" data-al="settings"></button>
   </header>

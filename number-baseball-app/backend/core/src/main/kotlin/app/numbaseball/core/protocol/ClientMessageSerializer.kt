@@ -2,6 +2,7 @@ package app.numbaseball.core.protocol
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -49,7 +50,18 @@ object ClientMessageSerializer : KSerializer<ClientMessage> {
     /** All message type names, for documentation and tests. */
     val types: List<String> get() = kinds.map { it.type }
 
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("app.numbaseball.core.protocol.ClientMessage")
+    /** Shaped like a sealed-class descriptor: "type" plus "value" whose elements are the message type names. */
+    override val descriptor: SerialDescriptor by lazy {
+        buildClassSerialDescriptor("app.numbaseball.core.protocol.ClientMessage") {
+            element("type", String.serializer().descriptor)
+            element(
+                "value",
+                buildClassSerialDescriptor("app.numbaseball.core.protocol.ClientMessage.value") {
+                    kinds.forEach { element(it.type, it.serializer.descriptor) }
+                },
+            )
+        }
+    }
 
     private val NUMBER = Regex("-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?")
 

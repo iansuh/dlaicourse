@@ -33,6 +33,10 @@ class RulesTest {
         assertTrue(Rules.judge("012345", "012345").isSolved(6))
     }
 
+    @Test(expected = IllegalArgumentException::class) fun judgeRejectsRepeatedDigits() { Rules.judge("112", "123") }
+
+    @Test(expected = IllegalArgumentException::class) fun judgeRejectsNonDigits() { Rules.judge("12a", "123") }
+
     @Test fun randomNumbersAreValid() {
         val rnd = Random(1)
         for (d in 3..6) repeat(200) { assertTrue(Rules.isValid(Rules.randomNumber(d, rnd), d)) }

@@ -1,15 +1,18 @@
 package app.numbaseball.core.text
 
 /**
- * Emoji removal for chat (text only). Removes Extended_Pictographic characters, regional-indicator flags,
- * skin-tone modifiers, ZWJ / variation selectors, tag sequences (subdivision flags) and whole keycap
- * sequences such as "1\uFE0F\u20E3". Plain text emoticons like ^^ or :) are kept.
+ * Emoji removal for chat (text only), protocol §9.1.
  *
- * The Extended_Pictographic table was generated from Unicode 15 data (JDK 21) so it also works on Android,
- * where `Character.isExtendedPictographic` is not available.
+ * Always removed: Emoji_Presentation characters, everything in U+1F000–U+1FAFF (emoji blocks, flags' regional
+ * indicators, skin tones), ZWJ (U+200D), variation selectors, the keycap mark U+20E3 together with its base
+ * ("1\uFE0F\u20E3"), and tag characters (subdivision flags).
+ * Text-presentation symbols such as ♥ © ™ ♪ ★ ↔ ‼ are text and survive, unless U+FE0F asks for the emoji form.
+ * Plain emoticons (^^, :), (╯°□°)╯) are untouched.
+ *
+ * Tables were generated from Unicode 15 data (JDK 21) so they also work on Android.
  */
 object EmojiFilter {
-    /** Inclusive [start, end] pairs, sorted. */
+    /** Extended_Pictographic, inclusive [start, end] pairs. */
     private val PICTOGRAPHIC = intArrayOf(
         0xA9, 0xA9, 0xAE, 0xAE, 0x203C, 0x203C, 0x2049, 0x2049, 0x2122, 0x2122, 0x2139, 0x2139,
         0x2194, 0x2199, 0x21A9, 0x21AA, 0x231A, 0x231B, 0x2328, 0x2328, 0x2388, 0x2388, 0x23CF, 0x23CF,
@@ -26,43 +29,41 @@ object EmojiFilter {
         0x1F888, 0x1F88F, 0x1F8AE, 0x1F8FF, 0x1F90C, 0x1F93A, 0x1F93C, 0x1F945, 0x1F947, 0x1FAFF, 0x1FC00, 0x1FFFD,
     )
 
-    fun isPictographic(cp: Int): Boolean {
+    /** Emoji_Presentation outside U+1F000–U+1FAFF, inclusive pairs. */
+    private val PRESENTATION = intArrayOf(
+        0x231A, 0x231B, 0x23E9, 0x23EC, 0x23F0, 0x23F0, 0x23F3, 0x23F3, 0x25FD, 0x25FE, 0x2614, 0x2615,
+        0x2648, 0x2653, 0x267F, 0x267F, 0x2693, 0x2693, 0x26A1, 0x26A1, 0x26AA, 0x26AB, 0x26BD, 0x26BE,
+        0x26C4, 0x26C5, 0x26CE, 0x26CE, 0x26D4, 0x26D4, 0x26EA, 0x26EA, 0x26F2, 0x26F3, 0x26F5, 0x26F5,
+        0x26FA, 0x26FA, 0x26FD, 0x26FD, 0x2705, 0x2705, 0x270A, 0x270B, 0x2728, 0x2728, 0x274C, 0x274C,
+        0x274E, 0x274E, 0x2753, 0x2755, 0x2757, 0x2757, 0x2795, 0x2797, 0x27B0, 0x27B0, 0x27BF, 0x27BF,
+        0x2B1B, 0x2B1C, 0x2B50, 0x2B50, 0x2B55, 0x2B55,
+    )
+
+    private fun inRanges(table: IntArray, cp: Int): Boolean {
         var lo = 0
-        var hi = PICTOGRAPHIC.size / 2 - 1
+        var hi = table.size / 2 - 1
         while (lo <= hi) {
             val mid = (lo + hi) ushr 1
-            val start = PICTOGRAPHIC[2 * mid]
-            val end = PICTOGRAPHIC[2 * mid + 1]
             when {
-                cp < start -> hi = mid - 1
-                cp > end -> lo = mid + 1
+                cp < table[2 * mid] -> hi = mid - 1
+                cp > table[2 * mid + 1] -> lo = mid + 1
                 else -> return true
             }
         }
         return false
     }
 
-    /** Code points that only make sense as part of an emoji and are dropped on their own. */
-    fun isEmojiComponent(cp: Int): Boolean =
-        cp == 0x200D ||                    // zero width joiner
-            cp == 0xFE0E || cp == 0xFE0F ||    // text / emoji variation selectors
-            cp == 0x20E3 ||                    // combining enclosing keycap
-            cp in 0x1F1E6..0x1F1FF ||          // regional indicators (flags)
-            cp in 0x1F3FB..0x1F3FF ||          // skin tones
-            cp in 0x1F9B0..0x1F9B3 ||          // hair components
-            cp in 0xE0020..0xE007F             // tag characters (subdivision flags)
+    fun isPictographic(cp: Int): Boolean = inRanges(PICTOGRAPHIC, cp)
 
-    fun isEmoji(cp: Int): Boolean = isPictographic(cp) || isEmojiComponent(cp)
+    /** Emoji no matter what follows. */
+    fun isAlwaysEmoji(cp: Int): Boolean =
+        cp in 0x1F000..0x1FAFF || inRanges(PRESENTATION, cp) ||
+            cp == 0x200D || cp == 0xFE0F || cp == 0xFE0E || cp == 0x20E3 || cp in 0xE0000..0xE007F
 
-    fun containsEmoji(text: String): Boolean {
-        var i = 0
-        while (i < text.length) {
-            val cp = text.codePointAt(i)
-            if (isEmoji(cp)) return true
-            i += Character.charCount(cp)
-        }
-        return false
-    }
+    /** Any code point that can be part of an emoji (for nickname checks). */
+    fun isEmoji(cp: Int): Boolean = isAlwaysEmoji(cp) || isPictographic(cp)
+
+    fun containsEmoji(text: String): Boolean = strip(text) != text
 
     fun strip(text: String): String {
         val cps = text.codePoints().toArray()
@@ -70,13 +71,19 @@ object EmojiFilter {
         var i = 0
         while (i < cps.size) {
             val cp = cps[i]
+            val next = if (i + 1 < cps.size) cps[i + 1] else -1
             // Keycap: [0-9#*] (FE0F)? 20E3 -> drop the whole sequence.
             if (cp in '0'.code..'9'.code || cp == '#'.code || cp == '*'.code) {
                 var j = i + 1
                 if (j < cps.size && (cps[j] == 0xFE0F || cps[j] == 0xFE0E)) j++
                 if (j < cps.size && cps[j] == 0x20E3) { i = j + 1; continue }
             }
-            if (!isEmoji(cp)) out.appendCodePoint(cp)
+            when {
+                isAlwaysEmoji(cp) -> Unit
+                // A text symbol turned into an emoji by VS16 ("\u2764\uFE0F") goes with it.
+                isPictographic(cp) && next == 0xFE0F -> Unit
+                else -> out.appendCodePoint(cp)
+            }
             i++
         }
         return out.toString()

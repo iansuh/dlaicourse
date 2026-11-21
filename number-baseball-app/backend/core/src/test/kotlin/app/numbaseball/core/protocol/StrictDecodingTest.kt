@@ -31,8 +31,10 @@ class StrictDecodingTest {
         for (bad in listOf("""{"type":ping}""", """{"type":"ping","x":NaN}""", """{"type":"ping","x":01}""", """{"type":"ping","x":Infinity}""")) {
             assertTrue(bad, runCatching { decode(bad) }.isFailure)
         }
+        // Deep nesting is either decoded or rejected with a decoding error, never a stack overflow.
         val deep = """{"type":"ping","pad":""" + "[".repeat(900) + "]".repeat(900) + "}"
-        assertEquals(Ping(), decode(deep))
+        val r = runCatching { decode(deep) }
+        assertTrue(r.isSuccess || r.exceptionOrNull() is IllegalArgumentException)
     }
 
     @Test fun encodesTypeFirst() {

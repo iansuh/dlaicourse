@@ -24,6 +24,7 @@ import app.numbaseball.core.protocol.RoomView
 import app.numbaseball.core.protocol.Team
 import app.numbaseball.data.online.ConnectionState
 import app.numbaseball.data.online.OnlineSession
+import app.numbaseball.data.online.RequestResult
 import app.numbaseball.ui.common.ChoiceRow
 import app.numbaseball.ui.common.ConnectionStatus
 import app.numbaseball.ui.common.ErrorText
@@ -37,11 +38,14 @@ import app.numbaseball.ui.theme.NbColors
 import app.numbaseball.ui.theme.NbLayout
 import app.numbaseball.ui.theme.NbSpace
 import app.numbaseball.ui.theme.NbType
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -58,6 +62,7 @@ data class LobbyUiState(
     val error: UiError? = null,
 ) {
     val creating: Boolean get() = room == null
+    val isHost: Boolean get() = room != null && room.hostId == room.youId
     val waitingFor: Int get() = room?.let { it.settings.teamSize * 2 - it.players.count { p -> !p.left } }?.coerceAtLeast(0) ?: 0
     val started: Boolean get() = room?.phase == RoomPhase.PLAYING
 }
@@ -70,10 +75,22 @@ class RoomLobbyViewModel(private val joinCode: String, private val session: Onli
         ui.copy(room = room, players = room?.toPlayers().orEmpty(), connection = connection)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), local.value)
 
+    private val _matchStarted = Channel<Unit>(Channel.CONFLATED)
+
+    /** Fires once per LOBBY -> PLAYING transition, so returning to the lobby during a match does not bounce back. */
+    val matchStarted: Flow<Unit> = _matchStarted.receiveAsFlow()
+
     init {
         session.acquire()
         if (joinCode.isNotEmpty() && session.room.value?.code != joinCode) {
             request { session.joinRoom(joinCode) }
+        }
+        viewModelScope.launch {
+            var previous: RoomPhase? = session.room.value?.phase
+            session.room.collect { room ->
+                if (previous == RoomPhase.LOBBY && room?.phase == RoomPhase.PLAYING) _matchStarted.trySend(Unit)
+                previous = room?.phase
+            }
         }
     }
 
@@ -86,12 +103,15 @@ class RoomLobbyViewModel(private val joinCode: String, private val session: Onli
         request { session.setTeam(me.team.other) }
     }
 
+    /** Host, finished match: back to the lobby with the same settings. */
+    fun onReset() = request { session.resetRoom() }
+
     fun onLeave() = session.leaveRoom()
 
     fun onRetryConnection() = session.retryConnection()
 
     /** Requests wait for a live connection first (the server answers with a fresh `room_state`). */
-    private fun request(call: suspend () -> app.numbaseball.data.online.RequestResult) {
+    private fun request(call: suspend () -> RequestResult) {
         local.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
             session.connection.first { it is ConnectionState.Connected }
@@ -120,7 +140,9 @@ fun RoomLobbyScreen(
     onDraftChange: (RoomSettings) -> Unit,
     onCreate: () -> Unit,
     onSwitchTeam: () -> Unit,
+    onReset: () -> Unit,
     onPractice: () -> Unit,
+    onOpenMatch: () -> Unit,
     onChat: () -> Unit,
     onBoard: () -> Unit,
     onLeave: () -> Unit,
@@ -153,7 +175,11 @@ fun RoomLobbyScreen(
             Text(stringResource(R.string.lobby_auto_start), color = NbColors.text3, style = MaterialTheme.typography.bodySmall)
             PrimaryButton(stringResource(R.string.lobby_practice), onPractice)
             SecondaryButton(stringResource(R.string.lobby_switch_team), onSwitchTeam, enabled = !state.busy)
+        } else if (room.phase == RoomPhase.PLAYING) {
+            PrimaryButton(stringResource(R.string.lobby_open_match), onOpenMatch)
+            SecondaryButton(stringResource(R.string.lobby_board), onBoard)
         } else {
+            if (state.isHost) PrimaryButton(stringResource(R.string.result_play_again), onReset, enabled = !state.busy)
             SecondaryButton(stringResource(R.string.lobby_board), onBoard)
         }
         SecondaryButton(stringResource(R.string.lobby_chat), onChat)

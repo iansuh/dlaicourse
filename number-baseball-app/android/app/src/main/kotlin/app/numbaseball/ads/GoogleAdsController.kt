@@ -8,6 +8,7 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.ump.ConsentInformation
@@ -16,21 +17,25 @@ import com.google.android.ump.UserMessagingPlatform
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 /**
  * AdMob + UMP. Order follows Google's guidance: request consent info on every start, show the form only if required,
  * initialise the Mobile Ads SDK off the main thread once `canRequestAds()` is true (also true for non-personalised ads
- * after a refusal), and mute the app's ads.
+ * after a refusal). Ads follow the game's sound setting (muted by default) and the Teen max content rating.
  */
 class GoogleAdsController(
     private val appContext: Context,
     override val bannerAdUnitId: String,
     interstitialAdUnitId: String,
     private val scope: CoroutineScope,
+    /** Ads are muted unless the game sound is on (sound is off by default). */
+    private val soundEnabled: Flow<Boolean>,
 ) : AdsController {
     private val consentInformation: ConsentInformation = UserMessagingPlatform.getConsentInformation(appContext)
     private val consentRequested = AtomicBoolean(false)
@@ -77,9 +82,17 @@ class GoogleAdsController(
 
     private fun startSdk() {
         if (!sdkStarted.compareAndSet(false, true)) return
+        // Audience 13+ (owner decision): Teen until the IARC certificate says otherwise. Must be set before any request.
+        MobileAds.setRequestConfiguration(
+            MobileAds.getRequestConfiguration().toBuilder()
+                .setMaxAdContentRating(RequestConfiguration.MAX_AD_CONTENT_RATING_T)
+                .build(),
+        )
         scope.launch(Dispatchers.IO) {
             MobileAds.initialize(appContext) { _ ->
-                MobileAds.setAppMuted(true)
+                scope.launch(Dispatchers.Main) {
+                    soundEnabled.distinctUntilChanged().collect { MobileAds.setAppMuted(!it) }
+                }
                 _canRequestAds.value = true
             }
         }
@@ -101,9 +114,9 @@ private class GoogleInterstitialController(
         if (policy.shouldPreload()) preload()
     }
 
-    override fun showIfDue(activity: Activity, onContinue: () -> Unit) {
+    override fun showIfDue(activity: Activity, resultVisibleMillis: Long, onContinue: () -> Unit) {
         val ready = ad
-        if (ready == null || !policy.shouldShow()) {
+        if (ready == null || !policy.shouldShow(resultVisibleMillis)) {
             if (policy.shouldPreload()) preload()
             onContinue()
             return
