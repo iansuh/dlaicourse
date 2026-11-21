@@ -600,7 +600,7 @@ def build(cue_id: str):
     music = cue["group"] == "music"
     x = BUILDERS[cue_id]()
     if not music:
-        x = dsp.normalize(x, cue["target"], "momentary", tp_ceiling=TP_CEILING)
+        x = dsp.normalize(x, cue["target"], "momentary", tp_ceiling=TP_CEILING, release_ms=4.0)
         x = dsp.fade_out(x, 3)  # guarantee the very last samples reach zero
     TMP.mkdir(parents=True, exist_ok=True)
     OUT.mkdir(parents=True, exist_ok=True)

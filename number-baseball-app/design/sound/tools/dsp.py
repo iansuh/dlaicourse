@@ -333,9 +333,11 @@ def limiter(x: np.ndarray, ceiling_db: float, lookahead_ms: float = 1.5, release
     return y[0] if x.ndim == 1 else y
 
 
-def normalize(x: np.ndarray, target_lufs: float, metric: str, tp_ceiling: float = -2.0) -> np.ndarray:
+def normalize(x: np.ndarray, target_lufs: float, metric: str, tp_ceiling: float = -2.0,
+              release_ms: float = 60.0) -> np.ndarray:
     """Gain to target loudness (metric 'momentary' = max 400 ms loudness, 'integrated' = gated I),
-    then limit true peaks above tp_ceiling and re-trim the gain (2 passes)."""
+    then, if true peaks exceed tp_ceiling, find the input gain that reaches the target through the
+    limiter. Effects use a short release so only the first transient is shaved (a transient shaper)."""
     meas = (lambda s: sliding_max_loudness(s, 0.4)) if metric == "momentary" else integrated_loudness
     g0 = target_lufs - meas(x)
     y = x * 10 ** (g0 / 20)
@@ -343,7 +345,7 @@ def normalize(x: np.ndarray, target_lufs: float, metric: str, tp_ceiling: float 
         return y
 
     def render(gain_db):
-        return limiter(x * 10 ** (gain_db / 20), tp_ceiling - 0.3)
+        return limiter(x * 10 ** (gain_db / 20), tp_ceiling - 0.3, lookahead_ms=1.0, release_ms=release_ms)
 
     # loudness after limiting rises monotonically with input gain: bisect for the target
     lo, hi = g0, g0 + 12.0
