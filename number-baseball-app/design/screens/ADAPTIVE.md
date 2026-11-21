@@ -2,6 +2,8 @@
 
 Window classes come from Compose `WindowSizeClass`. Height compact < 480 dp, width compact < 600, medium 600–839, expanded ≥ 840 dp. Rules apply to the **window**, not the device: split-screen, pop-up windows and freeform all use them.
 
+Smallest supported window: **320 × 320 dp**; banner ads are hidden below **480 dp** window height (DESIGN_SYSTEM 4.1).
+
 ## 1. Small window (height < 480 dp, e.g. 360 × 320 split-screen)
 
 Reference shots: `shots/match-small-ko.png`, `shots/match-small-de.png` (360 × 320, density 2).

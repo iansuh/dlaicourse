@@ -14,6 +14,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -25,6 +26,9 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
+
+/** Test tag of the banner container (QA test hook): tests assert it is absent on screens that must not show ads. */
+const val AD_BANNER_TAG = "adBanner"
 
 /** Disabled unless the activity provides the real controller, so previews, tests and screenshots never show ads. */
 val LocalAdsController = staticCompositionLocalOf<AdsController> { DisabledAdsController }
@@ -40,7 +44,7 @@ fun AdBanner(modifier: Modifier = Modifier) {
     val canRequestAds by ads.canRequestAds.collectAsStateWithLifecycle()
     val windowHeightDp = rememberWindowHeightDp()
     if (!canRequestAds || windowHeightDp < NbLayout.bannerHideWindowHeightBelow || LocalInspectionMode.current) return
-    BoxWithConstraints(modifier.fillMaxWidth()) {
+    BoxWithConstraints(modifier.fillMaxWidth().testTag(AD_BANNER_TAG)) {
         val widthDp = maxWidth.value.toInt()
         key(widthDp) { AnchoredBanner(adUnitId, widthDp) }
     }

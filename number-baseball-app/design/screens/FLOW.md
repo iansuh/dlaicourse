@@ -5,7 +5,9 @@ All screens are specified in this folder; values refer to [`../DESIGN_SYSTEM.md`
 ```mermaid
 flowchart TD
   Launch([App start]) --> HasAcct{Account token?}
-  HasAcct -- no --> Nick[01 First run: nickname]
+  HasAcct -- no --> Age[01 Age: birth year]
+  Age -- allowed --> Nick[01 First run: nickname]
+  Age -- under age --> NA([01 Not available, final])
   Nick --> Tut[01 Tutorial, skippable]
   Tut --> Home
   HasAcct -- yes --> DelReq{Web deletion pending?}
@@ -55,7 +57,7 @@ flowchart TD
 
 | # | File | Prototype | Shots |
 | --- | --- | --- | --- |
-| 01 | [01-first-run.md](01-first-run.md) | `nickname.html` | `nickname-ko`, `nickname-error-ko` |
+| 01 | [01-first-run.md](01-first-run.md) | `age.html`, `nickname.html` | `age-ko/en`, `age-error-ko`, `age-na-ko`, `nickname-ko`, `nickname-error-ko` |
 | 02 | [02-home.md](02-home.md) | `home.html` | `home-ko/de/ru`, `home-deletion-ko` |
 | 03 | [03-vs-computer-setup.md](03-vs-computer-setup.md) | — | — |
 | 04 | [04-quick-match.md](04-quick-match.md) | `search.html` | `search-ko`, `search-found-ko` |

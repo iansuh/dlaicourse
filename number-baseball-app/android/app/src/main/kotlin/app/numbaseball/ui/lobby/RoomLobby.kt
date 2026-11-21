@@ -50,6 +50,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * Round timers for private rooms (owner decision): 30 / 60 / 120 s and "relaxed" = 600 s; no untimed option.
+ * TODO(core): use Limits.ROUND_SECONDS once :core and docs/protocol.md carry these values (they still list 0, 30, 60, 120).
+ */
+object RoundTimers {
+    const val RELAXED = 600
+    val OPTIONS = listOf(30, 60, 120, RELAXED)
+}
+
 data class LobbyPlayer(val id: String, val displayName: String, val team: Team, val host: Boolean, val you: Boolean, val connected: Boolean)
 
 data class LobbyUiState(
@@ -194,12 +203,12 @@ private fun SettingsForm(draft: RoomSettings, onChange: (RoomSettings) -> Unit) 
     SectionLabel(stringResource(R.string.lobby_team_size))
     ChoiceRow(Limits.TEAM_SIZE.toList(), draft.teamSize, { it.toString() }) { onChange(draft.copy(teamSize = it)) }
     SectionLabel(stringResource(R.string.lobby_round_timer))
-    ChoiceRow(Limits.ROUND_SECONDS, draft.roundSeconds, { timerLabel(it) }) { onChange(draft.copy(roundSeconds = it)) }
+    ChoiceRow(RoundTimers.OPTIONS, draft.roundSeconds, { timerLabel(it) }) { onChange(draft.copy(roundSeconds = it)) }
 }
 
 @Composable
 private fun timerLabel(seconds: Int): String =
-    if (seconds == 0) stringResource(R.string.lobby_timer_none) else pluralStringResource(R.plurals.lobby_timer_seconds, seconds, seconds)
+    if (seconds == RoundTimers.RELAXED) stringResource(R.string.lobby_timer_relaxed) else pluralStringResource(R.plurals.lobby_timer_seconds, seconds, seconds)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

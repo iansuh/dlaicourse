@@ -92,9 +92,9 @@ class GoogleAdsController(
         val builder = MobileAds.getRequestConfiguration().toBuilder()
             .setMaxAdContentRating(maxAdContentRating)
         when (treatment) {
+            // CHILD replaces the deprecated child-directed / under-age-of-consent tags in SDK 25.x.
             AdAgeTreatment.CHILD -> builder
                 .setAgeRestrictedTreatment(AgeRestrictedTreatment.CHILD)
-                .setTagForUnderAgeOfConsent(RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_TRUE)
                 .setPublisherPrivacyPersonalizationState(RequestConfiguration.PublisherPrivacyPersonalizationState.DISABLED)
             AdAgeTreatment.TEEN -> builder.setAgeRestrictedTreatment(AgeRestrictedTreatment.TEEN)
             AdAgeTreatment.UNSPECIFIED -> builder.setAgeRestrictedTreatment(AgeRestrictedTreatment.UNSPECIFIED)

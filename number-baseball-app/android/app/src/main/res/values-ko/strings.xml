@@ -128,7 +128,7 @@
     <string name="lobby_title">방 %1$s</string>
     <string name="lobby_team_size">팀 인원</string>
     <string name="lobby_round_timer">라운드 시간</string>
-    <string name="lobby_timer_none">없음</string>
+    <string name="lobby_timer_relaxed">여유 (10분)</string>
     <plurals name="lobby_timer_seconds">
         <item quantity="other">%d초</item>
     </plurals>

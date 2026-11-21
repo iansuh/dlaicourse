@@ -27,6 +27,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.numbaseball.R
 import app.numbaseball.audio.GameAudio
+import app.numbaseball.audio.HapticCue
+import app.numbaseball.audio.LocalGameHaptics
 import app.numbaseball.audio.LocalGameAudio
 import app.numbaseball.audio.MusicTrack
 import app.numbaseball.audio.ScreenMusic
@@ -62,6 +64,7 @@ fun MatchScreen(
 ) {
     var confirmForfeit by rememberSaveable { mutableStateOf(false) }
     val audio = LocalGameAudio.current
+    val haptics = LocalGameHaptics.current
     ScreenMusic(MusicTrack.MATCH, audio)
     MatchSounds(state, audio)
     ScreenScaffold(
@@ -90,10 +93,12 @@ fun MatchScreen(
                 enabled = state.acceptsInput,
                 onDigit = {
                     audio.play(SoundCue.KEYPAD)
+                    haptics.perform(HapticCue.KEY_TAP)
                     onDigit(it)
                 },
                 onDelete = {
                     audio.play(SoundCue.KEYPAD)
+                    haptics.perform(HapticCue.KEY_TAP)
                     onDelete()
                 },
             )
@@ -105,6 +110,7 @@ fun MatchScreen(
                     text = stringResource(if (state.phase == MatchPhase.CHOOSING_SECRET) R.string.match_set_secret else R.string.match_guess),
                     onClick = {
                         audio.play(SoundCue.GUESS_SENT)
+                        haptics.perform(HapticCue.CONFIRM)
                         onSubmit()
                     },
                     enabled = state.acceptsInput && state.input.length == state.digits,

@@ -24,7 +24,7 @@ Column grid of the log: 16 dp padding · 28 round · flexible guess · 44 S · 4
 ## 2. Phases and states
 
 ### 2.1 Secret entry (shot `match-secret-ko`)
-- Top bar: title "빠른 대전" (mode) over "4자리"; the pitch clock runs if the mode has a timer (same duration as a round).
+- Top bar: title "빠른 대전" (mode) over "4자리"; the pitch clock runs with the same duration as a round.
 - Duel strip: opponent status "상대가 숫자를 정하는 중" (unlit lamp) → "숫자를 정했어요" (lit ball lamp). My-secret plates are not shown yet.
 - Log area: legend rows "판정 읽는 법" (DESIGN_SYSTEM 12.7): `1S` + lit strike lamp "스트라이크 · 숫자와 자리가 모두 맞음"; `1B` + lit ball lamp "볼 · 숫자는 있지만 자리가 다름"; `OUT` tag "아웃 · 맞는 숫자가 하나도 없음". 44 dp rows.
 - Above the slots (24 dp top padding): "비밀 숫자를 정하세요" `title`, "서로 다른 숫자 4개 · 0으로 시작해도 돼요" `caption` `text3`, centred.
@@ -55,7 +55,7 @@ Same layout; included because it is the store hero shot: latest row `3S 0B` with
 - Team match: after my duel ends, the screen goes to the team board (08) instead of the result, until all duels finish.
 
 ### 2.7 Pitch clock
-- Normal (`chalk`), warn ≤ 10 s (`strike`), critical ≤ 5 s (`out`, value pulses each second), paused while reconnecting (`textDisabled`), absent when the room has no timer. Shots via `?clock=warn|crit`.
+- Options: 30 / 60 / 120 s or 느긋하게 (10 min); always present (no untimed rounds). Normal (`chalk`), warn ≤ 10 s (`strike`), critical ≤ 5 s (`out`, value pulses each second), paused while reconnecting (`textDisabled`). Shots via `?clock=warn|crit`.
 - Expiry: the round is skipped for me (no guess); toast "시간이 지났어요. 이번 회는 넘어가요". Second consecutive miss forfeits the duel (README): result screen with "시간 초과 2회로 기권했어요".
 - First miss also shows a one-time warning toast at the next round start: "한 번 더 시간이 지나면 기권 처리돼요".
 
@@ -94,6 +94,6 @@ Same screen vs Computer, plus a 40 dp `surface3` band under the top bar: "방 K7
 | | Quick match | Private room 1:1 | Team | vs Computer |
 | --- | --- | --- | --- | --- |
 | Top bar subtitle | 빠른 대전 · 4자리 | 친구 방 · 4자리 | 팀전 A 1 : 0 B (tap opens board) | 컴퓨터 · 보통 · 4자리 |
-| Clock | 60 s | host choice / none | host choice / none | setup choice (default none) |
+| Clock | 60 s | host choice (30 / 60 / 120 s / 10 min) | host choice | setup choice (default 10 min) |
 | Duel strip button | quick phrases | full chat | full chat (team + room) | none |
 | Opponent tag | yes | yes | yes | none (`memory` icon) |

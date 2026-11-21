@@ -18,7 +18,7 @@ Prototype: `prototype/terms.html`. Shots: `terms-ko.png`, `terms-en.png`.
 
 The body scrolls if it does not fit; the actions stay pinned. At 360 × 800 in Korean everything except the version line fits without scrolling.
 
-> Note: the prototype and shots still show the earlier "만 13세 이상" point; the owner has since set the minimum age to 14 and moved age checking to the first-launch age screen (01 §0). The gate's first point is therefore the neutral "이용 연령" line above. The prototype copy will be updated with the next prototype pass; the spec here wins.
+The age itself is checked once, on the first-launch age screen (01 §0); the gate only restates the rule without naming the number.
 
 ## Behaviour
 - Agree → `PUT /api/v1/me/terms {version}` → on success continue straight to the action the user started (quick match search, create, join, chat). Failure → toast "연결할 수 없어요. 다시 시도해 주세요." and stay.

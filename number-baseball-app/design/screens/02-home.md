@@ -9,7 +9,7 @@ Prototype: `prototype/home.html` (`?ad=none`, `?state=deletion`). Shots: `home-k
 | Region | Spec |
 | --- | --- |
 | Status bar | 24 dp |
-| Header | 56 dp: brand mark 22 × 32 dp at x = 16; 12 dp; `app_name` in `title` (localized resource, system font, ellipsis); `help` and `settings` icon buttons (48 dp, `text2`), last one 4 dp from the edge |
+| Header | 56 dp: brand mark 22 × 32 dp at x = 16; 12 dp; name stack: `app_name_main` "숫자야구" in `subtitle` over `app_name_sub` "조용한 한판" in `caption` `text3` (system font, each line ellipsizes; en "Number Baseball" / "Quiet Duel"); `help` and `settings` icon buttons (48 dp, `text2`), last one 4 dp from the edge |
 | Hero | padding 12 / 16 / 0: "내 기록" `caption` `text3`; nickname `title` + tag `numTag` 18 sp; record row 16 dp below: three columns `numStat` values (승 패 무) with `caption` `text3` labels, 20 dp padding each side of a 1 dp `line` divider, then win rate (same style, value in `text2`, e.g. `52%`); form row 16 dp below: "최근 10경기" `caption` `text3` + 12 dp + ten 8 dp lamps, 6 dp gap, oldest left: win = lit strike lamp, draw = 1.5 dp chalk ring, loss = unlit |
 | Spacer | flexible, min 16 dp |
 | Other modes | section label "다른 방법으로 하기" (40 dp header); three 64 dp rows with a 40 × 40 dp `surface2` lead plate (radius 8, icon 24 chalk), title `subtitle`, subtitle `caption` `text3` (max 2 lines), chevron; dividers inset 72 dp: 컴퓨터와 대결 (`memory`, "오프라인 · 쉬움 · 보통 · 어려움"), 방 만들기 (`group`, "친구와 1:1 또는 팀전, 최대 5 대 5"), 코드로 참가 (`login`, "친구에게 받은 5자리 코드") |

@@ -164,6 +164,18 @@ Rules:
 - Bottom action zone: primary button 56 dp; 16 dp side margins; 24 dp below the last button when an ad band follows (see 13).
 - Window classes (Compose `WindowSizeClass`): width compact < 600, medium 600 to 839, expanded ≥ 840 dp; **height compact < 480 dp** triggers the compact game layout.
 
+### 4.1 Supported window sizes (QA DEF-019 / DEF-020)
+
+| Number | Value | Rule |
+| --- | --- | --- |
+| **Smallest supported window** | **320 × 320 dp** (width × height) | Every screen is fully usable down to this size (compact layouts, ADAPTIVE.md). Below it the app keeps the game state but shows a full-window notice instead of the screen: brand mark + "창을 조금 더 크게 해 주세요" (`title`) + "게임은 그대로 기다리고 있어요" (`caption` `text3`); online timers keep running, so the reconnect rules still apply. |
+| **Ad banner hidden below** | window height **< 480 dp** (or width < 320 dp) | No banner is requested or shown, on any screen. Same threshold as the compact game layout. |
+| Compact game layout | window height < 480 dp | ADAPTIVE.md §1 |
+| Large-text layout | fontScale ≥ 1.5 | ADAPTIVE.md §2 |
+| Two-pane match | window width ≥ 600 dp and height ≥ 480 dp | ADAPTIVE.md §3 |
+
+`android:resizeableActivity="true"`; no `maxAspectRatio`; minimum window size in the manifest `<layout android:minWidth="320dp" android:minHeight="320dp">` (freeform and pop-up windows cannot shrink below it on platforms that honour it).
+
 ---
 
 ## 5. Shape
@@ -429,7 +441,8 @@ Each component lists anatomy, size and every state. "Prototype" points to a page
 ### 12.2 Pitch clock (`PitchClock`)
 - `timer` icon 18 dp `text3` + `numTimer` value, right-aligned, min width 38 dp, format `m:ss`.
 - 2 dp progress line at the bottom edge of the top bar, full width; track `line`, fill `chalk`, shrinks right to left linearly.
-- States: normal (chalk); **warn** ≤ 10 s (value, icon and fill `strike`); **critical** ≤ 5 s (`out`); **paused** (reconnecting, `textDisabled`); **off** (room without a timer: the clock and the line are not shown).
+- Round timer options (owner decision): **30 s, 60 s, 120 s, or 느긋하게 / Relaxed = 10 min**; there is no untimed option. Quick match always uses 60 s. Relaxed shows `10:00` counting down like the others.
+- States: normal (chalk); **warn** ≤ 10 s (value, icon and fill `strike`); **critical** ≤ 5 s (`out`); **paused** (reconnecting, `textDisabled`).
 
 ### 12.3 Duel strip (`DuelStrip`)
 - 52 dp band, 16 dp margins, 12 dp gaps: `VS` (`numLabel`, `text3`, 20 dp wide) · opponent name + tag (`subtitle` / `numTag`) over status (`caption` `text2` with a 6 dp lamp) · quick-phrase button (online only, 48 dp, `chat` icon `text2`) · my secret ("내 숫자" `caption` `text3` over mini plates 18 × 22 dp, `surface2`, radius 4, Barlow 600 16 sp `text2`, 2 dp apart).
@@ -557,11 +570,28 @@ Placement rules from the README and the release lead, turned into layout:
 
 ## 14. Copy and content
 
+### 14.1 Languages and fallback (QA DEF-020)
+
+Supported: ko (primary), en, ja, zh-CN (Simplified), es (Latin American copy), fr, de, pt-BR, ru, vi. The app follows the system language unless the player picks one in Settings > 언어 (per-app language, `AppCompatDelegate.setApplicationLocales`; `res/xml/locales_config.xml` lists the ten).
+
+| Device locale | App language |
+| --- | --- |
+| Any supported language, any region (ko-KR, en-GB, fr-CA, de-AT, ru-UA, vi-VN, ja-JP …) | that language |
+| zh-CN, zh-SG, zh-Hans-* | zh-CN (Simplified) |
+| zh-TW, zh-HK, zh-MO, zh-Hant-* | **English** (we do not show Simplified text to Traditional readers; a Traditional translation is a later decision) |
+| es-ES and every es-* | es (Latin American copy) |
+| pt-PT and every pt-* | **pt-BR** |
+| Anything else (it, tr, th, id, …) | **English** |
+
+Android resource folders that make this happen without code: `values` = English (default); `values-ko`, `values-ja`, `values-b+zh+Hans` (not `values-zh`, so Traditional locales fall through to English), `values-es`, `values-fr`, `values-de`, `values-pt` (Brazilian copy, so pt-PT matches it), `values-ru`, `values-vi`. Plurals use `<plurals>` in every language (Russian 3/4 цифры vs 5/6 цифр). The bundled display face only renders digits and Latin letters, so no language depends on it.
+
+### 14.2 Copy rules
+
 - Korean first: short 해요체, no exclamation marks except in quick phrases and the result headline area ("승리" has none). Titles are statements, not questions, except confirmations.
 - Numbers always in `num`; units in `sans` next to them ("4자리", "60초").
 - Never "Excel", "Mastermind", "Numer0n", "ad-free". Never show real player names in screenshots.
-- The app name is a resource (`app_name`), localized per language (owner decision: a "숫자야구"-style name). Home shows it in `title` `sans`; no brand word is baked into the icon, artwork or store graphics (store text comes from [`store/store-text.json`](store/store-text.json)).
-- Audience 13 and over (owner decision); the style stays adult-neutral.
+- The app name is a set of resources (owner decision 2026-11-21): `app_name` = "숫자야구: 조용한 한판" / "Number Baseball: Quiet Duel" (full, localized per `docs/play/STORE_LISTING.md`), split for the UI into `app_name_main` ("숫자야구") and `app_name_sub` ("조용한 한판"). Home and the first-launch screens show main (`subtitle`) over sub (`caption` `text3`) next to the mark; the launcher label uses `app_name_main`. No brand word is baked into the icon, artwork or store graphics; store text comes from [`store/store-text.json`](store/store-text.json).
+- Minimum age 14 (owner decision), checked once by the neutral birth-year screen (01 §0). The style stays adult-neutral; no copy mentions the age number.
 
 ---
 

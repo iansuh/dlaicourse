@@ -1,6 +1,30 @@
-# 01 First run: nickname and tutorial
+# 01 First run: age, nickname and tutorial
 
-Prototype: `prototype/nickname.html` (`?state=error`, `?ime=0`). Shots: `nickname-ko.png`, `nickname-error-ko.png`.
+Prototypes: `prototype/age.html` (`?state=error|na`, `?entry=1998`), `prototype/nickname.html` (`?state=error`, `?ime=0`). Shots: `age-ko.png`, `age-en.png`, `age-error-ko.png`, `age-na-ko.png`, `nickname-ko.png`, `nickname-error-ko.png`.
+
+Order on first launch: **age → nickname → tutorial → Home**. A restored account (Auto Backup or transfer code) skips all three.
+
+## 0. Age (birth year)
+
+**Purpose:** owner decision: minimum age 14. The screen is neutral: it asks only for the birth year and never hints at the required age (no number, no "you must be…").
+
+| Element | Spec |
+| --- | --- |
+| Body top padding | 32 dp |
+| Eyebrow | brand mark 22 × 32 dp + 10 dp + name stack (`app_name_main` `labelSmall` `text2` over `app_name_sub` `caption` `text3`) |
+| Title | "태어난 해를 입력해 주세요" `headline`, 24 dp below |
+| Lead | "태어난 해만 확인해요. 이름이나 생일은 묻지 않아요." `body` `text2`, 8 dp below |
+| Year | 40 dp below, centred: "태어난 해" `labelSmall` `text3`; 12 dp; 4 slots 56 × 64 dp (12.4 states); 12 dp; error line (18 dp reserved, `caption` `out`) |
+| Keypad | pinned at the bottom: the digit keypad (5 × 2) with `⌫` and "확인" (4 columns, primary style); **repeated digits are allowed here** (no `used` state), unlike the game |
+
+- 확인 enabled at 4 digits. Valid years: 1900 to the current year. Invalid (shot `age-error-ko`): slots `error` state + "올바른 연도를 입력해 주세요"; slots clear on the next key.
+- Rule (year only, so age is known to ±1 year): **allowed when current year − birth year ≥ 14** (the player turns 14 at some point this calendar year). If the release lead wants the strict reading (≥ 15 until the birthday is certain), only the config value changes; the screen does not. The threshold lives in remote config with a bundled default, never in copy.
+- The result (allowed / not allowed) and the year are stored on the device; the screen is not shown again. There is no back from this screen and no way to re-enter the year after a "not available" result without clearing app data.
+- Accessibility: the slots are one group "태어난 해, 1 9 9 입력됨"; the keypad keys read digits.
+
+### 0.1 Not available (shot `age-na-ko`)
+Calm, final, no blame, no number: vertically centred column, 32 dp side margins: brand mark 33 × 48 dp at 55 % opacity; 8 dp; "지금은 이용할 수 없어요" `title`; 16 dp; "입력한 정보로는 이 게임을 이용할 수 없어요. 관심 가져 주셔서 고마워요." `body` `text2`; 24 dp; text link "개인정보 처리방침". No buttons, no ads, no sound, no account is created and nothing is sent to the server.
+
 
 ## 1. Nickname
 

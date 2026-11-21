@@ -11,10 +11,10 @@ Private rooms are for friends (1:1 or teams up to 5 vs 5). Free-text chat lives 
 | Title row | "방 만들기" `title` · close |
 | 자리수 | segmented 48 dp, 3–6 (default last used, first time 4) |
 | 인원 | segmented 48 dp: 1:1 · 2:2 · 3:3 · 4:4 · 5:5 (labels `numLabel` 16 sp) |
-| 제한 시간 | segmented 48 dp: 30초 · 60초 · 120초 · 없음 (default 60초) |
+| 제한 시간 | segmented 48 dp: 30초 · 60초 · 120초 · 느긋하게 (labels: number Barlow + unit; the fourth reads "느긋하게" with a `caption` `text3` line under the control when selected: "한 회에 10분까지 생각할 수 있어요"); default 60초; there is no untimed option |
 | Create | primary 56 dp "방 만들기"; 24 dp bottom + inset |
 
-Creating puts the host in seat A1 and opens the lobby.
+Creating puts the host in seat A1 and opens the lobby. The rules band shows the timer as "60초" or "느긋하게 (10분)".
 
 ## 2. Join with code (full screen)
 

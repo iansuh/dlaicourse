@@ -23,6 +23,9 @@ These are fixed for v1. Change them here first if the team agrees on something e
 - Audio focus: pause music and stop effects when another app takes focus, when the app goes to the background, or during calls. Ads stay muted.
 - All audio is made in-house (synthesized) so licensing is clean; OGG Vorbis, loudness-normalized.
 
+### App only (owner decision 2026-11-21)
+There is no web version and no website. The game, the terms, the privacy policy and account deletion all live in the app. The only web content is what Google requires a public URL for, served as plain static pages by the game server: `/privacy` (privacy policy), `/delete-account` (how to delete: in the app, or by email without the app), `/terms` (same text as in the app) and `/app-ads.txt` (AdMob). No landing page, no forms, no web login. The old web prototype in `../number-baseball/` is not developed further.
+
 ### Removed
 - Spreadsheet (Excel) disguise mode and the Esc boss key.
 - ID + password + email accounts and the password-reset mail flow.
@@ -33,7 +36,7 @@ Decision: **no ID, no password, no email.**
 - First launch creates a device account automatically. The player only picks a nickname (2–12 letters/digits, profanity-checked). Display form is `Nickname#1234`, so nicknames never collide.
 - The server returns a long random account token. The app stores it and includes it in Android Auto Backup, so a new phone signed in to the same Google account restores the player.
 - Settings has a **transfer code** (one-time, expires in 10 minutes) to move the account to another device by hand.
-- Settings has **Delete account** (Play requirement), and the server hosts a web page for deletion requests without the app.
+- Settings has **Delete account** (Play requirement). Deletion without the app is by email (see "App only" below).
 - Phase 2 option: Google Play Games sign-in as an extra restore path.
 
 Why: one less screen before the first game, no passwords to leak, no email to collect or mail service to run, and a smaller Play Data safety declaration. Play still requires account deletion and chat safety tools, so those are in v1.
@@ -51,8 +54,8 @@ Profanity masking, rate limit, report a message or a player, block a player (hid
 - Moderation: admin can restrict a player's chat; automatic 24 h chat restriction after reports from 3 different players within 24 h.
 
 ### Terms, deletion and review (from the release lead's policy review, `docs/play/POLICY_REVIEW.md`)
-- **Terms gate** before the first online match or chat; cannot be skipped; acceptance stored with the terms version; shown again when the version changes. Server pages `/`, `/privacy`, `/terms`, `/delete-account` built from `docs/play/*.md`.
-- **Deletion without the app**: the web page also accepts a request without an in-app code; the account is deleted after 30 days unless it is used again, and the app shows the pending request. Accepted risk: someone could file a request for an inactive account using its public `Nickname#1234`; mitigations are the 30-day wait, cancellation on any use, an in-app notice, one pending request per account, rate limits, and the admin can see and cancel requests.
+- **Terms gate** before the first online match or chat; cannot be skipped; acceptance stored with the terms version; shown again when the version changes. The terms text is shown inside the app.
+- **Deletion without the app**: by email to the game's contact address with the `Nickname#1234`; the operator deletes it with the admin tool. No web form, no web deletion code.
 - Reports: resolved reports purged after 180 days; deleted players are anonymised in other reports' snapshots.
 - No chat text, tokens, codes or IP addresses in logs or the database (rate-limit IPs in memory only).
 - A review room behind `REVIEW_ROOM_CODE` so Play reviewers always find an opponent.
@@ -77,7 +80,7 @@ The owner asked for Google ads. On Android that is **AdMob** (AdSense is for web
 | Path | What | Owner |
 | --- | --- | --- |
 | `backend/core` | Pure Kotlin game core: rules, judge, computer AI, match and team engine, protocol messages, nickname and chat filters. Shared by app and server. | Backend engineer |
-| `backend/server` | Ktor server: WebSocket protocol, accounts, matchmaking, rooms, chat moderation, deletion page, SQLite. | Backend engineer |
+| `backend/server` | Ktor server: WebSocket protocol, accounts, matchmaking, rooms, chat moderation, required static policy pages, SQLite. | Backend engineer |
 | `android/app` | Android app (Kotlin, Jetpack Compose). | Android engineer |
 | `design/` | Design system, screen specs, prototypes, review notes. | Design lead |
 | `docs/protocol.md` | Client–server contract. | Backend engineer |
