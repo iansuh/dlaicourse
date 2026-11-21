@@ -330,6 +330,10 @@ Clock text updates on whole seconds; the line moves continuously (linear).
 | `nav_forward` / `nav_back` | screen push / pop | shared axis X 24 dp + fade, 360 ms |
 | `sheet_open` / `sheet_close` | any bottom sheet | `sheet` spring |
 | `toggle(on/off)` | any switch | thumb slides 150 ms |
+| `opponent_pitched` | the opponent's pitch arrives (duel strip status → 던짐) | status lamp ignites (180 ms) |
+| `memo_cycle` | a memo cell or digit changes state | mark cross-fades 90 ms |
+| `secret_locked` | 이 숫자로 정하기 accepted | slots lock (150 ms) |
+| `error_shown` | an error dialog or error toast appears | dialog / toast enter |
 
 ### 8.4 Reduced motion
 
@@ -391,7 +395,30 @@ Owner request (README "Sound"): effects and music, made in-house. Assets, mixing
 - Ads are **always muted** (README), regardless of game sound.
 - No information is sound-only; everything audible has a visual and, where listed, a haptic.
 
-**Cue list** (hook → cue; character guidance for the sound designer): `key_down` dry wood tick · `key_rejected` short muted double tap · `pitch_submit` glove pop · `lamp(strike, i)` bright relay click, rising slightly with i · `lamp(ball, j)` softer, lower click · `lamp(out)` low muted knock, never a buzzer · `solve` / `opponent_solved` single firm hit / low knock · `result_headline(win|lose|draw)` short ballpark-organ figure / one low note / two neutral notes · `result_lamp(i)` as strike lamp · `timer_warn` one soft tick · `timer_tick(s)` softer tick · `match_found` two-note rising chime · `chat_message` quiet single tick · `nav_forward`/`nav_back` very soft whoosh (optional, may be silent) · `toggle` click.
+**Hook → sound file** (files from the sound designer in `design/sound/out/`; the hook defines *when*, the file *what*):
+
+| Hook (8.3) | File | Notes |
+| --- | --- | --- |
+| `key_down` | `sfx_keypad_1` / `_2` / `_3` | round-robin |
+| `backspace` | `sfx_keypad_delete` | |
+| `key_rejected` | `sfx_input_invalid` | with the 280 ms shake |
+| `pitch_submit` | `sfx_guess_sent` | |
+| `secret_locked` | `sfx_secret_locked` | |
+| `opponent_pitched` | `sfx_opponent_guessed` | sound only, no haptic; never during a reveal |
+| `lamp(strike, i)` / `lamp(ball, j)` / `lamp(out)` | `sfx_hint_strike` / `sfx_hint_ball` / `sfx_hint_out` | playback rate by lamp index, 110 ms apart |
+| `solve` | `sfx_solved` | `opponent_solved` plays nothing (the result sting follows) |
+| `result_headline(win / lose / draw)` | `sfx_win` / `sfx_lose` / `sfx_draw` | `result_lamp(i)` plays nothing (the sting covers it) |
+| `timer_warn` (once at 10 s) | `sfx_timer_warning` | the sound designer's demo ticks every second from 10 s; the app plays it **once** at 10 s and is silent at 9–6 s |
+| `timer_tick(5..1)` | `sfx_timer_warning_last` | |
+| `timer_expired` | `sfx_time_out` | |
+| `match_found` | `sfx_match_found` | |
+| `chat_message` / `phrase_received` | `sfx_chat_message` / `sfx_quick_phrase` | max one per 2 s; muted with chat |
+| `memo_cycle` | `sfx_memo_mark` | |
+| `toggle(on / off)` | `sfx_toggle_on` / `sfx_toggle_off` | |
+| `nav_forward` / `nav_back` | `sfx_ui_navigate` / `sfx_ui_back` | not on transitions into or out of a match (the music crossfade covers those) |
+| `error_shown` | `sfx_error` | |
+| music | `music_menu` (Home, lobby, results, settings, profile) / `music_match` (search, secret entry, match) | 600 ms crossfade |
+
 
 ## 11. Accessibility
 

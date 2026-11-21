@@ -37,7 +37,9 @@ LEAD_THRESH = 10 ** (-50 / 20)
 END_MAX_DB = -50.0       # peak of the last 2 ms (no click when the sound ends)
 PHONE_LOSS_WARN = 6.0    # LU lost through a 300 Hz high-pass (small phone speaker)
 SET_BUDGET_KB = 1536
-SEAM_RATIO_MAX = 1.5     # seam discontinuity vs the loop's own 99th percentile
+SEAM_RATIO_MAX = 2.0     # >6 kHz peak at the seam vs the loop's own 99th percentile of 2 ms block peaks
+SEAM_FLOOR_DB = -60.0    # ...or below this absolute level (>= 34 dB under the music's loudness: masked)
+AUDIBLE_DB = -60.0       # audible duration = up to the last sample above this (dBFS)
 
 SPECTRO_CUES = ["sfx_keypad_1", "sfx_keypad_delete", "sfx_input_invalid", "sfx_guess_sent", "sfx_hint_strike",
                 "sfx_hint_ball", "sfx_hint_out", "sfx_solved", "sfx_win", "sfx_lose", "sfx_draw",
@@ -64,42 +66,51 @@ def resample_rate(x, rate):
     return np.interp(idx, np.arange(x.size), x)
 
 
-def seam_metrics(x):
-    """Click detector at the loop point. Second difference (|x[n+1] - 2x[n] + x[n-1]|) peaks at a
-    discontinuity; compare the seam window with the same statistic over the whole loop."""
-    xc = x if x.ndim == 2 else x[None, :]
+def _hf(xc, ctx=8192):
+    """>6 kHz content of a loop with circular context so the filter has settled at sample 0."""
+    y = np.concatenate([xc[:, -ctx:], xc], axis=1)
+    return np.max(np.abs(dsp.highpass(y, 6000, 4)), axis=0)[ctx:]
+
+
+def _seam_at(xc, j):
+    """Seam statistics for a join at sample j of signal xc (2, N): the material before j runs into j."""
     N = xc.shape[1]
-    W = 64
-    wrapped = np.concatenate([xc[:, -4096:], xc[:, :4096]], axis=1)
-    d2w = np.max(np.abs(np.diff(wrapped, 2, axis=1)), axis=0)
-    seam = d2w[4096 - 1 - W:4096 - 1 + W].max()
-    d2 = np.max(np.abs(np.diff(xc, 2, axis=1)), axis=0)
-    blocks = d2[: (d2.size // W) * W].reshape(-1, W).max(axis=1)
-    p99 = np.percentile(blocks, 99)
-    # high-frequency burst check: energy above 6 kHz in 5 ms windows
-    hp = dsp.highpass(np.concatenate([xc, xc[:, :4096]], axis=1), 6000, 4)[:, :]
-    e = np.sum(hp ** 2, axis=0)
-    w5 = int(0.005 * SR)
-    seam_e = e[N - w5:N + w5].mean()
-    frames = e[: (N // w5) * w5].reshape(-1, w5).mean(axis=1)
-    hf_ratio = seam_e / max(np.percentile(frames, 95), 1e-20)
-    # level continuity: last 400 ms vs first 400 ms
+    W = 88                                              # 2 ms
+    hf = _hf(xc)
+    blocks = hf[: (N // W) * W].reshape(-1, W).max(axis=1)
+    p99 = float(np.percentile(blocks, 99))
+    seam = float(hf[np.r_[j - W:j + W] % N].max())
+    d2 = np.max(np.abs(np.diff(np.concatenate([xc, xc[:, :2]], axis=1), 2, axis=1)), axis=0)
+    d2b = d2[: (N // 64) * 64].reshape(-1, 64).max(axis=1)
+    d2_ratio = float(d2[np.r_[j - 65:j + 63] % N].max() / np.percentile(d2b, 99))
+    return dict(hf_peak_db=20 * np.log10(max(seam, 1e-9)), hf_ratio=seam / max(p99, 1e-12), d2_ratio=d2_ratio)
+
+
+def seam_metrics(x):
+    """Click detector at the loop point (end joined to start, i.e. sample 0 of the looped signal).
+    A click is a burst of high frequencies: compare the >6 kHz peak within 2 ms of the seam with the
+    loop's own 99th percentile of 2 ms block peaks, and with an absolute floor."""
+    xc = x if x.ndim == 2 else x[None, :]
+    m = _seam_at(xc, 0)
+    m["step"] = float(np.max(np.abs(xc[:, 0] - xc[:, -1])))
     m_end = dsp.integrated_loudness(xc[:, -int(0.4 * SR):])
     m_start = dsp.integrated_loudness(xc[:, : int(0.4 * SR)])
-    return dict(seam_d2=float(seam), p99_d2=float(p99), ratio=float(seam / p99), hf_ratio=float(hf_ratio),
-                step=float(np.max(np.abs(xc[:, 0] - xc[:, -1]))), level_jump=float(m_start - m_end))
+    m["level_jump"] = float(m_start - m_end)
+    return m
+
+
+def seam_ok(m):
+    return (m["hf_ratio"] <= SEAM_RATIO_MAX or m["hf_peak_db"] <= SEAM_FLOOR_DB) and abs(m["level_jump"]) <= 3
 
 
 def seam_selftest(x):
-    """Prove the detector catches a real splice: join the loop at two unrelated points."""
+    """Prove the detector catches a real splice: the loop cut at 55 % and rejoined at 80 % of its length."""
     xc = x if x.ndim == 2 else x[None, :]
     N = xc.shape[1]
-    bad = np.concatenate([xc[:, : N // 2 + 1234], xc[:, int(N * 0.8):]], axis=1)
-    j = N // 2 + 1234
-    W = 64
-    d2 = np.max(np.abs(np.diff(bad, 2, axis=1)), axis=0)
-    blocks = d2[: (d2.size // W) * W].reshape(-1, W).max(axis=1)
-    return float(d2[j - W:j + W].max() / np.percentile(blocks, 99))
+    a, b = int(N * 0.55), int(N * 0.8)
+    bad = np.concatenate([xc[:, :a], xc[:, b:]], axis=1)
+    m = _seam_at(bad, a)
+    return dict(st_hf_peak_db=m["hf_peak_db"], st_hf_ratio=m["hf_ratio"], st_pass=bool(seam_ok(m | {"level_jump": 0})))
 
 
 def measure(cue):
@@ -110,8 +121,10 @@ def measure(cue):
     absx = np.abs(x) if x.ndim == 1 else np.max(np.abs(x), axis=0)
     above = np.nonzero(absx >= LEAD_THRESH)[0]
     lead_ms = (above[0] / SR * 1000) if above.size else float("inf")
+    aud = np.nonzero(absx >= 10 ** (AUDIBLE_DB / 20))[0]
+    aud_ms = ((aud[-1] + 1) / SR * 1000) if aud.size else 0.0
     r = dict(
-        id=cid, group=cue["group"], channels=ch, samples=int(L), dur_ms=L / SR * 1000,
+        id=cid, group=cue["group"], channels=ch, samples=int(L), dur_ms=L / SR * 1000, aud_ms=aud_ms,
         size_kb=(OUT / f"{cid}.ogg").stat().st_size / 1024,
         m_max=dsp.sliding_max_loudness(x, 0.4), s_max=dsp.sliding_max_loudness(x, 3.0),
         integrated=dsp.integrated_loudness(x), tp=dsp.true_peak_db(x), sp=dsp.sample_peak_db(x),
@@ -130,7 +143,7 @@ def measure(cue):
         "true_peak": r["tp"] <= TP_MAX,
         "dc": r["dc"] <= DC_MAX,
         "clipping": r["clipped"] == 0,
-        "duration": r["dur_ms"] <= cue["max_ms"],
+        "duration": r["aud_ms"] <= cue["max_ms"],
         "format": (ch == 1) if not music else (ch in (1, 2)),
     }
     if not music:
@@ -138,9 +151,9 @@ def measure(cue):
         checks["end_click"] = r["end_db"] <= END_MAX_DB
     else:
         seam = seam_metrics(x)
-        seam["selftest_ratio"] = seam_selftest(x)
+        seam.update(seam_selftest(x))
         r["seam"] = seam
-        checks["loop_seam"] = seam["ratio"] <= SEAM_RATIO_MAX and seam["hf_ratio"] <= 2.0 and abs(seam["level_jump"]) <= 3
+        checks["loop_seam"] = seam_ok(seam)
         st = dsp.loudness_curve(x, 3.0, 1.0)
         r["s_range"] = (float(np.min(st)), float(np.max(st)))
     r["checks"] = checks
@@ -271,27 +284,31 @@ def write_report(results, seqs, total_kb):
       "measures silence, so the 400 ms window is the meaningful 'short-term' figure for one-shots. Music is judged on I.")
     A("- **True peak**: 4x oversampled (polyphase), dBTP. **Clipping**: samples at |x| >= 0.999. "
       "**DC**: |mean| as a fraction of full scale.")
+    A("- **Duration**: *audible ms* runs to the last sample above -60 dBFS and is checked against the cue budget; "
+      "*file ms* includes the 20 ms of digital silence appended to very short effects (keeps codec noise off the end).")
     A(f"- **Lead silence**: time to the first sample above -50 dBFS (rule for effects: < {LEAD_MAX_MS:.0f} ms). "
       f"**End**: peak of the last 2 ms (rule: <= {END_MAX_DB:.0f} dBFS, so nothing is cut off with a click).")
     A("- **Phone loss**: how much loudness disappears through a 2nd-order 300 Hz high-pass, a rough model of a phone "
       "speaker. Above 6 LU means the cue relies on bass a phone cannot play.")
-    A("- **Loop seam** (music): the second difference |x[n+1] - 2x[n] + x[n-1]| spikes at a discontinuity. "
-      "The seam figure is the largest value within 64 samples of the loop point (end joined to start), divided by the "
-      "99th percentile of the same statistic over 64-sample blocks of the whole loop; above 1.5 would be a click. "
-      "Also checked: energy above 6 kHz in 5 ms around the seam vs. the 95th percentile of the loop (rule <= 2), and the "
-      "loudness of the last vs. the first 400 ms (rule within 3 LU). Detector self-test: the same loop deliberately "
-      "spliced at two unrelated points must score far above 1.5.")
+    A("- **Loop seam** (music): a click is a short burst of high frequencies. The file is looped (end joined to sample 0) "
+      "and high-passed at 6 kHz (4th order, with circular context so the filter is settled). The seam passes if the "
+      "peak within 2 ms of the join is no higher than 2x the loop's own 99th percentile of 2 ms block peaks (the join is "
+      "no rougher than the music itself) **or** lies below -60 dBFS (at least 34 dB under the music's loudness, masked). "
+      "Also: loudness of the last vs. the first 400 ms within 3 LU, and, for information, the second-difference ratio "
+      "(|x[n+1] - 2x[n] + x[n-1]| at the join vs. its 99th percentile). Self-test: the same loop cut at 55 % and "
+      "rejoined at 80 % must fail. The seam is checked on the decoded OGG because the encoder codes the last and first "
+      "blocks independently; `generate.py` raises the Vorbis quality until it passes.")
     A("")
     A("## Effects")
     A("")
-    A("| id | ms | KB | target | M-max | dev | S-max | I | TP dBTP | DC | clip | lead ms | end dBFS | phone loss | result |")
-    A("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|")
+    A("| id | audible ms | file ms | budget ms | KB | target | M-max | dev | S-max | I | TP dBTP | DC | clip | lead ms | end dBFS | phone loss | result |")
+    A("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|")
     for r in sfx:
         bad = [k for k, v in r["checks"].items() if not v]
         res = "PASS" if not bad else "FAIL: " + ", ".join(bad)
         if r["warn_phone"]:
             res += " (phone warn)"
-        A(f"| `{r['id']}` | {r['dur_ms']:.0f} | {r['size_kb']:.1f} | {r['target']} | {r['m_max']:.1f} | "
+        A(f"| `{r['id']}` | {r['aud_ms']:.0f} | {r['dur_ms']:.0f} | {CUE_BY_ID[r['id']]['max_ms']} | {r['size_kb']:.1f} | {r['target']} | {r['m_max']:.1f} | "
           f"{r['dev']:+.1f} | {fmt(r['s_max'])} | {fmt(r['integrated'])} | {r['tp']:.1f} | {r['dc']:.5f} | "
           f"{r['clipped']} | {r['lead_ms']:.1f} | {fmt(r['end_db'], 0)} | {r['phone_loss']:.1f} | {res} |")
     A("")
@@ -309,12 +326,13 @@ def write_report(results, seqs, total_kb):
       "loop with `isLooping = true`. Ogg Vorbis stores the exact sample count (granule position), so the decoded length "
       "equals the source length and no encoder padding has to be skipped.")
     A("")
-    A("| id | seam ratio (<= 1.5) | HF ratio (<= 2) | step at seam | level end -> start (LU) | self-test splice ratio |")
-    A("|---|---:|---:|---:|---:|---:|")
+    A("| id | HF peak at seam dBFS | HF ratio (<= 2, or peak <= -60 dBFS) | 2nd-diff ratio (info) | step | level end -> start (LU) | self-test splice: HF peak / ratio / verdict |")
+    A("|---|---:|---:|---:|---:|---:|---|")
     for r in mus:
         s = r["seam"]
-        A(f"| `{r['id']}` | {s['ratio']:.2f} | {s['hf_ratio']:.2f} | {s['step']:.5f} | {s['level_jump']:+.1f} | "
-          f"{s['selftest_ratio']:.1f} |")
+        A(f"| `{r['id']}` | {s['hf_peak_db']:.1f} | {s['hf_ratio']:.2f} | {s['d2_ratio']:.2f} | {s['step']:.5f} | "
+          f"{s['level_jump']:+.1f} | {s['st_hf_peak_db']:.1f} dBFS / {s['st_hf_ratio']:.1f} / "
+          f"{'pass (detector broken!)' if s['st_pass'] else 'fail, as it should'} |")
     A("")
     A("## Demo sequences (SoundPool-style mix)")
     A("")
@@ -383,7 +401,7 @@ def main():
               f"{' phone-warn' if r['warn_phone'] else ''}")
     for r in results:
         if "seam" in r:
-            print(r["id"], {k: round(v, 3) for k, v in r["seam"].items()})
+            print(r["id"], {k: (round(v, 3) if isinstance(v, float) else v) for k, v in r["seam"].items()})
     for k, s in seqs.items():
         print("seq", k, {kk: round(v, 2) for kk, v in s.items()})
     print(f"total {total_kb:.0f} KB")

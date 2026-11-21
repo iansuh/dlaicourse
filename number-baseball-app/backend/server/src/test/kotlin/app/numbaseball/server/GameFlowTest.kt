@@ -157,6 +157,18 @@ class GameFlowTest {
         assertTrue(end.duel().result!!.reason in setOf(EndReason.DISCONNECT, EndReason.TIMEOUT))
     }
 
+    @Test fun gracefulShutdownClosesRoomsAndRecordsNothing() = serverTest {
+        val (a, b) = quickPair()
+        val roomId = a.lastRoom!!.id
+        services.hub.shutdown()
+        assertEquals(LeaveReason.CLOSED, a.expect<RoomLeft> { it.roomId == roomId }.reason)
+        assertEquals(1001.toShort(), a.awaitClose()?.code)
+        assertEquals(1001.toShort(), b.awaitClose()?.code)
+        assertEquals(Stats(0, 0, 0), me(a.account.token).stats)
+        val again = connect(a.account)
+        assertNull(again.expect<Welcome>().roomId)
+    }
+
     @Test fun newConnectionReplacesOldOne() = serverTest {
         val acc = account("Mina")
         val first = connect(acc)

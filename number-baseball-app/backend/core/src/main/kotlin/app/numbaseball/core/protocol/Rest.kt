@@ -140,4 +140,6 @@ data class AdminAccount(
     val bannedAt: Long?,
     val banReason: String?,
     val chatRestrictReason: String?,
+    /** Last authenticated request or connection (to the nearest 10 minutes); check it before deleting on an email request. */
+    val lastActiveAt: Long?,
 )

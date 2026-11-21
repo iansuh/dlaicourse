@@ -30,7 +30,7 @@ OUT = HERE.parent / "out"
 TMP = Path(os.environ.get("SOUND_TMP", "/tmp/nb_sound")) / "wav"
 
 SFX_QUALITY = "4"     # libvorbis -q:a for effects (mono)
-MUSIC_QUALITY = "0"   # libvorbis -q:a for music (stereo, soft material)
+MUSIC_QUALITIES = ["1", "2", "3", "4", "5", "6"]  # libvorbis -q:a for music; first one whose decoded loop seam passes
 TP_CEILING = -2.0     # dBTP before encoding; leaves room for codec overshoot (deliverable rule: <= -1)
 
 
@@ -587,11 +587,24 @@ BUILDERS = {
 }
 
 
-def encode(wav: Path, ogg: Path, music: bool):
+def encode(wav: Path, ogg: Path, music: bool, quality: str = SFX_QUALITY):
     cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(wav), "-map_metadata", "-1",
-           "-c:a", "libvorbis", "-q:a", MUSIC_QUALITY if music else SFX_QUALITY, "-ar", str(SR),
+           "-c:a", "libvorbis", "-q:a", quality, "-ar", str(SR),
            "-ac", "2" if music else "1", "-fflags", "+bitexact", "-flags:a", "+bitexact", str(ogg)]
     subprocess.run(cmd, check=True)
+
+
+def encode_loop(wav: Path, ogg: Path) -> str:
+    """Encode a music loop and check the seam of the DECODED file (the codec codes the last and the first
+    block independently, so its error can leave a step at the join). Steps the quality up until it passes."""
+    from measure import seam_ok, seam_metrics
+    for q in MUSIC_QUALITIES:
+        encode(wav, ogg, True, q)
+        y, _ = sf.read(ogg, dtype="float64", always_2d=True)
+        m = seam_metrics(y.T)
+        if seam_ok(m):
+            return f"q{q} seam HF {m['hf_peak_db']:.1f} dBFS, ratio {m['hf_ratio']:.2f}"
+    return f"q{q} SEAM FAIL HF {m['hf_peak_db']:.1f} dBFS, ratio {m['hf_ratio']:.2f}"
 
 
 def build(cue_id: str):
@@ -609,11 +622,15 @@ def build(cue_id: str):
     OUT.mkdir(parents=True, exist_ok=True)
     wav = TMP / f"{cue_id}.wav"
     sf.write(wav, x.T if x.ndim == 2 else x, SR, subtype="FLOAT")
-    encode(wav, OUT / f"{cue_id}.ogg", music)
+    note = ""
+    if music:
+        note = encode_loop(wav, OUT / f"{cue_id}.ogg")
+    else:
+        encode(wav, OUT / f"{cue_id}.ogg", False)
     dur = x.shape[-1] / SR
     print(f"{cue_id:26s} {dur * 1000:8.0f} ms  M-max {dsp.sliding_max_loudness(x, 0.4):6.1f}  "
           f"I {dsp.integrated_loudness(x):6.1f}  TP {dsp.true_peak_db(x):5.1f}  "
-          f"{(OUT / f'{cue_id}.ogg').stat().st_size / 1024:6.1f} KB")
+          f"{(OUT / f'{cue_id}.ogg').stat().st_size / 1024:6.1f} KB  {note}")
 
 
 def main(argv):

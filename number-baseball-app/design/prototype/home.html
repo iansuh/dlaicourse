@@ -11,11 +11,6 @@
   .brand { flex: 1; min-width: 0; display: flex; flex-direction: column; } /* localized app name, system font */
   .brand .n { font: var(--t-subtitle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .brand .s { font: var(--t-caption); color: var(--c-text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .dialog { position: absolute; left: 24px; right: 24px; top: 50%; transform: translateY(-50%); background: var(--c-surface3); border-radius: var(--r-l); box-shadow: var(--shadow-3); padding: 24px 24px 16px; }
-  .dialog .dic { color: var(--c-strike); margin-bottom: 16px; }
-  .dialog h2 { font: var(--t-title); }
-  .dialog p { font: var(--t-body); color: var(--c-text2); margin-top: 12px; }
-  .dialog .acts { display: flex; flex-direction: column; gap: 8px; margin-top: 24px; }
   .hero { flex: none; padding: 12px 16px 0; }
   .hero .cap { font: var(--t-caption); color: var(--c-text3); }
   .hero .pname { font: var(--t-title); display: block; margin-top: 2px; }
@@ -46,10 +41,6 @@ window.build = function (qs) {
   if (qs.get('ad') === 'none') document.querySelector('.adslot').remove();
   document.querySelectorAll('.seg [data-n]').forEach((b) => { b.innerHTML = P.digitsLabel(+b.dataset.n); });
   document.querySelector('.h-head').insertAdjacentHTML('afterbegin', P.mark());
-  if (qs.get('state') === 'deletion') {
-    const t = P.t;
-    document.querySelector('.app').insertAdjacentHTML('beforeend', `<div class="scrim"></div><section class="dialog" role="alertdialog"><span class="dic">${P.icon('error')}</span><h2>${t('delReqT')}</h2><p>${t('delReqP')}</p><div class="acts"><button class="btn btn-primary">${t('delCancel')}</button><button class="btn btn-text danger" style="width:100%;height:48px;font:var(--t-label)">${t('delNow')}</button></div></section>`);
-  }
   // Fit rule: if the upper area overflows, hide the form row first; if it still overflows, it scrolls.
   requestAnimationFrame(() => { const sc = document.querySelector('.scroller'); if (sc.scrollHeight > sc.clientHeight + 1) sc.classList.add('tight'); });
   const form = 'WWLWDLWWLW'; // oldest -> newest

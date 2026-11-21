@@ -15,6 +15,8 @@ import app.numbaseball.core.protocol.RoomPhase
 import app.numbaseball.core.protocol.RoomSettings
 import app.numbaseball.core.protocol.SetSecret
 import app.numbaseball.core.protocol.Welcome
+import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -67,14 +69,16 @@ class ProtocolRobustnessTest {
     @Test fun errorsKeepStateAndOpponentSecretNeverLeaks() = serverTest {
         val a = connect(account("Mina")); a.expect<Welcome>()
         val b = connect(account("Leo")); b.expect<Welcome>()
-        a.send(RoomCreate(RoomSettings(4, 1, 0)))
+        a.send(RoomCreate(RoomSettings(4, 1, 0), rid = 9))
+        assertEquals("untimed rooms do not exist", ErrorCodes.INVALID_SETTINGS, a.expect<ErrorMessage> { it.rid == 9L }.code)
+        a.send(RoomCreate(RoomSettings(4, 1, 600)))
         val code = a.state().code!!
         b.send(RoomJoin(code))
         a.state { it.phase == RoomPhase.PLAYING }
         a.send(SetSecret("0123"))
         b.send(SetSecret("4567"))
         a.state { it.match?.myDuel?.phase == DuelPhase.GUESSING }
-        assertNull(a.lastRoom!!.match!!.myDuel!!.deadline) // no timer
+        assertNotNull(a.lastRoom!!.match!!.myDuel!!.deadline) // the "relaxed" 600 s timer
         for ((msg, err) in listOf(
             SetSecret("9876", rid = 1) to ErrorCodes.SECRET_ALREADY_SET,
             Guess("112", 1, rid = 2) to ErrorCodes.INVALID_GUESS,
@@ -126,15 +130,20 @@ class ProtocolRobustnessTest {
         assertTrue(privacy.contains("<table>"))
         assertFalse(privacy.contains("공개하지 마세요"))
         val del = http(HttpMethod.Get, "/delete-account?lang=en").bodyAsText()
-        assertTrue(del.contains("action=\"/delete-account\"") && del.contains("action=\"/delete-account/request\""))
-        assertTrue(del.indexOf("lang=\"en\"") < del.indexOf("lang=\"ko\""))
-        assertTrue(http(HttpMethod.Get, "/").bodyAsText().contains("/terms#child-safety"))
+        assertFalse("text-only page", del.contains("<form") || del.contains("<script") || del.contains("[ ]"))
+        assertTrue(del.indexOf("id=\"en\"") < del.indexOf("id=\"ko\""))
+        assertTrue(del.contains("<html lang=\"en\">"))
+        assertEquals(HttpStatusCode.NotFound, http(HttpMethod.Get, "/").status)
         val ads = http(HttpMethod.Get, "/app-ads.txt")
         assertEquals(HttpStatusCode.OK, ads.status)
         assertTrue(ads.headers["Content-Type"]!!.startsWith("text/plain"))
         assertTrue(ads.bodyAsText().startsWith("google.com, pub-"))
         assertEquals(HttpStatusCode.NotFound, http(HttpMethod.Get, "/api/v2/config").status)
-        val redirect = http(HttpMethod.Get, "/privacy", headers = mapOf("X-Forwarded-Proto" to "http", "Host" to "nb.example.com"))
+        val noFollow = builder.createClient { followRedirects = false }
+        val redirect = noFollow.get("/privacy") {
+            header("X-Forwarded-Proto", "http")
+            header("Host", "nb.example.com")
+        }
         assertEquals(HttpStatusCode.MovedPermanently, redirect.status)
         assertEquals("https://nb.example.com/privacy", redirect.headers["Location"])
     }

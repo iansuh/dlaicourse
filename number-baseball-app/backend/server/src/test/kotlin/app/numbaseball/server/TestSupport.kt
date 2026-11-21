@@ -41,6 +41,15 @@ import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicInteger
 
+/** Finds the app root (the directory holding docs/) from the test's working directory. */
+object CorpusDir {
+    fun root(): java.io.File {
+        var dir: java.io.File? = java.io.File("").absoluteFile
+        while (dir != null && !java.io.File(dir, "docs/play").isDirectory) dir = dir.parentFile
+        return dir ?: error("docs/play not found")
+    }
+}
+
 class FakeClock(start: Long = 1_800_000_000_000L) : Clock {
     private val t = AtomicLong(start)
     override fun now(): Long = t.get()

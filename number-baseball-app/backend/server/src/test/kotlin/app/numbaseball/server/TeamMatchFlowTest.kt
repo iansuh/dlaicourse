@@ -101,6 +101,24 @@ class TeamMatchFlowTest {
         assertEquals(RoomPhase.PLAYING, again.phase)
     }
 
+    @Test fun aPlayerWhoLeavesGetsALossEvenIfTheTeamWins() = serverTest {
+        val (players, secretOf) = threeVsThree()
+        val host = players[0]
+        val room = host.lastRoom!!
+        val (a0, _) = room.pair(0)
+        val leaver = players.first { it.id == room.pair(2).first }
+        leaver.send(app.numbaseball.core.protocol.RoomLeave())
+        leaver.expect<app.numbaseball.core.protocol.RoomLeft>()
+        // Team A still wins duels 0 and 1.
+        play(players, secretOf, room, 0, Team.A)
+        host.state { it.match?.duels?.get(0)?.result != null }
+        play(players, secretOf, room, 1, Team.A)
+        val end = host.state { it.phase == RoomPhase.FINISHED }
+        assertEquals(Team.A, end.match!!.result!!.winner)
+        assertEquals(Stats(0, 1, 0), me(leaver.account.token).stats)
+        assertEquals(Stats(1, 0, 0), me(players.first { it.id == a0 }.account.token).stats)
+    }
+
     @Test fun majorityDecidesEarlyAndCancelsTheLastDuel() = serverTest {
         val (players, secretOf) = threeVsThree()
         val host = players[0]

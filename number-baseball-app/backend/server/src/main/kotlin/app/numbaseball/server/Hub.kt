@@ -368,7 +368,13 @@ class Hub(
                 for ((id, team) in listOf(pa to Team.A, pb to Team.B)) {
                     val seat = room.seats[id]
                     if (seat == null || seat.bot || seat.deleted) continue
-                    results[id] = when (winner) { null -> MatchOutcome.DRAW; team -> MatchOutcome.WIN; else -> MatchOutcome.LOSS }
+                    // Everyone gets the team result, except a player who left during the match: a loss (no reward for quitting).
+                    results[id] = when {
+                        seat.left -> MatchOutcome.LOSS
+                        winner == null -> MatchOutcome.DRAW
+                        winner == team -> MatchOutcome.WIN
+                        else -> MatchOutcome.LOSS
+                    }
                 }
             }
             accounts.recordResults(results)

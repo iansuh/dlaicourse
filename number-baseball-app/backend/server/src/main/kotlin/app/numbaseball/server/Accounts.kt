@@ -42,6 +42,7 @@ data class Account(
     val chatRestrictedUntil: Long?,
     val chatRestrictReason: String?,
     val isBot: Boolean,
+    val lastActiveAt: Long?,
 ) {
     val tagText: String get() = Nicknames.formatTag(tag)
     val display: String get() = Nicknames.display(nickname, tag)
@@ -75,6 +76,7 @@ class AccountService(
         const val AUTO_RESTRICT_WINDOW_MILLIS = 24L * 3600 * 1000
         const val AUTO_RESTRICT_MILLIS = 24L * 3600 * 1000
         const val CODE_ATTEMPTS = 5
+        const val ACTIVITY_GRANULARITY_MILLIS = 10 * 60 * 1000L
         private const val ID_ALPHABET = "abcdefghijkmnpqrstuvwxyz23456789"
 
         fun sha256(s: String): String =
@@ -120,6 +122,7 @@ class AccountService(
         chatRestrictedUntil = rs.longOrNull("chat_restricted_until"),
         chatRestrictReason = rs.getString("chat_restrict_reason"),
         isBot = rs.getInt("is_bot") != 0,
+        lastActiveAt = rs.longOrNull("last_active_at"),
     )
 
     private fun load(c: Connection, id: String): Account? =
@@ -199,12 +202,18 @@ class AccountService(
         return reload(id)!!
     }
 
-    /** Resolves a bearer token to its account. */
+    /** Resolves a bearer token to its account and notes the activity (at most one write per 10 minutes). */
     fun authenticate(token: String?): Account? {
         if (token.isNullOrBlank() || token.length > 200) return null
         val id = db.read { c -> c.query("SELECT account_id FROM tokens WHERE hash = ?", sha256(token)) { it.getString(1) }.firstOrNull() }
             ?: return null
-        return get(id)
+        val a = get(id) ?: return null
+        val now = clock.now()
+        if (a.lastActiveAt == null || now - a.lastActiveAt >= ACTIVITY_GRANULARITY_MILLIS) {
+            db.tx { c -> c.update("UPDATE accounts SET last_active_at = ? WHERE id = ?", now, id) }
+            return reload(id)
+        }
+        return a
     }
 
     fun rename(id: String, rawNickname: String): Account {
@@ -382,7 +391,7 @@ class AccountService(
         reload(id)
     }
 
-    fun adminView(a: Account) = AdminAccount(toDto(a), a.bannedAt, a.banReason, a.chatRestrictReason)
+    fun adminView(a: Account) = AdminAccount(toDto(a), a.bannedAt, a.banReason, a.chatRestrictReason, a.lastActiveAt)
 
     // ------------------------------------------------------------------ reports
 

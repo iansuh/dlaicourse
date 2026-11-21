@@ -88,7 +88,9 @@ class AccountsTest {
         val a = account("Mina", acceptTerms = false)
         val info = ProtocolJson.decodeFromString(ServerInfo.serializer(), http(HttpMethod.Get, "/api/v1/config").bodyAsText())
         assertEquals(services.accounts.currentTermsVersion, info.termsVersion)
-        assertEquals("2026-11-v1", info.termsVersion) // read from the bundled docs/play/TERMS_OF_USE.md
+        // Read from the bundled docs/play/TERMS_OF_USE.md ("Version ...").
+        val docVersion = Regex("Version ([0-9A-Za-z.\\-]+)").find(java.io.File(CorpusDir.root(), "docs/play/TERMS_OF_USE.md").readText())!!.groupValues[1]
+        assertEquals(docVersion, info.termsVersion)
         assertFalse(info.quickMatchFreeChat)
         assertEquals(14, info.minimumAge)
 
@@ -169,7 +171,7 @@ class AccountsTest {
         assertEquals(HttpStatusCode.NoContent, http(HttpMethod.Delete, "/api/v1/me", b.token).status)
         assertEquals(4004.toShort(), pb.awaitClose()?.code)
         assertEquals(b.id, pa.expect<ChatSenderDeleted>().senderId)
-        pa.state { s -> s.players.none { it.id == b.id } }
+        assertTrue(pa.lastRoom!!.players.none { it.id == b.id })
         assertEquals(HttpStatusCode.Unauthorized, http(HttpMethod.Get, "/api/v1/me", b.token).status)
         // Reports about b are gone; b's report about a stays without a reporter id.
         val reports = ProtocolJson.decodeFromString(AdminReportList.serializer(), http(HttpMethod.Get, "/admin/v1/reports", admin).bodyAsText()).reports
@@ -216,53 +218,37 @@ class AccountsTest {
         assertEquals(listOf("open"), services.accounts.listReports("all").map { it.status })
     }
 
-    @Test fun deletionCodeWebForm() = serverTest {
+    @Test fun adminDeletesByHandleForEmailRequests() = serverTest {
         val a = account("Mina")
-        val code = ProtocolJson.decodeFromString(CodeResponse.serializer(), http(HttpMethod.Post, "/api/v1/me/deletion-code", a.token).bodyAsText())
-        assertEquals(clock.now() + 24 * 3_600_000L, code.expiresAt)
-        val form = ContentType.Application.FormUrlEncoded
-        assertEquals(HttpStatusCode.BadRequest, http(HttpMethod.Post, "/delete-account", body = "code=${code.code}", type = form).status)
-        assertEquals(HttpStatusCode.OK, http(HttpMethod.Get, "/api/v1/me", a.token).status)
-        assertEquals(HttpStatusCode.BadRequest, http(HttpMethod.Post, "/delete-account", body = "code=AAAA-AAAA-AAAA&confirm=yes", type = form).status)
-        val ok = http(HttpMethod.Post, "/delete-account", body = "code=${code.code}&confirm=yes", type = form)
-        assertEquals(HttpStatusCode.OK, ok.status)
-        assertTrue(ok.bodyAsText().contains("deleted"))
+        val handle = "${a.account.nickname}%23${a.account.tag}"
+        val view = ProtocolJson.decodeFromString(app.numbaseball.core.protocol.AdminAccount.serializer(),
+            http(HttpMethod.Get, "/admin/v1/accounts?handle=$handle", admin).bodyAsText())
+        assertEquals(a.id, view.account.id)
+        assertEquals(clock.now(), view.lastActiveAt)
+        assertEquals(HttpStatusCode.NotFound, http(HttpMethod.Get, "/admin/v1/accounts?handle=Nobody%230001", admin).status)
+        assertEquals(HttpStatusCode.NoContent, http(HttpMethod.Delete, "/admin/v1/accounts?handle=$handle", admin).status)
         assertEquals(HttpStatusCode.Unauthorized, http(HttpMethod.Get, "/api/v1/me", a.token).status)
     }
 
-    @Test fun deletionRequestWithoutTheApp() = serverTest {
+    @Test fun webDeletionEndpointsAreGone() = serverTest {
         val a = account("Mina")
-        val handle = "${a.account.nickname}#${a.account.tag}"
+        assertEquals(HttpStatusCode.NotFound, http(HttpMethod.Post, "/api/v1/me/deletion-code", a.token).status)
         val form = ContentType.Application.FormUrlEncoded
-        val existing = http(HttpMethod.Post, "/delete-account/request", body = "handle=${handle.replace("#", "%23")}&confirm=yes", type = form)
-        val missing = http(HttpMethod.Post, "/delete-account/request", body = "handle=Nobody%230001&confirm=yes", type = form)
-        assertEquals(HttpStatusCode.OK, existing.status)
-        assertEquals("identical answer whether or not the account exists", existing.bodyAsText(), missing.bodyAsText())
-        assertNotNull(services.accounts.get(a.id)!!.deletionRequestedAt)
-
-        // Using the account cancels the request and leaves a notice for the app.
-        val dto = me(a.token)
-        assertNotNull(dto.deletionRequestedAt)
-        assertNull(services.accounts.get(a.id)!!.deletionRequestedAt)
-        assertEquals(HttpStatusCode.NoContent, http(HttpMethod.Delete, "/api/v1/me/deletion-request", a.token).status)
-        assertNull(me(a.token).deletionRequestedAt)
-
-        // A request that nobody cancels deletes the account after 30 days.
-        http(HttpMethod.Post, "/delete-account/request", body = "handle=${handle.replace("#", "%23")}&confirm=yes", type = form)
-        clock.advance(29L * 24 * 3_600_000)
-        services.runMaintenance()
-        assertNotNull(services.accounts.get(a.id))
-        clock.advance(2L * 24 * 3_600_000)
-        services.runMaintenance()
-        assertNull(services.accounts.get(a.id))
-        assertEquals(HttpStatusCode.Unauthorized, http(HttpMethod.Get, "/api/v1/me", a.token).status)
+        assertTrue(http(HttpMethod.Post, "/delete-account", body = "code=x&confirm=yes", type = form).status.value in setOf(404, 405))
+        assertTrue(http(HttpMethod.Post, "/delete-account/request", body = "handle=x&confirm=yes", type = form).status.value in setOf(404, 405))
+        assertEquals(HttpStatusCode.NotFound, http(HttpMethod.Get, "/").status)
     }
 
-    @Test fun deletionRequestsAreRateLimitedPerIp() = serverTest {
-        val form = ContentType.Application.FormUrlEncoded
-        val ip = mapOf("X-Forwarded-For" to "192.0.2.77")
-        repeat(10) { http(HttpMethod.Post, "/delete-account/request", body = "handle=X%230001&confirm=yes", type = form, headers = ip) }
-        assertEquals(HttpStatusCode.TooManyRequests,
-            http(HttpMethod.Post, "/delete-account/request", body = "handle=X%230001&confirm=yes", type = form, headers = ip).status)
+    @Test fun testClockHookMovesServerTime() = serverTest(testConfig().copy(testHooks = true)) {
+        val before = services.clock.now()
+        val r = http(HttpMethod.Post, "/admin/v1/test/clock?advanceMs=86400000", admin)
+        assertEquals(HttpStatusCode.OK, r.status)
+        assertEquals(before + 86_400_000, services.clock.now())
+        assertEquals(HttpStatusCode.NoContent, http(HttpMethod.Post, "/admin/v1/test/maintenance", admin).status)
+    }
+
+    @Test fun testHooksAreOffByDefault() = serverTest {
+        assertEquals(HttpStatusCode.NotFound, http(HttpMethod.Post, "/admin/v1/test/clock?advanceMs=1", admin).status)
+        assertEquals(HttpStatusCode.NotFound, http(HttpMethod.Post, "/admin/v1/test/maintenance", admin).status)
     }
 }

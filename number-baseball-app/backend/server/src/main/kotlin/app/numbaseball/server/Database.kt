@@ -131,6 +131,7 @@ class Database(file: File) : AutoCloseable {
         // Columns added after the first schema version.
         val columns = c.query("PRAGMA table_info(accounts)") { it.getString("name") }.toSet()
         if ("age_confirmed_at" !in columns) c.update("ALTER TABLE accounts ADD COLUMN age_confirmed_at INTEGER")
+        if ("last_active_at" !in columns) c.update("ALTER TABLE accounts ADD COLUMN last_active_at INTEGER")
     }
 }
 
