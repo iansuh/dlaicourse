@@ -21,6 +21,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.numbaseball.R
 import app.numbaseball.ads.AdBanner
+import app.numbaseball.audio.LocalGameAudio
+import app.numbaseball.audio.MusicTrack
+import app.numbaseball.audio.ScreenMusic
 import app.numbaseball.core.protocol.Limits
 import app.numbaseball.core.protocol.Stats
 import app.numbaseball.data.account.AccountRepository
@@ -124,6 +127,7 @@ fun HomeScreen(
     onCancelDeletion: () -> Unit,
     onDeleteNow: () -> Unit,
 ) {
+    ScreenMusic(MusicTrack.MENU, LocalGameAudio.current)
     ScreenScaffold(
         title = stringResource(R.string.app_name),
         onBack = null,

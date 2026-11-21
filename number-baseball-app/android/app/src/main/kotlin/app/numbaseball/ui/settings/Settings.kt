@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -68,9 +69,9 @@ class SettingsViewModel(
         ui.copy(settings = prefs, registered = account is AccountState.Registered)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), local.value)
 
-    fun onSoundChange(enabled: Boolean) = launch { settings.setSoundEnabled(enabled) }
-    fun onHapticsChange(enabled: Boolean) = launch { settings.setHapticsEnabled(enabled) }
-    fun onChatMutedChange(muted: Boolean) = launch { settings.setChatMuted(muted) }
+    fun onSettingsChange(change: (AppSettings) -> AppSettings) {
+        viewModelScope.launch { settings.update(change) }
+    }
 
     fun onLanguageChange(tag: String?) {
         local.update { it.copy(language = tag) }
@@ -105,10 +106,6 @@ class SettingsViewModel(
         }
     }
 
-    private fun launch(block: suspend () -> Unit) {
-        viewModelScope.launch { block() }
-    }
-
     companion object {
         /** 12-character codes are shown as XXXX-XXXX-XXXX (docs/protocol.md §3.1); the server ignores the dashes. */
         fun formatCode(code: String): String = code.chunked(4).joinToString("-")
@@ -120,9 +117,7 @@ fun SettingsScreen(
     state: SettingsUiState,
     showPrivacyOptions: Boolean,
     versionName: String,
-    onSoundChange: (Boolean) -> Unit,
-    onHapticsChange: (Boolean) -> Unit,
-    onChatMutedChange: (Boolean) -> Unit,
+    onSettingsChange: ((AppSettings) -> AppSettings) -> Unit,
     onLanguageChange: (String?) -> Unit,
     onPrivacyOptions: () -> Unit,
     onPrivacyPolicy: () -> Unit,
@@ -137,9 +132,20 @@ fun SettingsScreen(
     onBack: () -> Unit,
 ) {
     ScreenScaffold(title = stringResource(R.string.settings_title), onBack = onBack) {
-        SwitchRow(stringResource(R.string.settings_sound), stringResource(R.string.settings_sound_summary), state.settings.soundEnabled, onSoundChange)
-        SwitchRow(stringResource(R.string.settings_haptics), null, state.settings.hapticsEnabled, onHapticsChange)
-        SwitchRow(stringResource(R.string.settings_mute_chat), null, state.settings.chatMuted, onChatMutedChange)
+        val prefs = state.settings
+        SwitchRow(stringResource(R.string.settings_effects), null, prefs.effectsEnabled) { v -> onSettingsChange { it.copy(effectsEnabled = v) } }
+        VolumeRow(stringResource(R.string.settings_effects_volume), prefs.effectsVolume, prefs.effectsEnabled) { v ->
+            onSettingsChange { it.copy(effectsVolume = v) }
+        }
+        SwitchRow(stringResource(R.string.settings_follow_silent), stringResource(R.string.settings_follow_silent_summary), prefs.followSilentMode) { v ->
+            onSettingsChange { it.copy(followSilentMode = v) }
+        }
+        SwitchRow(stringResource(R.string.settings_music), null, prefs.musicEnabled) { v -> onSettingsChange { it.copy(musicEnabled = v) } }
+        VolumeRow(stringResource(R.string.settings_music_volume), prefs.musicVolume, prefs.musicEnabled) { v ->
+            onSettingsChange { it.copy(musicVolume = v) }
+        }
+        SwitchRow(stringResource(R.string.settings_haptics), null, prefs.hapticsEnabled) { v -> onSettingsChange { it.copy(hapticsEnabled = v) } }
+        SwitchRow(stringResource(R.string.settings_mute_chat), null, prefs.chatMuted) { v -> onSettingsChange { it.copy(chatMuted = v) } }
         SectionLabel(stringResource(R.string.settings_language))
         ChoiceRow(listOf<String?>(null) + SupportedLanguages.TAGS, state.language, { languageLabel(it) }, onLanguageChange)
         HorizontalDivider(color = NbColors.line)
@@ -204,6 +210,14 @@ private fun SwitchRow(title: String, summary: String?, checked: Boolean, onChang
             summary?.let { Text(it, color = NbColors.text3, style = MaterialTheme.typography.bodySmall) }
         }
         Switch(checked = checked, onCheckedChange = onChange)
+    }
+}
+
+@Composable
+private fun VolumeRow(title: String, value: Float, enabled: Boolean, onChange: (Float) -> Unit) {
+    androidx.compose.foundation.layout.Column(Modifier.fillMaxWidth()) {
+        Text(title, color = if (enabled) NbColors.chalk else NbColors.textDisabled, style = MaterialTheme.typography.bodySmall)
+        Slider(value = value, onValueChange = onChange, enabled = enabled, valueRange = 0f..1f)
     }
 }
 

@@ -12,8 +12,8 @@ import org.junit.Assert.fail
  */
 object KnownDefects {
     /** Defect id -> the exact failing items (corpus row ids or case keys) it explains. Keep in sync with DEFECTS.md. */
-    val OPEN: Map<String, Set<String>> = mapOf(
-        "DEF-031" to setOf("judge:12a/123", "judge:112/123", "judge:123/1 3"),
+    val OPEN: Map<String, Set<String>> = mapOf<String, Set<String>>(
+        // Fixed and removed so far: DEF-006, DEF-007 (marks), DEF-031, DEF-035 (partly), DEF-037, DEF-039.
     )
 
     private fun defectOf(item: String): String? = OPEN.entries.firstOrNull { item in it.value }?.key

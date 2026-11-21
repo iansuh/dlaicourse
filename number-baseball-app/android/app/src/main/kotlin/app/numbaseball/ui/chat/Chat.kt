@@ -15,6 +15,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -23,6 +24,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.numbaseball.R
+import app.numbaseball.audio.LocalGameAudio
+import app.numbaseball.audio.SoundCue
 import app.numbaseball.core.protocol.ChatKind
 import app.numbaseball.core.protocol.ChatMessage
 import app.numbaseball.core.protocol.Limits
@@ -117,6 +120,11 @@ fun ChatScreen(
     onReport: (ChatMessage) -> Unit,
     onBack: () -> Unit,
 ) {
+    val audio = LocalGameAudio.current
+    val latest = state.messages.lastOrNull()
+    LaunchedEffect(latest?.id) {
+        if (latest != null && !state.muted && latest.senderId != state.myId) audio.play(SoundCue.CHAT_MESSAGE)
+    }
     ScreenScaffold(title = stringResource(R.string.chat_title), onBack = onBack) {
         if (state.muted) {
             Text(stringResource(R.string.chat_muted), color = NbColors.text2)

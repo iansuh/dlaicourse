@@ -52,6 +52,7 @@ window.STR = {
     // settings
     secGame: '게임', secChat: '채팅', secAccount: '계정', secAbout: '정보 및 지원',
     language: '언어', languageVal: '한국어', sound: '소리', soundSub: '기본값은 꺼짐', haptics: '진동', hapticsSub: '키 입력, 판정, 승패',
+    secSound: '소리와 진동', sfx: '효과음', sfxSub: '키 입력, 판정, 승패, 알림', sfxVol: '효과음 볼륨', music: '배경 음악', musicSub: '메뉴와 대결 음악 (기본값은 꺼짐)', musicVol: '음악 볼륨', followSilent: '무음 모드 따르기', followSilentSub: '휴대폰이 무음이나 진동일 때 소리를 꺼요',
     muteChat: '전체 채팅 끄기', muteChatSub: '모든 채팅과 빠른 문구를 숨겨요', blocked: '차단한 플레이어', blockedVal: '2명',
     nickname: '닉네임', transfer: '다른 기기로 계정 옮기기', transferSub: '10분 동안 쓸 수 있는 코드를 만들어요', deleteAcc: '계정 삭제', deleteSub: '기록과 닉네임이 영구히 지워져요',
     privacyOptions: '개인정보 보호 옵션', privacyOptionsSub: '광고 맞춤 설정 동의를 바꿔요', privacyPolicy: '개인정보 처리방침', licences: '오픈소스 라이선스', version: '버전',
@@ -100,6 +101,7 @@ window.STR = {
     tagLater: 'The number is added for you',
     secGame: 'Game', secChat: 'Chat', secAccount: 'Account', secAbout: 'About and support',
     language: 'Language', languageVal: 'English', sound: 'Sound', soundSub: 'Off by default', haptics: 'Vibration', hapticsSub: 'Keys, hints, win and loss',
+    secSound: 'Sound and vibration', sfx: 'Sound effects', sfxSub: 'Keys, hints, results, alerts', sfxVol: 'Effects volume', music: 'Music', musicSub: 'Menu and match music (off by default)', musicVol: 'Music volume', followSilent: 'Follow silent mode', followSilentSub: 'No sound while the phone is on silent or vibrate',
     muteChat: 'Mute all chat', muteChatSub: 'Hide all chat and quick phrases', blocked: 'Blocked players', blockedVal: '2',
     nickname: 'Nickname', transfer: 'Move account to another device', transferSub: 'Creates a code that works for 10 minutes', deleteAcc: 'Delete account', deleteSub: 'Your record and nickname are erased for good',
     privacyOptions: 'Privacy options', privacyOptionsSub: 'Change your ad personalisation consent', privacyPolicy: 'Privacy policy', licences: 'Open-source licences', version: 'Version',

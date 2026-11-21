@@ -5,6 +5,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import app.numbaseball.ads.AdsController
 import app.numbaseball.ads.DisabledAdsController
 import app.numbaseball.ads.GoogleAdsController
+import app.numbaseball.audio.AndroidGameAudio
+import app.numbaseball.audio.GameAudio
+import app.numbaseball.audio.SilentGameAudio
 import app.numbaseball.data.account.AccountRepository
 import app.numbaseball.data.account.DataStoreAccountStore
 import app.numbaseball.data.online.ConnectionState
@@ -24,7 +27,6 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
@@ -34,6 +36,7 @@ data class AppConfig(
     val versionName: String,
     val contactEmail: String,
     val adsEnabled: Boolean,
+    val audioEnabled: Boolean,
     val bannerAdUnitId: String,
     val interstitialAdUnitId: String,
 ) {
@@ -47,6 +50,7 @@ data class AppConfig(
             versionName = BuildConfig.VERSION_NAME,
             contactEmail = BuildConfig.CONTACT_EMAIL,
             adsEnabled = true,
+            audioEnabled = true,
             bannerAdUnitId = BuildConfig.ADMOB_BANNER_ID,
             interstitialAdUnitId = BuildConfig.ADMOB_INTERSTITIAL_ID,
         )
@@ -64,6 +68,7 @@ interface AppContainer {
     val safety: SafetyRepository
     val offlineGame: OfflineGame
     val ads: AdsController
+    val audio: GameAudio
 }
 
 val LocalAppContainer = staticCompositionLocalOf<AppContainer> { error("AppContainer not provided") }
@@ -125,10 +130,13 @@ class DefaultAppContainer(context: Context, override val config: AppConfig) : Ap
                 bannerAdUnitId = config.bannerAdUnitId,
                 interstitialAdUnitId = config.interstitialAdUnitId,
                 scope = appScope,
-                soundEnabled = settingsRepository.settings.map { it.soundEnabled },
             )
         } else {
             DisabledAdsController
         }
+    }
+
+    override val audio: GameAudio by lazy {
+        if (config.audioEnabled) AndroidGameAudio(appContext, settingsRepository.settings, appScope) else SilentGameAudio
     }
 }

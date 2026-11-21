@@ -3,10 +3,13 @@ package app.numbaseball.ui.results
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import app.numbaseball.R
 import app.numbaseball.ads.AdBanner
+import app.numbaseball.audio.LocalGameAudio
+import app.numbaseball.audio.SoundCue
 import app.numbaseball.core.protocol.EndReason
 import app.numbaseball.ui.common.PrimaryButton
 import app.numbaseball.ui.common.ScreenScaffold
@@ -29,6 +32,16 @@ fun ResultsScreen(
     onHome: () -> Unit,
     onBackToRoom: (() -> Unit)?,
 ) {
+    val audio = LocalGameAudio.current
+    LaunchedEffect(summary) {
+        audio.play(
+            when (summary.outcome) {
+                Outcome.WIN -> SoundCue.WIN
+                Outcome.LOSE -> SoundCue.LOSE
+                Outcome.DRAW -> SoundCue.DRAW
+            },
+        )
+    }
     ScreenScaffold(
         title = stringResource(R.string.app_name),
         onBack = null,

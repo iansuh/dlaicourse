@@ -197,6 +197,18 @@ h1, h2, h3, p { margin: 0; }
 .switch.on { background: var(--c-chalk); box-shadow: none; }
 .switch.on::after { left: 24px; top: 4px; width: 24px; height: 24px; background: var(--c-on-chalk); }
 
+/* --- Slider: 48dp row, 4dp track, 20dp thumb --- */
+.slider { position: relative; flex: 1; height: 48px; display: flex; align-items: center; }
+.slider .tr { position: absolute; left: 0; right: 0; height: 4px; border-radius: 2px; background: var(--c-surface4); }
+.slider .fi { position: absolute; left: 0; height: 4px; border-radius: 2px; background: var(--c-chalk); }
+.slider .th { position: absolute; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; background: var(--c-chalk); }
+.slider.off .fi, .slider.off .th { background: var(--c-text-disabled); }
+.vol { display: flex; align-items: center; gap: 16px; min-height: 48px; padding: 0 16px 8px 56px; }
+.vol .v { width: 28px; text-align: right; font: var(--t-num-tag); color: var(--c-text2); font-feature-settings: "tnum" 1; }
+.vol.off .v { color: var(--c-text-disabled); }
+.vol + .row::before { content: ""; position: absolute; top: 0; left: 56px; right: 0; height: 1px; background: var(--c-line); }
+.row + .vol { margin-top: -8px; }
+
 /* --- Segmented (digit count) --- */
 .seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); height: 48px; background: var(--c-surface2); border-radius: var(--r-m); padding: 4px; gap: 4px; }
 .seg button { border-radius: var(--r-s); font: var(--t-label-small); color: var(--c-text2); display: flex; align-items: baseline; justify-content: center; gap: 2px; white-space: nowrap; }

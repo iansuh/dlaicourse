@@ -4,21 +4,25 @@
 >
 > - 서버가 `GET /terms` 에서 HTML로 보여 줍니다(현재 프로토콜에 없음, 백엔드에 추가 요청). 아동 안전 단락에는 `id="child-safety"` 앵커를 달아 `/terms#child-safety` 로 바로 열리게 합니다(Play 아동 안전 표준용 공개 문서).
 > - Play UGC 정책: 이용자가 채팅하기 전에 약관에 동의해야 하고 이 단계를 건너뛸 수 없어야 합니다(https://support.google.com/googleplay/android-developer/answer/9876937). 앱은 첫 온라인 대결 또는 첫 채팅 전에 약관 요약과 링크, **동의** 버튼을 보여 주고, 서버는 동의한 약관 버전(`terms_version`)과 시각을 계정에 저장합니다. 약관 버전이 바뀌면 다시 동의받습니다.
-> - `[대괄호]` 값은 공개 전에 채웁니다. 약관 버전: `2026-11-v1`.
+> - `[대괄호]` 값은 공개 전에 채웁니다. 약관 버전: `2026-11-v2` (v1에서 바뀐 점: 앱 이름, 최소 나이 14세, 운영자(트레이더) 정보).
+> - **앱 이름**은 추천안(숫자야구: 조용한 한판 / Number Baseball: Quiet Duel)으로 넣었습니다. 이름이 바뀌면 제목과 본문 첫 문단만 고치면 됩니다.
+> - **최소 나이 14세**는 릴리스 담당의 권고입니다(`POLICY_REVIEW.md` R19). 사장님이 13세를 고르시면 1절을 "만 13세 이상(대한민국 거주자는 만 14세 이상)"으로 바꾸고, 앱이 한국 이용자를 구분해야 합니다(권장하지 않음).
+> - **운영자 정보**는 트레이더 신고로 Google Play에도 공개되는 정보와 같게 채웁니다(사장님 결정 2026-11-21).
 
 ---
 
 ## 공개 본문 — 한국어
 
-# Pitchcode 이용약관
+# 숫자야구: 조용한 한판 이용약관
 
-버전 2026-11-v1 · 시행일: [시행일]
+버전 2026-11-v2 · 시행일: [시행일]
 
-이 약관은 [개발자 표시명](이하 "운영자")이 제공하는 숫자야구 게임 앱 **Pitchcode**(이하 "앱")의 이용 조건입니다. 온라인 대결이나 채팅을 시작하기 전에 동의를 받으며, 동의하지 않으면 컴퓨터 대결만 이용할 수 있습니다.
+이 약관은 [운영자 성명](Google Play 개발자 이름: [개발자 표시명], 이하 "운영자")이 제공하는 숫자야구 게임 앱 **숫자야구: 조용한 한판**(이하 "앱")의 이용 조건입니다. 온라인 대결이나 채팅을 시작하기 전에 동의를 받으며, 동의하지 않으면 컴퓨터 대결만 이용할 수 있습니다.
 
 ### 1. 이용 자격
 
-- 앱은 모르는 사람과 채팅할 수 있어 **만 18세 이상**을 대상으로 합니다.
+- 앱은 **만 14세 이상**만 이용할 수 있습니다. 처음 실행할 때 나이를 확인하며, 만 14세 미만이면 앱을 이용할 수 없습니다.
+- 만 19세 미만이라면 보호자와 함께 이 약관을 읽어 주세요.
 - 이용 정지된 사람이 새 계정을 만들어 계속 이용하는 것은 금지됩니다.
 
 ### 2. 계정
@@ -49,6 +53,7 @@
 
 - 메시지나 플레이어를 길게 눌러 **신고**하거나 **차단**할 수 있습니다. 차단하면 서로의 채팅이 보이지 않고 빠른 대결에서 다시 만나지 않습니다.
 - 설정에서 **전체 채팅 끄기**를 할 수 있습니다.
+- 빠른 대결에서는 정해진 문구만 쓸 수 있고, 자유 채팅은 방 코드로 들어온 비공개 방에서만 할 수 있습니다. 방 코드는 아는 사람에게만 알려 주세요.
 - 운영자는 신고를 확인해 보통 24시간 안에, 늦어도 3일 안에 조치합니다. 신고할 때 그 방의 최근 대화가 증거로 저장됩니다(개인정보처리방침 참고).
 - 앱 밖에서는 [연락처 이메일]로 신고하거나 문의할 수 있습니다.
 
@@ -65,7 +70,7 @@
 
 ### 7. 광고
 
-앱은 무료이며 Google AdMob 광고가 포함되어 있습니다. 대결 중에는 광고를 보여 주지 않습니다. 광고 관련 개인정보 처리는 [개인정보처리방침](/privacy)을 따릅니다.
+앱은 무료이며 앱 안에서 판매하는 상품이 없습니다. Google AdMob 광고가 포함되어 있고, 대결 중에는 광고를 보여 주지 않습니다. 만 18세 미만 이용자에게는 맞춤형 광고를 하지 않습니다. 광고 관련 개인정보 처리는 [개인정보처리방침](/privacy)을 따릅니다.
 
 ### 8. 서비스 변경과 책임
 
@@ -85,21 +90,29 @@
 
 약관을 바꾸면 시행 7일 전(이용자에게 불리한 변경은 30일 전)에 앱과 이 페이지에서 알리고, 다음 온라인 이용 때 다시 동의를 받습니다.
 
-문의: [연락처 이메일]
+### 12. 운영자 정보
+
+- 운영자: [운영자 성명] (개인 개발자, Google Play 개발자 이름: [개발자 표시명])
+- 주소: [운영자 주소 — Google Play에 표시되는 주소와 같게]
+- 전화: [게임 전용 전화번호]
+- 이메일: [연락처 이메일]
+
+이 정보는 Google Play 스토어의 개발자 정보에도 표시됩니다. 문의는 이메일로 보내 주시면 가장 빠르게 답변합니다.
 
 ---
 
 ## Public text — English
 
-# Pitchcode Terms of Use
+# Number Baseball: Quiet Duel — Terms of Use
 
-Version 2026-11-v1 · Effective: [시행일]
+Version 2026-11-v2 · Effective: [시행일]
 
-These terms govern your use of **Pitchcode** (the "app"), a number-guessing game provided by [개발자 표시명] ("we"). We ask you to accept them before your first online match or chat. If you do not accept, you can still play against the computer.
+These terms govern your use of **Number Baseball: Quiet Duel** (the "app"), a number-guessing game provided by [운영자 성명] (developer name on Google Play: [개발자 표시명]; "we"). We ask you to accept them before your first online match or chat. If you do not accept, you can still play against the computer.
 
 ### 1. Who can use the app
 
-- Because the app includes chat with strangers, it is meant for people **aged 18 and over**.
+- You must be **at least 14 years old** to use the app. The app asks your age on first launch and cannot be used if you are under 14.
+- If you are under the age of majority where you live, please read these terms with a parent or guardian.
 - If your account is suspended, you may not keep playing with a new account.
 
 ### 2. Your account
@@ -130,6 +143,7 @@ The following are not allowed, in chat and in nicknames:
 
 - Long-press a message or a player to **Report** or **Block**. Blocked players cannot see each other's chat and are not matched together in quick match.
 - You can **turn off all chat** in Settings.
+- Quick Match chat is limited to preset phrases; free text is only available in private rooms joined with a room code. Share room codes only with people you know.
 - We review reports and normally act within 24 hours, and within 3 days at the latest. When you report, the recent conversation in that room is saved as evidence (see the Privacy Policy).
 - Outside the app, you can report or contact us at [연락처 이메일].
 
@@ -146,7 +160,7 @@ Child-safety violations, serious threats and sharing personal information lead t
 
 ### 7. Ads
 
-The app is free and contains Google AdMob ads. We never show ads during a match. Ad-related data is handled as described in the [Privacy Policy](/privacy).
+The app is free and sells nothing inside the app. It contains Google AdMob ads, and we never show ads during a match. Users under 18 do not get personalized ads. Ad-related data is handled as described in the [Privacy Policy](/privacy).
 
 ### 8. Changes to the service and liability
 
@@ -166,4 +180,11 @@ These terms are governed by the laws of the Republic of Korea. Consumer rights g
 
 We will announce changes in the app and on this page 7 days before they take effect (30 days for changes that reduce your rights), and ask you to accept them again at your next online session.
 
-Contact: [연락처 이메일]
+### 12. Who we are
+
+- Operator: [운영자 성명] (individual developer; developer name on Google Play: [개발자 표시명])
+- Address: [운영자 주소 — same as shown on Google Play]
+- Phone: [게임 전용 전화번호]
+- Email: [연락처 이메일]
+
+These details are also shown in the developer information on our Google Play page. Email is the fastest way to reach us.

@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -25,6 +26,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.numbaseball.R
+import app.numbaseball.audio.GameAudio
+import app.numbaseball.audio.LocalGameAudio
+import app.numbaseball.audio.MusicTrack
+import app.numbaseball.audio.ScreenMusic
+import app.numbaseball.audio.SoundCue
 import app.numbaseball.core.protocol.RoundEntry
 import app.numbaseball.core.rules.NumberProblem
 import app.numbaseball.ui.common.ErrorText
@@ -55,6 +61,9 @@ fun MatchScreen(
     footer: @Composable () -> Unit = {},
 ) {
     var confirmForfeit by rememberSaveable { mutableStateOf(false) }
+    val audio = LocalGameAudio.current
+    ScreenMusic(MusicTrack.MATCH, audio)
+    MatchSounds(state, audio)
     ScreenScaffold(
         title = title(state),
         onBack = onBack,
@@ -79,8 +88,14 @@ fun MatchScreen(
             DigitKeypad(
                 input = state.input,
                 enabled = state.acceptsInput,
-                onDigit = onDigit,
-                onDelete = onDelete,
+                onDigit = {
+                    audio.play(SoundCue.KEYPAD)
+                    onDigit(it)
+                },
+                onDelete = {
+                    audio.play(SoundCue.KEYPAD)
+                    onDelete()
+                },
             )
             Row(horizontalArrangement = Arrangement.spacedBy(NbSpace.s8), modifier = Modifier.fillMaxWidth()) {
                 if (state.phase == MatchPhase.CHOOSING_SECRET && onRandomSecret != null) {
@@ -88,7 +103,10 @@ fun MatchScreen(
                 }
                 PrimaryButton(
                     text = stringResource(if (state.phase == MatchPhase.CHOOSING_SECRET) R.string.match_set_secret else R.string.match_guess),
-                    onClick = onSubmit,
+                    onClick = {
+                        audio.play(SoundCue.GUESS_SENT)
+                        onSubmit()
+                    },
                     enabled = state.acceptsInput && state.input.length == state.digits,
                     modifier = Modifier.weight(1f),
                 )
@@ -111,6 +129,28 @@ fun MatchScreen(
         )
     }
 }
+
+/** Hint reveal for each new round and the 10-second warning (phase 2 replaces this with the designed lamp sequence). */
+@Composable
+private fun MatchSounds(state: MatchUiState, audio: GameAudio) {
+    val latest = state.myRounds.lastOrNull()
+    LaunchedEffect(state.myRounds.size) {
+        if (latest?.guess == null) return@LaunchedEffect
+        audio.play(
+            when {
+                latest.strikes == state.digits -> SoundCue.SOLVED
+                latest.strikes > 0 -> SoundCue.HINT_STRIKE
+                latest.balls > 0 -> SoundCue.HINT_BALL
+                else -> SoundCue.HINT_OUT
+            },
+        )
+    }
+    LaunchedEffect(state.secondsLeft == TIMER_WARNING_SECONDS) {
+        if (state.secondsLeft == TIMER_WARNING_SECONDS) audio.play(SoundCue.TIMER_WARNING)
+    }
+}
+
+private const val TIMER_WARNING_SECONDS = 10
 
 @Composable
 private fun title(state: MatchUiState): String = when (val o = state.opponent) {

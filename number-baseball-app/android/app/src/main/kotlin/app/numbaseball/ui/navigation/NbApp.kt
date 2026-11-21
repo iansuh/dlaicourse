@@ -21,6 +21,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import app.numbaseball.LocalAppContainer
 import app.numbaseball.R
+import app.numbaseball.audio.SoundCue
 import app.numbaseball.core.ai.ComputerLevel
 import app.numbaseball.core.protocol.EndReason
 import app.numbaseball.core.protocol.RoomKind
@@ -144,7 +145,10 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
                 val vm = containerViewModel { QuickMatchViewModel(onlineSession) }
                 val state by vm.state.collectAsStateWithLifecycle()
                 LaunchedEffect(state.matchFound) {
-                    if (state.matchFound) navController.navigate(OnlineMatchRoute) { popUpTo<QuickMatchRoute> { inclusive = true } }
+                    if (state.matchFound) {
+                        container.audio.play(SoundCue.MATCH_FOUND)
+                        navController.navigate(OnlineMatchRoute) { popUpTo<QuickMatchRoute> { inclusive = true } }
+                    }
                 }
                 QuickMatchScreen(state, vm::onDigitsChange, vm::onSearch, vm::onCancel, vm::onRetryConnection, back)
             }
@@ -343,9 +347,7 @@ private fun SettingsRoute(navController: NavHostController, back: () -> Unit) {
         state = state,
         showPrivacyOptions = privacyOptionsRequired,
         versionName = container.config.versionName,
-        onSoundChange = vm::onSoundChange,
-        onHapticsChange = vm::onHapticsChange,
-        onChatMutedChange = vm::onChatMutedChange,
+        onSettingsChange = vm::onSettingsChange,
         onLanguageChange = vm::onLanguageChange,
         onPrivacyOptions = { activity?.let { container.ads.showPrivacyOptions(it) } },
         onPrivacyPolicy = { uriHandler.openUri(container.config.privacyUrl) },

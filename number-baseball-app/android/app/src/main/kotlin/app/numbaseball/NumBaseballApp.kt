@@ -18,6 +18,7 @@ open class NumBaseballApp : Application() {
     protected open fun createContainer(): AppContainer = DefaultAppContainer(this, AppConfig.fromBuildConfig())
 
     protected open fun observeProcessLifecycle() {
-        ProcessLifecycleOwner.get().lifecycle.addObserver(AppForegroundObserver(container.onlineClient))
+        val observer = AppForegroundObserver(listOf(container.onlineClient::setAppInForeground, container.audio::setAppInForeground))
+        ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
     }
 }

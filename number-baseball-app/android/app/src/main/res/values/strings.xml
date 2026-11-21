@@ -206,8 +206,12 @@
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
-    <string name="settings_sound">Sound</string>
-    <string name="settings_sound_summary">Off by default for quiet play</string>
+    <string name="settings_effects">Sound effects</string>
+    <string name="settings_effects_volume">Effects volume</string>
+    <string name="settings_music">Music</string>
+    <string name="settings_music_volume">Music volume</string>
+    <string name="settings_follow_silent">Follow silent mode</string>
+    <string name="settings_follow_silent_summary">No sound effects while the phone is on silent or vibrate</string>
     <string name="settings_haptics">Vibration</string>
     <string name="settings_mute_chat">Mute all chat</string>
     <string name="settings_language">Language</string>

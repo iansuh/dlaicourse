@@ -17,25 +17,21 @@ import com.google.android.ump.UserMessagingPlatform
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 /**
  * AdMob + UMP. Order follows Google's guidance: request consent info on every start, show the form only if required,
  * initialise the Mobile Ads SDK off the main thread once `canRequestAds()` is true (also true for non-personalised ads
- * after a refusal). Ads follow the game's sound setting (muted by default) and the Teen max content rating.
+ * after a refusal). Ads are always muted and capped at the Teen content rating.
  */
 class GoogleAdsController(
     private val appContext: Context,
     override val bannerAdUnitId: String,
     interstitialAdUnitId: String,
     private val scope: CoroutineScope,
-    /** Ads are muted unless the game sound is on (sound is off by default). */
-    private val soundEnabled: Flow<Boolean>,
 ) : AdsController {
     private val consentInformation: ConsentInformation = UserMessagingPlatform.getConsentInformation(appContext)
     private val consentRequested = AtomicBoolean(false)
@@ -90,9 +86,8 @@ class GoogleAdsController(
         )
         scope.launch(Dispatchers.IO) {
             MobileAds.initialize(appContext) { _ ->
-                scope.launch(Dispatchers.Main) {
-                    soundEnabled.distinctUntilChanged().collect { MobileAds.setAppMuted(!it) }
-                }
+                // README "Sound": ads stay muted whatever the game's own sound settings are.
+                MobileAds.setAppMuted(true)
                 _canRequestAds.value = true
             }
         }

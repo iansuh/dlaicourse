@@ -193,8 +193,12 @@
 
     <!-- Settings -->
     <string name="settings_title">설정</string>
-    <string name="settings_sound">소리</string>
-    <string name="settings_sound_summary">조용히 즐길 수 있게 기본은 꺼져 있어요</string>
+    <string name="settings_effects">효과음</string>
+    <string name="settings_effects_volume">효과음 크기</string>
+    <string name="settings_music">음악</string>
+    <string name="settings_music_volume">음악 크기</string>
+    <string name="settings_follow_silent">무음 모드 따르기</string>
+    <string name="settings_follow_silent_summary">휴대전화가 무음이나 진동일 때는 효과음을 내지 않아요</string>
     <string name="settings_haptics">진동</string>
     <string name="settings_mute_chat">모든 채팅 끄기</string>
     <string name="settings_language">언어</string>

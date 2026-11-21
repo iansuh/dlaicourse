@@ -160,6 +160,18 @@
   --d-match-found: 900ms;
   --d-toast-visible: 2800ms;
   --d-waiting-chase-cycle: 1200ms;
+  --d-reveal-lead-in: 240ms;
+  --d-solve-flash: 300ms;
+  --d-result-delay: 400ms;
+  --d-result-digit-stagger: 60ms;
+  --d-result-digits-after-headline: 320ms;
+  --d-result-button-min: 1000ms;
+  --d-settle-guard: 300ms;
+  --d-timer-pulse: 200ms;
+  --d-phrase-bubble: 2800ms;
+  --d-chat-sound-min-gap: 2000ms;
+  --d-music-crossfade: 600ms;
+  --d-reduced-motion-hook-gap: 60ms;
   --e-standard: cubic-bezier(0.2, 0, 0, 1);
   --e-decelerate: cubic-bezier(0, 0, 0, 1);
   --e-accelerate: cubic-bezier(0.3, 0, 1, 1);

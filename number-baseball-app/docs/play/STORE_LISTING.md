@@ -1,6 +1,6 @@
 # Store listing (10 languages)
 
-Owner: Release lead. Status: draft for owner approval, 2026-11-20.
+Owner: Release lead. Status: updated 2026-11-21 for the owner's decisions ("숫자야구"-style name, 13+ audience, quick match limited to quick phrases).
 
 Limits (Play Console, "Create and set up your app" / store listing help, https://support.google.com/googleplay/android-developer/answer/9859152): app name max 30 characters, short description max 80, full description max 4000. Limits count every character the same way, full-width or half-width. Counts below were computed with a script (Unicode code points, line breaks included in the full description), so they are exact for the text as written. Re-count after any edit.
 
@@ -10,44 +10,68 @@ Metadata rules applied (Metadata policy, https://support.google.com/googleplay/a
 
 ## 1. App name
 
-### Three options (all checked only with web searches on 2026-11-20; no formal trademark search was possible from here)
+Owner decision (2026-11-21): a **"숫자야구" (Number Baseball) style name**, localized per language. The earlier brand proposal (Pitchcode) is dropped.
 
-| Option | Idea | Search result | Risk |
+### Conflict check (web search of Google Play, 2026-11-21)
+
+The bare generic names are already used by several Play apps, so we add a distinctive descriptor:
+
+- Taken on Play (avoid as our whole title): "숫자야구게임", "숫자 야구", "숫자 야구 온라인" / "Number BaseBall Online" (two different developers), "Number Baseball" (several), "Number Baseball: Brain Puzzle", "Number Baseball AI Battle", "Number Baseball(Triple Strike)", "인공지능과 숫자야구 게임", "경우의 수 야구". A web-only launch called "Number Strike Baseball: PvP Logic Duel" also exists.
+- No Play app found with the descriptors below ("Quiet Duel", "조용한 한판", "Team Duel", "Break", or the localized forms). No app named 数字野球 / 数字棒球 / Béisbol Numérico / Zahlen-Baseball / Числовой бейсбол / Bóng chày số turned up either.
+- Generic game names (Number Baseball, Bulls and Cows, 1A2B, Быки и коровы, Picas y Fijas) cannot be owned as trademarks for this game, which is why a descriptor is needed to stand apart. Still avoid "Mastermind", "Superhirn", "Numer0n/ヌメロン", "Hit & Blow" and anything with "Excel". Do not put the words "Baseball Duel" next to each other (a registered mark with that wording turned up in search).
+- This was a web search, not a store-wide or trademark search. Before publishing, search Google Play on a phone for the chosen title in each language, and KIPRIS for the Korean title.
+
+### Options per language (characters / 30)
+
+Option 1 in every language is the recommended set ("Number Baseball: a quiet duel"). It matches the product spirit, is the most distinctive, and works as one family across languages.
+
+| Locale | Option 1 (recommended) | Option 2 | Option 3 |
 | --- | --- | --- | --- |
-| **Pitchcode** | "pitch" (baseball throw) + "code" (the secret number). One coined word, reads the same in every language. | No app, game or trademark named "Pitchcode" found. Nearby marks exist (PLAYCODE, PIXEL PITCH) but are different words. | Lowest |
-| Quiet Pitch | Matches the "quiet quick match" spirit. | No app or game named "Quiet Pitch" found. Two common words, weaker as a brand, and "pitch" also means sound pitch / sales pitch. | Low |
-| Hush Duel | Quiet duel. | No exact match, but "Hush" is an existing iOS party game and "Duel" is crowded. | Low to medium |
+| ko | 숫자야구: 조용한 한판 (12)<br>*Number Baseball: a quiet round* | 숫자야구 한판 대결 (10)<br>*Number Baseball, one-round duel* | 숫자야구: 1:1·팀 대결 (14)<br>*Number Baseball: 1v1 and team duels* |
+| en-US | Number Baseball: Quiet Duel (27) | Number Baseball: Team Duel (26) | Number Baseball Break (21)<br>*"Break" = a game for your break* |
+| ja-JP | 数字野球：静かな対戦 (10)<br>*Number Baseball: quiet match* | 数字野球：数字当てバトル (12)<br>*Number Baseball: number-guessing battle* | 数字野球：1対1・チーム戦 (13)<br>*Number Baseball: 1v1 and team play* |
+| zh-CN | 数字棒球：安静对决 (9)<br>*Number Baseball: quiet duel* | 数字棒球：猜数字对战 (10)<br>*Number Baseball: guess-the-number battle* | 数字棒球：组队对战 (9)<br>*Number Baseball: team battle* |
+| es-419 | Béisbol Numérico: Duelo Sereno (30)<br>*Number Baseball: serene duel* | Béisbol de Números 1 vs 1 (25)<br>*Baseball of Numbers 1 vs 1* | Béisbol Numérico en Equipo (26)<br>*Number Baseball in teams* |
+| fr-FR | Baseball des chiffres : duel (28)<br>*Number Baseball: duel* | Baseball des chiffres 1 vs 1 (28)<br>*Number Baseball 1 vs 1* | Duel de baseball des chiffres (29)<br>*Number Baseball duel* |
+| de-DE | Zahlen-Baseball: Leises Duell (29)<br>*Number Baseball: quiet duel* | Zahlen-Baseball: Team-Duell (27)<br>*Number Baseball: team duel* | Zahlen-Baseball 1:1 (19)<br>*Number Baseball 1:1* |
+| pt-BR | Beisebol Numérico: Duelo Calmo (30)<br>*Number Baseball: calm duel* | Beisebol dos Números 1x1 (24)<br>*Baseball of Numbers 1x1* | Beisebol Numérico em Equipe (27)<br>*Number Baseball in teams* |
+| ru-RU | Числовой бейсбол: тихая дуэль (29)<br>*Number Baseball: quiet duel* | Числовой бейсбол 1 на 1 (23)<br>*Number Baseball 1 on 1* | Числовой бейсбол: команды (25)<br>*Number Baseball: teams* |
+| vi | Bóng chày số: Đấu trí yên tĩnh (30)<br>*Number Baseball: quiet battle of wits* | Bóng chày số: Đối kháng 1-1 (27)<br>*Number Baseball: 1-on-1* | Bóng chày số: Đấu đội (21)<br>*Number Baseball: team battle* |
 
-Rejected: "Digit Duel" (at least two Android apps already use it), "Baseball Duel" (an existing registered trademark turned up in search), anything with **Mastermind**, **Superhirn** (German Mastermind), **Numer0n / ヌメロン** (Japanese TV game brand) or **Hit & Blow** (status unverified). "Number Baseball", "Bulls and Cows", "Быки и коровы", "Picas y Fijas", "猜数字 / 1A2B" are generic names of the folk game; we use them only as a description ("also known as"), never as the brand.
+Notes: es-419, pt-BR and vi option 1 are exactly 30 characters; any edit must shorten something. French has no short natural way to say "quiet duel" within 30 characters, so option 1 is "Number Baseball: duel".
 
-**Recommendation: Pitchcode.** Before publishing, the owner should search KIPRIS (Korea, kipris.or.kr) for "Pitchcode" and "피치코드" in class 9 and 41, and optionally USPTO and EUIPO. The Latin brand stays the same in all languages (it is the icon wordmark too); the part after the colon is localized for search.
+### Easy to swap
 
-### Final titles
+- The full descriptions below never use the app name (they say "this game" / the game's generic name), so changing the title only changes the **App name** field and the screenshot artwork, not the text.
+- In the app, the name lives only in `app_name` string resources per locale (`values/`, `values-ko/`, ... ). The launcher label can be shorter than the store title, for example 숫자야구 / Number Baseball / 数字野球 / 数字棒球 / Béisbol Numérico / Baseball chiffres / Zahlen-Baseball / Beisebol Numérico / Числовой бейсбол / Bóng chày số.
+- Web pages and policy documents use the placeholders `[앱 이름]` / `[App name]` filled with the chosen ko/en titles.
+
+### Final titles (recommended set)
 
 | Locale | Title | Chars |
 | --- | --- | --- |
-| ko-KR | Pitchcode: 숫자야구 대결 | 18 |
-| en-US | Pitchcode: Number Baseball | 26 |
-| ja-JP | Pitchcode：数字当てバトル | 17 |
-| zh-CN | Pitchcode：猜数字对战 | 15 |
-| es-419 | Pitchcode: Duelo de Números | 27 |
-| fr-FR | Pitchcode : duel de chiffres | 28 |
-| de-DE | Pitchcode: Zahlen-Duell | 23 |
-| pt-BR | Pitchcode: Duelo de Números | 27 |
-| ru-RU | Pitchcode: Быки и коровы | 24 |
-| vi | Pitchcode: Đoán số đối kháng | 28 |
+| ko | 숫자야구: 조용한 한판 | 12 |
+| en-US | Number Baseball: Quiet Duel | 27 |
+| ja-JP | 数字野球：静かな対戦 | 10 |
+| zh-CN | 数字棒球：安静对决 | 9 |
+| es-419 | Béisbol Numérico: Duelo Sereno | 30 |
+| fr-FR | Baseball des chiffres : duel | 28 |
+| de-DE | Zahlen-Baseball: Leises Duell | 29 |
+| pt-BR | Beisebol Numérico: Duelo Calmo | 30 |
+| ru-RU | Числовой бейсбол: тихая дуэль | 29 |
+| vi | Bóng chày số: Đấu trí yên tĩnh | 30 |
 
 ## 2. Locale choices
 
-- **Spanish: es-419 (Latin America).** Most Spanish-speaking Play users are in Latin America (Mexico, Colombia, Argentina and others), the copy uses neutral Latin American Spanish (for example "computadora") that readers in Spain also understand without effort, and Spain is in the EEA, which matters for the trader decision in `POLICY_REVIEW.md`. Play lists es-419 and es-ES as separate listing languages (Supported languages, https://support.google.com/googleplay/android-developer/table/4419860); adding an es-ES copy later is cheap. I could not confirm whether Play shows an es-419 listing to a device set to es-ES or falls back to the default language / machine translation, so check on a device after publishing.
+- **Spanish: es-419 (Latin America).** Most Spanish-speaking Play users are in Latin America (Mexico, Colombia, Argentina and others), the copy uses neutral Latin American Spanish (for example "computadora") that readers in Spain also understand without effort, and Play lists es-419 and es-ES as separate listing languages (Supported languages, https://support.google.com/googleplay/android-developer/table/4419860); adding an es-ES copy later is cheap. I could not confirm whether Play shows an es-419 listing to a device set to es-ES or falls back to the default language / machine translation, so check on a device after publishing.
 - In-app Spanish strings in the web prototype use Spain-only words ("ordenador"). The Android engineer should use neutral terms ("la computadora" vs "el ordenador" can be avoided with "la CPU" / "la máquina") or ship `values-es` (neutral) plus `values-b+es+419` if needed.
 - **zh-CN**: Google Play is not offered in mainland China; this listing serves Simplified Chinese readers elsewhere (for example Singapore and Malaysia).
 - **Default listing language: en-US.** Users whose language has no translation see the default or an automatic machine translation (Translate and localize your app, https://support.google.com/googleplay/android-developer/answer/9844778).
-- If the owner chooses "no EEA/UK distribution" (see `POLICY_REVIEW.md`), keep fr-FR and de-DE anyway: they still serve French and German readers outside the EEA and UK, such as Switzerland, Canada and many African countries; listing language follows the device language, not the country.
+- Distribution is worldwide including the EEA and UK (owner decision 2026-11-21), so fr-FR, de-DE and es-419 all reach their main markets; listing language follows the device language, not the country.
 
 ## 3. Copy rules for every language
 
-- The "Contains ads" line and the "18 and over" line are required by our policy choices (honest ads disclosure; target audience 18+). If the owner changes the target audience, delete the 18+ line in all 10 languages.
+- The "Contains ads" line is required (honest ads disclosure). The listing does not state a minimum age: the content rating shows on the listing, and the minimum age (14, see `POLICY_REVIEW.md` R19) is enforced by the in-app age screen and the Terms. Do not add "for kids" or child-oriented wording; the target audience is 13+ teens and adults, not children.
 - Never write "no ads", "free forever", "safe for kids", rankings or "best".
 - Game terms follow the in-app terms from the prototype (`../number-baseball/public/i18n.js`): ja ストライク/ボール/アウト, zh 好球/坏球/出局, es/pt Bola, fr Balle, ru Страйк/Болл.
 
@@ -55,9 +79,9 @@ Rejected: "Digit Duel" (at least two Android apps already use it), "Baseball Due
 
 ## ko — 한국어 (ko-KR)
 
-**App name** (18/30)
+**App name** (12/30)
 ```text
-Pitchcode: 숫자야구 대결
+숫자야구: 조용한 한판
 ```
 
 **Short description** (44/80)
@@ -65,10 +89,10 @@ Pitchcode: 숫자야구 대결
 서로 다른 숫자 3~6개, 스트라이크와 볼로 먼저 맞히는 조용한 1:1 숫자야구
 ```
 
-**Full description** (956/4000)
+**Full description** (943/4000)
 ```text
 쉬는 시간 5분, 조용하게 한 판.
-Pitchcode는 상대의 비밀 숫자를 먼저 맞히는 숫자야구 대결 게임입니다.
+상대의 비밀 숫자를 먼저 맞히는 숫자야구로 1:1 대결과 팀 대결을 즐겨 보세요.
 
 ■ 규칙은 금방 익힙니다
 • 서로 다른 숫자 3~6개로 비밀 숫자를 정합니다. 0이 맨 앞에 와도 됩니다.
@@ -93,13 +117,12 @@ Pitchcode는 상대의 비밀 숫자를 먼저 맞히는 숫자야구 대결 게
 ■ 안심하고 대화하세요
 • 글자만 쓰는 채팅(이미지·이모지 없음), 욕설 자동 가림
 • 메시지·플레이어 신고, 차단, 전체 채팅 끄기
-• 자주 쓰는 문구는 버튼 하나로
+• 빠른 대결에서는 정해진 문구만, 자유 채팅은 방 코드로 모인 친구끼리만
 
 ■ 알아 두세요
 • 광고가 포함되어 있습니다. 대결 중에는 광고가 나오지 않습니다.
 • 온라인 대결과 채팅은 인터넷 연결이 필요합니다.
 • 설정에서 언제든 계정을 삭제할 수 있습니다.
-• 모르는 사람과 채팅할 수 있어 만 18세 이상을 위한 앱입니다.
 • 지원 언어: 한국어, English, 日本語, 简体中文, Español, Français, Deutsch, Português (BR), Русский, Tiếng Việt
 ```
 
@@ -115,9 +138,9 @@ Pitchcode는 상대의 비밀 숫자를 먼저 맞히는 숫자야구 대결 게
 
 ## en-US — English (default)
 
-**App name** (26/30)
+**App name** (27/30)
 ```text
-Pitchcode: Number Baseball
+Number Baseball: Quiet Duel
 ```
 
 **Short description** (75/80)
@@ -125,10 +148,10 @@ Pitchcode: Number Baseball
 Crack your rival's secret number first. Strikes, balls and quiet 1v1 duels.
 ```
 
-**Full description** (1779/4000)
+**Full description** (1733/4000)
 ```text
 A quiet, quick duel for a short break.
-Pitchcode is a number-deduction game, also known as Number Baseball or Bulls and Cows: work out your opponent's secret number before they work out yours.
+Number Baseball, also known as Bulls and Cows, is a number-deduction duel: work out your opponent's secret number before they work out yours.
 
 HOW IT WORKS
 • Pick a secret number of 3–6 different digits (a leading 0 is fine).
@@ -153,13 +176,12 @@ QUIET BY DESIGN
 CHAT WITH CARE
 • Text-only chat (no images or emoji) with automatic profanity masking
 • Report messages or players, block players, or turn chat off entirely
-• Quick phrases for the things you say most
+• Quick Match chat uses preset phrases only; free text is for private rooms with friends
 
 GOOD TO KNOW
 • Contains ads. Ads never appear during a match.
 • Online play and chat need an internet connection.
 • You can delete your account at any time in Settings.
-• Includes online chat with strangers, so it is meant for players 18 and over.
 • Languages: English, 한국어, 日本語, 简体中文, Español, Français, Deutsch, Português (BR), Русский, Tiếng Việt
 ```
 
@@ -175,9 +197,9 @@ GOOD TO KNOW
 
 ## ja-JP — 日本語
 
-**App name** (17/30)
+**App name** (10/30)
 ```text
-Pitchcode：数字当てバトル
+数字野球：静かな対戦
 ```
 
 **Short description** (40/80)
@@ -185,10 +207,10 @@ Pitchcode：数字当てバトル
 相手の秘密の数字を先に当てよう。ストライクとボールで推理する、静かな1対1の対戦
 ```
 
-**Full description** (882/4000)
+**Full description** (874/4000)
 ```text
 ちょっとした休憩に、静かに一局。
-Pitchcodeは、相手の秘密の数字を先に当てる数字推理の対戦ゲームです。韓国では「数字野球」として親しまれている遊びです。
+数字野球は、相手の秘密の数字を先に当てる数字推理の対戦ゲームです。韓国で親しまれている遊びを、オンラインで気軽に楽しめます。
 
 ■ ルールはすぐに覚えられます
 ・異なる数字3〜6個で秘密の数字を決めます（先頭が0でもOK）。
@@ -213,13 +235,12 @@ Pitchcodeは、相手の秘密の数字を先に当てる数字推理の対戦�
 ■ 安心のチャット
 ・文字だけのチャット（画像・絵文字なし）、不適切な言葉は自動で伏せ字に
 ・メッセージやプレイヤーの通報、ブロック、チャットの全オフ
-・よく使うフレーズはワンタップで
+・クイック対戦では定型フレーズのみ。自由なチャットはルームコードで集まった友だち同士だけ
 
 ■ ご注意
 ・広告が含まれます。対戦中に広告は表示されません。
 ・オンライン対戦とチャットにはインターネット接続が必要です。
 ・アカウントは設定からいつでも削除できます。
-・知らない人とチャットできるため、18歳以上の方を対象としています。
 ・対応言語：日本語、한국어、English、简体中文、Español、Français、Deutsch、Português（BR）、Русский、Tiếng Việt
 ```
 
@@ -235,9 +256,9 @@ Pitchcodeは、相手の秘密の数字を先に当てる数字推理の対戦�
 
 ## zh-CN — 简体中文
 
-**App name** (15/30)
+**App name** (9/30)
 ```text
-Pitchcode：猜数字对战
+数字棒球：安静对决
 ```
 
 **Short description** (36/80)
@@ -245,10 +266,10 @@ Pitchcode：猜数字对战
 抢先猜出对手的秘密数字！靠好球和坏球的提示推理，安静地来一局一对一对决。
 ```
 
-**Full description** (695/4000)
+**Full description** (676/4000)
 ```text
 短暂休息时，安静地来一局。
-Pitchcode 是一款数字推理对战游戏，也叫“数字棒球”或“猜数字（1A2B）”：抢在对手之前猜出他的秘密数字。
+数字棒球是一款数字推理对战游戏，也叫“猜数字（1A2B）”：抢在对手之前猜出他的秘密数字。
 
 玩法说明
 • 用 3～6 个互不相同的数字设定秘密数字（可以以 0 开头）。
@@ -273,13 +294,12 @@ Pitchcode 是一款数字推理对战游戏，也叫“数字棒球”或“猜�
 安心聊天
 • 纯文字聊天（不支持图片和表情），不雅词语自动屏蔽
 • 可举报消息或玩家、屏蔽玩家，或一键关闭全部聊天
-• 常用短语一键发送
+• 快速匹配中只能发送预设短语，自由聊天仅限用房间代码加入的好友之间
 
 温馨提示
 • 本应用含广告。对局过程中绝不显示广告。
 • 在线对战和聊天需要联网。
 • 可随时在“设置”中删除账号。
-• 包含与陌生人的在线聊天，因此面向 18 岁及以上用户。
 • 支持语言：简体中文、English、한국어、日本語、Español、Français、Deutsch、Português（BR）、Русский、Tiếng Việt
 ```
 
@@ -295,9 +315,9 @@ Pitchcode 是一款数字推理对战游戏，也叫“数字棒球”或“猜�
 
 ## es-419 — Español (Latinoamérica)
 
-**App name** (27/30)
+**App name** (30/30)
 ```text
-Pitchcode: Duelo de Números
+Béisbol Numérico: Duelo Sereno
 ```
 
 **Short description** (79/80)
@@ -305,10 +325,10 @@ Pitchcode: Duelo de Números
 Descifra primero el número secreto de tu rival. Strikes, bolas y duelos 1 vs 1.
 ```
 
-**Full description** (1971/4000)
+**Full description** (1929/4000)
 ```text
 Un duelo rápido y tranquilo para tu descanso.
-Pitchcode es un juego de deducción numérica, también conocido como Béisbol Numérico, Picas y Fijas o Toros y Vacas: descifra el número secreto de tu rival antes de que descifre el tuyo.
+El Béisbol Numérico, también conocido como Picas y Fijas o Toros y Vacas, es un duelo de deducción: descifra el número secreto de tu rival antes de que descifre el tuyo.
 
 CÓMO SE JUEGA
 • Elige un número secreto de 3 a 6 cifras distintas (puede empezar con 0).
@@ -333,13 +353,12 @@ SILENCIOSO POR DISEÑO
 CHAT CON CUIDADO
 • Chat solo de texto (sin imágenes ni emojis) con groserías ocultas automáticamente
 • Reporta mensajes o jugadores, bloquea jugadores o desactiva todo el chat
-• Frases rápidas para lo que más dices
+• En la partida rápida solo hay frases predefinidas; el chat libre es para salas privadas con amigos
 
 TEN EN CUENTA
 • Contiene anuncios. Nunca aparecen durante una partida.
 • El juego en línea y el chat requieren conexión a internet.
 • Puedes eliminar tu cuenta cuando quieras desde Ajustes.
-• Incluye chat en línea con desconocidos, por eso está pensado para mayores de 18 años.
 • Idiomas: Español, English, 한국어, 日本語, 简体中文, Français, Deutsch, Português (BR), Русский, Tiếng Việt
 ```
 
@@ -357,7 +376,7 @@ TEN EN CUENTA
 
 **App name** (28/30)
 ```text
-Pitchcode : duel de chiffres
+Baseball des chiffres : duel
 ```
 
 **Short description** (80/80)
@@ -365,10 +384,10 @@ Pitchcode : duel de chiffres
 Trouvez avant l'autre son nombre secret. Strikes, balles et duels en 1 contre 1.
 ```
 
-**Full description** (2180/4000)
+**Full description** (2095/4000)
 ```text
 Un duel calme et rapide pour votre pause.
-Pitchcode est un jeu de déduction de nombres, connu aussi sous les noms de Baseball des chiffres ou Bulls and Cows : trouvez le nombre secret de votre adversaire avant qu'il ne trouve le vôtre.
+Le Baseball des chiffres, aussi appelé Bulls and Cows, est un duel de déduction : trouvez le nombre secret de votre adversaire avant qu'il ne trouve le vôtre.
 
 LES RÈGLES
 • Choisissez un nombre secret de 3 à 6 chiffres tous différents (il peut commencer par 0).
@@ -393,13 +412,12 @@ DISCRET PAR NATURE
 UNE DISCUSSION SEREINE
 • Discussion uniquement textuelle (ni images ni emojis), grossièretés masquées automatiquement
 • Signalez un message ou un joueur, bloquez un joueur ou coupez toute la discussion
-• Des phrases rapides pour ce que vous dites le plus souvent
+• En partie rapide, uniquement des phrases prédéfinies ; la discussion libre est réservée aux salons privés entre amis
 
 BON À SAVOIR
 • Contient des publicités. Aucune publicité pendant une partie.
 • Le jeu en ligne et la discussion nécessitent une connexion Internet.
 • Vous pouvez supprimer votre compte à tout moment dans les paramètres.
-• Le jeu comprend une discussion en ligne avec des inconnus : il s'adresse aux personnes de 18 ans et plus.
 • Langues : français, English, 한국어, 日本語, 简体中文, Español, Deutsch, Português (BR), Русский, Tiếng Việt
 ```
 
@@ -415,9 +433,9 @@ BON À SAVOIR
 
 ## de-DE — Deutsch
 
-**App name** (23/30)
+**App name** (29/30)
 ```text
-Pitchcode: Zahlen-Duell
+Zahlen-Baseball: Leises Duell
 ```
 
 **Short description** (79/80)
@@ -425,10 +443,10 @@ Pitchcode: Zahlen-Duell
 Knacke zuerst die Geheimzahl deines Gegners. Strikes, Balls, ruhige 1:1-Duelle.
 ```
 
-**Full description** (2000/4000)
+**Full description** (1936/4000)
 ```text
 Ein ruhiges, schnelles Duell für die kurze Pause.
-Pitchcode ist ein Zahlen-Logikspiel, auch bekannt als Zahlen-Baseball oder Bulls and Cows: Knacke die Geheimzahl deines Gegners, bevor er deine knackt.
+Zahlen-Baseball, auch bekannt als Bulls and Cows, ist ein Logik-Duell: Knacke die Geheimzahl deines Gegners, bevor er deine knackt.
 
 SO GEHT'S
 • Wähle eine Geheimzahl aus 3 bis 6 verschiedenen Ziffern (eine 0 vorne ist erlaubt).
@@ -453,13 +471,12 @@ LEISE GEDACHT
 ENTSPANNT CHATTEN
 • Reiner Text-Chat (keine Bilder, keine Emojis), Schimpfwörter werden automatisch ausgeblendet
 • Nachrichten oder Spieler melden, Spieler blockieren oder den Chat ganz ausschalten
-• Schnellphrasen für das, was du am häufigsten sagst
+• Im schnellen Spiel nur vorgegebene Sätze; freier Chat nur in privaten Räumen mit Freunden
 
 GUT ZU WISSEN
 • Enthält Werbung. Während eines Spiels wird nie Werbung gezeigt.
 • Online-Spiele und Chat brauchen eine Internetverbindung.
 • Du kannst dein Konto jederzeit in den Einstellungen löschen.
-• Enthält Online-Chat mit Fremden und richtet sich daher an Personen ab 18 Jahren.
 • Sprachen: Deutsch, English, 한국어, 日本語, 简体中文, Español, Français, Português (BR), Русский, Tiếng Việt
 ```
 
@@ -475,9 +492,9 @@ GUT ZU WISSEN
 
 ## pt-BR — Português (Brasil)
 
-**App name** (27/30)
+**App name** (30/30)
 ```text
-Pitchcode: Duelo de Números
+Beisebol Numérico: Duelo Calmo
 ```
 
 **Short description** (78/80)
@@ -485,10 +502,10 @@ Pitchcode: Duelo de Números
 Descubra primeiro o número secreto do adversário. Strikes, bolas e duelos 1x1.
 ```
 
-**Full description** (1973/4000)
+**Full description** (1916/4000)
 ```text
 Um duelo rápido e tranquilo para a sua pausa.
-Pitchcode é um jogo de dedução de números, também conhecido como Beisebol Numérico ou Bulls and Cows: descubra o número secreto do adversário antes que ele descubra o seu.
+O Beisebol Numérico, também conhecido como Bulls and Cows, é um duelo de dedução: descubra o número secreto do adversário antes que ele descubra o seu.
 
 COMO FUNCIONA
 • Escolha um número secreto com 3 a 6 dígitos diferentes (pode começar com 0).
@@ -513,13 +530,12 @@ SILENCIOSO DE PROPÓSITO
 CHAT TRANQUILO
 • Chat só de texto (sem imagens nem emojis), com palavrões ocultados automaticamente
 • Denuncie mensagens ou jogadores, bloqueie jogadores ou desative o chat inteiro
-• Frases rápidas para o que você mais fala
+• Na partida rápida, só frases prontas; o chat livre fica para salas privadas com amigos
 
 BOM SABER
 • Contém anúncios. Eles nunca aparecem durante uma partida.
 • Partidas online e chat exigem conexão com a internet.
 • Você pode excluir sua conta a qualquer momento nas Configurações.
-• Inclui chat online com desconhecidos, por isso é destinado a maiores de 18 anos.
 • Idiomas: Português (BR), English, 한국어, 日本語, 简体中文, Español, Français, Deutsch, Русский, Tiếng Việt
 ```
 
@@ -535,9 +551,9 @@ BOM SABER
 
 ## ru-RU — Русский
 
-**App name** (24/30)
+**App name** (29/30)
 ```text
-Pitchcode: Быки и коровы
+Числовой бейсбол: тихая дуэль
 ```
 
 **Short description** (75/80)
@@ -545,10 +561,10 @@ Pitchcode: Быки и коровы
 Разгадайте секретное число соперника первым. Страйки, боллы и дуэли 1 на 1.
 ```
 
-**Full description** (1893/4000)
+**Full description** (1818/4000)
 ```text
 Тихая быстрая дуэль для короткого перерыва.
-Pitchcode — логическая игра с числами, известная как «Быки и коровы» или «Числовой бейсбол»: разгадайте секретное число соперника раньше, чем он разгадает ваше.
+Числовой бейсбол, он же «Быки и коровы», — логическая дуэль: разгадайте секретное число соперника раньше, чем он разгадает ваше.
 
 ПРАВИЛА
 • Загадайте число из 3–6 разных цифр (можно начинать с 0).
@@ -573,13 +589,12 @@ Pitchcode — логическая игра с числами, известна�
 СПОКОЙНЫЙ ЧАТ
 • Только текст (без картинок и эмодзи), нецензурные слова скрываются автоматически
 • Жалобы на сообщения и игроков, блокировка игроков, полное отключение чата
-• Быстрые фразы для самых частых реплик
+• В быстрой игре — только готовые фразы; свободный чат — в приватных комнатах с друзьями
 
 ВАЖНО
 • Содержит рекламу. Во время игры реклама не показывается.
 • Для онлайн-игр и чата нужен интернет.
 • Аккаунт можно удалить в любой момент в настройках.
-• В игре есть онлайн-чат с незнакомыми людьми, поэтому она предназначена для лиц от 18 лет.
 • Языки: русский, English, 한국어, 日本語, 简体中文, Español, Français, Deutsch, Português (BR), Tiếng Việt
 ```
 
@@ -595,9 +610,9 @@ Pitchcode — логическая игра с числами, известна�
 
 ## vi — Tiếng Việt
 
-**App name** (28/30)
+**App name** (30/30)
 ```text
-Pitchcode: Đoán số đối kháng
+Bóng chày số: Đấu trí yên tĩnh
 ```
 
 **Short description** (77/80)
@@ -605,10 +620,10 @@ Pitchcode: Đoán số đối kháng
 Đoán trúng số bí mật của đối thủ trước. Strike, Ball và đấu 1 đối 1 yên tĩnh.
 ```
 
-**Full description** (1839/4000)
+**Full description** (1783/4000)
 ```text
 Một trận đấu nhanh, yên tĩnh cho giờ nghỉ ngắn.
-Pitchcode là trò chơi suy luận con số, còn gọi là Bóng chày số hay Bulls and Cows: hãy đoán ra số bí mật của đối thủ trước khi họ đoán ra số của bạn.
+Bóng chày số, còn gọi là Bulls and Cows, là trò đấu trí suy luận con số: hãy đoán ra số bí mật của đối thủ trước khi họ đoán ra số của bạn.
 
 CÁCH CHƠI
 • Chọn một số bí mật gồm 3–6 chữ số khác nhau (có thể bắt đầu bằng 0).
@@ -633,13 +648,12 @@ YÊN TĨNH TỪ THIẾT KẾ
 TRÒ CHUYỆN AN TÂM
 • Chat chỉ có chữ (không hình ảnh, không emoji), từ ngữ thô tục được tự động che
 • Báo cáo tin nhắn hoặc người chơi, chặn người chơi, hoặc tắt toàn bộ chat
-• Câu nói nhanh cho những điều bạn hay nói
+• Ghép trận nhanh chỉ dùng câu soạn sẵn; chat tự do chỉ trong phòng riêng với bạn bè
 
 LƯU Ý
 • Có quảng cáo. Quảng cáo không bao giờ xuất hiện trong trận đấu.
 • Chơi trực tuyến và trò chuyện cần kết nối internet.
 • Bạn có thể xóa tài khoản bất cứ lúc nào trong phần Cài đặt.
-• Có trò chuyện trực tuyến với người lạ nên ứng dụng dành cho người từ 18 tuổi trở lên.
 • Ngôn ngữ: Tiếng Việt, English, 한국어, 日本語, 简体中文, Español, Français, Deutsch, Português (BR), Русский
 ```
 

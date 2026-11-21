@@ -3,24 +3,27 @@
 > **운영자 메모 (공개하지 마세요 / do not publish this box)**
 >
 > - 서버가 `GET /privacy` 에서 아래 "공개 본문" 두 개(한국어, English)를 HTML로 보여 줍니다. 같은 페이지에 두 언어를 함께 두거나 `/privacy?lang=en` 으로 나눠도 됩니다. PDF는 안 됩니다(Play 정책).
-> - `[대괄호]` 는 공개 전에 반드시 채우세요. 본인 실명·집 주소·개인 전화번호·개인 이메일은 **넣지 마세요.**
+> - `[대괄호]` 는 공개 전에 반드시 채우세요. **2026-11-21 결정(트레이더 신고)** 으로 운영자 성명·주소·전화·이메일은 Google Play에 공개되므로, 이 방침의 "운영자 정보"에도 같은 값을 넣습니다. 그 밖의 곳에는 개인 이메일·개인 전화번호를 쓰지 말고 게임 전용 이메일·번호를 쓰세요.
+> - 앱 이름은 추천안(숫자야구: 조용한 한판 / Number Baseball: Quiet Duel)으로 넣었습니다. 바뀌면 제목과 첫 문단만 고칩니다. 최소 나이 14세는 `POLICY_REVIEW.md` R19의 권고이며, 사장님이 다르게 정하면 9절을 고칩니다.
 > - **연락 방법(개인정보 노출 없이)**, 둘 중 하나 이상:
 >   1. **게임 전용 이메일**을 새로 만듭니다(예: Gmail에서 `pitchcode.support@gmail.com` 같은 주소, 실명이 들어가지 않게). Play Console의 개발자 이메일·지원 이메일·아동안전 담당 연락처에도 같은 주소를 씁니다. **권장.**
 >   2. 앱 안 **문의하기 폼**(설정 → 문의하기): 서버에 문의 내용만 저장하고 답장은 앱 안 알림으로 보냅니다. 이메일을 받지 않으므로 수집 항목이 늘지 않지만 개발이 필요하고, 앱을 지운 사람은 쓸 수 없어 이메일을 대신하지는 못합니다. 만들면 아래 2절 표에 "문의 내용(보관 1년)"을 추가하세요.
 > - 이 방침은 `docs/protocol.md`(v1) 기준입니다. 서버가 실제로 그렇게 동작하는지 백엔드 담당이 확인해야 하며, 다르면 방침을 고쳐야 합니다. 특히 확인할 것: 서버 로그에 IP·채팅·토큰을 남기지 않는지, 대결 중 비밀 숫자·추측이 메모리에만 있는지, 처리된 신고 180일 후 삭제, 계정 삭제 시 다른 신고 스냅샷의 닉네임을 "삭제된 플레이어"로 바꾸는지, 호스팅 업체 로그 보관 기간. (이 중 180일 삭제와 닉네임 치환은 아직 프로토콜에 없으므로 `POLICY_REVIEW.md`의 요구사항으로 요청했습니다.)
 > - Play Console 데이터 보안(Data safety) 답변(`POLICY_CHECKLIST.md` 5절)과 이 방침은 항상 같아야 합니다.
 >
-> 채울 값: `[시행일]`, `[개발자 표시명]`(스토어에 보이는 이름, 예: Pitchcode), `[연락처 이메일]`, `[도메인]`, `[개인정보 보호책임자: 직책 또는 성명]`, `[호스팅 업체명]`, `[호스팅 업체 연락처 또는 개인정보 문의 페이지]`, `[서버 국가]`, `[로그 보관 일수]`.
+> 채울 값: `[시행일]`, `[운영자 성명]`, `[운영자 주소]`, `[게임 전용 전화번호]`, `[개발자 표시명]`(스토어에 보이는 개발자 이름), `[연락처 이메일]`, `[도메인]`, `[개인정보 보호책임자: 직책 또는 성명]`, `[호스팅 업체명]`, `[호스팅 업체 연락처 또는 개인정보 문의 페이지]`, `[서버 국가]`, `[로그 보관 일수]`.
 
 ---
 
 ## 공개 본문 — 한국어
 
-# Pitchcode 개인정보처리방침
+# 숫자야구: 조용한 한판 개인정보처리방침
 
 시행일: [시행일]
 
-[개발자 표시명](이하 "운영자")은 숫자야구 게임 앱 **Pitchcode**(이하 "앱")와 앱이 쓰는 게임 서버 및 웹 페이지(`https://[도메인]`)에서 이용자의 개인정보를 아래와 같이 처리합니다. 앱은 개인 개발자가 운영합니다.
+[운영자 성명](Google Play 개발자 이름: [개발자 표시명], 이하 "운영자")은 숫자야구 게임 앱 **숫자야구: 조용한 한판**(이하 "앱")와 앱이 쓰는 게임 서버 및 웹 페이지(`https://[도메인]`)에서 이용자의 개인정보를 아래와 같이 처리합니다. 앱은 개인 개발자가 운영합니다.
+
+운영자 정보: [운영자 성명] / 주소 [운영자 주소] / 전화 [게임 전용 전화번호] / 이메일 [연락처 이메일] (Google Play의 개발자 정보와 같습니다)
 
 ### 1. 한눈에 보기
 
@@ -29,6 +32,7 @@
 - 채팅은 서버 메모리에서만 전달되고 디스크에 저장하지 않습니다. 단, 신고된 대화는 신고 처리를 위해 일부 저장합니다.
 - 앱에는 **Google AdMob 광고**가 있습니다. 광고를 위해 Google이 광고 ID 등 기기 정보를 수집합니다(7절).
 - 개인정보를 판매하지 않습니다.
+- **만 14세 이상만** 이용할 수 있으며, 만 18세 미만에게는 맞춤형 광고를 하지 않습니다.
 - 계정은 앱 설정 또는 웹 페이지에서 언제든 삭제할 수 있습니다.
 
 ### 2. 처리하는 개인정보 항목과 목적
@@ -44,6 +48,8 @@
 | 채팅 | 방 안의 채팅 메시지 | 같은 방 사람에게 전달 | 이용자가 보낼 때 (메모리에서만 처리) |
 | 대결 정보 | 비밀 숫자, 추측, 남은 시간 | 판정과 진행 | 대결 중 (메모리에서만 처리, 결과만 전적에 반영) |
 | 접속 정보 | IP 주소, 앱 버전, 접속 시각 | 과도한 요청 차단(예: 시간당 계정 생성 횟수 제한), 장애 대응, 보안 | 서버 접속 시 자동 |
+| 연령대 | 처음 실행할 때 고른 연령대(만 14세 미만 / 14~15세 / 16~17세 / 18세 이상) | 이용 가능 여부 확인, 미성년자 광고 보호 설정 | **휴대폰에만 저장**, 서버로 보내지 않음 |
+| 약관 동의 | 동의한 약관 버전, 동의 시각, 만 14세 이상 확인 여부 | 이용약관 동의 기록 | 약관 동의 화면 |
 | 광고 정보 (Google이 수집) | 광고 ID, 앱 세트 ID, IP 주소(대략적인 위치 추정), 광고 상호작용, 진단 정보 | 광고 표시와 측정, 부정 클릭 방지 | Google Mobile Ads SDK가 자동 수집 (7절) |
 
 앱은 계정 토큰을 기기에 저장하고, 안드로이드 자동 백업을 켠 경우 이용자 본인의 Google 계정 백업에 포함됩니다. 이 백업은 Google이 관리하며 운영자는 볼 수 없습니다. 같은 Google 계정으로 새 휴대폰을 설정하면 계정을 되찾는 데 쓰입니다.
@@ -52,7 +58,7 @@
 
 | 항목 | 보유 기간 |
 | --- | --- |
-| 계정, 전적, 차단 목록 | 계정을 삭제할 때까지. 삭제하면 즉시 지웁니다. |
+| 계정, 전적, 차단 목록, 약관 동의 기록 | 계정을 삭제할 때까지. 삭제하면 즉시 지웁니다. |
 | 기기 이전 코드 | 10분 또는 사용 즉시 |
 | 계정 삭제 코드 | 24시간 또는 사용 즉시 |
 | 채팅 메시지 | 방이 있는 동안 서버 메모리에 최근 50개만. 방이 비거나 10분간 접속자가 없어 닫히면 사라지며 디스크에 저장하지 않습니다. |
@@ -93,6 +99,7 @@
 - Google Mobile Ads SDK는 광고 ID, 앱 세트 ID, IP 주소, 광고 상호작용, 진단 정보를 수집해 광고 제공, 측정, 부정 클릭 방지에 씁니다. Google이 데이터를 쓰는 방식: https://policies.google.com/technologies/partner-sites
 - 유럽경제지역, 영국, 스위스 및 일부 미국 주에서는 앱이 처음에 동의 화면을 보여 줍니다. 앱 **설정 → 개인정보 옵션**에서 언제든 선택을 바꿀 수 있습니다. 동의하지 않아도 앱은 그대로 쓸 수 있고 맞춤형이 아닌 광고가 나옵니다.
 - 모든 지역에서 휴대폰 **설정 → 개인정보 보호(또는 Google) → 광고**에서 광고 ID를 재설정하거나 삭제할 수 있습니다(기기마다 메뉴 이름이 조금 다릅니다).
+- **만 18세 미만 이용자**: 처음 실행할 때 고른 연령대에 따라 앱이 Google에 "연령 제한 처리"를 요청합니다. 만 14~15세는 맞춤형 광고를 하지 않고 광고 ID도 보내지 않으며, 만 16~17세는 Google의 청소년 보호 기준을 적용합니다. Google Play가 알려 주는 연령 정보(Play 연령 신호)도 같은 목적에만 씁니다.
 - 운영자는 광고 ID를 직접 받거나 저장하지 않습니다.
 
 ### 8. 이용자의 권리
@@ -103,9 +110,11 @@
 - **처리 정지·동의 철회**: 광고는 7절의 방법으로, 그 밖의 처리는 계정 삭제 또는 이메일 요청으로.
 - 요청은 [연락처 이메일]로 보내 주세요. 이메일이나 이름을 묻지 않는 서비스이므로, 계정 확인을 위해 앱 설정에 표시되는 `닉네임#태그`와 계정 삭제 코드 등을 요청할 수 있습니다. 10일 이내에 답변합니다.
 
-### 9. 아동
+### 9. 아동과 청소년
 
-앱은 낯선 사람과 채팅할 수 있어 만 18세 이상을 대상으로 합니다. 만 14세 미만 아동의 개인정보를 알면서 수집하지 않으며, 그런 사실을 알게 되면 해당 계정을 삭제합니다.
+- 앱은 **만 14세 이상**만 이용할 수 있습니다. 처음 실행할 때 나이를 확인하고, 만 14세 미만이면 계정을 만들지 않고 광고도 불러오지 않습니다. 따라서 만 14세 미만 아동의 개인정보를 수집하지 않으며, 법정대리인 동의 절차도 두지 않습니다.
+- 만 14세 미만 아동이 이용 중인 사실을 알게 되면 해당 계정을 즉시 삭제합니다. 보호자는 [연락처 이메일]로 알려 주세요.
+- 만 14세 이상 청소년도 이용할 수 있으므로, 빠른 대결에서는 정해진 문구만 쓸 수 있게 하고 신고·차단·채팅 끄기를 제공합니다.
 
 ### 10. 안전성 확보 조치
 
@@ -117,7 +126,7 @@
 
 ### 11. 개인정보 보호책임자와 연락처
 
-- 개인정보 보호책임자: [개인정보 보호책임자: 직책 또는 성명]
+- 개인정보 보호책임자: [운영자 성명] (운영자)
 - 연락처: [연락처 이메일]
 
 개인정보 침해에 대한 상담이나 신고는 아래 기관에도 할 수 있습니다.
@@ -140,11 +149,13 @@
 
 ## Public text — English
 
-# Pitchcode Privacy Policy
+# Number Baseball: Quiet Duel — Privacy Policy
 
 Effective date: [시행일]
 
-[개발자 표시명] ("we") runs the number-guessing game app **Pitchcode** (the "app"), its game server and the web pages at `https://[도메인]`. This policy explains what personal data we process and why. The app is run by an individual developer.
+[운영자 성명] (developer name on Google Play: [개발자 표시명]; "we") runs the number-guessing game app **Number Baseball: Quiet Duel** (the "app"), its game server and the web pages at `https://[도메인]`. This policy explains what personal data we process and why. The app is run by an individual developer.
+
+Who we are: [운영자 성명] / address [운영자 주소] / phone [게임 전용 전화번호] / email [연락처 이메일] (the same details as in our Google Play developer information)
 
 ### 1. Summary
 
@@ -153,6 +164,7 @@ Effective date: [시행일]
 - Chat is relayed through server memory and is not saved to disk, except conversations that someone reports.
 - The app shows **Google AdMob ads**. Google collects device information such as the advertising ID for ads (section 7).
 - We do not sell personal data.
+- The app is for people **aged 14 and over**, and users under 18 do not get personalized ads.
 - You can delete your account at any time in the app or on our website.
 
 ### 2. What we process and why
@@ -168,6 +180,8 @@ Effective date: [시행일]
 | Chat | Messages in a room | Deliver them to the room | When you send them (memory only) |
 | Match data | Secret numbers, guesses, timers | Judge and run the match | During a match (memory only; only the result is saved) |
 | Connection data | IP address, app version, time | Rate limiting (e.g. account creations per hour), troubleshooting, security | Automatically when you connect |
+| Age band | The age band chosen on first launch (under 14 / 14–15 / 16–17 / 18+) | Decide whether the app can be used; apply ad protections for minors | **Stored only on your phone**, never sent to us |
+| Terms acceptance | Terms version accepted, time, confirmation of being 14 or older | Record that you accepted the Terms | Terms screen |
 | Ad data (collected by Google) | Advertising ID, app set ID, IP address (to estimate approximate location), ad interactions, diagnostics | Serve and measure ads, prevent ad fraud | Google Mobile Ads SDK (section 7) |
 
 The app stores your account token on your device. If Android Auto Backup is on, it is included in your own Google account backup, which Google manages and we cannot see. It lets you restore your account on a new phone set up with the same Google account.
@@ -176,7 +190,7 @@ The app stores your account token on your device. If Android Auto Backup is on, 
 
 | Data | Kept for |
 | --- | --- |
-| Account, game record, block list | Until you delete your account; deleted immediately when you do |
+| Account, game record, block list, Terms acceptance | Until you delete your account; deleted immediately when you do |
 | Device transfer code | 10 minutes or until used |
 | Account deletion code | 24 hours or until used |
 | Chat messages | Only the last 50 per room, in server memory, while the room exists. Gone when the room closes (empty, or 10 minutes with nobody connected). Never written to disk. |
@@ -215,6 +229,7 @@ We do not sell or give your personal data to other companies or people, except w
 - The Google Mobile Ads SDK collects the advertising ID, app set ID, IP address, ad interactions and diagnostics to serve and measure ads and prevent fraud. How Google uses data: https://policies.google.com/technologies/partner-sites
 - In the EEA, the UK, Switzerland and some US states, the app shows a consent or choices screen. You can change your choice at any time in **Settings → Privacy options** in the app. If you do not consent, the app still works and shows non-personalized ads.
 - Everywhere, you can reset or delete your advertising ID in your phone's **Settings → Privacy (or Google) → Ads** (menu names vary by device).
+- **Users under 18**: based on the age band chosen on first launch, the app asks Google for age-restricted ad treatment. Users aged 14–15 get no personalized ads and their advertising ID is not sent; users aged 16–17 get Google's teen protections. Age information provided by Google Play (Play Age Signals) is used only for the same purpose.
 - We do not receive or store your advertising ID ourselves.
 
 ### 8. Your rights
@@ -225,9 +240,11 @@ We do not sell or give your personal data to other companies or people, except w
 - **Objection / withdrawing consent**: for ads, see section 7; for everything else, delete your account or email us.
 - Send requests to [연락처 이메일]. Because we never ask for your name or email, we may ask for your `Nickname#tag` and an account deletion code from the app's Settings to confirm the account is yours. We reply within 10 days.
 
-### 9. Children
+### 9. Children and teens
 
-Because the app includes chat with strangers, it is meant for people aged 18 and over. We do not knowingly collect data from children (under 14 in Korea, under 13 in the US, or under the age set by law in your country). If we learn that a child is using the app, we delete the account.
+- The app is for people **aged 14 and over**. It asks your age on first launch; if you are under 14, it does not create an account and does not load ads. We therefore do not collect personal data from children under 14 and have no parental-consent process.
+- If we learn that a child under 14 is using the app, we delete the account immediately. Parents can tell us at [연락처 이메일].
+- Because teens aged 14 and over can play, Quick Match chat is limited to preset phrases, and reporting, blocking and turning chat off are always available.
 
 ### 10. Security
 
@@ -239,7 +256,7 @@ Because the app includes chat with strangers, it is meant for people aged 18 and
 
 ### 11. Privacy contact
 
-- Person responsible for privacy: [개인정보 보호책임자: 직책 또는 성명]
+- Person responsible for privacy: [운영자 성명] (operator)
 - Contact: [연락처 이메일]
 
 ### 12. Additional information for some regions

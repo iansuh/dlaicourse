@@ -3,7 +3,7 @@
 > **팀 메모 (공개하지 마세요 / do not publish this box)**
 >
 > - 서버가 `GET /delete-account` 에서 이 내용을 HTML로 보여 줍니다(`docs/protocol.md` 14절). 이 주소를 Play Console 데이터 보안 양식의 "계정 삭제 URL"에 넣습니다.
-> - Play 요구사항: 페이지가 실제로 동작해야 하고, 찾기 쉬워야 하며, **스토어에 보이는 앱 이름 또는 개발자 이름**이 페이지에 있어야 합니다(https://support.google.com/googleplay/android-developer/answer/13327111). 제목에 "Pitchcode"와 `[개발자 표시명]`을 그대로 씁니다.
+> - Play 요구사항: 페이지가 실제로 동작해야 하고, 찾기 쉬워야 하며, **스토어에 보이는 앱 이름 또는 개발자 이름**이 페이지에 있어야 합니다(https://support.google.com/googleplay/android-developer/answer/13327111). 제목에 스토어 앱 이름(추천안: 숫자야구: 조용한 한판 / Number Baseball: Quiet Duel)과 `[개발자 표시명]`을 그대로 씁니다. 앱 이름이 바뀌면 이 페이지의 이름도 같이 바꿉니다.
 > - 방법 B(삭제 코드)는 현재 프로토콜에 있습니다. **방법 C(앱 없이 요청)는 아직 없습니다.** 앱을 지운 사람이 웹 페이지를 쓰는 가장 흔한 경우인데 코드가 없으면 삭제할 길이 없으므로 추가를 권장합니다(`POLICY_REVIEW.md` R5). 백엔드가 C를 만들지 않으면 C 단락을 지우고, 이메일 요청 문장만 남기세요. 이메일 요청을 받으면 운영자가 관리 API로 처리해야 합니다.
 > - 폼은 쿠키·분석 도구 없이, HTTPS로만, IP 기준 요청 제한(전송 코드와 동일)을 둡니다. 이메일 주소를 입력받지 않습니다.
 > - `[대괄호]` 값은 공개 전에 채웁니다.
@@ -12,15 +12,15 @@
 
 ## 공개 본문 — 한국어
 
-# Pitchcode 계정 삭제
+# 숫자야구: 조용한 한판 — 계정 삭제
 
-**앱: Pitchcode (숫자야구) · 개발자: [개발자 표시명]**
+**앱: 숫자야구: 조용한 한판 (Number Baseball: Quiet Duel) · 개발자: [개발자 표시명]**
 
-Pitchcode 계정과 관련 데이터를 삭제하는 방법을 안내합니다. 삭제하면 되돌릴 수 없습니다.
+이 앱의 계정과 관련 데이터를 삭제하는 방법을 안내합니다. 삭제하면 되돌릴 수 없습니다.
 
 ### 방법 A. 앱에서 바로 삭제 (가장 빠름)
 
-1. Pitchcode 앱을 엽니다.
+1. 숫자야구: 조용한 한판 앱을 엽니다.
 2. **설정 → 계정 삭제**를 누릅니다.
 3. 안내를 확인하고 **삭제**를 누르면 즉시 삭제됩니다.
 
@@ -63,15 +63,15 @@ Pitchcode 계정과 관련 데이터를 삭제하는 방법을 안내합니다. 
 
 ## Public text — English
 
-# Delete your Pitchcode account
+# Number Baseball: Quiet Duel — Delete your account
 
-**App: Pitchcode (Number Baseball) · Developer: [개발자 표시명]**
+**App: Number Baseball: Quiet Duel (숫자야구: 조용한 한판) · Developer: [개발자 표시명]**
 
-This page explains how to delete your Pitchcode account and its data. Deletion cannot be undone.
+This page explains how to delete your account in this app and its data. Deletion cannot be undone.
 
 ### Option A. Delete in the app (fastest)
 
-1. Open the Pitchcode app.
+1. Open the Number Baseball: Quiet Duel app.
 2. Go to **Settings → Delete account**.
 3. Read the notice and tap **Delete**. Your account is deleted immediately.
 

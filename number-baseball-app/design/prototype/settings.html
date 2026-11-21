@@ -23,6 +23,7 @@ window.build = function (qs) {
   const t = P.t;
   const nav = (ic, k, sub, val, extra = '') => `<button class="row${sub ? '' : ' single'}" style="width:100%;text-align:left">${P.icon(ic, 'ic lead')}<span class="rt"><span class="t${extra}">${t(k)}</span>${sub ? `<span class="s">${t(sub)}</span>` : ''}</span>${val ? `<span class="val">${val}</span>` : ''}${P.icon('chevron_right', 'ic chev')}</button>`;
   const ext = (ic, k) => `<button class="row single" style="width:100%;text-align:left">${P.icon(ic, 'ic lead')}<span class="rt"><span class="t">${t(k)}</span></span>${P.icon('open_in_new', 'ic ext')}</button>`;
+  const vol = (k, v, on) => `<div class="vol${on ? '' : ' off'}" role="slider" aria-label="${t(k)}" aria-valuenow="${v}" aria-valuemin="0" aria-valuemax="100"><span class="slider${on ? '' : ' off'}"><span class="tr"></span><span class="fi" style="width:${v}%"></span><span class="th" style="left:${v}%"></span></span><span class="v">${v}</span></div>`;
   const sw = (ic, k, sub, on) => `<div class="row" role="switch" aria-checked="${on}">${P.icon(ic, 'ic lead')}<span class="rt"><span class="t">${t(k)}</span>${sub ? `<span class="s">${t(sub)}</span>` : ''}</span><span class="switch${on ? ' on' : ''}"></span></div>`;
   document.getElementById('app').innerHTML = `
     <div class="sysbar"></div>
@@ -34,7 +35,14 @@ window.build = function (qs) {
       <div class="sec-head"><span class="sec-label">${t('secGame')}</span></div>
       <div class="list">
         ${nav('language', 'language', null, t('languageVal'))}
-        ${sw('volume_off', 'sound', 'soundSub', false)}
+      </div>
+      <div class="sec-head"><span class="sec-label">${t('secSound')}</span></div>
+      <div class="list">
+        ${sw('volume_up', 'sfx', 'sfxSub', true)}
+        ${vol('sfxVol', 70, true)}
+        ${sw('do_not_disturb_on', 'followSilent', 'followSilentSub', true)}
+        ${sw('music_note', 'music', 'musicSub', false)}
+        ${vol('musicVol', 40, false)}
         ${sw('mobile_vibrate', 'haptics', 'hapticsSub', true)}
       </div>
       <div class="sec-head"><span class="sec-label">${t('secChat')}</span></div>

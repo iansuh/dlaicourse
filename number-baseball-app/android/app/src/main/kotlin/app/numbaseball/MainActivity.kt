@@ -6,6 +6,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import app.numbaseball.ads.LocalAdsController
+import app.numbaseball.audio.LocalGameAudio
 import app.numbaseball.ui.navigation.NbApp
 import app.numbaseball.ui.theme.NumBaseballTheme
 
@@ -21,6 +22,7 @@ class MainActivity : AppCompatActivity() {
                 CompositionLocalProvider(
                     LocalAppContainer provides container,
                     LocalAdsController provides container.ads,
+                    LocalGameAudio provides container.audio,
                 ) {
                     NbApp(container.accountRepository)
                 }
