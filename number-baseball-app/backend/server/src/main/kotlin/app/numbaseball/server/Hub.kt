@@ -597,6 +597,14 @@ class Hub(
         }
     }
 
+    /** Closes the account's live connection as replaced (used after a transfer revoked its token). */
+    suspend fun closeSession(id: String) = mutex.withLock {
+        sessions[id]?.let { s ->
+            s.send(ErrorMessage(ErrorCodes.SESSION_REPLACED, "the account moved to another device"))
+            s.close(4000, "session_replaced")
+        }
+    }
+
     /**
      * Context for a report: the reported message and the last messages of the room, as delivered (masked), if the room
      * is alive and the reporter is or was in it.

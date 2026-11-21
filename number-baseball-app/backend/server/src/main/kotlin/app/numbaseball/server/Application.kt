@@ -461,8 +461,8 @@ private fun io.ktor.server.routing.Route.apiRoutes(services: Services) {
                 services.limiter.acquire("code:*", 500, 600_000)
                 throw ApiException(HttpStatusCode.BadRequest, ErrorCodes.INVALID_CODE, "wrong, used or expired code")
             }
-            // The old device's connection is closed: its token is no longer valid.
-            services.hub.accountRemoved(result.second.id, deleted = false).let { }
+            // The old device's token is revoked; close its connection (the seat stays for the new device).
+            services.hub.closeSession(result.second.id)
             call.respondJson(HttpStatusCode.OK, AuthResponse(result.first, accounts.toDto(result.second)), AuthResponse.serializer())
         }
         get("/me/blocks") {

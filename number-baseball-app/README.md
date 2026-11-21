@@ -55,7 +55,8 @@ Profanity masking, rate limit, report a message or a player, block a player (hid
 - Reports: resolved reports purged after 180 days; deleted players are anonymised in other reports' snapshots.
 - No chat text, tokens, codes or IP addresses in logs or the database (rate-limit IPs in memory only).
 - A review room behind `REVIEW_ROOM_CODE` so Play reviewers always find an opponent.
-- **Audience (owner decision 2026-11-21): 13 and over.** Restrict Minor Access stays off. Ads use a maximum ad content rating suitable for teens; chat safety above is mandatory, not optional.
+- **Audience (owner decision 2026-11-21): 13 and over; minimum age 14 recommended by the release lead because of Korean law (owner to confirm).** Restrict Minor Access stays off. A neutral age screen at first launch (before any ad or account) asks for the birth year; the age band is kept on the device only. Minimum age comes from build config (default 14). Chat safety above is mandatory, not optional.
+- **Ad content:** the maximum ad content rating must not exceed the app's own IARC rating (expected Everyone, so `G`); value from build config. Users under 16 get AdMob's under-age / child treatment (no personalized ads), 16–17 the teen treatment; sensitive ad categories blocked. Play Age Signals API integrated (US state app-store age laws).
 - **Distribution (owner decision 2026-11-21): worldwide including EEA/UK, with ads.** The owner accepts declaring as a trader, so legal name, address, phone and email will be shown on the store page.
 - **App name (owner decision 2026-11-21): a "숫자야구" (Number Baseball) style name**, localized per language; the release lead proposes the names. Keep the name in resources so it is easy to change.
 

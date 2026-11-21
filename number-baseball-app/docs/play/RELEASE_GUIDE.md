@@ -196,7 +196,8 @@ Play Console → 해당 앱 → **앱 무결성(App integrity) → Play 앱 서�
 - 폭력, 공포, 성적 내용, 도박, 약물, 저속한 유머: 모두 **아니요**.
 - **사용자 간 상호작용 또는 콘텐츠 교환: 예** (채팅이 있으므로).
 - 위치 공유: 아니요. 디지털 상품 구매: 아니요. 제한 없는 인터넷 접속(웹 브라우저): 아니요.
-- 등급을 낮추려고 답을 바꾸지 마세요. 나온 등급은 Android 담당에게 알려 주세요(광고 등급 상한을 맞춤).
+- 대상 연령(13세 이상)은 이 설문과 별개입니다. 답은 바뀌지 않습니다.
+- 등급을 낮추려고 답을 바꾸지 마세요. 나온 등급은 Android 담당에게 알려 주세요. 광고 등급 상한을 그 등급에 맞춥니다(전체이용가면 G). 앱 등급보다 높은 광고는 정책 위반입니다.
 
 ### 5-4. 데이터 보안 (Data safety)
 
@@ -219,12 +220,12 @@ Play Console → 해당 앱 → **앱 무결성(App integrity) → Play 앱 서�
 서버 담당이 심사용 방 코드(`REVIEW_ROOM_CODE`)를 켜 둔 상태여야 합니다. 서버는 24시간 켜져 있어야 합니다.
 
 ```text
-No login or password is needed. On first launch, enter any nickname (2-12 letters or digits) and accept the Terms of Use; the app creates an account automatically.
+No login or password is needed. On first launch, choose an age of 14 or older on the age screen (the app is for ages 14+), enter any nickname (2-12 letters or digits) and accept the Terms of Use; the app creates an account automatically.
 
 - Offline play: Home > Vs Computer.
 - Online play without a second device: Home > Private room > Join, enter room code [REVIEW_ROOM_CODE]. A test bot joins, plays a 4-digit duel and sends a chat message.
 - Chat safety: long-press the bot's message to Report it or Block the player. Settings > Mute all chat hides all chat.
-- Quick Match pairs real players; use two devices, or the room above.
+- Quick Match pairs real players and allows preset quick phrases only; free-text chat is available in private rooms. Use two devices, or the room above.
 - Account deletion: Settings > Delete account (immediate). Web: https://[도메인]/delete-account
 - Ads appear only on the home, results and profile screens, never during a match.
 - The game server runs 24/7. Contact: [연락처 이메일]
@@ -249,7 +250,7 @@ No login or password is needed. On first launch, enter any nickname (2-12 letter
 2. 테스터 목록: Google 그룹 하나를 만들어(예: `pitchcode-testers@googlegroups.com`) 그룹을 테스터로 등록하면 관리가 쉽습니다.
 3. **모집 요령**
    - 넉넉하게 **15~20명**을 모읍니다(중간 이탈 대비).
-   - 가족, 친구, 직장 동료, 동호회처럼 실제로 몇 번 플레이해 줄 사람. 대상이 만 18세 이상이므로 성인 Google 계정이어야 합니다(미성년자 접근 제한 때문).
+   - 가족, 친구, 직장 동료, 동호회처럼 실제로 몇 번 플레이해 줄 사람. 앱은 만 14세 이상만 쓸 수 있으니 그보다 어린 사람에게는 부탁하지 마세요.
    - 보내는 안내: ① 참여 링크에서 "테스터 되기" 누르기 ② Play 스토어에서 설치 ③ **14일 동안 앱을 지우거나 테스트에서 나가지 않기** ④ 일주일에 두세 번 컴퓨터 대결 한 판, 친구와 온라인 대결, 채팅·신고·차단 한 번씩 써 보기 ⑤ 불편한 점을 게임 전용 이메일로 보내기.
    - 돈을 받고 테스터를 채워 준다는 업체는 실제 사용이 적어 추가 테스트를 요구받을 수 있으니 권하지 않습니다.
 4. 테스트 기간에 받은 의견과 고친 내용을 메모해 둡니다(신청서에 씁니다).
@@ -346,6 +347,8 @@ AdMob → **개인정보 보호 및 메시지**:
 - 해마다 8월 말 전에 **목표 API 수준** 업데이트(2027년에는 API 37이 예상되지만 아직 공식 발표 전).
 - 트레이더 신고는 계정 설정에서 상태를 확인(2027-02-01 기한, 신규 계정은 가입 때 신고).
 - 앱 기능이나 SDK가 바뀌면 데이터 보안 양식, 개인정보처리방침, 콘텐츠 등급을 다시 확인.
+- 채팅 같은 소셜 기능을 바꾸는 업데이트 전에는 릴리스 담당과 상의하세요. 미국 텍사스 법 때문에 "중요한 변경"이면 Google Play에 알려야 할 수 있습니다. **빠른 대결 자유 채팅(`QUICK_MATCH_FREE_CHAT`)은 청소년이 이용하는 동안 켜지 마세요.**
+- 트레이더라서 공개된 주소·전화로 연락이 올 수 있습니다. 위협이나 괴롭힘은 기록을 남기고 경찰에 신고하세요.
 - 개발자 계정을 오래 쓰지 않으면 휴면으로 닫힐 수 있으니 1년에 몇 번은 업데이트나 로그인을 합니다.
 
 ---
