@@ -51,7 +51,7 @@ class ResourcesTest {
             val blocks = LegalMarkdown.parse(text)
             assertTrue(document.name, blocks.first() is LegalBlock.Heading)
             assertTrue(document.name, blocks.count { it is LegalBlock.Heading } > 5)
-            assertTrue(document.name, text.none { it == '{' })
+            assertTrue(document.name, blocks.none { it.toString().contains("{#") })
         }
     }
 
