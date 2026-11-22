@@ -39,6 +39,7 @@ PHONE_LOSS_WARN = 6.0    # LU lost through a 300 Hz high-pass (small phone speak
 SET_BUDGET_KB = 1536
 SEAM_RATIO_MAX = 2.0     # >6 kHz peak at the seam vs the loop's own 99th percentile of 2 ms block peaks
 SEAM_FLOOR_DB = -60.0    # ...or below this absolute level (>= 34 dB under the music's loudness: masked)
+SEQ_TP_MAX = -0.5        # summed demo sequences (mixer headroom)
 AUDIBLE_DB = -60.0       # audible duration = up to the last sample above this (dBFS)
 
 SPECTRO_CUES = ["sfx_keypad_1", "sfx_keypad_delete", "sfx_input_invalid", "sfx_guess_sent", "sfx_hint_strike",
@@ -342,7 +343,7 @@ def write_report(results, seqs, total_kb):
     A("| sequence | length s | true peak dBTP | M-max LUFS | result |")
     A("|---|---:|---:|---:|---|")
     for name, s in seqs.items():
-        A(f"| {name} | {s['dur']:.2f} | {s['tp']:.1f} | {s['m_max']:.1f} | {'PASS' if s['tp'] <= -0.5 else 'FAIL'} |")
+        A(f"| {name} | {s['dur']:.2f} | {s['tp']:.1f} | {s['m_max']:.1f} | {'PASS' if s['tp'] <= SEQ_TP_MAX else 'FAIL'} |")
     A("")
     A("## Spectrograms")
     A("")
@@ -357,7 +358,32 @@ def write_report(results, seqs, total_kb):
 
 # Filled in after looking at the PNGs (see SOUND_DESIGN.md "How it was checked").
 VISUAL_NOTES = [
-    "_Visual review pending._",
+    "Reviewed 2026-11-21 by the sound designer (images read one by one; nobody listened).",
+    "",
+    "- **Keypad** (`sfx_keypad_1`): broadband attack under 10 ms, then only the 385-445 Hz body, gone by about 45 ms. "
+    "No tonal tail. The three variants differ only in plate and body frequency.",
+    "- **Delete**: two taps 22 ms apart with a lower (~300 Hz) body, visibly different from a digit tap.",
+    "- **Guess sent**: leather snap (broadband, 0-20 ms), 130 Hz + 400 Hz body, relay latch at 78 ms, done by 160 ms.",
+    "- **Lamp ladder** (`seq_lamps_3s2b`, `seq_round_2s1b`): strike fundamentals step 880 -> 988 -> 1175 Hz with bell "
+    "partials at 2.76x and 5.4x; balls at 587 -> 659 Hz with no high partials and a shorter decay. Every lamp starts "
+    "with a broadband relay click, so each onset stands out even where the tones overlap.",
+    "- **Out**: energy at 150-600 Hz, nothing above ~1 kHz after the click, no ring past ~200 ms. Clearly unlike strike and ball.",
+    "- **Solved**: broadband bat crack at 0, bells climbing at 35/95/155/215 ms over an organ swell, faded out by "
+    "1.13 s so it is quiet when the result sting starts (+1.09 to +1.42 s, depending on digit count).",
+    "- **Win**: three pick-up onsets at 0/70/140 ms (the haptic pattern), D major chord to ~1.7 s, then the room tail.",
+    "- **Lose**: all energy under ~1.5 kHz; F#4 -> D4, then a B minor chord from 0.52 s. Soft, no bright partials.",
+    "- **Draw**: two equal bell onsets at 0/90 ms (the haptic pattern) over an open fifth. **Match found**: onsets at "
+    "0 and 120 ms (the haptic pattern), rings to ~1 s.",
+    "- **Timer** (`seq_timer`): warning at 10 s (two ticks + E5 659 Hz), silence at 9-6 s, five ticks with a B5 tone, "
+    "then time-out with a falling A4 -> D4.",
+    "- **Music**: the menu loop sits mostly at 100 Hz-2 kHz with sparse brushes and a chord change every 3 s. The "
+    "match loop is almost entirely under 1 kHz, with only faint organ harmonics in the 0.8-2 kHz lamp band, so the "
+    "lamps stay readable over it. Seam plots: both channels run continuously through the loop point.",
+    "",
+    "Defects found in this review and fixed: (1) truncation clicks, i.e. broadband vertical lines where bell and mallet "
+    "notes were cut off mid-ring (`sfx_match_found` at 0.90/1.02 s, `sfx_quick_phrase` at 0.17 s). Fixed at the source: "
+    "the partial and thump generators now always fade their ends, which also removed the same clicks inside the music "
+    "loops (kick and marimba tails). (2) The keypad body rang about 60 ms; it was shortened (decay 16 -> 10 ms) for a drier tap.",
 ]
 
 
@@ -405,7 +431,8 @@ def main():
     for k, s in seqs.items():
         print("seq", k, {kk: round(v, 2) for kk, v in s.items()})
     print(f"total {total_kb:.0f} KB")
-    return 0 if all(r["pass"] for r in results) and total_kb <= SET_BUDGET_KB else 1
+    seq_ok = all(sq["tp"] <= SEQ_TP_MAX for sq in seqs.values())
+    return 0 if all(r["pass"] for r in results) and total_kb <= SET_BUDGET_KB and seq_ok else 1
 
 
 if __name__ == "__main__":

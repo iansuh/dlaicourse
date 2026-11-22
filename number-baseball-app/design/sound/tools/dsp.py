@@ -95,7 +95,8 @@ def partials(f0: float, seconds: float, parts, attack: float = 0.001, rng=None) 
         if f >= SR / 2 * 0.95:
             continue
         out += amp * osc(f, L, ph) * env_exp(L, tau)
-    return out * env_exp(L, 1e9, attack)
+    # always fade the end: a decaying partial cut off mid-ring is a click
+    return fade_out(out * env_exp(L, 1e9, attack), min(8.0, seconds * 1000 * 0.25))
 
 
 def pitch_drop_sine(f0: float, seconds: float, drop: float, drop_tau: float, tau: float,
@@ -104,7 +105,7 @@ def pitch_drop_sine(f0: float, seconds: float, drop: float, drop_tau: float, tau
     L = n(seconds)
     t = np.arange(L) / SR
     f = f0 * (1 + drop * np.exp(-t / drop_tau))
-    return osc(f, L) * env_exp(L, tau, attack)
+    return fade_out(osc(f, L) * env_exp(L, tau, attack), min(8.0, seconds * 1000 * 0.25))
 
 
 def noise(length: int, rng) -> np.ndarray:

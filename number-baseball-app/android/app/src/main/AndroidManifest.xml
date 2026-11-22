@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -14,7 +15,8 @@
         android:localeConfig="@xml/locales_config"
         android:resizeableActivity="true"
         android:supportsRtl="true"
-        android:theme="@style/Theme.NumBaseball">
+        android:theme="@style/Theme.NumBaseball"
+        tools:targetApi="33">
 
         <!-- Test app ID in debug; release value comes from NB_ADMOB_APP_ID (app/build.gradle.kts). -->
         <meta-data

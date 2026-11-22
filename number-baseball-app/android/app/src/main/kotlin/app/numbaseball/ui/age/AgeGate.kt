@@ -18,6 +18,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -99,6 +100,6 @@ fun AgeScreen(state: AgeUiState, onYearSelected: (Int) -> Unit, onContinue: () -
 fun NotAvailableScreen(minimumAge: Int) {
     ScreenScaffold(title = stringResource(R.string.app_name), onBack = null) {
         Text(stringResource(R.string.not_available_title), style = MaterialTheme.typography.headlineMedium)
-        Text(stringResource(R.string.not_available_body, minimumAge), color = NbColors.text2)
+        Text(pluralStringResource(R.plurals.not_available_body, minimumAge, minimumAge), color = NbColors.text2)
     }
 }

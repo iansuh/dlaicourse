@@ -7,6 +7,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.numbaseball.data.account.AccountStoreFiles
 import app.numbaseball.data.settings.SupportedLanguages
+import app.numbaseball.ui.legal.LegalBlock
+import app.numbaseball.ui.legal.LegalDocument
+import app.numbaseball.ui.legal.LegalMarkdown
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -40,6 +43,16 @@ class ResourcesTest {
         assertEquals(listOf(relative), context.resources.getXml(R.xml.backup_rules).collect("include", "path"))
         // cloud-backup and device-transfer
         assertEquals(listOf(relative, relative), context.resources.getXml(R.xml.data_extraction_rules).collect("include", "path"))
+    }
+
+    @Test fun termsAndPrivacyAreBundledFromDocsPlay() {
+        LegalDocument.entries.forEach { document ->
+            val text = context.resources.openRawResource(document.raw).bufferedReader().use { it.readText() }
+            val blocks = LegalMarkdown.parse(text)
+            assertTrue(document.name, blocks.first() is LegalBlock.Heading)
+            assertTrue(document.name, blocks.count { it is LegalBlock.Heading } > 5)
+            assertTrue(document.name, text.none { it == '{' })
+        }
     }
 
     @Test fun localesConfigListsEveryTranslatedLanguage() {

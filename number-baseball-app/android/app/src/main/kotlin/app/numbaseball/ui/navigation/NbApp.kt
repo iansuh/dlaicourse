@@ -231,6 +231,7 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
             val vm = containerViewModel { OnlineMatchViewModel(onlineSession) }
             val state by vm.state.collectAsStateWithLifecycle()
             val connection by vm.connection.collectAsStateWithLifecycle()
+            val room by container.onlineSession.room.collectAsStateWithLifecycle()
             val current = state
             if (current == null) {
                 LaunchedEffect(Unit) { home() }
@@ -250,7 +251,7 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
                 footer = {
                     ConnectionStatus(connection, vm::retryConnection)
                     SecondaryButton(stringResource(R.string.lobby_chat), { navController.navigate(ChatRoute) })
-                    if (container.onlineSession.room.value?.settings?.teamSize?.let { it > 1 } == true) {
+                    if ((room?.settings?.teamSize ?: 1) > 1) {
                         SecondaryButton(stringResource(R.string.lobby_board), { navController.navigate(TeamBoardRoute) })
                     }
                 },
@@ -353,7 +354,7 @@ private fun ResultsRoute(summary: MatchSummary, navController: NavHostController
         }
     }
     if (summary.mode == MatchMode.PRACTICE) SwitchToRealMatchWhenStarted(navController)
-    val room = session.room.value
+    val room by session.room.collectAsStateWithLifecycle()
     ResultsScreen(
         summary = summary,
         onPlayAgain = when (summary.mode) {
@@ -384,7 +385,9 @@ private fun ResultsRoute(summary: MatchSummary, navController: NavHostController
         onBackToRoom = when {
             summary.mode == MatchMode.PRACTICE -> { { navController.popBackStack() } }
             summary.mode == MatchMode.ONLINE && room?.kind == RoomKind.PRIVATE -> {
-                { navController.navigate(RoomLobbyRoute(room.code.orEmpty())) { popUpTo<HomeRoute> { inclusive = false } } }
+                val code = room?.code.orEmpty()
+                val backToRoom: () -> Unit = { navController.navigate(RoomLobbyRoute(code)) { popUpTo<HomeRoute> { inclusive = false } } }
+                backToRoom
             }
             else -> null
         },

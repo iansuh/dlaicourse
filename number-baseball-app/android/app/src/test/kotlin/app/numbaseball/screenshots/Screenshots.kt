@@ -87,11 +87,11 @@ abstract class ScreenshotSuite(private val variant: String) {
     @Test fun computerSetup() = capture("05_computer_setup") { ComputerSetupScreen(4, ComputerLevel.NORMAL, {}, {}, {}, {}) }
 
     @Test fun matchSecret() = capture("06_match_secret") {
-        match(MatchUiState(3, Opponent.Computer(ComputerLevel.NORMAL), MatchMode.COMPUTER, MatchPhase.CHOOSING_SECRET, input = "04"))
+        Match(MatchUiState(3, Opponent.Computer(ComputerLevel.NORMAL), MatchMode.COMPUTER, MatchPhase.CHOOSING_SECRET, input = "04"))
     }
 
     @Test fun matchGuessing() = capture("07_match_guessing") {
-        match(
+        Match(
             MatchUiState(
                 digits = 3,
                 opponent = Opponent.Computer(ComputerLevel.HARD),
@@ -107,7 +107,7 @@ abstract class ScreenshotSuite(private val variant: String) {
     }
 
     @Test fun matchOnline() = capture("08_match_online") {
-        match(SampleData.quickRoom().toMatchUiState(LocalInput(text = "35", round = 3), serverNow = 1_795_000_030_000)!!)
+        Match(SampleData.quickRoom().toMatchUiState(LocalInput(text = "35", round = 3), serverNow = 1_795_000_030_000)!!)
     }
 
     @Test fun quickMatch() = capture("09_quick_match") {
@@ -115,12 +115,12 @@ abstract class ScreenshotSuite(private val variant: String) {
     }
 
     @Test fun lobbyNew() = capture("10_lobby_new") {
-        lobby(LobbyUiState(draft = RoomSettings(digits = 4, teamSize = 2, roundSeconds = 120)))
+        Lobby(LobbyUiState(draft = RoomSettings(digits = 4, teamSize = 2, roundSeconds = 120)))
     }
 
     @Test fun lobby() = capture("11_lobby") {
         val room = SampleData.privateLobby()
-        lobby(
+        Lobby(
             LobbyUiState(
                 room = room,
                 players = listOf(
@@ -195,10 +195,10 @@ abstract class ScreenshotSuite(private val variant: String) {
     }
 
     @Composable
-    private fun match(state: MatchUiState) = MatchScreen(state, {}, {}, {}, {}, {}, {})
+    private fun Match(state: MatchUiState) = MatchScreen(state, {}, {}, {}, {}, {}, {})
 
     @Composable
-    private fun lobby(state: LobbyUiState) = RoomLobbyScreen(state, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+    private fun Lobby(state: LobbyUiState) = RoomLobbyScreen(state, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
 
     private companion object {
         /** Tolerates tiny anti-aliasing differences between machines when CI verifies the committed images. */

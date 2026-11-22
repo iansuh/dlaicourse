@@ -7,7 +7,6 @@
     <string name="action_ok">확인</string>
     <string name="action_cancel">취소</string>
     <string name="action_retry">다시 시도</string>
-    <string name="action_close">닫기</string>
     <string name="action_copy">복사</string>
 
     <!-- First run -->
@@ -20,7 +19,6 @@
     <string name="first_run_code_label">이전 코드</string>
     <string name="first_run_redeem">내 계정 가져오기</string>
     <string name="first_run_new_account">새 계정 만들기</string>
-    <string name="first_run_offline_note">지금은 컴퓨터와 대결할 수 있어요. 인터넷에 연결되면 온라인 계정이 만들어져요.</string>
 
     <string name="nickname_error_too_short">2자 이상 입력하세요.</string>
     <string name="nickname_error_too_long">12자 이하로 입력하세요.</string>
@@ -36,7 +34,6 @@
     <string name="home_room_code">방 코드</string>
     <string name="home_join_room">참가</string>
     <string name="home_how_to_play">게임 방법</string>
-    <string name="home_profile">프로필</string>
     <string name="home_settings">설정</string>
     <string name="home_record">승 %1$d · 패 %2$d · 무 %3$d</string>
     <string name="home_not_registered">계정이 만들어지면 온라인 대전을 할 수 있어요. 인터넷 연결을 확인하세요.</string>
@@ -121,7 +118,6 @@
     <string name="connection_replaced">다른 기기에서 접속했어요.</string>
     <string name="connection_deleted">계정이 삭제되었어요.</string>
     <string name="connection_play_here">여기서 하기</string>
-    <string name="connection_seat_lost">너무 오래 자리를 비워서 자리가 없어졌어요.</string>
 
     <!-- Room lobby -->
     <string name="lobby_title_new">새 방</string>
@@ -168,7 +164,6 @@
     <string name="chat_muted">채팅을 꺼 두었어요. 설정에서 켤 수 있어요.</string>
     <string name="chat_deleted_player">삭제된 플레이어</string>
     <string name="chat_counter">%1$d/%2$d</string>
-    <string name="chat_report">신고</string>
     <string name="phrase_hello">안녕하세요!</string>
     <string name="phrase_good_luck">행운을 빌어요!</string>
     <string name="phrase_have_fun">재밌게 해요!</string>
@@ -294,5 +289,7 @@
     <string name="age_privacy_note">답변은 이 기기에만 저장돼요.</string>
     <string name="age_continue">계속</string>
     <string name="not_available_title">죄송해요, 이 게임을 이용할 수 없어요</string>
-    <string name="not_available_body">이 게임은 만 %1$d세 이상만 이용할 수 있어요. 관심 가져 주셔서 고마워요.</string>
+    <plurals name="not_available_body">
+        <item quantity="other">이 게임은 만 %d세 이상만 이용할 수 있어요. 관심 가져 주셔서 고마워요.</item>
+    </plurals>
 </resources>

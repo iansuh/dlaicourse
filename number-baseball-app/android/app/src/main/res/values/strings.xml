@@ -7,7 +7,6 @@
     <string name="action_ok">OK</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_retry">Try again</string>
-    <string name="action_close">Close</string>
     <string name="action_copy">Copy</string>
 
     <!-- Universal baseball notation, same in every language -->
@@ -27,7 +26,6 @@
     <string name="first_run_code_label">Transfer code</string>
     <string name="first_run_redeem">Restore my account</string>
     <string name="first_run_new_account">Create a new account instead</string>
-    <string name="first_run_offline_note">You can play against the computer now. Your online account is created once you are connected.</string>
 
     <string name="nickname_error_too_short">Use at least 2 characters.</string>
     <string name="nickname_error_too_long">Use at most 12 characters.</string>
@@ -43,7 +41,6 @@
     <string name="home_room_code">Room code</string>
     <string name="home_join_room">Join</string>
     <string name="home_how_to_play">How to play</string>
-    <string name="home_profile">Profile</string>
     <string name="home_settings">Settings</string>
     <string name="home_record">Wins %1$d · Losses %2$d · Draws %3$d</string>
     <string name="home_not_registered">Online play starts once your account is created. Check your connection.</string>
@@ -132,7 +129,6 @@
     <string name="connection_replaced">You are now connected on another device.</string>
     <string name="connection_deleted">This account was deleted.</string>
     <string name="connection_play_here">Play here</string>
-    <string name="connection_seat_lost">You were away too long and lost your seat.</string>
 
     <!-- Room lobby -->
     <string name="lobby_title_new">New room</string>
@@ -181,7 +177,6 @@
     <string name="chat_muted">Chat is muted. You can turn it on in Settings.</string>
     <string name="chat_deleted_player">Deleted player</string>
     <string name="chat_counter">%1$d/%2$d</string>
-    <string name="chat_report">Report</string>
     <string name="phrase_hello">Hi!</string>
     <string name="phrase_good_luck">Good luck!</string>
     <string name="phrase_have_fun">Have fun!</string>
@@ -307,5 +302,8 @@
     <string name="age_privacy_note">Your answer stays on this device.</string>
     <string name="age_continue">Continue</string>
     <string name="not_available_title">Sorry, this game is not available</string>
-    <string name="not_available_body">This game is for players aged %1$d and over. Thank you for your interest.</string>
+    <plurals name="not_available_body">
+        <item quantity="one">This game is for players aged %d and over. Thank you for your interest.</item>
+        <item quantity="other">This game is for players aged %d and over. Thank you for your interest.</item>
+    </plurals>
 </resources>

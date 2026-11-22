@@ -9,7 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import app.numbaseball.R
 import app.numbaseball.ui.common.ScreenScaffold
@@ -52,9 +52,9 @@ object LegalMarkdown {
 /** Terms or privacy policy, bundled and localized (README "App only"). */
 @Composable
 fun LegalTextScreen(document: LegalDocument, onBack: () -> Unit, onWebVersion: (() -> Unit)? = null) {
-    val context = LocalContext.current
-    val blocks = remember(document) {
-        LegalMarkdown.parse(context.resources.openRawResource(document.raw).bufferedReader().use { it.readText() })
+    val resources = LocalResources.current
+    val blocks = remember(document, resources) {
+        LegalMarkdown.parse(resources.openRawResource(document.raw).bufferedReader().use { it.readText() })
     }
     LegalTextScreen(stringResource(document.title), blocks, onBack, onWebVersion)
 }

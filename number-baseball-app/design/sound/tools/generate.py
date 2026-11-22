@@ -136,7 +136,7 @@ def tap(rng, f1, f2, fb, body_gain=0.6, length=0.055):
     """Soft key tap: plate modes + small body; dry."""
     L = n(length)
     plate = resonate(exciter(rng, 1.4, 0.4), L, [(f1, 7, 1.0), (f2, 6, 0.55)])
-    body = dsp.pitch_drop_sine(fb, length, 0.25, 0.004, 0.016) * body_gain
+    body = dsp.pitch_drop_sine(fb, length, 0.25, 0.004, 0.010) * body_gain
     thock = dsp.lowpass(pad_to(exciter(rng, 3.0, 0.9), L), 900)
     y = 0.8 * pk(plate) + body + 0.25 * pk(thock)
     y = dsp.highpass(dsp.lowpass(y, 7000, 2), 120, 2)
@@ -255,7 +255,7 @@ def solved():
     pad = organ([hz("D4"), hz("F#4"), hz("A4")], 0.7, rng, attack=0.12, release=0.45, lp=2000)
     dry = dsp.place(dry, pk(pad) * 0.22, 0.05)
     wet = dsp.add_reverb(dry, small_room(), 0.22)
-    return finish(dsp.fade_out(wet[: n(1.55)], 250))
+    return finish(dsp.fade_out(wet[: n(1.15)], 380))
 
 
 def win():
@@ -322,13 +322,22 @@ def match_found():
     return finish(dsp.fade_out(wet[: n(1.1)], 200))
 
 
-def timer_warning():
-    rng = rng_for("tick")
+def wood_tick(rng, f=2600.0):
     L = n(0.06)
-    y = resonate(exciter(rng, 0.5, 0.15), L, [(2600, 18, 1.0), (1200, 8, 0.5), (4300, 12, 0.25)])
-    body = dsp.pitch_drop_sine(820, 0.06, 0.2, 0.003, 0.01) * 0.5     # small wooden body, lowers the crest factor
+    y = resonate(exciter(rng, 0.5, 0.15), L, [(f, 18, 1.0), (f * 0.46, 8, 0.5), (f * 1.65, 12, 0.25)])
+    body = dsp.pitch_drop_sine(f * 0.315, 0.06, 0.2, 0.003, 0.01) * 0.5   # small wooden body, lowers the crest
     y = (pk(y) + body) * dsp.env_exp(L, 0.016)
-    return finish(dsp.fade_out(dsp.highpass(y, 300), 10))
+    return dsp.fade_out(dsp.highpass(y, 300), 10)
+
+
+def timer_warning():
+    """One-off 10 s warning: tick-tock plus a faint muted E5 (not the strike lamp's A5)."""
+    rng = rng_for("tick")
+    out = pk(wood_tick(rng, 2600))
+    out = dsp.place(out, pk(wood_tick(rng, 2150)) * 0.8, 0.11)
+    tone = dsp.partials(hz("E5"), 0.2, [(1.0, 1.0, 0.07), (2.0, 0.12, 0.03), (3.0, 0.05, 0.015)], attack=0.002)
+    out = dsp.place(out, pk(tone) * 0.3, 0.11)
+    return finish(dsp.fade_out(out, 40))
 
 
 def timer_warning_last():
