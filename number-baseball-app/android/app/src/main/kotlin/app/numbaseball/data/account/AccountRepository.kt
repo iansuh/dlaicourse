@@ -1,17 +1,19 @@
 package app.numbaseball.data.account
 
+import app.numbaseball.core.protocol.AcceptTermsRequest
 import app.numbaseball.core.protocol.AccountDto
 import app.numbaseball.core.protocol.AuthResponse
 import app.numbaseball.core.protocol.CodeResponse
 import app.numbaseball.core.protocol.ErrorCodes
+import app.numbaseball.core.protocol.ServerInfo
 import app.numbaseball.core.protocol.Stats
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -35,19 +37,27 @@ class AccountRepository(
     private val store: AccountStore,
     private val api: AccountApi,
     scope: CoroutineScope,
-    private val policyApi: PolicyApi = PendingProtocolPolicyApi,
-    private val currentTermsVersion: Int = TermsPolicy.CURRENT_VERSION,
 ) {
     private val stats = MutableStateFlow<Stats?>(null)
+    /** Terms version the account accepted (from `AccountDto`); null = never or not loaded. */
+    private val acceptedTerms = MutableStateFlow<String?>(null)
+    private val _serverInfo = MutableStateFlow<ServerInfo?>(null)
+
+    /** `GET /config`: current terms version, minimum age, quick-match chat rule. Null until loaded. */
+    val serverInfo: StateFlow<ServerInfo?> = _serverInfo.asStateFlow()
     private val registrationLock = Mutex()
 
     val state: StateFlow<AccountState> = combine(store.account, stats) { stored, s -> stored.toState(s) }
         .stateIn(scope, SharingStarted.Eagerly, AccountState.Loading)
 
-    val terms: StateFlow<TermsState> = store.account.map { stored ->
-        val accepted = stored.acceptedTermsVersion
-        if (accepted != null && accepted >= currentTermsVersion) TermsState.Accepted else TermsState.Required(updated = accepted != null)
-    }.stateIn(scope, SharingStarted.Eagerly, TermsState.Required(updated = false))
+    /** Terms gate (docs/protocol.md §3.1): the account must have accepted the server's current version. */
+    val terms: StateFlow<TermsState> = combine(_serverInfo, acceptedTerms) { info, accepted ->
+        when {
+            info == null -> TermsState.Unknown
+            accepted == info.termsVersion -> TermsState.Accepted
+            else -> TermsState.Required(updated = accepted != null, minimumAge = info.minimumAge)
+        }
+    }.stateIn(scope, SharingStarted.Eagerly, TermsState.Unknown)
 
     suspend fun token(): String? = store.account.first().token
 
@@ -95,18 +105,40 @@ class AccountRepository(
         if (token() == null) return
         store.saveProfile(account.toProfile())
         stats.value = account.stats
+        acceptedTerms.value = account.termsVersion
     }
 
     /** HTTP 401: the token is unknown (account deleted or moved to another device). The nickname stays for a new account. */
     suspend fun onTokenRejected() {
         stats.value = null
+        acceptedTerms.value = null
         store.clearToken()
     }
 
-    suspend fun acceptTerms(): ApiResult<Unit> {
-        val result = withToken { policyApi.acceptTerms(it, currentTermsVersion) }
-        if (result is ApiResult.Success) store.saveAcceptedTerms(currentTermsVersion)
-        return result
+    /** Loads the server config and the account's accepted terms version (for the terms gate). */
+    suspend fun loadTerms() {
+        when (val r = api.serverInfo()) {
+            is ApiResult.Success -> _serverInfo.value = r.value
+            else -> Unit
+        }
+        refresh()
+    }
+
+    /** `PUT /me/terms` with the current version and the explicit minimum-age confirmation. */
+    suspend fun acceptTerms(ageConfirmed: Boolean): ApiResult<Unit> {
+        val version = _serverInfo.value?.termsVersion ?: return ApiResult.NetworkError
+        val result = withToken { api.acceptTerms(it, AcceptTermsRequest(version, ageConfirmed)) }
+        return when (result) {
+            is ApiResult.Success -> {
+                onAccountUpdate(result.value)
+                ApiResult.Success(Unit)
+            }
+            is ApiResult.Failure -> {
+                if (result.code == ErrorCodes.TERMS_OUTDATED) loadTerms()
+                ApiResult.Failure(result.status, result.code, result.retryAfterSeconds)
+            }
+            ApiResult.NetworkError -> ApiResult.NetworkError
+        }
     }
 
     suspend fun createTransferCode(): ApiResult<CodeResponse> = withToken { api.createTransferCode(it) }
@@ -116,6 +148,7 @@ class AccountRepository(
         val result = if (token == null) ApiResult.Success(Unit) else api.deleteAccount(token)
         if (result is ApiResult.Success || (result is ApiResult.Failure && result.status == 401)) {
             stats.value = null
+            acceptedTerms.value = null
             store.clear()
             return ApiResult.Success(Unit)
         }
@@ -134,6 +167,7 @@ class AccountRepository(
         val profile = auth.account.toProfile()
         store.saveRegistered(auth.token, profile)
         stats.value = auth.account.stats
+        acceptedTerms.value = auth.account.termsVersion
         return profile
     }
 

@@ -26,13 +26,13 @@ data class StoredAccount(
     val id: String?,
     val nickname: String?,
     val tag: String?,
-    /** Version of the terms the player agreed to (policy review R6); null = never. */
-    val acceptedTermsVersion: Int? = null,
 )
 
 sealed interface TermsState {
+    /** Server version or account state not known yet (offline, loading). */
+    data object Unknown : TermsState
     data object Accepted : TermsState
 
-    /** [updated] = an older version was accepted and the terms changed since. */
-    data class Required(val updated: Boolean) : TermsState
+    /** [updated] = an older version was accepted and the terms changed since. [minimumAge] for the age confirmation. */
+    data class Required(val updated: Boolean, val minimumAge: Int) : TermsState
 }

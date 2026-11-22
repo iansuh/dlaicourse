@@ -270,7 +270,7 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
 
         composable<ChatRoute> {
             TermsGate(onBack = back, onReadTerms = readTerms) {
-                val vm = containerViewModel { ChatViewModel(onlineSession, settingsRepository) }
+                val vm = containerViewModel { ChatViewModel(onlineSession, settingsRepository, accountRepository.serverInfo) }
                 val state by vm.state.collectAsStateWithLifecycle()
                 ChatScreen(
                     state = state,

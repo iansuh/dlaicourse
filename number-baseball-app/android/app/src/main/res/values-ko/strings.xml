@@ -292,4 +292,12 @@
     <plurals name="not_available_body">
         <item quantity="other">이 게임은 만 %d세 이상만 이용할 수 있어요. 관심 가져 주셔서 고마워요.</item>
     </plurals>
+
+    <!-- docs/protocol.md (complete): terms with age confirmation, transfer, chat restrictions -->
+    <plurals name="terms_age_confirm">
+        <item quantity="other">저는 만 %d세 이상이에요.</item>
+    </plurals>
+    <string name="first_run_transfer_note">코드를 입력하면 계정이 이 휴대전화로 옮겨지고 다른 기기는 로그아웃돼요.</string>
+    <string name="error_chat_restricted">지금은 채팅이 제한되어 있어요.</string>
+    <string name="error_age_confirmation">계속하려면 나이를 확인해 주세요.</string>
 </resources>

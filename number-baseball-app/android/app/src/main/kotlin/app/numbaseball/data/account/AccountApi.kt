@@ -1,8 +1,10 @@
 package app.numbaseball.data.account
 
+import app.numbaseball.core.protocol.AcceptTermsRequest
 import app.numbaseball.core.protocol.AccountDto
 import app.numbaseball.core.protocol.AuthResponse
 import app.numbaseball.core.protocol.CodeResponse
+import app.numbaseball.core.protocol.ServerInfo
 
 /** Result of a REST call (docs/protocol.md §3). */
 sealed interface ApiResult<out T> {
@@ -22,21 +24,6 @@ interface AccountApi {
     suspend fun deleteAccount(token: String): ApiResult<Unit>
     suspend fun createTransferCode(token: String): ApiResult<CodeResponse>
     suspend fun redeemTransferCode(code: String): ApiResult<AuthResponse>
-}
-
-/**
- * Terms acceptance (policy review R6).
- * TODO(protocol): bind `PUT /api/v1/me/terms {version, ageConfirmed}` and read the current terms version from the server
- * once docs/protocol.md defines them.
- */
-fun interface PolicyApi {
-    suspend fun acceptTerms(token: String, version: Int): ApiResult<Unit>
-}
-
-/** Until the endpoint exists the acceptance is stored on the device only. */
-val PendingProtocolPolicyApi = PolicyApi { _, _ -> ApiResult.Success(Unit) }
-
-object TermsPolicy {
-    /** TODO(protocol): use the version the server reports. */
-    const val CURRENT_VERSION = 1
+    suspend fun serverInfo(): ApiResult<ServerInfo>
+    suspend fun acceptTerms(token: String, request: AcceptTermsRequest): ApiResult<AccountDto>
 }

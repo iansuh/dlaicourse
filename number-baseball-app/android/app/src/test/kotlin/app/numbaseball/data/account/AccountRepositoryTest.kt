@@ -1,6 +1,8 @@
 package app.numbaseball.data.account
 
+import app.numbaseball.core.protocol.AcceptTermsRequest
 import app.numbaseball.testing.FakeAccountApi
+import app.numbaseball.testing.account
 import app.numbaseball.testing.FakeAccountStore
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -58,16 +60,18 @@ class AccountRepositoryTest {
         val repo = AccountRepository(registered, api, backgroundScope)
         assertEquals(ApiResult.Success(Unit), repo.deleteAccount())
         assertEquals(AccountState.NeedsNickname, repo.state.value)
-        assertNull(registered.value.value.acceptedTermsVersion)
+        assertNull(registered.value.value.token)
     }
 
-    @Test fun termsMustBeAcceptedAgainWhenTheVersionChanges() = runTest(UnconfinedTestDispatcher()) {
-        val registered = FakeAccountStore.registered()
-        val repo = AccountRepository(registered, api, backgroundScope, currentTermsVersion = 2)
-        assertEquals(TermsState.Required(updated = true), repo.terms.value)
-        assertEquals(ApiResult.Success(Unit), repo.acceptTerms())
+    @Test fun termsMustBeAcceptedWithTheAgeConfirmationAndAgainWhenTheVersionChanges() = runTest(UnconfinedTestDispatcher()) {
+        api.meResult = ApiResult.Success(account().copy(termsVersion = "2026-11-v1"))
+        val repo = AccountRepository(FakeAccountStore.registered(), api, backgroundScope)
+        assertEquals(TermsState.Unknown, repo.terms.value)
+        repo.loadTerms()
+        assertEquals(TermsState.Required(updated = true, minimumAge = 14), repo.terms.value)
+        assertEquals(ApiResult.Success(Unit), repo.acceptTerms(ageConfirmed = true))
+        assertEquals(AcceptTermsRequest("2026-11-v2", ageConfirmed = true), api.acceptedTerms.single())
         assertEquals(TermsState.Accepted, repo.terms.value)
-        assertEquals(2, registered.value.value.acceptedTermsVersion)
     }
 
     @Test fun transferRedemptionStoresTheNewToken() = runTest(UnconfinedTestDispatcher()) {

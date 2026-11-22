@@ -1,5 +1,6 @@
 package app.numbaseball.testing
 
+import app.numbaseball.core.protocol.AcceptTermsRequest
 import app.numbaseball.core.protocol.AccountDto
 import app.numbaseball.core.protocol.Ack
 import app.numbaseball.core.protocol.AuthResponse
@@ -8,6 +9,7 @@ import app.numbaseball.core.protocol.ClientMessage
 import app.numbaseball.core.protocol.CodeResponse
 import app.numbaseball.core.protocol.ReportRequest
 import app.numbaseball.core.protocol.ReportResponse
+import app.numbaseball.core.protocol.ServerInfo
 import app.numbaseball.core.protocol.ServerMessage
 import app.numbaseball.core.protocol.Stats
 import app.numbaseball.data.account.AccountApi
@@ -42,14 +44,13 @@ class FakeAccountStore(initial: StoredAccount = StoredAccount(null, null, null, 
     override suspend fun saveRegistered(token: String, profile: Profile) =
         value.update { it.copy(token = token, id = profile.id, nickname = profile.nickname, tag = profile.tag) }
     override suspend fun saveProfile(profile: Profile) = value.update { it.copy(id = profile.id, nickname = profile.nickname, tag = profile.tag) }
-    override suspend fun saveAcceptedTerms(version: Int) = value.update { it.copy(acceptedTermsVersion = version) }
     override suspend fun clearToken() = value.update { it.copy(token = null, id = null, tag = null) }
     override suspend fun clear() {
         value.value = StoredAccount(null, null, null, null)
     }
 
     companion object {
-        fun registered() = FakeAccountStore(StoredAccount("token-1", "k2m9x4q1ab7p", "Mina", "0420", acceptedTermsVersion = 1))
+        fun registered() = FakeAccountStore(StoredAccount("token-1", "k2m9x4q1ab7p", "Mina", "0420"))
     }
 }
 
@@ -68,6 +69,15 @@ class FakeAccountApi : AccountApi {
 
     override suspend fun me(token: String) = meResult
     override suspend fun deleteAccount(token: String) = deleteResult
+    var serverInfo = ServerInfo(1, 0, listOf(3, 4, 5, 6), listOf(1, 2, 3, 4, 5), listOf(30, 60, 120, 600), 60, 100, 2048, emptyList(), termsVersion = "2026-11-v2")
+    var acceptTermsResult: ApiResult<AccountDto>? = null
+    val acceptedTerms = mutableListOf<AcceptTermsRequest>()
+
+    override suspend fun serverInfo(): ApiResult<ServerInfo> = ApiResult.Success(serverInfo)
+    override suspend fun acceptTerms(token: String, request: AcceptTermsRequest): ApiResult<AccountDto> {
+        acceptedTerms += request
+        return acceptTermsResult ?: ApiResult.Success(account().copy(termsVersion = request.version))
+    }
     override suspend fun createTransferCode(token: String) = codeResult
     override suspend fun redeemTransferCode(code: String) = redeemResult
 }

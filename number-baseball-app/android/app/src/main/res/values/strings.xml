@@ -306,4 +306,13 @@
         <item quantity="one">This game is for players aged %d and over. Thank you for your interest.</item>
         <item quantity="other">This game is for players aged %d and over. Thank you for your interest.</item>
     </plurals>
+
+    <!-- docs/protocol.md (complete): terms with age confirmation, transfer, chat restrictions -->
+    <plurals name="terms_age_confirm">
+        <item quantity="one">I am at least %d year old.</item>
+        <item quantity="other">I am at least %d years old.</item>
+    </plurals>
+    <string name="first_run_transfer_note">The code moves your account to this phone and signs out the other device.</string>
+    <string name="error_chat_restricted">Your chat is restricted for now.</string>
+    <string name="error_age_confirmation">Please confirm your age to continue.</string>
 </resources>

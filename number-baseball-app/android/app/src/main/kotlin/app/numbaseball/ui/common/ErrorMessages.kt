@@ -37,6 +37,10 @@ fun errorMessage(code: String): Int = when (code) {
     ErrorCodes.CHAT_EMPTY -> R.string.error_chat_empty
     ErrorCodes.CHAT_TOO_LONG -> R.string.error_chat_too_long
     ErrorCodes.CHAT_RATE_LIMITED -> R.string.error_chat_rate_limited
+    ErrorCodes.CHAT_NOT_ALLOWED -> R.string.chat_phrases_only
+    ErrorCodes.CHAT_RESTRICTED -> R.string.error_chat_restricted
+    ErrorCodes.TERMS_REQUIRED, ErrorCodes.TERMS_OUTDATED -> R.string.terms_updated
+    ErrorCodes.AGE_CONFIRMATION_REQUIRED -> R.string.error_age_confirmation
     else -> R.string.error_generic
 }
 

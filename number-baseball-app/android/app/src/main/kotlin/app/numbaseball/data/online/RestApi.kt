@@ -1,5 +1,6 @@
 package app.numbaseball.data.online
 
+import app.numbaseball.core.protocol.AcceptTermsRequest
 import app.numbaseball.core.protocol.AccountDto
 import app.numbaseball.core.protocol.AuthResponse
 import app.numbaseball.core.protocol.BlockListResponse
@@ -11,6 +12,7 @@ import app.numbaseball.core.protocol.ProtocolJson
 import app.numbaseball.core.protocol.RedeemTransferRequest
 import app.numbaseball.core.protocol.ReportRequest
 import app.numbaseball.core.protocol.ReportResponse
+import app.numbaseball.core.protocol.ServerInfo
 import app.numbaseball.data.account.AccountApi
 import app.numbaseball.data.account.ApiResult
 import java.io.IOException
@@ -58,6 +60,11 @@ class RestApi(
 
     override suspend fun redeemTransferCode(code: String): ApiResult<AuthResponse> =
         call(request("transfer").post(body(RedeemTransferRequest.serializer(), RedeemTransferRequest(code))), AuthResponse.serializer())
+
+    override suspend fun serverInfo(): ApiResult<ServerInfo> = call(request("config").get(), ServerInfo.serializer())
+
+    override suspend fun acceptTerms(token: String, request: AcceptTermsRequest): ApiResult<AccountDto> =
+        call(request("me/terms", token).put(body(AcceptTermsRequest.serializer(), request)), AccountDto.serializer())
 
     override suspend fun blocks(token: String): ApiResult<BlockListResponse> =
         call(request("me/blocks", token).get(), BlockListResponse.serializer())

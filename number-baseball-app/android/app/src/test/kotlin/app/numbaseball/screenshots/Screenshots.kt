@@ -178,7 +178,9 @@ abstract class ScreenshotSuite(private val variant: String) {
 
     @Test fun howToPlay() = capture("20_how_to_play") { HowToPlayScreen(onBack = {}) }
 
-    @Test fun termsGate() = capture("21_terms_gate") { TermsGateScreen(updated = false, submitting = false, error = null, {}, {}, {}) }
+    @Test fun termsGate() = capture("21_terms_gate") {
+        TermsGateScreen(updated = false, minimumAge = 14, ageConfirmed = false, submitting = false, error = null, {}, {}, {}, {})
+    }
 
     @Test fun legalText() = capture("22_legal_text") {
         LegalTextScreen(

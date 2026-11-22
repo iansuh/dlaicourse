@@ -50,6 +50,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -175,7 +176,7 @@ class ViewModelTests {
     @Test fun chatIsPhrasesOnlyInQuickRoomsAndStripsEmoji() = runTest(main.dispatcher) {
         val client = FakeOnlineClient()
         val session = OnlineSession(client, backgroundScope)
-        val vm = ChatViewModel(session, FakeSettingsRepository())
+        val vm = ChatViewModel(session, FakeSettingsRepository(), MutableStateFlow(null))
         backgroundScope.launch { vm.state.collect {} }
         client.receive(RoomState(SampleData.quickRoom()))
         assertTrue(vm.state.value.phrasesOnly)
@@ -197,7 +198,7 @@ class ViewModelTests {
     @Test fun chatShowsServerErrors() = runTest(main.dispatcher) {
         val client = FakeOnlineClient().apply { errorFor = { ErrorMessage("chat_rate_limited", "slow down", it.rid, 2_000) } }
         val session = OnlineSession(client, backgroundScope)
-        val vm = ChatViewModel(session, FakeSettingsRepository())
+        val vm = ChatViewModel(session, FakeSettingsRepository(), MutableStateFlow(null))
         backgroundScope.launch { vm.state.collect {} }
         client.receive(RoomState(SampleData.privateLobby()))
         vm.onInputChange("hello")

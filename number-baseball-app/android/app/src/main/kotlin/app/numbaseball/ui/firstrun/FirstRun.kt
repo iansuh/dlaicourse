@@ -96,6 +96,8 @@ fun FirstRunScreen(
         Text(stringResource(R.string.first_run_title, stringResource(R.string.app_name)), style = MaterialTheme.typography.headlineMedium)
         Text(stringResource(R.string.first_run_subtitle), color = NbColors.text2)
         if (state.transferMode) {
+            // Redeeming revokes every older token of that account (docs/protocol.md §3.1).
+            Text(stringResource(R.string.first_run_transfer_note), color = NbColors.strike, style = MaterialTheme.typography.bodySmall)
             OutlinedTextField(
                 value = state.transferCode,
                 onValueChange = onTransferCodeChange,

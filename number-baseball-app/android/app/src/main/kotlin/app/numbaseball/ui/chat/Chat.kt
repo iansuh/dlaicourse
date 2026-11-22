@@ -30,6 +30,7 @@ import app.numbaseball.core.protocol.ChatKind
 import app.numbaseball.core.protocol.ChatMessage
 import app.numbaseball.core.protocol.Limits
 import app.numbaseball.core.protocol.RoomKind
+import app.numbaseball.core.protocol.ServerInfo
 import app.numbaseball.core.text.EmojiFilter
 import app.numbaseball.core.text.QuickPhrases
 import app.numbaseball.data.online.OnlineSession
@@ -63,16 +64,21 @@ data class ChatUiState(
     val error: UiError? = null,
 )
 
-class ChatViewModel(private val session: OnlineSession, settings: SettingsRepository) : ViewModel() {
+class ChatViewModel(
+    private val session: OnlineSession,
+    settings: SettingsRepository,
+    serverInfo: StateFlow<ServerInfo?>,
+) : ViewModel() {
     private val local = MutableStateFlow(ChatUiState())
 
-    val state: StateFlow<ChatUiState> = combine(local, session.room, session.chat, settings.settings) { ui, room, chat, prefs ->
+    val state: StateFlow<ChatUiState> = combine(local, session.room, session.chat, settings.settings, serverInfo) { ui, room, chat, prefs, info ->
         ui.copy(
             roomId = room?.id,
             myId = room?.youId,
             messages = chat,
             muted = prefs.chatMuted,
-            phrasesOnly = room == null || room.kind == RoomKind.QUICK,
+            // Quick rooms: quick phrases only unless the server turned free chat on (`chat_not_allowed` otherwise).
+            phrasesOnly = room == null || (room.kind == RoomKind.QUICK && info?.quickMatchFreeChat != true),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), local.value)
 
