@@ -77,6 +77,8 @@ class Hub(
     companion object {
         const val GRACE_MS = Limits.DISCONNECT_GRACE_MS
         const val IDLE_ROOM_MS = 10 * 60 * 1000L
+        /** A private lobby that does not start within 30 minutes of its creation / last join or settings change is closed. */
+        const val IDLE_LOBBY_MS = 30 * 60 * 1000L
         const val CHAT_BURST = 5
         const val CHAT_WINDOW_MS = 10_000L
         const val RECENT_FOR_REPORT = 20
@@ -259,6 +261,7 @@ class Hub(
         rooms[room.id] = room
         roomsByCode[room.code!!] = room
         room.hostId = me
+        room.lobbyActivityAt = now
         val seat = addSeat(room, me, Team.A)
         maybeStart(room, now)
         broadcast(room, now)
@@ -289,6 +292,7 @@ class Hub(
         val a = room.active(Team.A).size
         val b = room.active(Team.B).size
         val team = if (a <= b && a < room.settings.teamSize) Team.A else Team.B
+        room.lobbyActivityAt = now
         val seat = addSeat(room, me, team)
         maybeStart(room, now)
         broadcast(room, now)
@@ -309,6 +313,7 @@ class Hub(
             reject(ErrorCodes.INVALID_SETTINGS, "a team already has more players than the new team size")
         }
         room.settings = settings
+        room.lobbyActivityAt = now
         maybeStart(room, now)
         broadcast(room, now)
     }
@@ -332,6 +337,7 @@ class Hub(
         room.seats.values.removeIf { it.left }
         room.phase = RoomPhase.LOBBY
         room.match = null
+        room.lobbyActivityAt = now
         maybeStart(room, now)
         broadcast(room, now)
     }
@@ -557,6 +563,10 @@ class Hub(
                 }
             }
             if (!rooms.containsKey(room.id)) continue
+            if (room.phase == RoomPhase.LOBBY && room.kind == RoomKind.PRIVATE && now - room.lobbyActivityAt >= IDLE_LOBBY_MS) {
+                closeRoom(room, LeaveReason.CLOSED)
+                continue
+            }
             if (now - room.lastActiveAt >= IDLE_ROOM_MS) {
                 closeRoom(room, LeaveReason.CLOSED)
                 continue

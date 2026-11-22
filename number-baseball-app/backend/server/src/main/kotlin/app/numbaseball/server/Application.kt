@@ -292,10 +292,19 @@ private fun bearer(call: ApplicationCall): String? {
     return h.substring(7).trim().takeIf { it.isNotEmpty() }
 }
 
-/** Client address for in-memory rate limits only (first X-Forwarded-For entry behind the host's proxy). */
-private fun clientIp(call: ApplicationCall): String =
-    call.request.headers["X-Forwarded-For"]?.substringBefore(',')?.trim()?.takeIf { it.isNotEmpty() && it.length <= 64 }
-        ?: call.request.local.remoteAddress
+/**
+ * Client address for in-memory rate limits only. With TRUSTED_PROXY_HOPS = n > 0 it is the n-th X-Forwarded-For entry
+ * counted from the right (the one our own proxy appended); entries further left are written by the client and ignored.
+ * With 0, or when the header has fewer entries, the socket address is used.
+ */
+internal fun clientIp(call: ApplicationCall, hops: Int): String {
+    if (hops > 0) {
+        val entries = call.request.headers.getAll("X-Forwarded-For").orEmpty()
+            .flatMap { it.split(',') }.map { it.trim() }.filter { it.isNotEmpty() }
+        if (entries.size >= hops) entries[entries.size - hops].takeIf { it.length <= 64 }?.let { return it }
+    }
+    return call.request.local.remoteAddress
+}
 
 private suspend fun readBody(call: ApplicationCall): String {
     call.request.headers[HttpHeaders.ContentLength]?.toLongOrNull()?.let {
@@ -385,7 +394,7 @@ private fun io.ktor.server.routing.Route.apiRoutes(services: Services) {
         }
         post("/accounts") {
             val req = call.body(CreateAccountRequest.serializer())
-            val ip = clientIp(call)
+            val ip = clientIp(call, services.config.trustedProxyHops)
             limited(services, "create:$ip", 10, 3_600_000)
             limited(services, "create:*", 300, 3_600_000)
             val (token, account) = accounts.create(req.nickname)
@@ -418,7 +427,7 @@ private fun io.ktor.server.routing.Route.apiRoutes(services: Services) {
         }
         post("/transfer") {
             val req = call.body(RedeemTransferRequest.serializer())
-            val ip = clientIp(call)
+            val ip = clientIp(call, services.config.trustedProxyHops)
             if (services.limiter.isExhausted("code:$ip", cap(services, 10), 600_000) ||
                 services.limiter.isExhausted("code:*", cap(services, 500), 600_000)
             ) {

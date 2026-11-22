@@ -355,42 +355,46 @@ private fun ResultsRoute(summary: MatchSummary, navController: NavHostController
     }
     if (summary.mode == MatchMode.PRACTICE) SwitchToRealMatchWhenStarted(navController)
     val room by session.room.collectAsStateWithLifecycle()
-    ResultsScreen(
-        summary = summary,
-        onPlayAgain = when (summary.mode) {
-            MatchMode.COMPUTER, MatchMode.PRACTICE -> {
-                {
-                    leave {
-                        navController.navigate(
-                            ComputerMatchRoute(summary.digits, (summary.level ?: ComputerLevel.NORMAL).name, practice = summary.mode == MatchMode.PRACTICE),
-                        ) { popUpTo<ResultsRoute> { inclusive = true } }
+    val playAgain: (() -> Unit)? = when (summary.mode) {
+        MatchMode.COMPUTER, MatchMode.PRACTICE -> {
+            {
+                leave {
+                    val level = (summary.level ?: ComputerLevel.NORMAL).name
+                    navController.navigate(ComputerMatchRoute(summary.digits, level, practice = summary.mode == MatchMode.PRACTICE)) {
+                        popUpTo<ResultsRoute> { inclusive = true }
                     }
                 }
             }
-            MatchMode.ONLINE -> if (room?.kind == RoomKind.QUICK) {
-                {
-                    session.leaveRoom()
-                    navController.navigate(QuickMatchRoute) { popUpTo<HomeRoute> { inclusive = false } }
-                }
-            } else {
-                null
+        }
+        MatchMode.ONLINE -> if (room?.kind == RoomKind.QUICK) {
+            {
+                session.leaveRoom()
+                navController.navigate(QuickMatchRoute) { popUpTo<HomeRoute> { inclusive = false } }
             }
-        },
+        } else {
+            null
+        }
+    }
+    val roomCode = room?.code
+    val backToRoom: (() -> Unit)? = when {
+        summary.mode == MatchMode.PRACTICE -> {
+            { navController.popBackStack() }
+        }
+        summary.mode == MatchMode.ONLINE && room?.kind == RoomKind.PRIVATE && roomCode != null -> {
+            { navController.navigate(RoomLobbyRoute(roomCode)) { popUpTo<HomeRoute> { inclusive = false } } }
+        }
+        else -> null
+    }
+    ResultsScreen(
+        summary = summary,
+        onPlayAgain = playAgain,
         onHome = {
             leave {
                 if (summary.mode != MatchMode.COMPUTER) session.leaveRoom()
                 home()
             }
         },
-        onBackToRoom = when {
-            summary.mode == MatchMode.PRACTICE -> { { navController.popBackStack() } }
-            summary.mode == MatchMode.ONLINE && room?.kind == RoomKind.PRIVATE -> {
-                val code = room?.code.orEmpty()
-                val backToRoom: () -> Unit = { navController.navigate(RoomLobbyRoute(code)) { popUpTo<HomeRoute> { inclusive = false } } }
-                backToRoom
-            }
-            else -> null
-        },
+        onBackToRoom = backToRoom,
     )
 }
 

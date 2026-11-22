@@ -21,6 +21,11 @@ data class Config(
     val forceHttps: Boolean = true,
     /** Minimum age players confirm with the terms (shown by the app; no birth date is collected). */
     val minimumAge: Int = 14,
+    /**
+     * Number of reverse proxies in front of the server that append to X-Forwarded-For. 0 = use the socket address;
+     * 1 on Render = take the entry Render's proxy appended (the last one). Entries further left are client-controlled.
+     */
+    val trustedProxyHops: Int = 0,
     /** Test servers only: multiply REST rate limits by 1000 (QA black-box runs create many accounts). */
     val relaxedRateLimits: Boolean = false,
     /** Test servers only: enables /admin/v1/test/clock (move time forward) and /admin/v1/test/maintenance. */
@@ -51,6 +56,7 @@ data class Config(
                 termsVersion = str("TERMS_VERSION"),
                 forceHttps = bool("FORCE_HTTPS", true),
                 minimumAge = str("MIN_AGE")?.toIntOrNull()?.takeIf { it in 1..99 } ?: 14,
+                trustedProxyHops = str("TRUSTED_PROXY_HOPS")?.toIntOrNull()?.coerceIn(0, 10) ?: 0,
                 relaxedRateLimits = bool("RELAXED_RATE_LIMITS", false),
                 testHooks = bool("TEST_HOOKS", false),
                 dbFile = str("DB_FILE")?.let { File(it) },

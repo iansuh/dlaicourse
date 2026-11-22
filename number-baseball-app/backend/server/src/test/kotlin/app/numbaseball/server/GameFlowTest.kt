@@ -169,6 +169,25 @@ class GameFlowTest {
         assertNull(again.expect<Welcome>().roomId)
     }
 
+    @Test fun idlePrivateLobbyIsClosedAfter30Minutes() = serverTest {
+        val a = connect(account("Mina")); a.expect<Welcome>()
+        val b = connect(account("Leo")); b.expect<Welcome>()
+        a.send(app.numbaseball.core.protocol.RoomCreate(app.numbaseball.core.protocol.RoomSettings(3, 2, 60)))
+        val code = a.state().code!!
+        advance(29 * 60_000L)
+        b.send(app.numbaseball.core.protocol.RoomJoin(code)) // a join restarts the 30 minutes
+        b.state { s -> s.players.size == 2 }
+        advance(29 * 60_000L)
+        assertEquals(1, services.hub.counts()["rooms"])
+        advance(60_000L)
+        assertEquals(LeaveReason.CLOSED, a.expect<RoomLeft>().reason)
+        assertEquals(LeaveReason.CLOSED, b.expect<RoomLeft>().reason)
+        assertEquals(0, services.hub.counts()["rooms"])
+        a.send(Resync(rid = 2))
+        a.expect<Ack> { it.rid == 2L }
+        assertNull(connect(a.account).expect<Welcome>().roomId)
+    }
+
     @Test fun newConnectionReplacesOldOne() = serverTest {
         val acc = account("Mina")
         val first = connect(acc)

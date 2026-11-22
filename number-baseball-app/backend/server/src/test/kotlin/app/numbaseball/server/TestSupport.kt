@@ -71,6 +71,7 @@ fun testConfig(
     tickMillis = 20,
     maintenanceMillis = 3_600_000,
     randomSeed = 7,
+    trustedProxyHops = 1, // tests vary X-Forwarded-For to act as different addresses
 )
 
 /** A running test server with helpers for REST calls and WebSocket players. */

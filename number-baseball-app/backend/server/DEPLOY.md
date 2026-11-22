@@ -46,6 +46,7 @@ Under **Environment** add:
 | `REVIEW_ROOM_CODE` | 5 characters from `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`, for example `PLAYR` | a private room code that always starts a game against a bot, for Google Play reviewers. Write it into the Play Console "App access" instructions. |
 | `QUICK_MATCH_FREE_CHAT` | `false` (default) | `true` would allow free-text chat in quick match. Keep `false`. |
 | `MIN_AGE` | `14` (default) | the minimum age the app asks players to confirm. |
+| `TRUSTED_PROXY_HOPS` | `1` | Render puts one proxy in front of the server. With `1` the per-address limits (account creation, wrong transfer codes) use the address Render's proxy saw, which players cannot fake. Leave it unset (0) only when nothing sits in front of the server. |
 
 Do **not** set `PORT` or `DATA_DIR`: the image already uses `8080` and `/data`. Never set `RELAXED_RATE_LIMITS` or `TEST_HOOKS` on the
 real server; they are only for test servers.

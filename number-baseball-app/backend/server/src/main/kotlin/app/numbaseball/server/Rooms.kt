@@ -85,6 +85,8 @@ class Room(
     val members = HashSet<String>()
     /** Last time at least one human player was connected. */
     var lastActiveAt = createdAt
+    /** Creation, last join, settings change or reset while in the lobby (idle private lobbies are closed). */
+    var lobbyActivityAt = createdAt
     var bot: ReviewBotState? = null
 
     fun active(team: Team): List<Seat> = seats.values.filter { it.team == team && !it.left }

@@ -75,6 +75,27 @@ class AccountsTest {
         assertNotNull(r.headers["Retry-After"])
     }
 
+    @Test fun forwardedForIsIgnoredWithoutTrustedProxies() = serverTest(testConfig().copy(trustedProxyHops = 0)) {
+        // Every request comes from the same socket; changing X-Forwarded-For must not escape the per-IP limit.
+        repeat(10) { i ->
+            val r = http(HttpMethod.Post, "/api/v1/accounts", body = """{"nickname":"Bot$i"}""", headers = mapOf("X-Forwarded-For" to "10.9.9.$i"))
+            assertEquals(HttpStatusCode.Created, r.status)
+        }
+        val r = http(HttpMethod.Post, "/api/v1/accounts", body = """{"nickname":"Bot99"}""", headers = mapOf("X-Forwarded-For" to "10.9.9.99"))
+        assertEquals(HttpStatusCode.TooManyRequests, r.status)
+    }
+
+    @Test fun oneTrustedProxyHopUsesTheRightmostEntry() = serverTest(testConfig().copy(trustedProxyHops = 1)) {
+        // The client controls the left part; only the entry appended by our proxy (rightmost) counts.
+        repeat(10) { i ->
+            http(HttpMethod.Post, "/api/v1/accounts", body = """{"nickname":"Bot$i"}""", headers = mapOf("X-Forwarded-For" to "1.2.3.$i, 203.0.113.5"))
+        }
+        val spoofed = http(HttpMethod.Post, "/api/v1/accounts", body = """{"nickname":"Bot99"}""", headers = mapOf("X-Forwarded-For" to "9.9.9.9, 203.0.113.5"))
+        assertEquals(HttpStatusCode.TooManyRequests, spoofed.status)
+        val other = http(HttpMethod.Post, "/api/v1/accounts", body = """{"nickname":"Other"}""", headers = mapOf("X-Forwarded-For" to "203.0.113.6"))
+        assertEquals(HttpStatusCode.Created, other.status)
+    }
+
     @Test fun authFailures() = serverTest {
         assertEquals(HttpStatusCode.Unauthorized, http(HttpMethod.Get, "/api/v1/me").status)
         assertEquals(HttpStatusCode.Unauthorized, http(HttpMethod.Get, "/api/v1/me", "garbage").status)

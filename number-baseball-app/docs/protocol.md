@@ -238,6 +238,8 @@ quick rooms start directly in PLAYING.
 
 - Host: the creator; if the host leaves, the earliest-joined remaining player becomes host.
 - Lobby: players switch team, the host moves players and changes settings. Seats of players disconnected for 60 s are freed (`inactive`).
+  A private lobby that has not started **30 minutes** after its creation, last join, settings change or reset is closed: every
+  member gets `room_left {reason:"closed"}`.
 - Practising against the computer while waiting is client-side only (`:core` `ComputerPlayer` + `Duel`); switch to the match when it starts.
 - Playing: each pair plays its own duel (8.3); the match result follows 8.4. Nobody can join (`match_in_progress`). `room_leave` forfeits
   your duel and marks you `left`. Disconnected players keep their seat; the duel engine handles grace and forfeits.
@@ -376,6 +378,7 @@ profanity anywhere in the name, also glued inside it → `nickname_profanity`. R
 | --- | --- |
 | Digits / team size / round timer | 3–6 / 1–5 per side / 30, 60, 120 or 600 s (quick: 60 s) |
 | Missed rounds in a row / disconnect grace | 2 → forfeit / 60 s |
+| Idle private lobby / room with nobody connected | closed after 30 min / 10 min |
 | Chat | 100 code points, 5 lines per 10 s, 50 lines history per room |
 | WS message | 2048 bytes (error), 16 KB frame (close 1009), ~10 msg/s with bursts of 30 |
 | Connections | 1 per account (newest wins) |
@@ -462,7 +465,8 @@ Behind the host's proxy, plain HTTP (`X-Forwarded-Proto: http`) is redirected (3
 
 `PORT`, `DATA_DIR` (SQLite file `numbaseball.db`), `DB_FILE` (override), `ADMIN_TOKEN` (≥ 16 characters), `APP_ADS_TXT`,
 `REVIEW_ROOM_CODE`, `QUICK_MATCH_FREE_CHAT` (default false), `MIN_AGE` (default 14), `TERMS_VERSION` (default: read from the bundled terms),
-`FORCE_HTTPS` (default true), `LOG_FILE` (optional extra log file). Test servers only: `RELAXED_RATE_LIMITS=true` (REST limits × 1000),
+`FORCE_HTTPS` (default true), `LOG_FILE` (optional extra log file), `TRUSTED_PROXY_HOPS` (default 0: per-IP limits use the socket
+address; n > 0: the n-th `X-Forwarded-For` entry counted from the right, i.e. the one our own proxy appended — 1 on Render). Test servers only: `RELAXED_RATE_LIMITS=true` (REST limits × 1000),
 `TEST_HOOKS=true` (§14.2). See `backend/server/DEPLOY.md`.
 
 ## 15. Data kept by the server
