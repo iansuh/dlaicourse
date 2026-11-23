@@ -1,29 +1,54 @@
 package app.numbaseball.ui.firstrun
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.numbaseball.R
+import app.numbaseball.core.protocol.ErrorCodes
+import app.numbaseball.core.protocol.Limits
 import app.numbaseball.data.account.AccountRepository
 import app.numbaseball.data.account.NicknameProblem
 import app.numbaseball.data.account.NicknameRules
 import app.numbaseball.data.account.RegistrationResult
-import app.numbaseball.ui.common.ErrorText
-import app.numbaseball.ui.common.PrimaryButton
-import app.numbaseball.ui.common.ScreenScaffold
+import app.numbaseball.ui.age.Eyebrow
 import app.numbaseball.ui.common.UiError
+import app.numbaseball.ui.common.message
 import app.numbaseball.ui.common.toUiError
+import app.numbaseball.ui.design.ButtonKind
+import app.numbaseball.ui.design.exactLineHeight
+import app.numbaseball.ui.design.ChaseLamps
+import app.numbaseball.ui.design.Hairline
+import app.numbaseball.ui.design.IconButton48
+import app.numbaseball.ui.design.NbButton
+import app.numbaseball.ui.design.NbScreen
+import app.numbaseball.ui.design.NbTextField
+import app.numbaseball.ui.design.VSpacer
+import app.numbaseball.ui.design.rowClick
 import app.numbaseball.ui.theme.NbColors
+import app.numbaseball.ui.theme.NbType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,7 +70,17 @@ class FirstRunViewModel(private val accounts: AccountRepository) : ViewModel() {
     private val _state = MutableStateFlow(FirstRunUiState())
     val state: StateFlow<FirstRunUiState> = _state.asStateFlow()
 
-    fun onNicknameChange(value: String) = _state.update { it.copy(nickname = value, nicknameProblem = null, error = null) }
+    /** Spaces and symbols are stripped as typed (01 §1); at most 12 characters. */
+    fun onNicknameChange(value: String) {
+        val clean = value.filter { Character.isLetterOrDigit(it.code) || Character.isSurrogate(it) }
+        val capped = if (clean.codePointCount(0, clean.length) > Limits.NICKNAME_MAX) {
+            clean.substring(0, clean.offsetByCodePoints(0, Limits.NICKNAME_MAX))
+        } else {
+            clean
+        }
+        _state.update { it.copy(nickname = capped, nicknameProblem = null, error = null) }
+    }
+
     fun onTransferCodeChange(value: String) = _state.update { it.copy(transferCode = value, error = null) }
     fun onTransferModeChange(enabled: Boolean) = _state.update { it.copy(transferMode = enabled, error = null) }
 
@@ -84,6 +119,10 @@ class FirstRunViewModel(private val accounts: AccountRepository) : ViewModel() {
     }
 }
 
+/**
+ * Nickname (01 §1): the only step before the first game. The body scrolls; the Start button and the privacy line stay
+ * pinned above the IME. "Move from another device" switches to the transfer-code form.
+ */
 @Composable
 fun FirstRunScreen(
     state: FirstRunUiState,
@@ -91,48 +130,120 @@ fun FirstRunScreen(
     onTransferCodeChange: (String) -> Unit,
     onTransferModeChange: (Boolean) -> Unit,
     onSubmit: () -> Unit,
+    onPrivacyPolicy: () -> Unit,
 ) {
-    ScreenScaffold(title = stringResource(R.string.app_name), onBack = null) {
-        Text(stringResource(R.string.first_run_title, stringResource(R.string.app_name)), style = MaterialTheme.typography.headlineMedium)
-        Text(stringResource(R.string.first_run_subtitle), color = NbColors.text2)
-        if (state.transferMode) {
-            // Redeeming revokes every older token of that account (docs/protocol.md §3.1).
-            Text(stringResource(R.string.first_run_transfer_note), color = NbColors.strike, style = MaterialTheme.typography.bodySmall)
-            OutlinedTextField(
-                value = state.transferCode,
-                onValueChange = onTransferCodeChange,
-                label = { Text(stringResource(R.string.first_run_code_label)) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done),
-                modifier = Modifier.testTag("transferCode"),
+    val nickError: Int? = state.nicknameProblem?.message() ?: when ((state.error as? UiError.Code)?.code) {
+        ErrorCodes.INVALID_NICKNAME, ErrorCodes.NICKNAME_PROFANITY -> R.string.nick_error_rejected
+        ErrorCodes.NICKNAME_UNAVAILABLE -> R.string.nick_error_unavailable
+        else -> null
+    }
+    NbScreen(modifier = Modifier.imePadding()) {
+        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+            VSpacer(32.dp)
+            Eyebrow { Text(stringResource(R.string.nick_eyebrow), style = NbType.labelSmall, color = NbColors.text2) }
+            VSpacer(16.dp)
+            Text(stringResource(R.string.nick_title), style = NbType.headline, color = NbColors.chalk, maxLines = 2, modifier = Modifier.exactLineHeight(NbType.headline))
+            VSpacer(8.dp)
+            Text(stringResource(R.string.nick_lead), style = NbType.body, color = NbColors.text2)
+            VSpacer(32.dp)
+            if (state.transferMode) {
+                Text(stringResource(R.string.transfer_code_label), style = NbType.labelSmall, color = NbColors.text2)
+                VSpacer(8.dp)
+                NbTextField(
+                    value = state.transferCode,
+                    onValueChange = onTransferCodeChange,
+                    isError = state.error != null,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+                    modifier = Modifier.fillMaxWidth().testTag("transferCode"),
+                )
+                VSpacer(8.dp)
+                Text(
+                    state.error?.let { stringResource(it.message()) } ?: stringResource(R.string.transfer_note),
+                    style = NbType.caption,
+                    color = if (state.error != null) NbColors.out else NbColors.text3,
+                )
+                NbButton(stringResource(R.string.nick_new_account), { onTransferModeChange(false) }, kind = ButtonKind.TEXT)
+            } else {
+                Text(stringResource(R.string.nick_label), style = NbType.labelSmall, color = NbColors.text2)
+                VSpacer(8.dp)
+                NbTextField(
+                    value = state.nickname,
+                    onValueChange = onNicknameChange,
+                    isError = nickError != null,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+                    modifier = Modifier.fillMaxWidth().testTag("nickname"),
+                    trailing = if (state.nickname.isNotEmpty()) {
+                        { IconButton48(R.drawable.ic_close, stringResource(R.string.nick_clear), { onNicknameChange("") }, tint = NbColors.text3, iconSize = 20.dp) }
+                    } else {
+                        null
+                    },
+                )
+                VSpacer(8.dp)
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        if (nickError != null) stringResource(nickError) else stringResource(R.string.nick_helper),
+                        style = NbType.caption,
+                        color = if (nickError != null) NbColors.out else NbColors.text3,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        "${state.nickname.codePointCount(0, state.nickname.length)} / ${Limits.NICKNAME_MAX}",
+                        style = NbType.numTag,
+                        color = NbColors.text3,
+                    )
+                }
+                VSpacer(24.dp)
+                Hairline()
+                Column(Modifier.padding(vertical = 16.dp)) {
+                    Text(stringResource(R.string.nick_preview), style = NbType.caption, color = NbColors.text3)
+                    VSpacer(8.dp)
+                    Text(
+                        buildAnnotatedString {
+                            append(state.nickname.ifEmpty { "–" })
+                            withStyle(SpanStyle(fontFamily = NbType.numTag.fontFamily, fontSize = 20.sp, color = NbColors.text3, fontWeight = NbType.numTag.fontWeight)) {
+                                append("#····")
+                            }
+                        },
+                        style = NbType.title,
+                        color = NbColors.chalk,
+                        maxLines = 1,
+                    )
+                    VSpacer(4.dp)
+                    Text(stringResource(R.string.nick_tag_later), style = NbType.caption, color = NbColors.text3)
+                }
+                NbButton(stringResource(R.string.nick_transfer), { onTransferModeChange(true) }, kind = ButtonKind.TEXT)
+            }
+        }
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+            val enabled = !state.submitting && if (state.transferMode) state.transferCode.isNotBlank() else state.nickname.isNotEmpty()
+            NbButton(
+                text = stringResource(if (state.transferMode) R.string.transfer_redeem else R.string.nick_start),
+                onClick = onSubmit,
+                enabled = enabled,
+                modifier = Modifier.fillMaxWidth(),
+                content = if (state.submitting) ({ ChaseLamps() }) else null,
             )
-            ErrorText(state.error)
-            PrimaryButton(stringResource(R.string.first_run_redeem), onSubmit, enabled = !state.submitting && state.transferCode.isNotBlank())
-            TextButton(onClick = { onTransferModeChange(false) }) { Text(stringResource(R.string.first_run_new_account)) }
-        } else {
-            OutlinedTextField(
-                value = state.nickname,
-                onValueChange = onNicknameChange,
-                label = { Text(stringResource(R.string.first_run_nickname_label)) },
-                supportingText = {
-                    val problem = state.nicknameProblem
-                    Text(if (problem == null) stringResource(R.string.first_run_nickname_hint) else stringResource(problem.message()))
+            VSpacer(12.dp)
+            Text(
+                buildAnnotatedString {
+                    append(stringResource(R.string.nick_privacy_note))
+                    append(" ")
+                    withStyle(SpanStyle(color = NbColors.text2, textDecoration = TextDecoration.Underline)) { append(stringResource(R.string.privacy_policy)) }
                 },
-                isError = state.nicknameProblem != null,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                modifier = Modifier.testTag("nickname"),
+                style = NbType.caption,
+                color = NbColors.text3,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().rowClick(onClick = onPrivacyPolicy),
             )
-            ErrorText(state.error)
-            PrimaryButton(stringResource(R.string.first_run_start), onSubmit, enabled = !state.submitting && state.nickname.isNotBlank())
-            TextButton(onClick = { onTransferModeChange(true) }) { Text(stringResource(R.string.first_run_have_code)) }
         }
     }
 }
 
 private fun NicknameProblem.message(): Int = when (this) {
-    NicknameProblem.TOO_SHORT -> R.string.nickname_error_too_short
-    NicknameProblem.TOO_LONG -> R.string.nickname_error_too_long
-    NicknameProblem.INVALID_CHARACTERS -> R.string.nickname_error_invalid
-    NicknameProblem.PROFANITY -> R.string.nickname_error_profanity
+    NicknameProblem.TOO_SHORT -> R.string.nick_error_short
+    NicknameProblem.TOO_LONG -> R.string.nick_error_short
+    NicknameProblem.INVALID_CHARACTERS -> R.string.nick_error_rejected
+    NicknameProblem.PROFANITY -> R.string.nick_error_rejected
 }

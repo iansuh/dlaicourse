@@ -1,20 +1,24 @@
 package app.numbaseball
 
 import android.os.Bundle
+import android.os.Vibrator
+import android.os.VibratorManager
+import android.provider.Settings
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import app.numbaseball.ads.LocalAdsController
 import app.numbaseball.audio.LocalGameAudio
 import app.numbaseball.audio.LocalGameHaptics
 import app.numbaseball.audio.ViewGameHaptics
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.launch
+import app.numbaseball.ui.design.LocalReduceMotion
 import app.numbaseball.ui.navigation.NbApp
 import app.numbaseball.ui.theme.NumBaseballTheme
+import kotlinx.coroutines.launch
 
 /** Single activity. AppCompat is needed for the per-app language API on Android 12 and lower. */
 class MainActivity : AppCompatActivity() {
@@ -25,12 +29,20 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val container = (application as NumBaseballApp).container
         // Ad consent and SDK start wait for the age screen (NbApp), so nothing ad-related happens before it.
-        val haptics = ViewGameHaptics(window.decorView) { hapticsEnabled }
+        val vibrator = if (android.os.Build.VERSION.SDK_INT >= 31) {
+            getSystemService(VibratorManager::class.java)?.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Vibrator::class.java)
+        }
+        val haptics = ViewGameHaptics(window.decorView, vibrator) { hapticsEnabled }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 container.settingsRepository.settings.collect { hapticsEnabled = it.hapticsEnabled }
             }
         }
+        // DESIGN_SYSTEM 8.4: "Remove animations" (animator duration scale 0) switches to the reduced-motion variants.
+        val reduceMotion = Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
         setContent {
             NumBaseballTheme {
                 CompositionLocalProvider(
@@ -38,6 +50,7 @@ class MainActivity : AppCompatActivity() {
                     LocalAdsController provides container.ads,
                     LocalGameAudio provides container.audio,
                     LocalGameHaptics provides haptics,
+                    LocalReduceMotion provides reduceMotion,
                 ) {
                     NbApp(container.ageRepository, container.accountRepository)
                 }

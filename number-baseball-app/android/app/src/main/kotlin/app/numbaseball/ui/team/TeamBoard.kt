@@ -1,52 +1,328 @@
 package app.numbaseball.ui.team
 
+import android.os.SystemClock
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.numbaseball.R
+import app.numbaseball.ads.AdBanner
 import app.numbaseball.core.protocol.DuelPhase
 import app.numbaseball.core.protocol.DuelSummary
 import app.numbaseball.core.protocol.EndReason
+import app.numbaseball.core.protocol.Limits
+import app.numbaseball.core.protocol.PlayerView
 import app.numbaseball.core.protocol.RoomView
+import app.numbaseball.core.protocol.RoundEntry
 import app.numbaseball.core.protocol.Team
-import app.numbaseball.ui.common.ScreenScaffold
+import app.numbaseball.ui.design.ButtonKind
+import app.numbaseball.ui.design.exactLineHeight
+import app.numbaseball.ui.design.HSpacer
+import app.numbaseball.ui.design.Hairline
+import app.numbaseball.ui.design.IconButton48
+import app.numbaseball.ui.design.Lamp
+import app.numbaseball.ui.design.LampColor
+import app.numbaseball.ui.design.NameWithTag
+import app.numbaseball.ui.design.NbButton
+import app.numbaseball.ui.design.NbIcon
+import app.numbaseball.ui.design.NbScreen
+import app.numbaseball.ui.design.OutTag
+import app.numbaseball.ui.design.TeamBadge
+import app.numbaseball.ui.design.TopBar
+import app.numbaseball.ui.design.VSpacer
+import app.numbaseball.ui.design.fadingEdges
+import app.numbaseball.ui.design.formatClock
 import app.numbaseball.ui.theme.NbColors
+import app.numbaseball.ui.theme.NbFonts
+import app.numbaseball.ui.theme.NbMotion
 import app.numbaseball.ui.theme.NbType
+import kotlinx.coroutines.delay
 
-/** Team match overview: score and every duel (other duels only as summaries, docs/protocol.md §7). */
+/** How the board is shown (08 §1): over my running duel, replacing it after my duel ended, or as the team result (06 §4). */
+enum class BoardMode { OVERLAY, LIVE, FINAL }
+
+/** Duel wins needed to take the match: ceil(N / 2) for odd N, N / 2 + 1 otherwise. */
+fun winsNeeded(teamSize: Int): Int = if (teamSize % 2 == 1) (teamSize + 1) / 2 else teamSize / 2 + 1
+
 @Composable
-fun TeamBoardScreen(room: RoomView?, onBack: () -> Unit) {
-    ScreenScaffold(title = stringResource(R.string.board_title), onBack = onBack) {
-        val match = room?.match
-        if (room == null || match == null) {
-            Text(stringResource(R.string.board_waiting), color = NbColors.text2)
-            return@ScreenScaffold
-        }
-        Text(stringResource(R.string.score_a_b, match.score.a, match.score.b), style = NbType.numScore)
-        val names = room.players.associate { it.id to "${it.nickname}#${it.tag}" }
-        match.duels.forEach { duel ->
-            Row(Modifier.fillMaxWidth()) {
-                Text("${names[duel.playerA].orEmpty()}  vs  ${names[duel.playerB].orEmpty()}", style = NbType.numTag, modifier = Modifier.weight(1f))
-                Text(duelStatus(duel), color = NbColors.text2)
+fun TeamBoardScreen(
+    room: RoomView,
+    mode: BoardMode,
+    onBack: () -> Unit,
+    onChat: () -> Unit,
+    onBackToRoom: () -> Unit = {},
+    onHome: () -> Unit = {},
+) {
+    val match = room.match ?: return
+    val me = room.players.firstOrNull { it.id == room.youId }
+    val myTeam = me?.team ?: Team.A
+    val myWins = if (myTeam == Team.A) match.score.a else match.score.b
+    val won = mode == BoardMode.FINAL && match.result?.winner == myTeam
+    NbScreen(
+        wash = if (won) NbColors.strikeTint else null,
+        topBar = {
+            TopBar(
+                title = stringResource(R.string.team_match),
+                navIcon = if (mode == BoardMode.OVERLAY) R.drawable.ic_arrow_back else R.drawable.ic_close,
+                navDescription = stringResource(if (mode == BoardMode.OVERLAY) R.string.back_to_duel else R.string.action_close),
+                onNav = onBack,
+                actions = { IconButton48(R.drawable.ic_chat, stringResource(R.string.chat_title), onChat, tint = NbColors.chalk) },
+            )
+        },
+        bottomBar = {
+            if (mode == BoardMode.FINAL) {
+                Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp)) {
+                    NbButton(stringResource(R.string.back_to_room), onBackToRoom, modifier = Modifier.fillMaxWidth())
+                    VSpacer(8.dp)
+                    NbButton(stringResource(R.string.home), onHome, kind = ButtonKind.SECONDARY, modifier = Modifier.fillMaxWidth())
+                }
+                AdBanner()
             }
+        },
+    ) {
+        if (mode == BoardMode.FINAL) {
+            FinalHero(match.result?.winner, myTeam, myWins, room.settings.teamSize)
+        }
+        ScoreBlock(match.score.a, match.score.b, room.settings.teamSize)
+        val scroll = rememberScrollState()
+        Column(Modifier.weight(1f).fillMaxWidth().fadingEdges(bottom = 16.dp, enabled = scroll.canScrollForward).verticalScroll(scroll)) {
+            Hairline(Modifier.height(2.dp))
+            val players = room.players.associateBy { it.id }
+            match.duels.forEach { duel ->
+                DuelRow(
+                    duel = duel,
+                    a = players[duel.playerA],
+                    b = players[duel.playerB],
+                    mine = duel.index == match.myDuel?.index,
+                    myRounds = match.myDuel?.takeIf { it.index == duel.index }?.myRounds,
+                    opponentRounds = match.myDuel?.takeIf { it.index == duel.index }?.opponentRounds,
+                    myTeam = match.myDuel?.myTeam,
+                )
+                Hairline()
+            }
+            if (mode == BoardMode.LIVE) {
+                Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                    NbIcon(R.drawable.ic_visibility, null, NbColors.text3, 20.dp)
+                    HSpacer(8.dp)
+                    Text(stringResource(R.string.watching), style = NbType.caption, color = NbColors.text3, textAlign = TextAlign.Center)
+                }
+            }
+            Spacer(Modifier.heightIn(min = 16.dp))
         }
     }
 }
 
 @Composable
-private fun duelStatus(duel: DuelSummary): String {
-    val result = duel.result
-    return when {
-        result != null && result.reason == EndReason.CANCELLED -> stringResource(R.string.board_cancelled)
-        result != null -> when (result.winner) {
-            Team.A -> stringResource(R.string.board_won_a)
-            Team.B -> stringResource(R.string.board_won_b)
-            null -> stringResource(R.string.board_draw)
+private fun FinalHero(winner: Team?, myTeam: Team, myWins: Int, teamSize: Int) {
+    val needed = winsNeeded(teamSize)
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            repeat(needed) { Lamp(LampColor.STRIKE, lit = it < myWins, size = 12.dp) }
         }
-        duel.phase == DuelPhase.CHOOSING -> stringResource(R.string.board_choosing)
-        else -> stringResource(R.string.board_round, duel.round)
+        Text(
+            stringResource(
+                when (winner) {
+                    null -> R.string.res_team_draw
+                    myTeam -> R.string.res_win
+                    else -> R.string.res_lose
+                },
+            ),
+            style = NbType.display,
+            color = NbColors.chalk,
+            modifier = Modifier.exactLineHeight(NbType.display).semantics { heading() },
+        )
+    }
+}
+
+/** Score block (08 §2): badge + name · `numScore` a : b (leading or tied in chalk) · name + badge, then the rule line. */
+@Composable
+private fun ScoreBlock(scoreA: Int, scoreB: Int, teamSize: Int) {
+    val a by animateIntAsState(scoreA, tween(NbMotion.short), label = "a")
+    val b by animateIntAsState(scoreB, tween(NbMotion.short), label = "b")
+    val teamA = stringResource(R.string.team_a)
+    val teamB = stringResource(R.string.team_b)
+    Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 20.dp)) {
+        Row(
+            Modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = "$teamA $scoreA, $teamB $scoreB" },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                TeamBadge(Team.A)
+                HSpacer(12.dp)
+                Text(teamA, style = NbType.subtitle, color = NbColors.chalk, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            HSpacer(12.dp)
+            Text(a.toString(), style = NbType.numScore, color = if (scoreA >= scoreB) NbColors.chalk else NbColors.text3, textAlign = TextAlign.Center, modifier = Modifier.widthIn(min = 32.dp))
+            HSpacer(12.dp)
+            Text(":", style = TextStyle(fontFamily = NbFonts.num, fontWeight = FontWeight.SemiBold, fontSize = 32.sp), color = NbColors.text3)
+            HSpacer(12.dp)
+            Text(b.toString(), style = NbType.numScore, color = if (scoreB >= scoreA) NbColors.chalk else NbColors.text3, textAlign = TextAlign.Center, modifier = Modifier.widthIn(min = 32.dp))
+            HSpacer(12.dp)
+            Row(Modifier.weight(1f), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                Text(teamB, style = NbType.subtitle, color = NbColors.chalk, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                HSpacer(12.dp)
+                TeamBadge(Team.B)
+            }
+        }
+        // Spec: 16 dp; the reference render sits 7 dp under the 60 dp score line box.
+        VSpacer(7.dp)
+        val needed = winsNeeded(teamSize)
+        Text(
+            if (teamSize % 2 == 0) stringResource(R.string.team_rule_even, teamSize, needed, teamSize / 2) else stringResource(R.string.team_rule, teamSize, needed),
+            style = NbType.caption,
+            color = NbColors.text3,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+/** Best hint so far: most strikes, then most balls; null when every guess was out (OUT tag) or none yet. */
+private fun bestHint(rounds: List<RoundEntry>): Pair<Int, Int>? =
+    rounds.filter { it.guess != null }.maxWithOrNull(compareBy({ it.strikes }, { it.balls }))?.let { it.strikes to it.balls }
+
+/**
+ * Duel row (DESIGN_SYSTEM 12.11): 72 dp; A player (flex) · status 88 dp · B player (right-aligned); 3 dp team stripes inset
+ * 12 dp; my row `surface1`. Best hints exist only for my own duel (the protocol's duel summaries carry no hints).
+ */
+@Composable
+private fun DuelRow(
+    duel: DuelSummary,
+    a: PlayerView?,
+    b: PlayerView?,
+    mine: Boolean,
+    myRounds: List<RoundEntry>?,
+    opponentRounds: List<RoundEntry>?,
+    myTeam: Team?,
+) {
+    val finished = duel.phase == DuelPhase.FINISHED
+    val result = duel.result
+    val cancelled = result?.reason == EndReason.CANCELLED
+    val winner = result?.winner?.takeIf { !cancelled }
+    // My rounds are guesses at the opponent's number: they are the hints of my side.
+    val hintA = when (myTeam) { Team.A -> myRounds; Team.B -> opponentRounds; null -> null }
+    val hintB = when (myTeam) { Team.B -> myRounds; Team.A -> opponentRounds; null -> null }
+    val disconnected = !finished && listOfNotNull(a, b).any { !it.connected }
+    val spoken = buildString {
+        append(duel.index + 1).append(", ")
+        append(a?.let { "${it.nickname} ${it.tag}" }.orEmpty())
+        append(", ")
+        append(b?.let { "${it.nickname} ${it.tag}" }.orEmpty())
+        if (duel.round > 0) append(", R").append(duel.round)
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(72.dp)
+            .background(if (mine) NbColors.surface1 else NbColors.bg)
+            .clearAndSetSemantics { contentDescription = spoken },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.width(3.dp).height(48.dp).background(NbColors.teamA))
+        Column(Modifier.weight(1f).padding(start = 13.dp)) {
+            PlayerCell(a, winner == Team.A, finished && winner != null && winner != Team.A, hintA?.let(::bestHint), hintA, end = false)
+        }
+        Column(Modifier.width(88.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            if (duel.round > 0) Text(stringResource(R.string.duel_round, duel.round), style = NbType.numLabel, color = NbColors.text3)
+            when {
+                cancelled -> Text(stringResource(R.string.status_decided), style = NbType.caption, color = NbColors.text2)
+                finished && result?.winner == null -> Text(stringResource(R.string.status_draw), style = NbType.caption, color = NbColors.text2)
+                finished && (result?.reason == EndReason.FORFEIT || result?.reason == EndReason.DISCONNECT) ->
+                    Text(stringResource(R.string.status_forfeit), style = NbType.caption, color = NbColors.text2)
+                finished -> Unit
+                disconnected -> ReconnectStatus(duel.index)
+                else -> Row(verticalAlignment = Alignment.CenterVertically) {
+                    Lamp(LampColor.CHALK, lit = true, size = 6.dp, glow = false)
+                    HSpacer(6.dp)
+                    Text(stringResource(R.string.status_playing), style = NbType.caption, color = NbColors.text2)
+                }
+            }
+        }
+        Column(Modifier.weight(1f).padding(end = 13.dp), horizontalAlignment = Alignment.End) {
+            PlayerCell(b, winner == Team.B, finished && winner != null && winner != Team.B, hintB?.let(::bestHint), hintB, end = true)
+        }
+        Box(Modifier.width(3.dp).height(48.dp).background(NbColors.teamB))
+    }
+}
+
+/** "재접속 대기 0:41" in `strike`: the 60 s grace counted from when this client first saw the player offline. */
+@Composable
+private fun ReconnectStatus(key: Int) {
+    val firstSeen = remember { mutableStateMapOf<Int, Long>() }
+    val since = firstSeen.getOrPut(key) { SystemClock.elapsedRealtime() }
+    var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    LaunchedEffect(key) {
+        while (true) {
+            now = SystemClock.elapsedRealtime()
+            delay(1000)
+        }
+    }
+    val left = ((Limits.DISCONNECT_GRACE_MS - (now - since)) / 1000).toInt().coerceAtLeast(0)
+    Text(stringResource(R.string.status_reconnecting, formatClock(left)), style = NbType.caption, color = NbColors.strike, textAlign = TextAlign.Center, maxLines = 2)
+}
+
+@Composable
+private fun PlayerCell(player: PlayerView?, winner: Boolean, loser: Boolean, best: Pair<Int, Int>?, rounds: List<RoundEntry>?, end: Boolean) {
+    val name = when {
+        player == null -> ""
+        player.deleted -> stringResource(R.string.chat_deleted_player)
+        else -> player.nickname
+    }
+    NameWithTag(
+        name,
+        player?.takeIf { !it.deleted }?.tag,
+        nameColor = if (loser) NbColors.text3 else NbColors.chalk,
+    )
+    VSpacer(4.dp)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = if (end) Arrangement.End else Arrangement.Start) {
+        when {
+            winner -> {
+                Lamp(LampColor.STRIKE, lit = true, size = 6.dp)
+                HSpacer(6.dp)
+                Text(stringResource(R.string.tag_won), style = NbType.micro.copy(fontSize = 13.sp), color = NbColors.strike)
+            }
+            rounds != null && rounds.any { it.guess != null } -> {
+                Text(stringResource(R.string.best), style = NbType.caption, color = NbColors.text3)
+                HSpacer(8.dp)
+                if (best == null || (best.first == 0 && best.second == 0)) {
+                    OutTag(height = 18.dp)
+                } else {
+                    Text("${best.first}S ${best.second}B", style = NbType.numTag, color = if (loser) NbColors.text3 else NbColors.text2)
+                }
+            }
+        }
     }
 }

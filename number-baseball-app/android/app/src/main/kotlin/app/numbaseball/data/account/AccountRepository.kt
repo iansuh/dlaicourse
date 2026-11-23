@@ -141,6 +141,19 @@ class AccountRepository(
         }
     }
 
+    /** PATCH /me: keeps the tag when free, otherwise the server assigns a new one (docs/protocol.md §2). */
+    suspend fun rename(nickname: String): ApiResult<Unit> {
+        val result = withToken { api.rename(it, nickname.trim()) }
+        return when (result) {
+            is ApiResult.Success -> {
+                onAccountUpdate(result.value)
+                ApiResult.Success(Unit)
+            }
+            is ApiResult.Failure -> ApiResult.Failure(result.status, result.code, result.retryAfterSeconds)
+            ApiResult.NetworkError -> ApiResult.NetworkError
+        }
+    }
+
     suspend fun createTransferCode(): ApiResult<CodeResponse> = withToken { api.createTransferCode(it) }
 
     suspend fun deleteAccount(): ApiResult<Unit> {

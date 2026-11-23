@@ -1,10 +1,13 @@
 package app.numbaseball.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineBreak
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -58,8 +61,23 @@ object NbFonts {
 }
 
 object NbType {
-    private fun sans(size: Int, line: Int, weight: FontWeight) =
-        TextStyle(fontFamily = NbFonts.sans, fontSize = size.sp, lineHeight = line.sp, fontWeight = weight)
+    /** DESIGN_SYSTEM 16: no font padding and centred line height, so numerals sit exactly in their plates. */
+    private val platform = PlatformTextStyle(includeFontPadding = false)
+    private val lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None)
+
+    /** Korean wraps between words (CSS `word-break: keep-all` in the prototype), not between syllables. */
+    private val lineBreak = LineBreak(LineBreak.Strategy.HighQuality, LineBreak.Strictness.Normal, LineBreak.WordBreak.Phrase)
+
+    private fun sans(size: Int, line: Int, weight: FontWeight) = TextStyle(
+        fontFamily = NbFonts.sans,
+        fontSize = size.sp,
+        lineHeight = line.sp,
+        fontWeight = weight,
+        letterSpacing = 0.sp,
+        platformStyle = platform,
+        lineHeightStyle = lineHeightStyle,
+        lineBreak = lineBreak,
+    )
 
     private fun num(size: Int, line: Int, weight: FontWeight, tracking: Double = 0.0) = TextStyle(
         fontFamily = NbFonts.num,
@@ -68,7 +86,12 @@ object NbType {
         fontWeight = weight,
         letterSpacing = tracking.em,
         fontFeatureSettings = "tnum",
+        platformStyle = platform,
+        lineHeightStyle = lineHeightStyle,
     )
+
+    /** Long legal text: 15 / 24 sp (15-legal-reader). */
+    val reading = sans(15, 24, FontWeight.Normal)
 
     val display = sans(40, 48, FontWeight.Bold)
     val headline = sans(26, 34, FontWeight.Bold)
@@ -111,16 +134,64 @@ object NbLayout {
     val sectionGap = 24.dp
     val contentMaxWidth = 560.dp
     val touchMin = 48.dp
+    val topBar = 56.dp
+    val topBarCompact = 48.dp
+    val duelStrip = 52.dp
+    val listRow = 64.dp
+    val listRowSingle = 56.dp
     const val compactHeightBelow = 480
     const val bannerHideWindowHeightBelow = 480
+    const val minWindowDp = 320
 }
 
 object NbSize {
     val buttonHeight = 56.dp
     val buttonHeightSecondary = 48.dp
+    val buttonHeightSmall = 36.dp
     val keyHeight = 52.dp
+    val keyHeightCompact = 48.dp
     val keyGap = 8.dp
     val slotWidth = 56.dp
+    val slotWidthMin = 44.dp
     val slotHeight = 64.dp
     val slotHeightCompact = 48.dp
+    val slotGap = 8.dp
+    val lampL = 12.dp
+    val lampM = 8.dp
+    val lampS = 6.dp
+    val historyRow = 44.dp
+    val historyRowLatest = 64.dp
+    val historyHeader = 28.dp
+    val memoHeader = 32.dp
+    val memoCell = 28.dp
+    val memoToolbar = 32.dp
+    val segmented = 48.dp
+    val textField = 56.dp
+    val stripe = 3.dp
+}
+
+object NbRadius {
+    val s = 4.dp
+    val m = 8.dp
+    val l = 16.dp
+}
+
+/** Motion tokens (DESIGN_SYSTEM 8.1), milliseconds. */
+object NbMotion {
+    const val tap = 90
+    const val short = 150
+    const val medium = 240
+    const val long = 360
+    const val lampIgnite = 180
+    const val lampStagger = 110
+    const val slotFill = 120
+    const val shake = 280
+    const val resultHero = 640
+    const val matchFound = 900
+    const val toastVisible = 2800L
+    const val chaseStep = 400
+    const val revealLeadIn = 240
+    const val solveFlash = 300
+    const val resultDelay = 400
+    const val resultButtonMin = 1000L
 }

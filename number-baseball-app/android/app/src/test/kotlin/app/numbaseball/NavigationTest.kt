@@ -1,11 +1,8 @@
 package app.numbaseball
 
-import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -20,11 +17,9 @@ class NavigationTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     @Test fun firstLaunchAsksTheAgeThenTheNickname() {
-        compose.onNodeWithText("What year were you born?").assertExists()
-        compose.onNodeWithTag("birthYear").performClick()
-        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("1990"))
-        compose.onNodeWithText("1990").performClick()
-        compose.onNodeWithText("Continue").performClick()
+        compose.onNodeWithText("Enter the year you were born").assertExists()
+        "1990".forEach { compose.onNodeWithTag("key_$it").performClick() }
+        compose.onNodeWithText("Confirm").performClick()
         compose.waitUntil(5_000) { compose.onAllNodes(hasTestTag("nickname")).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag(AD_BANNER_TAG).assertDoesNotExist()
     }

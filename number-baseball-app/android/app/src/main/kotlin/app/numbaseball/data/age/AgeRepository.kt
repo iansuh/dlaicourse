@@ -86,8 +86,8 @@ class AgeRepository(
         if (band == null) AgeState.Unknown else AgeState.Known(band, s)
     }.stateIn(scope, SharingStarted.Eagerly, AgeState.Loading)
 
-    /** Year range for the neutral picker: no default, no hint about the minimum age. */
-    fun selectableYears(): List<Int> = (currentYear() downTo currentYear() - 100).toList()
+    /** Valid birth years (01 §0): 1900 to the current year. */
+    fun validYears(): IntRange = 1900..currentYear()
 
     /** Stores the band once; an under-minimum answer is final on this device (no retry by re-answering). */
     suspend fun submitBirthYear(year: Int): AgeBand {

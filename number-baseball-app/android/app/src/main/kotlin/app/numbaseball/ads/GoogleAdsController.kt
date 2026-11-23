@@ -129,6 +129,8 @@ private class GoogleInterstitialController(
         if (policy.shouldPreload()) preload()
     }
 
+    override fun isDue(): Boolean = ad != null && policy.isDue()
+
     override fun showIfDue(activity: Activity, resultVisibleMillis: Long, onContinue: () -> Unit) {
         val ready = ad
         if (ready == null || !policy.shouldShow(resultVisibleMillis)) {

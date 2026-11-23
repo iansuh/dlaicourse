@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Dark-only "Night Game" theme (design/tokens.json). Compose draws everything; this only sets the window. -->
     <style name="Theme.NumBaseball" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@color/nb_bg</item>
         <item name="colorPrimary">@color/nb_chalk</item>
         <item name="colorAccent">@color/nb_chalk</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="29">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 </resources>

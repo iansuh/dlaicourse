@@ -1,6 +1,12 @@
 package app.numbaseball.ads
 
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
@@ -11,7 +17,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.testTag
@@ -20,7 +28,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.numbaseball.ui.common.rememberWindowHeightDp
+import app.numbaseball.ui.theme.NbColors
 import app.numbaseball.ui.theme.NbLayout
+import app.numbaseball.ui.theme.NbMotion
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
@@ -46,6 +56,7 @@ fun AdBanner(modifier: Modifier = Modifier) {
     if (!canRequestAds || windowHeightDp < NbLayout.bannerHideWindowHeightBelow || LocalInspectionMode.current) return
     BoxWithConstraints(modifier.fillMaxWidth().testTag(AD_BANNER_TAG)) {
         val widthDp = maxWidth.value.toInt()
+        if (widthDp < 320) return@BoxWithConstraints
         key(widthDp) { AnchoredBanner(adUnitId, widthDp) }
     }
 }
@@ -78,8 +89,13 @@ private fun AnchoredBanner(adUnitId: String, widthDp: Int) {
         adView.resume()
         onPauseOrDispose { adView.pause() }
     }
-    AndroidView(
-        factory = { adView },
-        modifier = Modifier.fillMaxWidth().height(if (loaded) adSize.height.dp else 0.dp),
-    )
+    // AdBand (DESIGN_SYSTEM 13): 1 dp `line` top edge + `surface1` band of the ad's height; 0 dp until an ad loads, then
+    // it expands in 240 ms (decelerate). The creative is centred when narrower than the band.
+    val bandHeight by animateDpAsState(if (loaded) adSize.height.dp + 1.dp else 0.dp, tween(NbMotion.medium, easing = LinearOutSlowInEasing), label = "adBand")
+    Column(Modifier.fillMaxWidth().height(bandHeight).clipToBounds()) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(NbColors.line))
+        Box(Modifier.fillMaxWidth().weight(1f).background(NbColors.surface1), contentAlignment = Alignment.Center) {
+            AndroidView(factory = { adView }, modifier = Modifier.height(adSize.height.dp))
+        }
+    }
 }

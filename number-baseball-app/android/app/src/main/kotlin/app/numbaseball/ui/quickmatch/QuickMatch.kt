@@ -1,102 +1,245 @@
 package app.numbaseball.ui.quickmatch
 
-import androidx.compose.material3.CircularProgressIndicator
+import android.os.SystemClock
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.numbaseball.R
+import app.numbaseball.audio.LocalGameAudio
+import app.numbaseball.audio.MusicTrack
+import app.numbaseball.audio.ScreenMusic
 import app.numbaseball.core.protocol.Limits
 import app.numbaseball.core.protocol.RoomKind
-import app.numbaseball.core.protocol.RoomPhase
 import app.numbaseball.data.online.ConnectionState
+import app.numbaseball.data.online.NetworkMonitor
 import app.numbaseball.data.online.OnlineSession
-import app.numbaseball.data.online.QueueState
-import app.numbaseball.data.online.SessionEvent
-import app.numbaseball.ui.common.ChoiceRow
-import app.numbaseball.ui.common.ConnectionStatus
-import app.numbaseball.ui.common.ErrorText
-import app.numbaseball.ui.common.PrimaryButton
-import app.numbaseball.ui.common.ScreenScaffold
-import app.numbaseball.ui.common.SecondaryButton
-import app.numbaseball.ui.common.SectionLabel
-import app.numbaseball.ui.common.UiError
+import app.numbaseball.data.settings.SettingsRepository
+import app.numbaseball.ui.design.ButtonKind
+import app.numbaseball.ui.design.exactLineHeight
+import app.numbaseball.ui.design.ChaseLamps
+import app.numbaseball.ui.design.Lamp
+import app.numbaseball.ui.design.LampColor
+import app.numbaseball.ui.design.NameWithTag
+import app.numbaseball.ui.design.NbButton
+import app.numbaseball.ui.design.NbScreen
+import app.numbaseball.ui.design.NumberUnitLabel
+import app.numbaseball.ui.design.QuestionPlate
+import app.numbaseball.ui.design.Segmented
+import app.numbaseball.ui.design.TopBar
+import app.numbaseball.ui.design.VSpacer
+import app.numbaseball.ui.design.formatClock
+import app.numbaseball.ui.design.isCompactHeight
+import app.numbaseball.ui.design.LocalReduceMotion
 import app.numbaseball.ui.theme.NbColors
+import app.numbaseball.ui.theme.NbMotion
+import app.numbaseball.ui.theme.NbType
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+data class FoundOpponent(val nickname: String, val tag: String)
+
 data class QuickMatchUiState(
     val digits: Int = 3,
-    val searching: Boolean = false,
-    val connection: ConnectionState = ConnectionState.Idle,
-    val error: UiError? = null,
-    /** A quick room arrived: open the match. */
-    val matchFound: Boolean = false,
+    /** elapsedRealtime when the current search (re)started; the clock resets when the count changes. */
+    val startedAt: Long = 0L,
+    val found: FoundOpponent? = null,
+    /** The connection was lost: toast and back to Home (04). */
+    val stopped: Boolean = false,
 )
 
-class QuickMatchViewModel(private val session: OnlineSession) : ViewModel() {
-    private val local = MutableStateFlow(QuickMatchUiState())
+class QuickMatchViewModel(
+    private val session: OnlineSession,
+    private val settings: SettingsRepository,
+    network: NetworkMonitor,
+    private val clock: () -> Long = SystemClock::elapsedRealtime,
+) : ViewModel() {
+    private val local = MutableStateFlow(QuickMatchUiState(startedAt = clock()))
 
-    val state: StateFlow<QuickMatchUiState> = combine(local, session.queue, session.connection, session.room) { ui, queue, connection, room ->
+    val state: StateFlow<QuickMatchUiState> = combine(local, session.room, session.connection, network.online) { ui, room, connection, online ->
+        val opponent = room?.takeIf { it.kind == RoomKind.QUICK }?.players?.firstOrNull { it.id != room.youId }
         ui.copy(
-            searching = queue is QueueState.Searching,
-            connection = connection,
-            matchFound = room != null && room.kind == RoomKind.QUICK && room.phase == RoomPhase.PLAYING,
+            found = opponent?.let { FoundOpponent(it.nickname, it.tag) },
+            stopped = ui.stopped || (opponent == null && (!online || connection is ConnectionState.Stopped)),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), local.value)
 
     init {
         session.acquire()
         viewModelScope.launch {
-            session.events.collect { if (it is SessionEvent.Error) local.update { s -> s.copy(error = UiError.Code(it.code)) } }
+            val digits = settings.settings.first().quickDigits
+            local.update { it.copy(digits = digits, startedAt = clock()) }
+            // Sent now if connected, otherwise on the next welcome (the queue does not survive reconnects).
+            session.startQuickMatch(digits)
         }
     }
 
-    fun onDigitsChange(digits: Int) = local.update { if (state.value.searching) it else it.copy(digits = digits) }
-
-    fun onSearch() {
-        local.update { it.copy(error = null) }
-        // Sent now if connected, otherwise on the next welcome (the queue does not survive reconnects).
-        session.startQuickMatch(local.value.digits)
+    /** Changing the count restarts the search immediately; no confirmation (04). */
+    fun onDigitsChange(digits: Int) {
+        if (digits == local.value.digits || state.value.found != null) return
+        session.cancelQuickMatch()
+        session.startQuickMatch(digits)
+        local.update { it.copy(digits = digits, startedAt = clock()) }
+        viewModelScope.launch { settings.update { it.copy(quickDigits = digits) } }
     }
 
     fun onCancel() = session.cancelQuickMatch()
 
-    fun onRetryConnection() = session.retryConnection()
-
     override fun onCleared() {
-        if (state.value.searching && !state.value.matchFound) session.cancelQuickMatch()
+        if (state.value.found == null) session.cancelQuickMatch()
         session.release()
     }
 }
 
+private const val SLOW_SEARCH_SECONDS = 60
+
+/** Quick match search (04): calm wait, change the count without leaving; found state hands off after 900 ms. */
 @Composable
 fun QuickMatchScreen(
     state: QuickMatchUiState,
     onDigitsChange: (Int) -> Unit,
-    onSearch: () -> Unit,
     onCancel: () -> Unit,
-    onRetryConnection: () -> Unit,
-    onBack: () -> Unit,
+    onVsComputer: () -> Unit,
+    now: () -> Long = SystemClock::elapsedRealtime,
 ) {
-    ScreenScaffold(title = stringResource(R.string.quick_title), onBack = onBack) {
-        Text(stringResource(R.string.quick_rules), color = NbColors.text2)
-        SectionLabel(stringResource(R.string.setup_digits))
-        ChoiceRow(Limits.DIGITS.toList(), state.digits, { it.toString() }) { if (!state.searching) onDigitsChange(it) }
-        ConnectionStatus(state.connection, onRetryConnection)
-        ErrorText(state.error)
-        if (state.searching) {
-            CircularProgressIndicator()
-            Text(stringResource(R.string.quick_searching))
-            SecondaryButton(stringResource(R.string.quick_cancel), onCancel)
-        } else {
-            PrimaryButton(stringResource(R.string.quick_search), onSearch)
+    ScreenMusic(MusicTrack.MATCH, LocalGameAudio.current)
+    var elapsed by remember { mutableIntStateOf(0) }
+    LaunchedEffect(state.startedAt, state.found) {
+        while (state.found == null) {
+            elapsed = ((now() - state.startedAt) / 1000).toInt().coerceAtLeast(0)
+            delay(1000)
         }
+    }
+    val compact = isCompactHeight()
+    val slow = elapsed >= SLOW_SEARCH_SECONDS && state.found == null
+    NbScreen(
+        topBar = {
+            TopBar(stringResource(R.string.quick_title), R.drawable.ic_close, stringResource(R.string.search_cancel), onCancel)
+        },
+        bottomBar = {
+            if (state.found == null) {
+                Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = if (compact) 12.dp else 24.dp)) {
+                    if (slow) {
+                        NbButton(stringResource(R.string.cpu_title), onVsComputer, kind = ButtonKind.TONAL, modifier = Modifier.fillMaxWidth())
+                        VSpacer(8.dp)
+                    }
+                    NbButton(stringResource(R.string.search_cancel), onCancel, kind = ButtonKind.SECONDARY, modifier = Modifier.fillMaxWidth().testTag("cancelSearch"))
+                }
+            }
+        },
+    ) {
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)) {
+            Text(stringResource(R.string.search_digits_label), style = NbType.labelSmall, color = NbColors.text3)
+            VSpacer(8.dp)
+            val unit = pluralStringResource(R.plurals.digit_unit, 2)
+            Segmented(Limits.DIGITS.toList(), state.digits, onDigitsChange, enabled = state.found == null) { d, selected ->
+                NumberUnitLabel(d.toString(), unit, selected)
+            }
+        }
+        Box(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()), contentAlignment = Alignment.Center) {
+            AnimatedContent(
+                targetState = state.found,
+                transitionSpec = { fadeIn(tween(NbMotion.medium)) togetherWith fadeOut(tween(NbMotion.short)) },
+                label = "found",
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+            ) { found ->
+                if (found == null) {
+                    Searching(state.digits, elapsed, slow, compact)
+                } else {
+                    Found(found)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Searching(digits: Int, elapsed: Int, slow: Boolean, compact: Boolean) {
+    val reduceMotion = LocalReduceMotion.current
+    var sweep by remember { mutableIntStateOf(0) }
+    LaunchedEffect(digits, reduceMotion) {
+        if (reduceMotion) return@LaunchedEffect
+        while (true) {
+            delay(300)
+            sweep = (sweep + 1) % digits
+        }
+    }
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        if (!compact) {
+            BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                // DESIGN_SYSTEM 12.4 width rule: 56 dp, shrinking to 44 dp so six plates fit.
+                val width = minOf(56.dp, (maxWidth - 8.dp * (digits - 1)) / digits).coerceAtLeast(44.dp)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    repeat(digits) { QuestionPlate(lit = it == sweep, width = width, height = 64.dp) }
+                }
+            }
+            VSpacer(20.dp)
+        }
+        ChaseLamps()
+        VSpacer(20.dp)
+        Text(stringResource(R.string.search_title), style = NbType.title, color = NbColors.chalk, textAlign = TextAlign.Center)
+        VSpacer(20.dp)
+        Text(formatClock(elapsed), style = NbType.numTimer, color = NbColors.text2)
+        VSpacer(20.dp)
+        Text(
+            stringResource(if (slow) R.string.search_slow else R.string.search_hint),
+            style = NbType.caption,
+            color = NbColors.text3,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        )
+    }
+}
+
+@Composable
+private fun Found(opponent: FoundOpponent) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }) {
+        Text("VS", style = NbType.numLabel.copy(letterSpacing = 0.12.sp * 14), color = NbColors.text3)
+        VSpacer(20.dp)
+        NameWithTag(opponent.nickname, opponent.tag, modifier = Modifier.exactLineHeight(NbType.headline), nameStyle = NbType.headline, tagStyle = NbType.numTag.copy(fontSize = 22.sp, lineHeight = 28.sp))
+        VSpacer(20.dp)
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { repeat(3) { Lamp(LampColor.CHALK, lit = true, size = 12.dp, glow = false) } }
+        VSpacer(20.dp)
+        Text(stringResource(R.string.found_title), style = NbType.title, color = NbColors.chalk, textAlign = TextAlign.Center)
+        VSpacer(20.dp)
+        Text(stringResource(R.string.found_sub), style = NbType.caption, color = NbColors.text3, textAlign = TextAlign.Center)
     }
 }

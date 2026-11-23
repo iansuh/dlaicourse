@@ -22,6 +22,7 @@ interface AccountApi {
     suspend fun createAccount(nickname: String): ApiResult<AuthResponse>
     suspend fun me(token: String): ApiResult<AccountDto>
     suspend fun deleteAccount(token: String): ApiResult<Unit>
+    suspend fun rename(token: String, nickname: String): ApiResult<AccountDto>
     suspend fun createTransferCode(token: String): ApiResult<CodeResponse>
     suspend fun redeemTransferCode(code: String): ApiResult<AuthResponse>
     suspend fun serverInfo(): ApiResult<ServerInfo>

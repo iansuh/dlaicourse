@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Material Symbols Outlined "mobile_vibrate" (Apache 2.0), from design/prototype/js/icons.js. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:autoMirrored="false"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+    <group android:translateY="960">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M301-120q-24.75 0-42.37-17.63Q241-155.25 241-180v-600q0-24.75 17.63-42.38Q276.25-840 301-840h359q24.75 0 42.38 17.62Q720-804.75 720-780v600q0 24.75-17.62 42.37Q684.75-120 660-120H301Zm359-60v-600H301v600h359ZM500-649q9-9 9-21t-9-21q-9-9-21-9t-21 9q-9 9-9 21t9 21q9 9 21 9t21-9ZM0-365v-230h60v230H0Zm120 88v-406h60v406h-60Zm780-88v-230h60v230h-60Zm-120 88v-406h60v406h-60Zm-479 97v-600 600Z" />
+    </group>
+</vector>

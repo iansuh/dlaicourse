@@ -69,6 +69,7 @@ class FakeAccountApi : AccountApi {
 
     override suspend fun me(token: String) = meResult
     override suspend fun deleteAccount(token: String) = deleteResult
+    override suspend fun rename(token: String, nickname: String): ApiResult<AccountDto> = ApiResult.Success(account().copy(nickname = nickname))
     var serverInfo = ServerInfo(1, 0, listOf(3, 4, 5, 6), listOf(1, 2, 3, 4, 5), listOf(30, 60, 120, 600), 60, 100, 2048, emptyList(), termsVersion = "2026-11-v2")
     var acceptTermsResult: ApiResult<AccountDto>? = null
     val acceptedTerms = mutableListOf<AcceptTermsRequest>()

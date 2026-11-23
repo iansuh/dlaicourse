@@ -10,13 +10,13 @@ import app.numbaseball.data.online.RequestResult
 @StringRes
 fun errorMessage(code: String): Int = when (code) {
     ErrorCodes.RATE_LIMITED -> R.string.error_rate_limited
-    ErrorCodes.MESSAGE_TOO_LARGE -> R.string.error_message_too_large
+    ErrorCodes.MESSAGE_TOO_LARGE -> R.string.error_chat_too_long
     ErrorCodes.NOT_FOUND -> R.string.error_not_found
     ErrorCodes.UNAUTHORIZED -> R.string.error_unauthorized
     ErrorCodes.BANNED -> R.string.error_banned
-    ErrorCodes.INVALID_NICKNAME -> R.string.nickname_error_invalid
-    ErrorCodes.NICKNAME_PROFANITY -> R.string.nickname_error_profanity
-    ErrorCodes.NICKNAME_UNAVAILABLE -> R.string.nickname_error_unavailable
+    ErrorCodes.INVALID_NICKNAME -> R.string.nick_error_rejected
+    ErrorCodes.NICKNAME_PROFANITY -> R.string.nick_error_rejected
+    ErrorCodes.NICKNAME_UNAVAILABLE -> R.string.nick_error_unavailable
     ErrorCodes.INVALID_CODE -> R.string.error_invalid_code
     ErrorCodes.TOO_MANY_ATTEMPTS -> R.string.error_too_many_attempts
     ErrorCodes.SESSION_REPLACED -> R.string.error_session_replaced
@@ -36,11 +36,11 @@ fun errorMessage(code: String): Int = when (code) {
     ErrorCodes.STALE_ROUND -> R.string.error_stale_round
     ErrorCodes.CHAT_EMPTY -> R.string.error_chat_empty
     ErrorCodes.CHAT_TOO_LONG -> R.string.error_chat_too_long
-    ErrorCodes.CHAT_RATE_LIMITED -> R.string.error_chat_rate_limited
+    ErrorCodes.CHAT_RATE_LIMITED -> R.string.error_rate_limited
     ErrorCodes.CHAT_NOT_ALLOWED -> R.string.chat_phrases_only
-    ErrorCodes.CHAT_RESTRICTED -> R.string.error_chat_restricted
-    ErrorCodes.TERMS_REQUIRED, ErrorCodes.TERMS_OUTDATED -> R.string.terms_updated
-    ErrorCodes.AGE_CONFIRMATION_REQUIRED -> R.string.error_age_confirmation
+    ErrorCodes.CHAT_RESTRICTED -> R.string.chat_restricted
+    ErrorCodes.TERMS_REQUIRED, ErrorCodes.TERMS_OUTDATED -> R.string.terms_changed_title
+    ErrorCodes.AGE_CONFIRMATION_REQUIRED -> R.string.terms_gate_title
     else -> R.string.error_generic
 }
 

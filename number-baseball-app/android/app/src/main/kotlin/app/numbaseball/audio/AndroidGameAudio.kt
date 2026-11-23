@@ -6,9 +6,9 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.SoundPool
+import android.os.SystemClock
 import app.numbaseball.data.settings.AppSettings
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -37,7 +37,7 @@ class AndroidGameAudio(
     context: Context,
     settings: Flow<AppSettings>,
     scope: CoroutineScope,
-    private val random: Random = Random.Default,
+    private val clock: () -> Long = SystemClock::elapsedRealtime,
 ) : GameAudio {
     private val appContext = context.applicationContext
     private val audioManager: AudioManager = appContext.getSystemService(AudioManager::class.java)
@@ -52,7 +52,10 @@ class AndroidGameAudio(
         .build()
 
     private val soundPool: SoundPool = SoundPool.Builder().setMaxStreams(MAX_STREAMS).setAudioAttributes(effectAttributes).build()
-    private val loaded = ConcurrentHashMap<SoundCue, Int>()
+    private val loaded = ConcurrentHashMap<SoundCue, List<Int>>()
+    private val streams = HashMap<SoundCue, Int>()
+    private val roundRobin = HashMap<SoundCue, Int>()
+    private var lastChatSoundAt = Long.MIN_VALUE / 2
 
     private val focusRequest: AudioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
         .setAudioAttributes(musicAttributes)
@@ -77,12 +80,22 @@ class AndroidGameAudio(
         }
     }
 
-    override fun play(cue: SoundCue) {
-        val sample = loaded[cue] ?: return
+    override fun play(cue: SoundCue, rate: Float) {
+        val samples = loaded[cue] ?: return
         if (!AudioGate.effectsAllowed(current, audioManager.ringerMode, audioManager.mode, foreground, focusLost)) return
-        val volume = (cue.volume * current.effectsVolume).coerceIn(0f, 1f)
-        val rate = (1f + (random.nextFloat() * 2f - 1f) * cue.pitchVariation).coerceIn(0.5f, 2f)
-        soundPool.play(sample, volume, volume, cue.priority, 0, rate)
+        val now = clock()
+        if (cue == SoundCue.CHAT_MESSAGE || cue == SoundCue.QUICK_PHRASE) {
+            // DESIGN_SYSTEM 10: at most one chat sound every 2 s.
+            if (now - lastChatSoundAt < CHAT_SOUND_MIN_GAP_MS) return
+            lastChatSoundAt = now
+        }
+        // Effects never stack, except the lamps of one reveal.
+        if (!cue.stackable) streams.remove(cue)?.let { soundPool.stop(it) }
+        val sample = samples[roundRobin.getOrDefault(cue, 0) % samples.size]
+        roundRobin[cue] = roundRobin.getOrDefault(cue, 0) + 1
+        val volume = current.effectsVolume.coerceIn(0f, 1f)
+        val stream = soundPool.play(sample, volume, volume, cue.priority, 0, rate.coerceIn(0.5f, 2f))
+        if (stream != 0 && !cue.stackable) streams[cue] = stream
     }
 
     override fun setMusic(track: MusicTrack?) {
@@ -97,19 +110,22 @@ class AndroidGameAudio(
     }
 
     private fun preload() {
-        val pending = ConcurrentHashMap<Int, SoundCue>()
+        val pending = ConcurrentHashMap<Int, Pair<SoundCue, Int>>()
+        val ready = ConcurrentHashMap<SoundCue, MutableList<Int>>()
         soundPool.setOnLoadCompleteListener { _, sampleId, status ->
-            val cue = pending.remove(sampleId)
-            if (status == 0 && cue != null) loaded[cue] = sampleId
+            val (cue, count) = pending.remove(sampleId) ?: return@setOnLoadCompleteListener
+            if (status != 0) return@setOnLoadCompleteListener
+            val list = ready.getOrPut(cue) { mutableListOf() }.apply { add(sampleId) }
+            if (list.size == count) loaded[cue] = list.toList()
         }
         SoundCue.entries.forEach { cue ->
-            SoundResources.effect(cue)?.let { res -> pending[soundPool.load(appContext, res, 1)] = cue }
+            cue.files.forEach { res -> pending[soundPool.load(appContext, res, 1)] = cue to cue.files.size }
         }
     }
 
     private fun updateMusic() {
         val track = wantedTrack
-        val res = track?.let { SoundResources.music(it) }
+        val res = track?.file
         if (res == null || !AudioGate.musicAllowed(current, foreground, audioManager.mode)) {
             stopMusic()
             return
@@ -168,6 +184,7 @@ class AndroidGameAudio(
     }
 
     private companion object {
-        const val MAX_STREAMS = 4
+        const val MAX_STREAMS = 6
+        const val CHAT_SOUND_MIN_GAP_MS = 2_000L
     }
 }

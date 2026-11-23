@@ -6,6 +6,8 @@ import app.numbaseball.audio.GameAudio
 import app.numbaseball.audio.SilentGameAudio
 import app.numbaseball.data.account.AccountRepository
 import app.numbaseball.data.age.AgeRepository
+import app.numbaseball.data.online.AlwaysOnlineNetworkMonitor
+import app.numbaseball.data.online.NetworkMonitor
 import app.numbaseball.data.online.OnlineSession
 import app.numbaseball.data.online.SafetyRepository
 import app.numbaseball.game.offline.OfflineGame
@@ -53,4 +55,5 @@ class TestAppContainer(
     override val offlineGame = OfflineGame()
     override val ads: AdsController = DisabledAdsController
     override val audio: GameAudio = SilentGameAudio
+    override val network: NetworkMonitor = AlwaysOnlineNetworkMonitor()
 }

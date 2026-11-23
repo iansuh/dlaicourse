@@ -13,7 +13,9 @@ import app.numbaseball.data.age.AgeRepository
 import app.numbaseball.data.age.DataStoreAgeStore
 import app.numbaseball.data.age.PlayAgeSignalsSource
 import app.numbaseball.data.account.DataStoreAccountStore
+import app.numbaseball.data.online.AndroidNetworkMonitor
 import app.numbaseball.data.online.ConnectionState
+import app.numbaseball.data.online.NetworkMonitor
 import app.numbaseball.data.online.OnlineClient
 import app.numbaseball.data.online.OnlineSession
 import app.numbaseball.data.online.RestApi
@@ -77,6 +79,7 @@ interface AppContainer {
     val offlineGame: OfflineGame
     val ads: AdsController
     val audio: GameAudio
+    val network: NetworkMonitor
 }
 
 val LocalAppContainer = staticCompositionLocalOf<AppContainer> { error("AppContainer not provided") }
@@ -147,6 +150,8 @@ class DefaultAppContainer(context: Context, override val config: AppConfig) : Ap
             DisabledAdsController
         }
     }
+
+    override val network: NetworkMonitor by lazy { AndroidNetworkMonitor(appContext) }
 
     override val audio: GameAudio by lazy {
         if (config.audioEnabled) AndroidGameAudio(appContext, settingsRepository.settings, appScope) else SilentGameAudio

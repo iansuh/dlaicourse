@@ -76,6 +76,15 @@ class OnlineSession(
     /** Chat lines of the current room, oldest first. Lines of blocked players are hidden by [hideSender]. */
     val chat: StateFlow<List<ChatMessage>> = _chat.asStateFlow()
 
+    private val _chatReadUpTo = MutableStateFlow(-1L)
+
+    /** Highest chat id the player has seen with the chat sheet open (lobby chat peek badge, 07 §3). */
+    val chatReadUpTo: StateFlow<Long> = _chatReadUpTo.asStateFlow()
+
+    fun markChatRead() {
+        _chat.value.lastOrNull()?.let { last -> _chatReadUpTo.update { maxOf(it, last.id) } }
+    }
+
     private val _queue = MutableStateFlow<QueueState>(QueueState.Idle)
     val queue: StateFlow<QueueState> = _queue.asStateFlow()
 
@@ -194,6 +203,7 @@ class OnlineSession(
         if (current?.id != room.id) {
             chatRoomId = room.id
             _chat.value = emptyList()
+            _chatReadUpTo.value = -1L
         }
         _room.value = room
         if (room.kind == RoomKind.QUICK) _queue.value = QueueState.Idle
@@ -202,6 +212,7 @@ class OnlineSession(
     private fun clearRoom() {
         _room.value = null
         _chat.value = emptyList()
+        _chatReadUpTo.value = -1L
         chatRoomId = null
     }
 

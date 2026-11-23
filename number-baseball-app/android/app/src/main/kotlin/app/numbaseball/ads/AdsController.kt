@@ -17,6 +17,9 @@ interface InterstitialController : ComputerMatchFinishedListener {
      * allows it, then calls [onContinue] (immediately if not). [resultVisibleMillis]: how long the result was on screen.
      */
     fun showIfDue(activity: Activity, resultVisibleMillis: Long, onContinue: () -> Unit)
+
+    /** 06 §3: an interstitial is due and loaded, so the result shows the notice and no banner. */
+    fun isDue(): Boolean = false
 }
 
 /**

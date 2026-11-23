@@ -1,318 +1,450 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from scratchpad strings table; ko is the source language (design/screens). -->
 <resources>
+
+    <!-- App name (owner decision): full name, and main/sub for the UI -->
     <string name="app_name">Number Baseball: Quiet Duel</string>
+    <string name="app_name_main">Number Baseball</string>
+    <string name="app_name_sub">Quiet Duel</string>
 
     <!-- Common -->
     <string name="action_back">Back</string>
-    <string name="action_ok">OK</string>
+    <string name="action_close">Close</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
     <string name="action_retry">Try again</string>
     <string name="action_copy">Copy</string>
+    <string name="action_share">Share</string>
+    <string name="action_more">More</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_start">Start</string>
 
-    <!-- Universal baseball notation, same in every language -->
-    <string name="hint_out" translatable="false">OUT</string>
-    <string name="hint_strikes_balls" translatable="false">%1$dS %2$dB</string>
-    <string name="score_a_b" translatable="false">A %1$d : %2$d B</string>
-    <string name="language_name_en" translatable="false">English</string>
-    <string name="language_name_ko" translatable="false">한국어</string>
+    <!-- First run: age (neutral, never mention the required age) -->
+    <string name="age_title">Enter the year you were born</string>
+    <string name="age_lead">We only ask for the year. No name, no birthday.</string>
+    <string name="age_year">Birth year</string>
+    <string name="age_confirm">Confirm</string>
+    <string name="age_invalid">Enter a valid year</string>
+    <string name="na_title">Not available right now</string>
+    <string name="na_body">Based on the information entered, this game is not available. Thank you for your interest.</string>
 
-    <!-- First run -->
-    <string name="first_run_title">Welcome to %1$s</string>
-    <string name="first_run_subtitle">Pick a nickname and play. No ID, password or email.</string>
-    <string name="first_run_nickname_label">Nickname</string>
-    <string name="first_run_nickname_hint">2–12 letters or digits</string>
-    <string name="first_run_start">Start</string>
-    <string name="first_run_have_code">I have a transfer code</string>
-    <string name="first_run_code_label">Transfer code</string>
-    <string name="first_run_redeem">Restore my account</string>
-    <string name="first_run_new_account">Create a new account instead</string>
-
-    <string name="nickname_error_too_short">Use at least 2 characters.</string>
-    <string name="nickname_error_too_long">Use at most 12 characters.</string>
-    <string name="nickname_error_invalid">Use letters and digits only.</string>
-    <string name="nickname_error_profanity">Please choose a different nickname.</string>
-    <string name="nickname_error_unavailable">This nickname is not available. Try another one.</string>
+    <!-- First run: nickname -->
+    <string name="nick_eyebrow">Welcome</string>
+    <string name="nick_title">Choose a nickname</string>
+    <string name="nick_lead">No sign-up. An account is created on this device right away.</string>
+    <string name="nick_label">Nickname</string>
+    <string name="nick_helper">2–12 letters or digits</string>
+    <string name="nick_clear">Clear</string>
+    <string name="nick_preview">Others will see you as</string>
+    <string name="nick_tag_later">The number is added for you</string>
+    <string name="nick_start">Start</string>
+    <string name="nick_privacy_note">Other players see your nickname.</string>
+    <string name="nick_error_short">Use at least 2 characters</string>
+    <string name="nick_error_rejected">This nickname can’t be used. Try another one</string>
+    <string name="nick_error_unavailable">This nickname is taken. Try another one</string>
+    <string name="nick_transfer">Move from another device</string>
+    <string name="nick_new_account">Create a new account instead</string>
+    <string name="transfer_code_label">Transfer code</string>
+    <string name="transfer_redeem">Bring my account</string>
+    <string name="transfer_note">The code moves your account to this phone and signs out the other device.</string>
 
     <!-- Home -->
-    <string name="home_tagline">Crack the secret number first</string>
-    <string name="home_vs_computer">vs Computer</string>
-    <string name="home_quick_match">Quick match</string>
-    <string name="home_create_room">Create room</string>
-    <string name="home_room_code">Room code</string>
-    <string name="home_join_room">Join</string>
-    <string name="home_how_to_play">How to play</string>
+    <string name="home_help">How to play</string>
     <string name="home_settings">Settings</string>
-    <string name="home_record">Wins %1$d · Losses %2$d · Draws %3$d</string>
-    <string name="home_not_registered">Online play starts once your account is created. Check your connection.</string>
-    <string name="home_choose_nickname_again">Choose another nickname</string>
+    <string name="record_label">My record</string>
+    <string name="record_win">W</string>
+    <string name="record_loss">L</string>
+    <string name="record_draw">D</string>
+    <string name="record_rate">Win rate</string>
+    <string name="recent_form">Last 10</string>
+    <string name="first_game_waiting">Waiting for your first game</string>
+    <string name="other_modes">More ways to play</string>
+    <string name="cpu_title">vs Computer</string>
+    <string name="cpu_sub">Offline · Easy · Normal · Hard</string>
+    <string name="room_title">Create room</string>
+    <string name="room_sub">1 vs 1 or teams with friends, up to 5 vs 5</string>
+    <string name="join_title">Join with code</string>
+    <string name="join_sub">The 5-character code from a friend</string>
+    <string name="quick_title">Quick match</string>
+    <string name="quick_sub">Play a similar opponent now · 60 s turns</string>
+    <string name="quick_start">Start quick match</string>
+    <string name="offline_band">Offline · only vs Computer is available</string>
+    <string name="needs_internet">Internet connection needed</string>
+    <string name="waiting_connection">Waiting for a connection</string>
+    <string name="choose_nickname_again">Choose another nickname</string>
+    <plurals name="digit_unit">
+        <item quantity="one">digit</item>
+        <item quantity="other">digits</item>
+    </plurals>
+    <plurals name="digits_n">
+        <item quantity="one">%d digit</item>
+        <item quantity="other">%d digits</item>
+    </plurals>
 
     <!-- vs Computer setup -->
-    <string name="setup_title">vs Computer</string>
-    <string name="setup_digits">Digits</string>
-    <string name="setup_level">Level</string>
+    <string name="label_digits">Digits</string>
+    <string name="label_level">Level</string>
     <string name="level_easy">Easy</string>
     <string name="level_normal">Normal</string>
     <string name="level_hard">Hard</string>
-    <string name="setup_start">Start</string>
+    <string name="level_easy_desc">Makes a mistake now and then</string>
+    <string name="level_normal_desc">Uses every hint carefully</string>
+    <string name="level_hard_desc">Weighs every possible number</string>
+    <string name="label_timer">Time limit</string>
+    <string name="timer_relaxed">Relaxed (10 min)</string>
+    <string name="timer_relaxed_short">Relaxed</string>
+    <string name="timer_relaxed_note">Up to 10 minutes of thinking per round</string>
+    <plurals name="timer_seconds">
+        <item quantity="one">%d s</item>
+        <item quantity="other">%d s</item>
+    </plurals>
+    <string name="seconds_unit">s</string>
+
+    <!-- Quick match search -->
+    <string name="search_digits_label">Digits (changing restarts the search)</string>
+    <string name="search_title">Looking for an opponent</string>
+    <string name="search_hint">Usually under 30 seconds. The search continues while you use other apps.</string>
+    <string name="search_slow">Few players right now. Wait a little longer or practise against the computer.</string>
+    <string name="search_cancel">Cancel search</string>
+    <string name="found_title">Opponent found</string>
+    <string name="found_sub">Next: pick your secret number</string>
+    <string name="search_stopped">Connection lost, search stopped</string>
 
     <!-- Match -->
-    <string name="match_title_computer">vs Computer · %1$s</string>
-    <string name="match_title_online">vs %1$s</string>
-    <string name="match_title_practice">Practice · %1$s</string>
-    <plurals name="match_choose_secret">
-        <item quantity="one">Choose your secret number: %d digit</item>
-        <item quantity="other">Choose your secret number: %d different digits, 0 may come first</item>
+    <string name="round_n">Round %1$d</string>
+    <string name="mode_quick">Quick match</string>
+    <string name="mode_room">Private room</string>
+    <string name="mode_cpu">Computer</string>
+    <string name="mode_practice">Practice</string>
+    <string name="mode_line">%1$s · %2$s</string>
+    <string name="team_line">Team A %1$d : %2$d B</string>
+    <string name="opp_thinking">Thinking</string>
+    <string name="opp_pitched">Pitched</string>
+    <string name="opp_picking">Opponent is picking a number</string>
+    <string name="opp_ready">Number picked</string>
+    <string name="opp_disconnected">Disconnected · %1$s</string>
+    <string name="my_secret">My number</string>
+    <string name="col_guess">My guess</string>
+    <string name="col_hint">Hint</string>
+    <string name="col_opp">Opp.</string>
+    <string name="legend_title">Reading the hints</string>
+    <string name="legend_strike_name">Strike</string>
+    <string name="legend_strike">right digit, right place</string>
+    <string name="legend_ball_name">Ball</string>
+    <string name="legend_ball">right digit, wrong place</string>
+    <string name="legend_out_name">Out</string>
+    <string name="legend_out">no digit matches</string>
+    <string name="memo">Notes</string>
+    <string name="memo_help">Tap: out → in → clear</string>
+    <string name="memo_clear">Clear</string>
+    <string name="memo_collapse">Hide notes</string>
+    <string name="memo_expand">Show notes</string>
+    <string name="pitch">Pitch</string>
+    <string name="waiting_opp">Waiting for the opponent</string>
+    <string name="waiting_ready">Waiting for the opponent</string>
+    <string name="backspace">Delete one digit</string>
+    <string name="random_number">Random number</string>
+    <string name="lock_in">Lock in</string>
+    <string name="secret_title">Pick your secret number</string>
+    <plurals name="secret_rule">
+        <item quantity="one">%d digit · may start with 0</item>
+        <item quantity="other">%d different digits · may start with 0</item>
     </plurals>
-    <string name="match_your_turn">Enter your guess.</string>
-    <string name="match_random">Random</string>
-    <string name="match_set_secret">Set number</string>
-    <string name="match_guess">Pitch</string>
-    <string name="match_delete">Delete</string>
-    <string name="match_my_secret">My number %1$s</string>
-    <string name="match_round">Round %1$d</string>
-    <string name="match_me">Me</string>
-    <string name="match_opponent">Opponent</string>
-    <string name="match_missed">Missed</string>
-    <string name="match_waiting_secret">Waiting for the opponent to choose a number…</string>
-    <string name="match_waiting_guess">Sent. Waiting for the opponent…</string>
-    <string name="match_computer_thinking">The computer is thinking…</string>
-    <string name="match_forfeit">Give up</string>
-    <string name="match_forfeit_confirm">Give up this duel? It counts as a loss.</string>
-    <plurals name="match_seconds_left">
+    <string name="secret_short">Secret number</string>
+    <string name="leave">Leave</string>
+    <plurals name="time_left">
         <item quantity="one">%d second left</item>
         <item quantity="other">%d seconds left</item>
     </plurals>
-    <string name="match_practice_note">Practice while you wait. The real match starts as soon as the room is full.</string>
-    <plurals name="number_error_length">
-        <item quantity="one">Enter %d digit.</item>
-        <item quantity="other">Enter %d digits.</item>
-    </plurals>
-    <string name="number_error_repeated">Use different digits.</string>
-
-    <!-- Results -->
-    <string name="result_win">You win!</string>
-    <string name="result_lose">You lose</string>
-    <string name="result_draw">Draw</string>
-    <string name="result_team_win">Your team wins!</string>
-    <string name="result_team_lose">Your team loses</string>
-    <string name="result_team_draw">The teams tied</string>
-    <plurals name="result_rounds">
-        <item quantity="one">Finished in %d round</item>
-        <item quantity="other">Finished in %d rounds</item>
-    </plurals>
-    <string name="result_opponent_secret">Opponent\'s number</string>
-    <string name="result_reason_solved">Solved</string>
-    <string name="result_reason_both_solved">Both solved in the same round</string>
-    <string name="result_reason_timeout">Two rounds missed in a row</string>
-    <string name="result_reason_both_timeout">Both missed two rounds in a row</string>
-    <string name="result_reason_disconnect">Did not come back in time</string>
-    <string name="result_reason_forfeit">Gave up</string>
-    <string name="result_reason_cancelled">The team match was already decided</string>
-    <string name="result_play_again">Play again</string>
-    <string name="result_home">Home</string>
-    <string name="result_back_to_room">Back to room</string>
-
-    <!-- Quick match -->
-    <string name="quick_title">Quick match</string>
-    <string name="quick_rules">1 vs 1, 60 seconds per round. Missing two rounds in a row loses the duel.</string>
-    <string name="quick_search">Find an opponent</string>
-    <string name="quick_searching">Looking for an opponent…</string>
-    <string name="quick_cancel">Stop searching</string>
-
-    <!-- Connection -->
+    <string name="menu_how_to">How to play</string>
+    <string name="menu_report">Report</string>
+    <string name="menu_forfeit">Give up</string>
+    <string name="menu_show_secret">Show my number</string>
+    <string name="forfeit_title">Give up?</string>
+    <string name="forfeit_body">This duel counts as a loss.</string>
+    <string name="leave_title">Leave the duel?</string>
+    <string name="leave_body">If you are not back within 60 seconds, the duel is forfeited.</string>
+    <string name="leave_cpu_body">If you leave, this game is not recorded.</string>
+    <string name="leave_continue">Keep playing</string>
+    <string name="timer_expired">Time is up. This round is skipped</string>
+    <string name="timer_last_warning">One more timeout forfeits the duel</string>
+    <string name="secret_random_toast">Time is up, a random number was picked for you</string>
+    <string name="reconnected">Reconnected</string>
+    <string name="practice_band">Room %1$s · waiting %2$d/%3$d</string>
+    <string name="practice_to_room">To room</string>
+    <string name="duel_over">Your duel is over. Waiting for the other duels</string>
+    <string name="reconnecting_title">Connection lost · reconnecting</string>
+    <string name="reconnecting_match">If you are not back in time, this duel is forfeited</string>
+    <string name="reconnecting_room">If you are not back in time, you leave the room</string>
     <string name="connection_connecting">Connecting…</string>
-    <string name="connection_reconnecting">Connection lost. Reconnecting…</string>
-    <string name="connection_paused">Paused while the app was in the background.</string>
+    <string name="connection_paused">Paused while the app was in the background</string>
     <string name="connection_no_account">Online play needs an account. Connect to the internet and try again.</string>
     <string name="connection_unauthorized">Account not found. It may have been deleted or moved to another device.</string>
-    <string name="connection_banned">This account cannot play online.</string>
+    <string name="connection_banned">This account can’t play online.</string>
     <string name="connection_replaced">You are now connected on another device.</string>
     <string name="connection_deleted">This account was deleted.</string>
     <string name="connection_play_here">Play here</string>
 
-    <!-- Room lobby -->
-    <string name="lobby_title_new">New room</string>
-    <string name="lobby_title">Room %1$s</string>
-    <string name="lobby_team_size">Players per team</string>
-    <string name="lobby_round_timer">Round timer</string>
-    <string name="lobby_timer_relaxed">Relaxed (10 min)</string>
-    <plurals name="lobby_timer_seconds">
-        <item quantity="one">%d second</item>
-        <item quantity="other">%d seconds</item>
-    </plurals>
-    <string name="lobby_create">Create room</string>
-    <string name="lobby_code">Room code</string>
-    <string name="lobby_share">Share this code with your friends.</string>
-    <string name="lobby_team_a">Team A</string>
-    <string name="lobby_team_b">Team B</string>
-    <string name="lobby_host">Host</string>
-    <string name="lobby_you">You</string>
-    <string name="lobby_offline">Offline</string>
-    <plurals name="lobby_waiting">
-        <item quantity="one">Waiting for %d more player…</item>
-        <item quantity="other">Waiting for %d more players…</item>
-    </plurals>
-    <string name="lobby_auto_start">The match starts automatically when both teams are full.</string>
-    <string name="lobby_switch_team">Switch team</string>
-    <string name="lobby_practice">Practise vs computer</string>
-    <string name="lobby_chat">Chat</string>
-    <string name="lobby_board">Match board</string>
-    <string name="lobby_leave">Leave room</string>
-
-    <!-- Team board -->
-    <string name="board_title">Match board</string>
-    <string name="board_choosing">Choosing numbers</string>
-    <string name="board_round">Round %1$d</string>
-    <string name="board_won_a">Team A won</string>
-    <string name="board_won_b">Team B won</string>
-    <string name="board_draw">Draw</string>
-    <string name="board_cancelled">Not needed</string>
-    <string name="board_waiting">The board appears when the match starts.</string>
+    <!-- Quick phrases (ids from core QuickPhrases; the sheet shows the six presets of design 09 §4) -->
+    <string name="phrases_title">Quick phrases</string>
+    <string name="phrases_note">Quick match allows preset phrases only</string>
+    <string name="phrase_hello">Hi</string>
+    <string name="phrase_good_luck">Good luck</string>
+    <string name="phrase_have_fun">Have fun</string>
+    <string name="phrase_nice_guess">Nice guess</string>
+    <string name="phrase_close_one">So close</string>
+    <string name="phrase_thinking">One sec</string>
+    <string name="phrase_oops">Oops</string>
+    <string name="phrase_well_played">Well played</string>
+    <string name="phrase_good_game">Good game!</string>
+    <string name="phrase_thanks">Thanks</string>
+    <string name="phrase_rematch">Again?</string>
+    <string name="phrase_bye">Bye</string>
 
     <!-- Chat -->
     <string name="chat_title">Chat</string>
-    <string name="chat_hint">Message (text only)</string>
+    <string name="chat_mute">Mute all chat</string>
+    <plurals name="chat_hint">
+        <item quantity="one">Message (max %d character)</item>
+        <item quantity="other">Message (max %d characters)</item>
+    </plurals>
     <string name="chat_send">Send</string>
-    <string name="chat_empty">No messages yet.</string>
-    <string name="chat_muted">Chat is muted. You can turn it on in Settings.</string>
+    <string name="chat_empty">No messages yet. Say hi with a quick phrase.</string>
+    <string name="chat_muted">Chat is muted</string>
+    <string name="chat_unmute">Turn on</string>
+    <plurals name="chat_rate_limited">
+        <item quantity="one">Too fast. You can send again in %d second</item>
+        <item quantity="other">Too fast. You can send again in %d seconds</item>
+    </plurals>
+    <string name="chat_restricted">Chat is restricted for 24 hours after reports</string>
+    <string name="chat_phrases_only">Quick match chat uses quick phrases only</string>
     <string name="chat_deleted_player">Deleted player</string>
     <string name="chat_counter">%1$d/%2$d</string>
-    <string name="phrase_hello">Hi!</string>
-    <string name="phrase_good_luck">Good luck!</string>
-    <string name="phrase_have_fun">Have fun!</string>
-    <string name="phrase_nice_guess">Nice guess!</string>
-    <string name="phrase_close_one">So close!</string>
-    <string name="phrase_thinking">Let me think…</string>
-    <string name="phrase_oops">Oops!</string>
-    <string name="phrase_well_played">Well played!</string>
-    <string name="phrase_good_game">Good game!</string>
-    <string name="phrase_thanks">Thanks!</string>
-    <string name="phrase_rematch">Rematch?</string>
-    <string name="phrase_bye">Bye!</string>
+    <string name="msg_selected">Selected message</string>
+    <string name="msg_copy">Copy</string>
+    <string name="msg_report">Report message</string>
+    <string name="msg_block">Block this player</string>
+    <string name="block_sub">You won’t see their chat or be matched again</string>
+
+    <!-- Results -->
+    <string name="res_win">You win</string>
+    <string name="res_lose">You lose</string>
+    <string name="res_draw">Draw</string>
+    <string name="res_team_draw">Team draw</string>
+    <string name="res_win_sub">You cracked it in round %1$d</string>
+    <string name="res_lose_sub">Your opponent cracked it first, round %1$d</string>
+    <string name="res_draw_sub">You both cracked it in round %1$d</string>
+    <string name="res_forfeit_me">You gave up</string>
+    <string name="res_timeout_me">Two timeouts in a row ended the duel</string>
+    <string name="res_disconnect_me">Disconnected too long, the duel was forfeited</string>
+    <string name="res_forfeit_opp">Your opponent gave up</string>
+    <string name="res_timeout_opp">Your opponent ran out of time twice</string>
+    <string name="res_disconnect_opp">Your opponent didn’t come back</string>
+    <string name="res_cancelled">The team match was decided first</string>
+    <string name="opp_secret">Their number</string>
+    <string name="line_score">Strikes by round</string>
+    <string name="best">Best</string>
+    <string name="me_short">Me</string>
+    <string name="cpu_short">Computer</string>
+    <string name="rematch">Play again</string>
+    <string name="home">Home</string>
+    <string name="back_to_room">Back to room</string>
+    <string name="ad_notice">A short ad plays before the next screen</string>
+    <string name="report_player">Report</string>
+
+    <!-- Room: create, join, lobby -->
+    <string name="lobby_title">Private room</string>
+    <string name="invite_code">Invite code</string>
+    <string name="invite_hint">Send the code to your friends</string>
+    <string name="share_text">Join my %1$s room %2$s</string>
+    <string name="code_copied">Code copied</string>
+    <string name="room_rules">%1$s · %2$d vs %2$d · %3$s</string>
+    <string name="room_filled">%1$d / %2$d players</string>
+    <string name="auto_start">Starts as soon as everyone is in</string>
+    <string name="team_a">Team A</string>
+    <string name="team_b">Team B</string>
+    <string name="tag_host">Host</string>
+    <string name="tag_me">You</string>
+    <string name="tag_offline">Offline</string>
+    <string name="seat_empty">Open seat</string>
+    <string name="seat_move">Move here</string>
+    <string name="seat_opponent">Opponent</string>
+    <string name="practice">Practise while you wait</string>
+    <string name="room_settings">Room settings</string>
+    <string name="leave_room">Leave room</string>
+    <string name="leave_room_title">Leave the room?</string>
+    <string name="create_title">Create room</string>
+    <string name="label_team_size">Players</string>
+    <string name="join_prompt">Enter the code from your friend</string>
+    <string name="join_rule">5 capital letters and digits</string>
+    <string name="join">Join</string>
+    <string name="open_match">Back to the match</string>
+
+    <!-- Team board -->
+    <string name="team_match">Team match</string>
+    <string name="team_rule">%1$d vs %1$d · first to %2$d wins</string>
+    <string name="team_rule_even">%1$d vs %1$d · first to %2$d wins, %3$d : %3$d is a draw</string>
+    <string name="duel_round">R%1$d</string>
+    <string name="status_playing">Playing</string>
+    <string name="status_reconnecting">Reconnecting %1$s</string>
+    <string name="status_draw">Draw</string>
+    <string name="status_forfeit">Forfeit</string>
+    <string name="status_decided">Decided</string>
+    <string name="tag_won">Won</string>
+    <string name="watching">Your duel is over. Watching the others</string>
+    <string name="back_to_duel">Back to my duel</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>
-    <string name="profile_record">Record</string>
-    <string name="profile_wins">Wins</string>
-    <string name="profile_losses">Losses</string>
-    <string name="profile_draws">Draws</string>
+    <string name="change_nickname">Change nickname</string>
+    <string name="mode_team">Team match</string>
+    <string name="record_value">%1$dW %2$dL %3$dD</string>
+    <string name="profile_offline">Offline · last record received</string>
     <string name="profile_unregistered">Not registered yet. Your account is created when you are online.</string>
-    <string name="profile_stats_unknown">Your record appears when you are online.</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
-    <string name="settings_effects">Sound effects</string>
-    <string name="settings_effects_volume">Effects volume</string>
-    <string name="settings_music">Music</string>
-    <string name="settings_music_volume">Music volume</string>
-    <string name="settings_follow_silent">Follow silent mode</string>
-    <string name="settings_follow_silent_summary">No sound effects while the phone is on silent or vibrate</string>
-    <string name="settings_haptics">Vibration</string>
-    <string name="settings_mute_chat">Mute all chat</string>
-    <string name="settings_language">Language</string>
-    <string name="settings_language_system">System default</string>
-    <string name="settings_privacy_options">Privacy options for ads</string>
-    <string name="settings_transfer">Move to another device</string>
-    <string name="settings_transfer_summary">Get a one-time code, valid for 10 minutes</string>
-    <string name="settings_transfer_title">Your transfer code</string>
-    <string name="settings_transfer_body">Enter this code on the new device within 10 minutes. This device will be signed out.</string>
-    <string name="settings_delete">Delete account</string>
-    <string name="settings_delete_title">Delete your account?</string>
-    <string name="settings_delete_body">Your nickname, record and block list are deleted immediately. This cannot be undone.</string>
-    <string name="settings_delete_confirm">Delete</string>
-    <string name="settings_version">Version %1$s</string>
+    <string name="sec_game">Game</string>
+    <string name="language">Language</string>
+    <string name="language_system">Follow system language</string>
+    <string name="sec_sound">Sound and vibration</string>
+    <string name="sfx">Sound effects</string>
+    <string name="sfx_sub">Keys, hints, results, alerts</string>
+    <string name="sfx_silent_now">The phone is on silent, so no sound plays</string>
+    <string name="sfx_volume">Effects volume</string>
+    <string name="follow_silent">Follow silent mode</string>
+    <string name="follow_silent_sub">No sound while the phone is on silent or vibrate</string>
+    <string name="music">Music</string>
+    <string name="music_sub">Menu and match music (off by default)</string>
+    <string name="music_volume">Music volume</string>
+    <string name="haptics">Vibration</string>
+    <string name="haptics_sub">Keys, hints, win and loss</string>
+    <string name="sec_chat">Chat</string>
+    <string name="mute_chat_sub">Hide all chat and quick phrases</string>
+    <string name="sec_account">Account</string>
+    <string name="nickname">Nickname</string>
+    <string name="transfer">Move account to another device</string>
+    <string name="transfer_sub">Creates a code that works for 10 minutes</string>
+    <string name="transfer_title">Move account to another device</string>
+    <string name="transfer_body">Enter this code on the new device under “Move from another device”. It expires in 10 minutes and works once.</string>
+    <string name="delete_account">Delete account</string>
+    <string name="delete_sub">Your record and nickname are erased for good</string>
+    <string name="delete_title">Delete your account?</string>
+    <string name="delete_body">Your record, nickname and block list are erased at once and can’t be restored. Without the app you can ask for deletion by the contact email.</string>
+    <string name="delete_confirm">Delete</string>
+    <string name="sec_about">About and support</string>
+    <string name="privacy_options">Privacy options</string>
+    <string name="privacy_options_sub">Change your ad personalisation consent</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="terms_of_use">Terms of Use</string>
+    <string name="contact">Contact</string>
+    <string name="contact_copied">Email address copied</string>
+    <string name="version">Version</string>
 
-    <!-- Report / block -->
-    <string name="report_title">Report or block</string>
-    <string name="report_target">About %1$s</string>
-    <string name="report_reason">Reason</string>
-    <string name="report_reason_spam">Spam</string>
-    <string name="report_reason_harassment">Harassment</string>
-    <string name="report_reason_hate">Hate speech</string>
-    <string name="report_reason_sexual">Sexual content</string>
-    <string name="report_reason_cheating">Cheating</string>
-    <string name="report_reason_nickname">Offensive nickname</string>
-    <string name="report_reason_other">Other</string>
-    <string name="report_note">Details (optional)</string>
-    <string name="report_block_too">Also block this player</string>
-    <string name="report_submit">Send report</string>
-    <string name="report_block_only">Block only</string>
-    <string name="report_sent">Thanks. We will review your report.</string>
-    <string name="report_blocked">Blocked. You will not see their chat or be matched with them.</string>
+    <!-- Player card, report, block -->
+    <string name="card_context_quick">Quick match record</string>
+    <string name="report_action">Report</string>
+    <string name="block_action">Block</string>
+    <string name="unblock_action">Unblock</string>
+    <string name="report_title">Report %1$s</string>
+    <string name="report_pick">Choose one reason</string>
+    <string name="reason_harassment">Abuse or harassment</string>
+    <string name="reason_hate">Hate speech</string>
+    <string name="reason_sexual">Sexual content</string>
+    <string name="reason_personal_info">Asking for or sharing personal information</string>
+    <string name="reason_spam">Spam or advertising</string>
+    <string name="reason_cheating">Cheating</string>
+    <string name="reason_child_safety">Child safety concern</string>
+    <string name="reason_other">Other</string>
+    <string name="report_note">Details (optional, max 200 characters)</string>
+    <string name="report_evidence">A report saves the last 20 lines of this room’s chat as evidence.</string>
+    <string name="report_send">Send report</string>
+    <string name="report_done_title">Report sent</string>
+    <string name="report_done_body">We usually review reports within 24 hours. We won’t send you the outcome.</string>
+    <string name="report_child_safety_note">If someone is in danger right now, call the police (112).</string>
+    <string name="block_too">Block this player too</string>
+    <string name="block_title">Block %1$s?</string>
+    <string name="block_body">You won’t see each other’s chat or meet again in quick match. You can unblock in Settings &gt; Blocked players.</string>
+    <string name="block_confirm">Block</string>
+    <string name="blocked_toast">Blocked</string>
+    <string name="report_limit">You can’t report more today. Try again tomorrow.</string>
 
-    <!-- How to play -->
-    <string name="rules_title">How to play</string>
-    <string name="rules_1">Each player secretly picks a number of 3–6 different digits. 0 may be the first digit.</string>
-    <string name="rules_2">Every round both players guess the other\'s number at the same time and get a hint.</string>
-    <string name="rules_3">Strike (S): right digit, right place. Ball (B): right digit, wrong place. OUT: no digit matches.</string>
-    <string name="rules_4">Example: secret 0 4 7, guess 0 7 5 → 1S 1B (0 is a strike, 7 is a ball).</string>
-    <string name="rules_5">Get all strikes first to win. If both solve it in the same round, it is a draw.</string>
-    <string name="rules_6">Team play: teammates are paired 1 vs 1 with the other team, and the team with more duel wins takes the match. Ties are possible.</string>
-
-    <!-- Error codes from docs/protocol.md §11 -->
-    <string name="error_generic">Something went wrong. Please try again.</string>
-    <string name="error_network">Cannot reach the game server.</string>
-    <string name="error_rate_limited">Too many requests. Please wait a moment.</string>
-    <string name="error_room_not_found">Room not found. Check the code.</string>
-    <string name="error_room_full">The room is full.</string>
-    <string name="error_team_full">That team is full.</string>
-    <string name="error_already_in_room">You are already in a room.</string>
-    <string name="error_not_in_room">You are not in a room.</string>
-    <string name="error_not_host">Only the host can do that.</string>
-    <string name="error_invalid_settings">These room settings are not allowed.</string>
-    <string name="error_match_in_progress">A match is in progress. Try again later.</string>
-    <string name="error_wrong_phase">That is not possible right now.</string>
-    <string name="error_already_queued">You are already searching.</string>
-    <string name="error_invalid_number">Enter different digits of the right length.</string>
-    <string name="error_secret_already_set">Your number is already set.</string>
-    <string name="error_already_guessed">You already guessed this round.</string>
-    <string name="error_stale_round">That round is over.</string>
-    <string name="error_chat_empty">Write a message first.</string>
-    <string name="error_chat_too_long">The message is too long.</string>
-    <string name="error_chat_rate_limited">You are sending messages too fast.</string>
-    <string name="error_invalid_code">The code is wrong or has expired.</string>
-    <string name="error_too_many_attempts">Too many wrong codes. Please try again later.</string>
-    <string name="error_unauthorized">Account not found.</string>
-    <string name="error_banned">This account is blocked.</string>
-    <string name="error_session_replaced">You are now connected on another device.</string>
-    <string name="error_not_found">Not found.</string>
-    <string name="error_message_too_large">The message is too long.</string>
-
-    <!-- Added with the policy review (terms gate, deletion notice, chat rules) -->
-    <string name="match_duel_over">Your duel is over. Waiting for the other duels…</string>
-    <string name="lobby_open_match">Back to the match</string>
-    <string name="chat_quick_phrases">Quick phrases</string>
-    <string name="chat_phrases_only">Quick match chat uses quick phrases only.</string>
-    <string name="terms_title">Terms of service</string>
-    <string name="terms_summary">Before you play online: be kind, do not cheat, and never share personal information in chat. Reported players can lose chat or online play.</string>
-    <string name="terms_read">Read the full terms</string>
+    <!-- Terms gate (the age number comes from the Terms, never shown here) -->
+    <string name="terms_gate_title">Check the terms before playing online</string>
+    <string name="terms_changed_title">The terms have changed</string>
+    <string name="terms_gate_lead">You play and talk with people you don’t know, so a few promises are needed.</string>
+    <string name="terms_age_title">Who can play</string>
+    <string name="terms_age_line">This game is only for players above a set age.</string>
+    <string name="terms_respect_title">Respect each other</string>
+    <string name="terms_respect_line">No harassment, hate speech, asking for personal information or spam.</string>
+    <string name="terms_child_title">Zero tolerance for child abuse</string>
+    <string name="terms_child_line">Such content is removed at once, the account is banned and reported to the authorities.</string>
+    <string name="terms_report_title">Report and block</string>
+    <string name="terms_report_line">Long-press a message or a player. We usually act within 24 hours.</string>
+    <string name="terms_full">Read the full terms</string>
+    <string name="terms_version">Terms version %1$s</string>
     <string name="terms_agree">Agree and continue</string>
-    <string name="terms_updated">The terms have changed. Please review them.</string>
-    <string name="legal_web_version">Web version</string>
-    <string name="settings_privacy_policy">Privacy policy</string>
-    <string name="settings_terms">Terms of service</string>
-    <string name="settings_contact">Contact us</string>
-    <string name="report_block_offer">Do you also want to block this player?</string>
-    <string name="report_block_button">Block too</string>
+    <string name="terms_decline_note">Without agreeing you can only play against the computer.</string>
+    <string name="legal_contents">Contents</string>
 
-    <!-- First-launch age screen (policy review R19). Neutral: never mention the required age here. -->
-    <string name="age_title">Before you start</string>
-    <string name="age_question">What year were you born?</string>
-    <string name="age_select_year">Select a year</string>
-    <string name="age_privacy_note">Your answer stays on this device.</string>
-    <string name="age_continue">Continue</string>
-    <string name="not_available_title">Sorry, this game is not available</string>
-    <plurals name="not_available_body">
-        <item quantity="one">This game is for players aged %d and over. Thank you for your interest.</item>
-        <item quantity="other">This game is for players aged %d and over. Thank you for your interest.</item>
-    </plurals>
+    <!-- Small window and errors (docs/protocol.md §11) -->
+    <string name="window_too_small_title">Make the window a little bigger</string>
+    <string name="window_too_small_body">Your game is waiting</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="error_network">Can’t connect. Please try again.</string>
+    <string name="error_rate_limited">Too many requests. Please wait a moment.</string>
+    <string name="error_room_not_found">Room not found</string>
+    <string name="error_room_full">The room is full</string>
+    <string name="error_team_full">That team is full</string>
+    <string name="error_already_in_room">You are already in a room</string>
+    <string name="error_not_in_room">You are not in a room</string>
+    <string name="error_not_host">Only the host can do that</string>
+    <string name="error_invalid_settings">These room settings are not allowed</string>
+    <string name="error_match_in_progress">The match has already started</string>
+    <string name="error_wrong_phase">That is not possible right now</string>
+    <string name="error_already_queued">You are already searching</string>
+    <string name="error_invalid_number">Enter different digits of the right length</string>
+    <string name="error_secret_already_set">Your number is already set</string>
+    <string name="error_already_guessed">You already pitched this round</string>
+    <string name="error_stale_round">That round is over</string>
+    <string name="error_chat_empty">Write a message first</string>
+    <string name="error_chat_too_long">The message is too long</string>
+    <string name="error_invalid_code">The code is wrong or has expired</string>
+    <string name="error_too_many_attempts">Too many wrong codes. Try again later.</string>
+    <string name="error_unauthorized">Account not found</string>
+    <string name="error_banned">This account is blocked</string>
+    <string name="error_session_replaced">You are now connected on another device</string>
+    <string name="error_not_found">Not found</string>
+    <string name="account_deleted">Account deleted</string>
 
-    <!-- docs/protocol.md (complete): terms with age confirmation, transfer, chat restrictions -->
-    <plurals name="terms_age_confirm">
-        <item quantity="one">I am at least %d year old.</item>
-        <item quantity="other">I am at least %d years old.</item>
+    <!-- Accessibility and phase 2 additions -->
+    <string name="log_row_spoken">Round %1$d, my guess %2$s, %3$d strikes %4$d balls</string>
+    <string name="line_score_cell">Round %1$d, %2$s, %3$d strikes</string>
+    <string name="memo_cell_spoken">Position %1$d, digit %2$d, %3$s</string>
+    <string name="memo_change">Change mark</string>
+    <string name="memo_state_unknown">not marked</string>
+    <string name="memo_state_out">ruled out</string>
+    <string name="memo_state_in">confirmed</string>
+    <string name="state_on">On</string>
+    <string name="state_off">Off</string>
+    <string name="chat_after_first_match">Finish one online match to use chat</string>
+    <string name="blocked_players">Blocked players</string>
+    <plurals name="people_count">
+        <item quantity="one">%d player</item>
+        <item quantity="other">%d players</item>
     </plurals>
-    <string name="first_run_transfer_note">The code moves your account to this phone and signs out the other device.</string>
-    <string name="error_chat_restricted">Your chat is restricted for now.</string>
-    <string name="error_age_confirmation">Please confirm your age to continue.</string>
+    <string name="blocked_empty">You haven’t blocked anyone</string>
+    <string name="unblocked_toast">Unblocked</string>
+    <string name="transfer_left">%1$s left</string>
+    <string name="transfer_new">Create a new code</string>
+    <string name="licences">Open-source licences</string>
+    <string name="privacy_web">Public version of this policy</string>
+    <string name="how_title">How to play</string>
+    <string name="how_goal">Guess your opponent’s secret number first</string>
+    <string name="how_1">Both players pick a secret number of different digits. It may start with 0.</string>
+    <string name="how_2">Each round you both pitch a guess at the same time.</string>
+    <string name="how_3">A strike is a right digit in the right place; a ball is a right digit in another place; out means none of the digits is in the number.</string>
+    <string name="how_4">Use the memo board to rule digits out or pin them to a position.</string>
+    <string name="how_5">Whoever gets all strikes first wins. If both do in the same round, it is a draw.</string>
 </resources>

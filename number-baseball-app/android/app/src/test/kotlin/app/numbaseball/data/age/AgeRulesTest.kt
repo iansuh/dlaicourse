@@ -10,15 +10,15 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AgeRulesTest {
-    @Test fun birthYearUsesTheYoungestPossibleAge() {
-        // Born 2012: 13 or 14 in 2026, so 13 counts and the minimum of 14 is not met.
-        assertEquals(AgeBand.UNDER_MINIMUM, AgeRules.bandForBirthYear(2012, 2026, minimumAge = 14))
+    @Test fun birthYearRuleFollowsTheDesign() {
+        // 01 §0: allowed when current year − birth year ≥ 14 (they turn 14 at some point this year).
+        assertEquals(AgeBand.UNDER_MINIMUM, AgeRules.bandForBirthYear(2013, 2026, minimumAge = 14))
+        assertEquals(AgeBand.CHILD, AgeRules.bandForBirthYear(2012, 2026, minimumAge = 14))
         assertEquals(AgeBand.CHILD, AgeRules.bandForBirthYear(2011, 2026, minimumAge = 14))
-        assertEquals(AgeBand.CHILD, AgeRules.bandForBirthYear(2010, 2026, minimumAge = 14))
+        assertEquals(AgeBand.TEEN, AgeRules.bandForBirthYear(2010, 2026, minimumAge = 14))
         assertEquals(AgeBand.TEEN, AgeRules.bandForBirthYear(2009, 2026, minimumAge = 14))
-        assertEquals(AgeBand.TEEN, AgeRules.bandForBirthYear(2008, 2026, minimumAge = 14))
-        assertEquals(AgeBand.ADULT, AgeRules.bandForBirthYear(2007, 2026, minimumAge = 14))
-        assertEquals(AgeBand.CHILD, AgeRules.bandForBirthYear(2012, 2026, minimumAge = 13))
+        assertEquals(AgeBand.ADULT, AgeRules.bandForBirthYear(2008, 2026, minimumAge = 14))
+        assertEquals(AgeBand.CHILD, AgeRules.bandForBirthYear(2013, 2026, minimumAge = 13))
     }
 
     @Test fun adTreatmentByBand() {

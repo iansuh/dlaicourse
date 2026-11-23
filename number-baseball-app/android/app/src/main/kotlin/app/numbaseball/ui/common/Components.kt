@@ -1,169 +1,89 @@
 package app.numbaseball.ui.common
 
-import androidx.compose.foundation.layout.Arrangement
+import android.os.SystemClock
+import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import app.numbaseball.R
+import app.numbaseball.core.protocol.Limits
 import app.numbaseball.data.online.ConnectionState
 import app.numbaseball.data.online.StopReason
+import app.numbaseball.ui.design.ButtonKind
+import app.numbaseball.ui.design.ConnectionBanner
+import app.numbaseball.ui.design.Hairline
+import app.numbaseball.ui.design.NbButton
+import app.numbaseball.ui.design.formatClock
 import app.numbaseball.ui.theme.NbColors
-import app.numbaseball.ui.theme.NbLayout
-import app.numbaseball.ui.theme.NbSize
-import app.numbaseball.ui.theme.NbSpace
+import app.numbaseball.ui.theme.NbType
+import kotlinx.coroutines.delay
 
-// Phase 1 building blocks: plain Material 3 on the Night Game tokens. Phase 2 replaces them with the design's components.
+/** True while an online screen has no live connection (seats grey out, chat send disabled). */
+val ConnectionState.offline: Boolean get() = this !is ConnectionState.Connected && this != ConnectionState.Idle
 
 /**
- * Screen frame: top bar with optional back button, vertically scrollable content (works down to 320dp high split-screen
- * windows), and an optional [bottomBar] (for example the ad banner on calm screens).
+ * Connection banner for lobby and other online screens (14 §1–2): chase lamps, what happened, what happens next and a
+ * 60 s countdown. Stopped states (no automatic reconnect) show their reason and the one action that helps.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScreenScaffold(
-    title: String,
-    onBack: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-    actions: @Composable () -> Unit = {},
-    bottomBar: @Composable () -> Unit = {},
-    scrollable: Boolean = true,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Scaffold(
-        modifier = modifier,
-        containerColor = NbColors.bg,
-        topBar = {
-            TopAppBar(
-                title = { Text(title, maxLines = 1) },
-                navigationIcon = {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack) {
-                            Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.action_back))
-                        }
-                    }
-                },
-                actions = { actions() },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NbColors.bg),
-            )
-        },
-        bottomBar = bottomBar,
-    ) { padding ->
-        ScreenColumn(padding, scrollable, content)
-    }
-}
-
-@Composable
-private fun ScreenColumn(padding: PaddingValues, scrollable: Boolean, content: @Composable ColumnScope.() -> Unit) {
-    val compact = rememberWindowHeightDp() < NbLayout.compactHeightBelow
-    val margin = if (compact) NbLayout.marginCompact else NbLayout.margin
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
-            .then(if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier)
-            .padding(horizontal = margin, vertical = if (compact) NbSpace.s8 else NbSpace.s16),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Column(
-            modifier = Modifier.widthIn(max = NbLayout.contentMaxWidth).fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(if (compact) NbSpace.s8 else NbSpace.s12),
-            content = content,
-        )
-    }
-}
-
-@Composable
-fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier.fillMaxWidth().heightIn(min = NbSize.buttonHeight),
-    ) { Text(text) }
-}
-
-@Composable
-fun SecondaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
-    OutlinedButton(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier.fillMaxWidth().heightIn(min = NbSize.buttonHeightSecondary),
-    ) { Text(text) }
-}
-
-/** Single choice among a few options (digits, level, team size...). */
-@Composable
-fun <T> ChoiceRow(options: List<T>, selected: T, label: @Composable (T) -> String, onSelect: (T) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(NbSpace.s8)) {
-        options.forEach { option ->
-            FilterChip(
-                selected = option == selected,
-                onClick = { onSelect(option) },
-                label = { Text(label(option)) },
-            )
+fun OnlineConnectionBanner(state: ConnectionState, onRetry: () -> Unit, @StringRes line: Int = R.string.reconnecting_room) {
+    var since by remember { mutableLongStateOf(0L) }
+    var left by remember { mutableIntStateOf((Limits.DISCONNECT_GRACE_MS / 1000).toInt()) }
+    val lost = state is ConnectionState.Reconnecting || (state is ConnectionState.Connecting && state.attempt > 0)
+    LaunchedEffect(lost) {
+        if (!lost) return@LaunchedEffect
+        since = SystemClock.elapsedRealtime()
+        while (true) {
+            left = ((Limits.DISCONNECT_GRACE_MS - (SystemClock.elapsedRealtime() - since)) / 1000).toInt().coerceAtLeast(0)
+            delay(1000)
         }
     }
-}
-
-@Composable
-fun SectionLabel(text: String) {
-    Text(text, style = MaterialTheme.typography.labelMedium, color = NbColors.text2)
-}
-
-@Composable
-fun ErrorText(error: UiError?) {
-    if (error != null) {
-        Text(stringResource(error.message()), color = NbColors.out, style = MaterialTheme.typography.bodySmall)
+    when (state) {
+        is ConnectionState.Reconnecting, is ConnectionState.Connecting -> if (lost) {
+            ConnectionBanner(stringResource(R.string.reconnecting_title), stringResource(line), formatClock(left))
+        }
+        ConnectionState.Paused -> ConnectionBanner(stringResource(R.string.connection_paused), null, null)
+        is ConnectionState.Stopped -> StoppedBanner(state.reason, onRetry)
+        is ConnectionState.Connected, ConnectionState.Idle -> Unit
     }
 }
 
-/** Status line for the online connection; null when connected or idle. */
 @Composable
-fun ConnectionStatus(state: ConnectionState, onRetry: () -> Unit) {
-    val text = when (state) {
-        is ConnectionState.Connecting -> R.string.connection_connecting
-        is ConnectionState.Reconnecting -> R.string.connection_reconnecting
-        ConnectionState.Paused -> R.string.connection_paused
-        is ConnectionState.Stopped -> when (state.reason) {
-            StopReason.NO_ACCOUNT -> R.string.connection_no_account
-            StopReason.UNAUTHORIZED -> R.string.connection_unauthorized
-            StopReason.BANNED -> R.string.connection_banned
-            StopReason.SESSION_REPLACED -> R.string.connection_replaced
-            StopReason.ACCOUNT_DELETED -> R.string.connection_deleted
+private fun StoppedBanner(reason: StopReason, onRetry: () -> Unit) {
+    val text = when (reason) {
+        StopReason.NO_ACCOUNT -> R.string.connection_no_account
+        StopReason.UNAUTHORIZED -> R.string.connection_unauthorized
+        StopReason.BANNED -> R.string.connection_banned
+        StopReason.SESSION_REPLACED -> R.string.connection_replaced
+        StopReason.ACCOUNT_DELETED -> R.string.connection_deleted
+    }
+    val action = when (reason) {
+        StopReason.SESSION_REPLACED -> R.string.connection_play_here
+        StopReason.NO_ACCOUNT -> R.string.action_retry
+        else -> null
+    }
+    Column(Modifier.fillMaxWidth().background(NbColors.surface3).semantics { liveRegion = LiveRegionMode.Assertive }) {
+        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(text), style = NbType.caption, color = NbColors.chalk, modifier = Modifier.weight(1f).padding(vertical = 4.dp))
+            if (action != null) NbButton(stringResource(action), onRetry, kind = ButtonKind.TEXT)
         }
-        is ConnectionState.Connected, ConnectionState.Idle -> null
-    } ?: return
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(NbSpace.s8)) {
-        Text(stringResource(text), color = NbColors.text2, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Start)
-        val retryLabel = when {
-            state is ConnectionState.Stopped && state.reason == StopReason.SESSION_REPLACED -> R.string.connection_play_here
-            state is ConnectionState.Stopped && state.reason == StopReason.NO_ACCOUNT -> R.string.action_retry
-            else -> null
-        }
-        if (retryLabel != null) SecondaryButton(stringResource(retryLabel), onRetry)
+        Hairline()
     }
 }

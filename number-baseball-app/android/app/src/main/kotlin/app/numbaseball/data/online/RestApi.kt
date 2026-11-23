@@ -10,6 +10,7 @@ import app.numbaseball.core.protocol.ErrorCodes
 import app.numbaseball.core.protocol.ErrorResponse
 import app.numbaseball.core.protocol.ProtocolJson
 import app.numbaseball.core.protocol.RedeemTransferRequest
+import app.numbaseball.core.protocol.RenameRequest
 import app.numbaseball.core.protocol.ReportRequest
 import app.numbaseball.core.protocol.ReportResponse
 import app.numbaseball.core.protocol.ServerInfo
@@ -54,6 +55,9 @@ class RestApi(
 
     override suspend fun deleteAccount(token: String): ApiResult<Unit> =
         callUnit(request("me", token).delete())
+
+    override suspend fun rename(token: String, nickname: String): ApiResult<AccountDto> =
+        call(request("me", token).patch(body(RenameRequest.serializer(), RenameRequest(nickname))), AccountDto.serializer())
 
     override suspend fun createTransferCode(token: String): ApiResult<CodeResponse> =
         call(request("me/transfer-code", token).post(EMPTY_BODY), CodeResponse.serializer())

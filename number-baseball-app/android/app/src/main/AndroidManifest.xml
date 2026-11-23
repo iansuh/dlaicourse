@@ -3,6 +3,15 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Offline states on Home / search (NetworkMonitor). -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Haptics table (DESIGN_SYSTEM 9): Vibrator compositions for the lamp and result patterns. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!--
+        Pulled in by androidx.work (a dependency of the Mobile Ads SDK) for foreground workers. Nothing in this app runs
+        foreground work, so both the permission and WorkManager's foreground service are removed from the merged manifest.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
 
     <!-- Auto Backup keeps only the account token store (see res/xml/*backup* and data_extraction_rules). -->
     <application
@@ -29,6 +38,10 @@
             android:exported="true"
             android:resizeableActivity="true"
             android:windowSoftInputMode="adjustResize">
+            <!-- ADAPTIVE.md: 320 × 320 dp minimum window (free-form and split screen). -->
+            <layout
+                android:minWidth="320dp"
+                android:minHeight="320dp" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -44,5 +57,9 @@
                 android:name="autoStoreLocales"
                 android:value="true" />
         </service>
+
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            tools:node="remove" />
     </application>
 </manifest>

@@ -38,10 +38,10 @@ sealed interface AgeState {
 
 object AgeRules {
     /**
-     * With only a birth year the player may not have had a birthday yet this year, so the youngest possible age is used
-     * (conservative for both the minimum age and the ad treatment).
+     * Year only, so the age is known to ±1 year. Design 01 §0: allowed when current year − birth year ≥ the minimum
+     * (the player reaches that age at some point this calendar year).
      */
-    fun youngestAge(birthYear: Int, currentYear: Int): Int = currentYear - birthYear - 1
+    fun ageThisYear(birthYear: Int, currentYear: Int): Int = currentYear - birthYear
 
     fun bandForAge(age: Int, minimumAge: Int): AgeBand = when {
         age < minimumAge -> AgeBand.UNDER_MINIMUM
@@ -51,7 +51,7 @@ object AgeRules {
     }
 
     fun bandForBirthYear(birthYear: Int, currentYear: Int, minimumAge: Int): AgeBand =
-        bandForAge(youngestAge(birthYear, currentYear), minimumAge)
+        bandForAge(ageThisYear(birthYear, currentYear), minimumAge)
 
     /**
      * Signals only tighten ad treatment; the app-wide stop stays with the declared band (signals below 13 refuse online
