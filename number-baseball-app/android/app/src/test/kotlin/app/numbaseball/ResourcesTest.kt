@@ -60,8 +60,8 @@ class ResourcesTest {
         assertEquals(SupportedLanguages.TAGS.sorted(), locales.sorted())
         val translated = File("src/main/res").listFiles()!!
             .map { it.name }
-            .filter { it.matches(Regex("values-[a-z]{2}(-r[A-Z]{2})?")) && File("src/main/res/$it/strings.xml").exists() }
-            .map { it.removePrefix("values-").replace("-r", "-") }
+            .filter { it.matches(Regex("values-([a-z]{2}(-r[A-Z]{2})?|b\\+[a-z]{2}\\+[A-Z][a-z]{3})")) && File("src/main/res/$it/strings.xml").exists() }
+            .map { it.removePrefix("values-").replace("b+", "").replace("+", "-").replace("-r", "-") }
         assertEquals((translated + "en").sorted(), locales.sorted())
     }
 }

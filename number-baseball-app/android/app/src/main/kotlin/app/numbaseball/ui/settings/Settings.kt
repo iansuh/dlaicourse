@@ -392,6 +392,14 @@ fun SettingsScreen(
 private fun languageName(tag: String): String = when (tag) {
     "ko" -> "한국어"
     "en" -> "English"
+    "ja" -> "日本語"
+    "zh-Hans" -> "简体中文"
+    "es" -> "Español"
+    "fr" -> "Français"
+    "de" -> "Deutsch"
+    "pt" -> "Português (Brasil)"
+    "ru" -> "Русский"
+    "vi" -> "Tiếng Việt"
     else -> tag
 }
 

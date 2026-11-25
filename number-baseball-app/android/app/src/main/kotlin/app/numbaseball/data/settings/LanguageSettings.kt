@@ -5,7 +5,7 @@ import androidx.core.os.LocaleListCompat
 
 /** Languages with translations in the app; keep in sync with res/xml/locales_config.xml. */
 object SupportedLanguages {
-    val TAGS: List<String> = listOf("ko", "en")
+    val TAGS: List<String> = listOf("ko", "en", "ja", "zh-Hans", "es", "fr", "de", "pt", "ru", "vi")
 }
 
 /** Per-app language. null means "follow the system". */
@@ -18,7 +18,11 @@ interface LanguageSettings {
 class AppCompatLanguageSettings : LanguageSettings {
     override fun current(): String? {
         val locales = AppCompatDelegate.getApplicationLocales()
-        return if (locales.isEmpty) null else locales[0]?.language
+        val first = locales[0] ?: return null
+        val full = first.toLanguageTag()
+        return SupportedLanguages.TAGS.firstOrNull { it == full }
+            ?: SupportedLanguages.TAGS.firstOrNull { it.substringBefore('-') == first.language }
+            ?: first.language
     }
 
     override fun set(tag: String?) {
