@@ -210,6 +210,7 @@ dependencies {
     implementation(libs.play.services.ads)
     implementation(libs.google.ump)
     implementation(libs.play.age.signals)
+    implementation(libs.play.billing.ktx)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
