@@ -1,6 +1,6 @@
 # Defect log
 
-Owner: QA lead. Updated 2026-11-25 (phase 2: all open defects re-verified against the final protocol, code and the server scenarios). Test plan: [`TEST_PLAN.md`](TEST_PLAN.md).
+Owner: QA lead. Updated 2026-11-25 (Android phase added DEF-051 to DEF-063; phase 2: all open defects re-verified against the final protocol, code and the server scenarios). Test plan: [`TEST_PLAN.md`](TEST_PLAN.md).
 
 ## Format
 
@@ -24,9 +24,9 @@ document resolved it, **Rejected** with a reason. A confirmed code defect that a
 | Severity | Open | Fixed / verified | Closed (spec) |
 | --- | --- | --- | --- |
 | Blocker | 0 | 0 | 0 |
-| Major | 0 | 8 | 2 |
-| Minor | 11 | 21 | 1 |
-| Trivial | 4 | 2 | 1 |
+| Major | 1 | 8 | 2 |
+| Minor | 21 | 21 | 1 |
+| Trivial | 6 | 2 | 1 |
 
 | ID | Sev | Area | Status | Title | Owner |
 | --- | --- | --- | --- | --- | --- |
@@ -81,6 +81,19 @@ document resolved it, **Rejected** with a reason. A confirmed code defect that a
 | DEF-048 | Minor | Stats | Fixed | A forfeit against the review-room bot is recorded as a human loss (protocol 3.1/8.5: bot games never touch stats) | backend |
 | DEF-049 | Minor | Protocol | Fixed | A rejected duel action bumps `room.version` and re-broadcasts `room_state` ("an error never changes state") | backend |
 | DEF-050 | Trivial | Protocol | Fixed | Protocol 3.1 says `chat`/`phrase` answer `terms_required`; protocol 5 says `not_in_room` without a seat, which is always the case before terms | backend |
+| DEF-051 | Major | Age/Policy | Open | Year-only age rule admits players who are 13 (born in the boundary year) although README says minimum age 14 | android, product |
+| DEF-052 | Trivial | Age | Open | An under-minimum answer is not final below the UI: `AgeRepository.submitBirthYear` overwrites it | android |
+| DEF-053 | Minor | Accounts/Terms | Open | Offline-first player whose first registration failed cannot accept the terms (Quick match / rooms) until a connectivity change or restart | android |
+| DEF-054 | Minor | L10N | Open | vs-computer / practice match top-bar subtitle "Computer · Normal · 4 digits" is cut in en, de, es, fr, pt, ru, ja at 360 dp | android |
+| DEF-055 | Minor | L10N/Window | Open | Opponent "Disconnected · 0:41" and "Reconnecting" lines truncate the countdown in narrow / small windows | android |
+| DEF-056 | Minor | L10N/Window | Open | Team board status column: "Reconnecting 0:41" clipped to 3 lines / broken mid-word (en, fr, ru small window; ru phone) | android |
+| DEF-057 | Minor | L10N | Open | Score labels "Team A / Équipe A / チームA / Команда A" ellipsised on the team board (320 dp; ru also at 360 dp) | android |
+| DEF-058 | Minor | Window | Open | Profile at 320 dp wide: win rate "52%" wraps to two lines and its label is cut to 6 dp high (all languages) | android |
+| DEF-059 | Minor | L10N | Open | Words broken mid-word in buttons, segments and titles (ru copy / share, pt share, fr chat title, de/ru relaxed timer, de/ru team title, ru blocked players) | android |
+| DEF-060 | Minor | L10N | Open | Other single-line strings cut: ja cpu_short, pt opp_picking, fr waiting_opp / col_guess, de opp_pitched, ja tut_start, ru age_confirm / reconnecting_title | android |
+| DEF-061 | Minor | Font | Open | At 200 % font size many labels are clipped or ellipsised (AC-FONT-01 says none may be): 40 to 109 distinct strings per language | android, design |
+| DEF-062 | Minor | Ads/Policy | Open | [UNCONFIRMED] `MobileAdsInitProvider` stays in the merged manifest: the Mobile Ads SDK may start before the age answer, for under-age players and for `remove_ads` owners | android, release |
+| DEF-063 | Trivial | Testability | Open | Home record block: `testTag("profile")` is erased by `clearAndSetSemantics` (modifier order), so the tag cannot be found by tests | android |
 
 ---
 
@@ -362,3 +375,79 @@ Found by: `ChatSafetyQaTest.acTerms01` (asserts `not_in_room`).
 Protocol 3.1: "Until then `queue_join`, `room_create`, `room_join`, `chat` and `phrase` answer `terms_required`." Protocol 5: every seat-bound message, `chat` and `phrase` included, answers `not_in_room` without a seat. An account without accepted terms can never get a seat, so `terms_required` for `chat`/`phrase` is unreachable (only after a terms-version change while seated, which needs a restart that drops rooms). The server follows protocol 5. Expected: say so in 3.1.
 Owner: backend (doc).
 Fixed 2026-11-25: protocol 3.1 now says that `chat`/`phrase` without a seat answer `not_in_room`.
+
+## Android phase (2026-11-25, automated Robolectric QA in `android/app/src/test/kotlin/app/numbaseball/qa/`)
+
+Layout findings are measured with `TextLayoutResult` (ellipsis, clipped width/height, word broken mid-word) in Robolectric with the real Barlow Condensed and the host's Roboto/Noto fonts; the full per-suite, per-screen list is `android/app/src/test/resources/qa/layout-baseline.tsv` (suite = `phone-<lang>` 360 x 800, `narrow-<lang>` 320 x 568, `small-<lang>` 360 x 320, `font200-<lang>`, `small-font200-<lang>`) and is enforced by the sweeps (a new finding or a fixed one fails the test). Renders: `android/app/qa-screenshots/qa-locale-<screen>-<lang>.png`. Confirm font-dependent items on a device.
+
+### DEF-051 — Major — Age/Policy — Open
+Found by: `AgeGateQaTest.def051_aPlayerBornInTheBoundaryYearMayStillBeUnderTheMinimumAge`.
+Steps: first launch in 2026, enter birth year 2012.
+Expected: README "minimum age 14" (Korean PIPA guardian consent under 14): a player who may still be 13 is refused or asked more.
+Actual: `AgeRules.ageThisYear` = year - birth year, allowed when >= 14 (design 01 section 0, "turns 14 at some point this calendar year"), so someone born in 2012 who is 13 until the birthday gets in (band CHILD) and can chat online. Same rule as the open question in DEF-047.
+Android file: `data/age/Age.kt` (`AgeRules.bandForAge`, `ageThisYear`). Owner: product decision (accept the year granularity in the privacy/terms texts, or require birth year <= year - minimum - 1).
+
+### DEF-052 — Trivial — Age — Open
+Found by: `AgeGateQaTest.def052_anUnderMinimumAnswerIsNotFinalInTheRepository`.
+Steps: enter 2015, Confirm, then (before the DataStore write is reported back) clear, enter 1990, Confirm.
+Expected: the under-minimum answer is final on the device ("no retry by re-answering", comment in `AgeRepository`).
+Actual: `AgeViewModel.onConfirm` ignores `submitting`, `AgeRepository.submitBirthYear` always saves; the second answer (ADULT) replaces UNDER_MINIMUM. Needs a very fast second entry, so Trivial.
+Android file: `ui/age/AgeGate.kt`, `data/age/AgeRepository.kt`. Owner: android (ignore a second submit once a band is stored).
+
+### DEF-053 — Minor — Accounts/Terms — Open
+Found by: `TermsGateQaTest.def053_...`.
+Steps: first launch offline, choose a nickname (kept locally); the connection returns but the server answers 503 to the first registration; tap Quick match, then Agree and continue.
+Expected: the app registers first (`ensureRegistered`) or says what is wrong; the player gets in once the server is back.
+Actual: only `HomeViewModel` calls `ensureRegistered`, and only when connectivity flips. `acceptTerms` has no token, answers 401, the gate shows the generic "network error" toast and the player is stuck until the app is restarted or connectivity flips. Also `TermsGateScreen` shows `error_network` for every failure code.
+Android file: `ui/home/Home.kt` (HomeViewModel), `ui/terms/TermsGateRoute.kt`, `data/account/AccountRepository.kt`. Owner: android.
+
+### DEF-054 — Minor — L10N — Open
+Found by: sweeps `phone-*` (screens `match-cpu`, `match-practice`).
+Steps: vs Computer with 4 digits (or the practice game), phone 360 dp.
+Expected: the top-bar subtitle shows the digit count.
+Actual: key `digits_n` inside `mode_line` is ellipsised: "Computer · Normal · 4 dig…" in en (also in the committed `match-cpu-en.png`), de "4 Ziffern", es, fr, pt, ru, ja; ko, zh, vi fit. At 320 dp also "Schnelles Spiel · 4 Ziffern" (de), "Partie rapide · 4 chiffres" (fr), "Быстрая игра · 4 цифры" (ru) on every quick-match screen.
+Android file: `ui/match/MatchScreen.kt` (top bar). Owner: android / design.
+
+### DEF-055 — Minor — L10N/Window — Open
+Found by: `small-en`, `narrow-fr`, `narrow-ru`, `narrow-vi`, `small-ru` (screens `match-opponent-offline`, `match-reconnect`, `lobby-reconnect`).
+Actual: `opp_disconnected` ("Disconnected · 0:41", "Déconnecté · 0:41", "Нет связи · 0:41", "Mất kết nối · 0:41") is ellipsised so the countdown is cut; `reconnecting_title` (ru, 360 x 320) "Связь потеряна · переподключение" ellipsised.
+Android file: `ui/match/MatchScreen.kt` (`StatusLine`), `ui/lobby/RoomLobby.kt`. Owner: android.
+
+### DEF-056 — Minor — L10N/Window — Open
+Found by: `small-en`, `small-fr`, `small-ru`, `phone-ru`, `narrow-ru` (screen `team-board`, `report-card`, `report-reasons`).
+Actual: the 72 dp status column wraps "Reconnecting 0:41" / "Reconnexion 0:41" / "Переподключение 0:41" to 3 lines, clipped by 30 px (en, fr, ru small), and "Переподключение" is broken mid-word at 360 dp.
+Android file: `ui/team/TeamBoard.kt`. Owner: android.
+
+### DEF-057 — Minor — L10N — Open
+Found by: `narrow-de`, `narrow-fr`, `narrow-ja`, `narrow-ru`, `phone-ru` (screens `team-board`, `team-final`, `report-*`).
+Actual: key `team_a` ("Team A", "Équipe A", "チームA", "Команда A") is ellipsised in the 50 dp score label at 320 dp (ru at 360 dp: 70 dp).
+Android file: `ui/team/TeamBoard.kt`. Owner: android.
+
+### DEF-058 — Minor — Window — Open
+Found by: `narrow-de/fr/ja/ru/vi` (screen `profile`).
+Actual: at 320 dp the win-rate numeral "52%" wraps to two lines and the `record_rate` label (Siegquote, Victoires, 勝率, Побед, Tỉ lệ thắng) is squeezed to 6 dp high and clipped.
+Android file: `ui/profile/Profile.kt`. Owner: android.
+
+### DEF-059 — Minor — L10N — Open
+Found by: `phone-ru`, `phone-pt`, `phone-fr`, `narrow-*`.
+Actual: words broken in the middle: ru `action_copy` "Копировать" and `action_share` "Поделиться" (lobby buttons, 84 dp), pt `action_share` "Compartilhar", fr `chat_title` "Discussion" (and one letter per line for "Chat" / "Discussion" / "Trò chuyện" at 320 dp: the chat title gets 13 to 52 dp), de/ru `timer_relaxed_short` "Entspannt" / "Спокойно" (create-room sheet, 320 dp), de/ru `mode_team` "Teamspiel" / "Командный матч" (team result title, 320 dp), ru `blocked_players` (settings, 320 dp).
+Android file: `ui/lobby/RoomLobby.kt`, `ui/chat/Chat.kt`, `ui/lobby/CreateRoom.kt`, `ui/team/TeamBoard.kt`, `ui/settings/Settings.kt`. Owner: android / L10N (shorter strings or maxLines with scaling).
+
+### DEF-060 — Minor — L10N — Open
+Found by: `phone-ja`, `phone-pt`, `narrow-de`, `narrow-fr`, `small-ja`, `small-ru`.
+Actual (single line cut): ja `cpu_short` "コンピューター" (result of a computer match), pt `opp_picking` "O adversário está escolhendo um número" (secret entry), fr `waiting_opp` "En attente de l'adversaire" (main action key, 320 dp), fr `col_guess` "Ma proposition" (6-digit log, 320 dp), de `opp_pitched` "Hat geraten" (320 dp), ja `tut_start` "遊んでみよう" (compact tutorial key), ru `age_confirm` "Подтвердить" (compact age screen key), `memo` header clipped to 8 dp (all languages, 320 dp with the reconnect band).
+Android file: `ui/results/Results.kt`, `ui/match/MatchScreen.kt`, `ui/tutorial/Tutorial.kt`, `ui/age/AgeGate.kt`. Owner: android / L10N.
+
+### DEF-061 — Minor — Font — Open
+Found by: `font200-*` (360 x 800) and `small-font200-*` (360 x 320).
+Expected: AC-FONT-01, no clipped hint counts, timer, nickname#tag or buttons at 200 % in any language; screens scroll.
+Actual: no screen crashes and every key control stays reachable by scrolling (zero `missing` / `unreachable` findings in all 32 sweeps), but text is cut: distinct clipped strings per language at 360 x 800: en 40, de 72, fr 76, ja 58, ko 49, ru 109, vi 49; at 360 x 320: en 68, de 89, ko 105. Most frequent: log column headers `col_hint` / `col_opp`, `best`, `other_modes`, `team_a` / `team_b`, `home_help` and `app_name_main` (home title), `practice_to_room`, `waiting_opp` on the Pitch key, `record_rate`, `action_copy` / `action_share`, `tag_won`.
+Android file: various, see the baseline. Owner: android, design (decide which clips are acceptable ellipsis).
+
+### DEF-062 — Minor — Ads/Policy — Open [UNCONFIRMED]
+Found by: review of the merged debug manifest (`processDebugMainManifest`).
+`com.google.android.gms.ads.MobileAdsInitProvider` (initOrder 100) is merged in and not removed (`tools:node="remove"`), no `DELAY_APP_MEASUREMENT_INIT`. The app code never calls `MobileAds.initialize` before the age answer, for an under-age player or a `remove_ads` owner (verified by `AdsIntegrationQaTest`, `BillingQaTest`), but the provider runs at process start. Whether that does more than a light init cannot be told on the JVM. Expected: no ad SDK traffic before consent / age / for owners. Verify with a traffic capture on a device (manual checklist); if it initialises, remove the provider and start the SDK from `GoogleAdsController.startSdk` only.
+Android file: `app/src/main/AndroidManifest.xml`. Owner: android, release lead.
+
+### DEF-063 — Trivial — Testability — Open
+`HomeScreen` Hero: `Modifier.clearAndSetSemantics { ... }.testTag("profile")`, the tag sits inside the cleared node, so `onNodeWithTag("profile")` never matches (the QA tests click by content description). Android file: `ui/home/Home.kt`. Owner: android (put `testTag` before `clearAndSetSemantics`).

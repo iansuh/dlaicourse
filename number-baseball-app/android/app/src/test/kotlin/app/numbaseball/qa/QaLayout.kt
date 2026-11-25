@@ -1,7 +1,6 @@
 package app.numbaseball.qa
 
 import android.content.res.Resources
-import android.graphics.Bitmap
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -10,14 +9,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asAndroidBitmap
+import com.github.takahirom.roborazzi.captureRoboImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -398,11 +396,17 @@ fun ComposeContentTestRule.checkKeys(screen: QaScreen, res: Resources, ime: Int 
     return findings
 }
 
-/** Writes the current window to `qa-screenshots/qa-locale-<name>.png` (a folder of its own, never `screenshots/`). */
+/**
+ * Writes the current window to `qa-screenshots/qa-locale-<name>.png` (a folder of its own, never `screenshots/`). Always
+ * records, whatever the Roborazzi task: these images have no baseline and take no part in `verifyRoborazziDebug`.
+ */
+@OptIn(com.github.takahirom.roborazzi.ExperimentalRoborazziApi::class)
 fun ComposeContentTestRule.saveQaImage(name: String) {
-    val dir = File("qa-screenshots").apply { mkdirs() }
-    val bitmap = onRoot().captureToImage().asAndroidBitmap()
-    File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    File("qa-screenshots").mkdirs()
+    onRoot().captureRoboImage(
+        "qa-screenshots/$name.png",
+        roborazziOptions = com.github.takahirom.roborazzi.RoborazziOptions(taskType = com.github.takahirom.roborazzi.RoborazziTaskType.Record),
+    )
 }
 
 /** Findings log of a sweep: `build/qa/<suite>.tsv`. */
