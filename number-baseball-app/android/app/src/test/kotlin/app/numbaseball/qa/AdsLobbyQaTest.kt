@@ -2,6 +2,8 @@ package app.numbaseball.qa
 
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -44,7 +46,7 @@ class AdsLobbyQaTest {
         compose.onNodeWithTag("chatPeek").performClick()
         compose.waitForIdle()
         assertFalse("no banner in chat", ui.hasBanner())
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithContentDescription("Close").onLast().performClick()
         compose.waitForIdle()
 
         // Practice game while waiting.
