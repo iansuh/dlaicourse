@@ -251,6 +251,19 @@ Sources: Advertising ID, https://support.google.com/googleplay/android-developer
 - App content → Advertising ID → **Yes, uses advertising ID**; purposes: Advertising or marketing, Analytics, Fraud prevention/security. Must match Data safety.
 - Apps solely for children must not request AD_ID (not our case with an 18+ target).
 
+**Permissions in the merged release manifest (checked 2026-11-26, `processReleaseManifest`; targetSdk 36, minSdk 26).**
+
+| Permission | From | Note |
+| --- | --- | --- |
+| `INTERNET`, `ACCESS_NETWORK_STATE`, `VIBRATE` | app | game server, offline state, haptics |
+| `com.google.android.gms.permission.AD_ID` | Mobile Ads SDK | kept on purpose (above); matches "Advertising ID = Yes" |
+| `ACCESS_ADSERVICES_AD_ID`, `ACCESS_ADSERVICES_ATTRIBUTION`, `ACCESS_ADSERVICES_TOPICS` | Mobile Ads SDK | Privacy Sandbox on Android; no Play form of its own, covered by the ad rows of Data safety |
+| `com.android.vending.BILLING` | Play Billing | `remove_ads` |
+| `WAKE_LOCK` | androidx.work (via the Ads SDK) | no app feature uses it |
+| `app.numbaseball.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | AndroidX | signature-level, app-internal |
+
+`FOREGROUND_SERVICE` and WorkManager's foreground service are removed on purpose. `MobileAdsInitProvider` is removed (DEF-062); `DELAY_APP_MEASUREMENT_INIT` is true. No location, camera, contacts, storage or notification permissions. Auto Backup: only `datastore/account.preferences_pb` (the token store); the age band lives in a separate `age` store that is not backed up (so a reinstall asks the age again, DEF-046).
+
 ### 11.5 Consent (EEA, UK, Switzerland, US states)
 
 Sources: Google consent management requirements, https://support.google.com/admob/answer/13554116 ; EU user consent policy help, https://www.google.com/about/company/user-consent-policy-help/ ; Disclose to EEA users (UMP), https://developers.google.com/admob/android/privacy/gdpr ; US state regulations messages, https://support.google.com/admob/answer/10862202 ; Restricted data processing, https://support.google.com/admob/answer/14125907
@@ -272,7 +285,7 @@ Sources: AdMob targeting, https://developers.google.com/admob/android/targeting 
 - **Ads must be appropriate for the app's content rating** and not significantly more mature than the app. Google's own violation example is **a Teen-rated ad shown in an Everyone-rated app** (Content rating requirements for apps, games and ads, https://support.google.com/googleplay/android-developer/answer/9859655).
 - So "an ad rating suitable for teens" (README) is only correct if IARC rates the app Teen/12+. Rule: set `RequestConfiguration.setMaxAdContentRating(...)` from the IARC result — Everyone / PEGI 3 / 전체이용가 → **G**; Everyone 10+ / PEGI 7 → **PG**; Teen / PEGI 12 / 12세이용가 → **T**. Never MA. Keep the value in build configuration so it can be changed when the rating is known. Expected: G (a number game with text chat usually gets the lowest bracket plus "Users interact").
 - In AdMob's blocking controls, also block sensitive categories (gambling, dating, alcohol, sexual content, get-rich-quick) because minors are in the audience.
-- `MobileAds.setAppMuted(true)` fits the quiet design, but Google warns muting **reduces video ad eligibility and may lower revenue**, and should mirror a real in-app mute control. Recommendation: keep ads muted when the app's sound setting is off (the default); unmute ads only if the player turns game sound on.
+- `MobileAds.setAppMuted(true)` fits the quiet design, but Google warns muting **reduces video ad eligibility and may lower revenue**, and should mirror a real in-app mute control. Decision (README "Sound", DEF-044): ads are always muted app-wide (`MobileAds.setAppMuted(true)` after SDK start), whatever the game's sound setting; the lower video-ad eligibility is accepted.
 
 ### 11.7 app-ads.txt
 

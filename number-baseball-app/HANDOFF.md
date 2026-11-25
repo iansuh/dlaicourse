@@ -1,6 +1,6 @@
 # Handoff for the next tech-lead session
 
-Written 2026-11-25 by the previous tech-lead session, which became too long to run cheaply. Read this file and `README.md` (all product decisions) before doing anything else. Branch: `claude/number-baseball-game-1u4o9o` (push only there).
+Written 2026-11-25 by the previous tech-lead session (status table refreshed 2026-11-26 by the release lead; the "Findings 2026-11-25" section and the sections below it are historical), which became too long to run cheaply. Read this file and `README.md` (all product decisions) before doing anything else. Branch: `claude/number-baseball-game-1u4o9o` (push only there).
 
 ## The owner
 - Writes in Korean, often from an Android phone. Answer in short, plain Korean. Environment changes (network hosts, setup scripts) can only be approved from a computer.
@@ -16,30 +16,33 @@ Written 2026-11-25 by the previous tech-lead session, which became too long to r
 bash number-baseball-app/tools/install-android-sdk.sh   # Android SDK at /opt/android-sdk, writes android/local.properties
 export ANDROID_HOME=/opt/android-sdk
 cd number-baseball-app/backend && ./gradlew test         # core + server
-cd ../android && ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+cd ../android && ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:verifyRoborazziDebug
 ```
 Network: dl.google.com and gcp.mirrors.maven.org are allowed in the environment (needed for Google Maven and Robolectric jars). GitHub Actions (`.github/workflows/number-baseball-app.yml`) builds and tests on every push to the branch.
 
-## Status by workstream (2026-11-25)
+## Status by workstream (2026-11-26)
+
+Release status page with numbers, open defects, the device checklist and the owner's to-do list (Korean): `docs/play/RELEASE_READINESS.md`.
 
 | Area | State | Remaining |
 | --- | --- | --- |
-| Product decisions | `README.md`, current | Keep it updated when the owner decides something |
-| Design (`design/`) | Phase 1 signed off: DESIGN_SYSTEM.md, tokens.json, 15 screen specs + FLOW/ADAPTIVE, prototypes, 48 reference renders in `design/shots/`, fonts, icon, store assets | Phase 2: review the Android Roborazzi renders against `design/shots` (more than 1 dp off or a non-token colour = defect), up to 2 fix rounds |
-| Backend (`backend/`) | Complete: protocol (`docs/protocol.md`), core, Ktor server, Dockerfile, `server/DEPLOY.md`. `./gradlew test` green (QA's 40 server scenarios still `@Ignore`) | Fix defects QA finds |
-| Android (`android/`) | Phase 1 complete (architecture, data, online client, age/terms gates, ads + UMP + Age Signals, audio/haptics hooks, CI). Phase 2 (designed UI) **in progress**: builds, 194 tests green; screens partly converted to the design | Finish every screen per `design/screens/*.md` and `design/shots`; re-record Roborazzi; `verifyRoborazziDebug`, lint, tests green; wire real sound files |
-| Sound (`design/sound/`) | 29 OGG cues in `out/`, generator `tools/`, `REPORT.md`, spectrograms | `SOUND_DESIGN.md`, `audition.html` (owner listens on a phone), `INTEGRATION.md`; timer warning must be one cue at 10 s then ticks for the last 5 s (DESIGN_SYSTEM 8.3/10) |
-| QA (`docs/qa/`) | TEST_PLAN.md (220 criteria), corpora, oracle + differential tests (pass), 40 server scenarios written, DEFECTS.md (47 logged: 38 open, many likely fixed since) | Phase 2: update scenarios to the final protocol (terms + `ageConfirmed`, timers 30/60/120/600, `chat_not_allowed`), run the server with `RELAXED_RATE_LIMITS=true TEST_HOOKS=true`, un-ignore, re-verify defects; then Android checks (offline vs-computer from first launch in airplane mode, ads never in matches, age gate, terms gate, small window, font scale 200%, locales) |
-| Play release (`docs/play/`) | Policy checklist, review, privacy policy, terms, deletion page, store listing (10 languages), Korean release guide | Fill placeholders once the owner provides contact email/domain |
-| Translations | App strings exist in `values/` (en) and `values-ko/` | 8 locales: ja, `b+zh+Hans`, es, fr, de, `pt` (Brazilian), ru, vi. Store listing texts already exist in `docs/play/STORE_LISTING.md` |
+| Product decisions | `README.md`, current (age screen asks birth year and month; ads always muted; `remove_ads` 4.99 USD) | Keep it updated when the owner decides something; README should point to the per-age-band ad settings (DEF-047) |
+| Design (`design/`) | Phase 1 signed off; phase 2 reviews `REVIEW_PHASE2*.md`: round 2 said "Not signed off"; later fix rounds closed most items (layout sweeps clean except 7 entries at 360 x 320 and 200 % font) | One more design review round (round 3) for a sign-off verdict |
+| Backend (`backend/`) | Complete. `./gradlew --offline test`: 271 tests green (core 128, server 143), no ignored scenarios, all server defects fixed | Deploy on Render (owner), see `backend/server/DEPLOY.md` |
+| Android (`android/`) | Complete. `:app:testDebugUnitTest` 3045 cases, 0 failures (729 skipped by design, screenshot suites); lint 0 errors; `verifyRoborazziDebug` green (480 reference renders); `assembleDebug` ok; unsigned `assembleRelease` / `bundleRelease` ok with `NB_ALLOW_PLACEHOLDER_RELEASE=true` | Signed build needs the owner's `NB_*` values and upload key; device checks (RELEASE_READINESS section 4) |
+| Sound (`design/sound/`) | 29 cues integrated (`res/raw`), `SOUND_DESIGN.md`, `INTEGRATION.md`, `audition.html` exist | Owner listens on a phone; device haptics check |
+| QA (`docs/qa/`) | DEFECTS.md: no Blocker, no Major open. 15 Minor/Trivial open (DEF-016, 019, 020, 023 to 027, 029, 036, 043, 045 to 047, 061 partly) | Optional: product decisions on the open ones; device checks |
+| Play release (`docs/play/`) | Checked against the code on 2026-11-26 and fixed (muting, age screen wording, signing/AdMob value names, permissions table). `RELEASE_READINESS.md` added | Owner fills the `[대괄호]` placeholders (email, name, address, phone, domain, hosting details, dates) before the release build, because the in-app texts and the web pages are generated from `docs/play/*.md` |
+| Translations | 10 languages in `res/values*`, `LocaleResourcesQaTest` green (429 strings, 8 plurals) | Native-speaker review |
+| CI | `.github/workflows/number-baseball-app.yml`: backend tests, Android verify + lint + debug APK + unsigned release bundle | Runs only on the feature branch; no signing step (add one only if the owner wants Actions to sign) |
 
-## Findings 2026-11-25 (new session)
+## Findings 2026-11-25 (new session, historical: all fixed by 2026-11-26)
 - `backend: ./gradlew test` fails to compile: `server/src/test/.../qa/QaClients.kt` was rewritten (QaInstance/QaServer.start) but the 5 QA test files still use the removed `QaHttp`. QA phase 2 must finish this migration first. `:core:test` is green.
 - Android: 194 unit tests green; lint had 1 error (`NbApp.kt:542` LocalContextGetResourceValueCall), assigned to the Android phase 2 agent.
 - Maven Central often answers HTTP 429 here; rerunning Gradle works because downloads are cached.
 
 ## New owner decision 2026-11-25: Remove ads purchase
-README "Remove ads" + updated interstitial rule (now also after online matches). Not implemented yet. After Android phase 2 lands: an Android agent (opus) adds Play Billing + Settings/results entry + interstitial rule change + tests; the release docs (`docs/play/`: Data safety, privacy policy, store listing "In-app purchases", RELEASE_GUIDE product setup in Play Console) get a sonnet docs pass. Owner must create the in-app product `remove_ads` in Play Console. Play docs are updated (2026-11-25; terms now `2026-11-v3`). Billing agent must also meet `docs/play/POLICY_CHECKLIST.md` 11.1 and 12 and POLICY_REVIEW Android item 13: purchase token never logged or sent to our server; after purchase no Mobile Ads init and no UMP form; online interstitial safeguards (not with chat/keyboard open, not if the player left the screen, not in the review room, not when `remove_ads` is owned).
+README "Remove ads" + updated interstitial rule (now also after online matches). **Implemented** (Play Billing, Settings and result link, restore, interstitial rule; `BillingQaTest` 14 tests). Original brief, kept for the record: an Android agent adds Play Billing + Settings/results entry + interstitial rule change + tests; the release docs (`docs/play/`: Data safety, privacy policy, store listing "In-app purchases", RELEASE_GUIDE product setup in Play Console) get a sonnet docs pass. Owner must create the in-app product `remove_ads` in Play Console. Play docs are updated (2026-11-25; terms now `2026-11-v3`). Billing agent must also meet `docs/play/POLICY_CHECKLIST.md` 11.1 and 12 and POLICY_REVIEW Android item 13: purchase token never logged or sent to our server; after purchase no Mobile Ads init and no UMP form; online interstitial safeguards (not with chat/keyboard open, not if the player left the screen, not in the review room, not when `remove_ads` is owned).
 
 ## Suggested order
 1. Android phase 2 (opus) and sound finishing (sonnet) in parallel.
@@ -49,7 +52,7 @@ README "Remove ads" + updated interstitial rule (now also after online matches).
 5. Show the owner real app screenshots and the sound audition page (publish it as an Artifact) along the way.
 
 ## Waiting on the owner
-Contact email for the game, a domain (for `app-ads.txt`), deploying the server (Render, `backend/server/DEPLOY.md`), AdMob account and real ad unit IDs, Play Console account (trader declaration, minimum age 14, target audience 13+ groups), KIPRIS check of the name "숫자야구: 조용한 한판", upload key for signing.
+The numbered Korean list with where each value goes is in `docs/play/RELEASE_READINESS.md` section 5. In short: contact email for the game, a domain (for `app-ads.txt`), deploying the server (Render, `backend/server/DEPLOY.md`), AdMob account and real ad unit IDs, Play Console account (trader declaration, minimum age 14, target audience 13+ groups), KIPRIS check of the name "숫자야구: 조용한 한판", upload key for signing.
 
 ## Usage limits
 When agents stop with a usage-limit error, note the reset time and resume work after it. An hourly scheduled task bound to this session does the commit + resume check; delete it when the project is finished.

@@ -51,7 +51,7 @@
 | 채팅 | 방 안의 채팅 메시지 | 같은 방 사람에게 전달 | 이용자가 보낼 때 (메모리에서만 처리) |
 | 대결 정보 | 비밀 숫자, 추측, 남은 시간 | 판정과 진행 | 대결 중 (메모리에서만 처리, 결과만 전적에 반영) |
 | 접속 정보 | IP 주소, 앱 버전, 접속 시각 | 과도한 요청 차단(예: 시간당 계정 생성 횟수 제한), 장애 대응, 보안 | 서버 접속 시 자동 |
-| 연령대 | 처음 실행할 때 고른 연령대(만 14세 미만 / 14~15세 / 16~17세 / 18세 이상) | 이용 가능 여부 확인, 미성년자 광고 보호 설정 | **휴대폰에만 저장**, 서버로 보내지 않음 |
+| 연령대 | 처음 실행할 때 입력한 출생 연도·월로 앱이 계산한 연령대(만 14세 미만 / 14~15세 / 16~17세 / 18세 이상). 출생 연도·월 자체는 저장하지 않음 | 이용 가능 여부 확인, 미성년자 광고 보호 설정 | **연령대만 휴대폰에 저장**, 서버로 보내지 않음 |
 | 약관 동의 | 동의한 약관 버전, 동의 시각, 만 14세 이상 확인 여부 | 이용약관 동의 기록 | 약관 동의 화면 |
 | 구매 정보 (Google Play가 처리) | 상품 ID(`remove_ads`), 구매 상태(구매됨/보류), 구매 토큰, 구매 확인(acknowledge) 여부. **카드번호·계좌·결제 수단·실명은 받지 않습니다.** | "광고 제거" 구매 확인, 광고 숨기기, 구매 복원 | Google Play 결제 라이브러리가 앱에 전달 (**휴대폰에서만 확인하며 운영자 서버로 보내지 않음**) |
 | 광고 정보 (Google이 수집) | 광고 ID, 앱 세트 ID, IP 주소(대략적인 위치 추정), 광고 상호작용, 진단 정보 | 광고 표시와 측정, 부정 클릭 방지 | Google Mobile Ads SDK가 자동 수집 (7절) |
@@ -104,7 +104,7 @@
 - Google Mobile Ads SDK는 광고 ID, 앱 세트 ID, IP 주소, 광고 상호작용, 진단 정보를 수집해 광고 제공, 측정, 부정 클릭 방지에 씁니다. Google이 데이터를 쓰는 방식: https://policies.google.com/technologies/partner-sites
 - 유럽경제지역, 영국, 스위스 및 일부 미국 주에서는 앱이 처음에 동의 화면을 보여 줍니다. 앱 **설정 → 개인정보 옵션**에서 언제든 선택을 바꿀 수 있습니다. 동의하지 않아도 앱은 그대로 쓸 수 있고 맞춤형이 아닌 광고가 나옵니다.
 - 모든 지역에서 휴대폰 **설정 → 개인정보 보호(또는 Google) → 광고**에서 광고 ID를 재설정하거나 삭제할 수 있습니다(기기마다 메뉴 이름이 조금 다릅니다).
-- **만 18세 미만 이용자**: 처음 실행할 때 고른 연령대에 따라 앱이 Google에 "연령 제한 처리"를 요청합니다. 만 14~15세는 맞춤형 광고를 하지 않고 광고 ID도 보내지 않으며, 만 16~17세는 Google의 청소년 보호 기준을 적용합니다. Google Play가 알려 주는 연령 정보(Play 연령 신호)도 같은 목적에만 씁니다.
+- **만 18세 미만 이용자**: 처음 실행할 때 입력한 출생 연도·월로 계산한 연령대에 따라 앱이 Google에 "연령 제한 처리"를 요청합니다. 만 14~15세는 맞춤형 광고를 하지 않고 광고 ID도 보내지 않으며, 만 16~17세는 Google의 청소년 보호 기준을 적용합니다. Google Play가 알려 주는 연령 정보(Play 연령 신호)도 같은 목적에만 씁니다.
 - 운영자는 광고 ID를 직접 받거나 저장하지 않습니다.
 
 ### 7-1. 인앱 구매 (광고 제거)
@@ -197,7 +197,7 @@ Who we are: [운영자 성명] / address [운영자 주소] / phone [게임 전�
 | Chat | Messages in a room | Deliver them to the room | When you send them (memory only) |
 | Match data | Secret numbers, guesses, timers | Judge and run the match | During a match (memory only; only the result is saved) |
 | Connection data | IP address, app version, time | Rate limiting (e.g. account creations per hour), troubleshooting, security | Automatically when you connect |
-| Age band | The age band chosen on first launch (under 14 / 14–15 / 16–17 / 18+) | Decide whether the app can be used; apply ad protections for minors | **Stored only on your phone**, never sent to us |
+| Age band | The age band the app works out from the birth year and month you enter on first launch (under 14 / 14–15 / 16–17 / 18+). The birth year and month themselves are not stored | Decide whether the app can be used; apply ad protections for minors | **Only the band is stored, only on your phone**, never sent to us |
 | Terms acceptance | Terms version accepted, time, confirmation of being 14 or older | Record that you accepted the Terms | Terms screen |
 | Purchase data (handled by Google Play) | Product ID (`remove_ads`), purchase state (purchased / pending), purchase token, whether the purchase has been acknowledged. **We do not receive card numbers, bank details, payment methods or your real name.** | Confirm the "Remove ads" purchase, hide ads, restore the purchase | Passed to the app by the Google Play Billing library (**checked on your phone only; not sent to our server**) |
 | Ad data (collected by Google) | Advertising ID, app set ID, IP address (to estimate approximate location), ad interactions, diagnostics | Serve and measure ads, prevent ad fraud | Google Mobile Ads SDK (section 7) |
@@ -248,7 +248,7 @@ We do not sell or give your personal data to other companies or people, except w
 - The Google Mobile Ads SDK collects the advertising ID, app set ID, IP address, ad interactions and diagnostics to serve and measure ads and prevent fraud. How Google uses data: https://policies.google.com/technologies/partner-sites
 - In the EEA, the UK, Switzerland and some US states, the app shows a consent or choices screen. You can change your choice at any time in **Settings → Privacy options** in the app. If you do not consent, the app still works and shows non-personalized ads.
 - Everywhere, you can reset or delete your advertising ID in your phone's **Settings → Privacy (or Google) → Ads** (menu names vary by device).
-- **Users under 18**: based on the age band chosen on first launch, the app asks Google for age-restricted ad treatment. Users aged 14–15 get no personalized ads and their advertising ID is not sent; users aged 16–17 get Google's teen protections. Age information provided by Google Play (Play Age Signals) is used only for the same purpose.
+- **Users under 18**: based on the age band the app works out from the birth year and month you enter on first launch, the app asks Google for age-restricted ad treatment. Users aged 14–15 get no personalized ads and their advertising ID is not sent; users aged 16–17 get Google's teen protections. Age information provided by Google Play (Play Age Signals) is used only for the same purpose.
 - We do not receive or store your advertising ID ourselves.
 
 ### 7-1. In-app purchase (Remove ads)

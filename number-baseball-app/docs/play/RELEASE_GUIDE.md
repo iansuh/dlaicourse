@@ -140,14 +140,17 @@ keytool -export -rfc -keystore upload-keystore.jks -alias upload -file upload_ce
 1. **GitHub 저장소에 절대 올리지 않습니다.** (저장소의 `.gitignore`가 `*.jks`, `*.keystore`를 막고 있지만, 애초에 저장소 폴더 안에 두지 마세요.)
 2. 채팅, 이메일, 스크린샷으로 보내지 않습니다.
 3. 백업 2곳: 예) 비밀번호 관리자의 파일 첨부 + 암호 걸린 USB. 비밀번호는 파일과 다른 곳에 둡니다.
-4. **GitHub Actions 비밀값**으로 자동 빌드에 넘깁니다. GitHub 저장소 → Settings → Secrets and variables → Actions → New repository secret. 이름은 Android 담당이 `.github/` 설정에 맞춰 알려 줍니다. 보통 이런 4개입니다.
+4. 서명된 출시 빌드는 `android/app/build.gradle.kts`가 읽는 **`NB_` 환경 변수(또는 Gradle 속성)** 로 키를 받습니다(`android/README.md`). 지금 GitHub Actions(`.github/workflows/number-baseball-app.yml`)에는 서명 단계가 없고 서명 없는 확인용 번들만 만듭니다. 나중에 Actions에서 서명하려면 GitHub 저장소 → Settings → Secrets and variables → Actions → New repository secret에 넣고 워크플로 단계를 추가해야 합니다(Android 담당 작업). 빌드에 필요한 값은 이렇습니다.
 
 | 비밀값 이름 (예시) | 값 |
 | --- | --- |
-| `UPLOAD_KEYSTORE_BASE64` | `.jks` 파일을 글자로 바꾼 값 (아래 명령) |
-| `UPLOAD_KEYSTORE_PASSWORD` | 키 저장소 비밀번호 |
-| `UPLOAD_KEY_ALIAS` | `upload` |
-| `UPLOAD_KEY_PASSWORD` | 키 비밀번호 (보통 같은 값) |
+| `NB_RELEASE_STORE_FILE` | `.jks` 파일의 경로 (Actions에서 쓸 때는 `.jks`를 글자로 바꾼 값을 비밀값으로 넣고 단계에서 파일로 복원) |
+| `NB_RELEASE_STORE_PASSWORD` | 키 저장소 비밀번호 |
+| `NB_RELEASE_KEY_ALIAS` | `upload` |
+| `NB_RELEASE_KEY_PASSWORD` | 키 비밀번호 (보통 같은 값) |
+| `NB_SERVER_URL`, `NB_CONTACT_EMAIL` | 서버 주소(`https://[도메인]`), 게임 전용 이메일 |
+| `NB_ADMOB_APP_ID`, `NB_ADMOB_BANNER_ID`, `NB_ADMOB_INTERSTITIAL_ID` | AdMob 실제 ID (9장) |
+| `NB_MAX_AD_CONTENT_RATING` | 광고 등급 상한(기본 `G`), 콘텐츠 등급 결과에 맞춤 |
 
 `.jks`를 글자로 바꾸는 명령:
 
@@ -160,7 +163,7 @@ base64 -w 0 upload-keystore.jks
 [Convert]::ToBase64String([IO.File]::ReadAllBytes("upload-keystore.jks")) | Set-Clipboard
 ```
 
-광고 단위 ID도 같은 방법으로 비밀값에 넣습니다(9장).
+광고 단위 ID도 같은 방법으로 넣습니다(9장). 실제 값이 하나라도 빠지면 출시 빌드는 일부러 실패합니다(`checkReleaseConfig`).
 
 ### 업로드 키를 잃어버렸다면
 
@@ -226,7 +229,7 @@ Play Console → 해당 앱 → **앱 무결성(App integrity) → Play 앱 서�
 서버 담당이 심사용 방 코드(`REVIEW_ROOM_CODE`)를 켜 둔 상태여야 합니다. 서버는 24시간 켜져 있어야 합니다.
 
 ```text
-No login or password is needed. On first launch, choose an age of 14 or older on the age screen (the app is for ages 14+), enter any nickname (2-12 letters or digits) and accept the Terms of Use; the app creates an account automatically.
+No login or password is needed. On first launch, enter a birth year and month that make you 14 or older on the age screen (the app is for ages 14+; only the age band is kept, not the date), enter any nickname (2-12 letters or digits) and accept the Terms of Use; the app creates an account automatically.
 
 - Offline play: Home > Vs Computer.
 - Online play without a second device: Home > Private room > Join, enter room code [REVIEW_ROOM_CODE]. A test bot joins, plays a 4-digit duel and sends a chat message.
@@ -244,7 +247,7 @@ No login or password is needed. On first launch, choose an age of 14 or older on
 
 ### 7-1. 내부 테스트 (바로 가능)
 
-1. Android 담당이 서명된 AAB 파일을 줍니다(또는 GitHub Actions가 만듭니다).
+1. Android 담당이 서명된 AAB 파일을 줍니다. 서명된 AAB는 업로드 키와 실제 값(`NB_*`, 아래 4장 표)을 넣고 **담당자의 컴퓨터에서** 만듭니다. GitHub Actions는 서명 없는 확인용 번들(자리표시 값)만 만들고 Play에 올릴 수 없습니다.
 2. **테스트 및 출시 → 테스트 → 내부 테스트 → 새 버전 만들기** → AAB 업로드 → 출시 노트 작성 → 저장 → 검토 → 출시.
 3. **테스터** 탭에서 이메일 목록을 만들고 팀원 이메일을 넣습니다(최대 100명). 참여 링크를 보내 설치합니다.
 4. 이 단계에서 광고는 **테스트 광고**만 나와야 합니다.
@@ -304,7 +307,7 @@ No login or password is needed. On first launch, choose an age of 14 or older on
    - 배너 1개 (이름 예: `home_results_banner`)
    - 전면 광고 1개 (이름 예: `match_end_interstitial`, 컴퓨터·온라인 대결 뒤에 함께 씁니다)
    - 보상형 광고는 만들지 않습니다.
-4. 광고 단위 ID 2개(`ca-app-pub-.../...`)를 **GitHub Actions 비밀값**(예: `ADMOB_APP_ID`, `ADMOB_BANNER_ID`, `ADMOB_INTERSTITIAL_ID`)에 넣습니다. 저장소 파일에는 넣지 않습니다.
+4. 앱 ID와 광고 단위 ID 2개(`ca-app-pub-.../...`)를 빌드 값 `NB_ADMOB_APP_ID`, `NB_ADMOB_BANNER_ID`, `NB_ADMOB_INTERSTITIAL_ID`로 넣습니다(4장 표). 저장소 파일에는 넣지 않습니다.
 5. 개발 중에는 Google의 **테스트 광고 ID**만 씁니다(Android 담당이 처리).
 6. **광고를 산 사람에게는 광고 요청 자체가 없어집니다**(앱이 처리). 테스트할 때는 광고 제거 상품을 산 계정과 안 산 계정을 모두 써 봅니다.
 7. **본인이나 지인이 실제 광고를 누르면 안 됩니다.** 부정 클릭으로 계정이 정지될 수 있습니다. 광고를 누르라고 부탁하는 문구도 금지입니다.
@@ -439,7 +442,7 @@ AdMob → **개인정보 보호 및 메시지**:
 - [ ] 신고·차단·전체 채팅 끄기 동작
 - [ ] 광고: 대결 중·비밀 숫자 입력·대기 연습·대기실·채팅에 없음, 전면 광고는 컴퓨터·온라인 대결 뒤 결과 화면 가는 길에만(3판에 1번·4분 간격), 심사용 방에서는 안 나옴, 실제 광고 ID는 비밀값에서만
 - [ ] 광고 제거: 설정과 결과 화면의 작은 링크에서만 구매, 대결 중 팝업 없음, 구매 복원 동작, 가격은 Play가 주는 값, 구매 후 광고·동의 화면 없음, 계정 삭제 안내문에 "구매는 Google 계정에 남음"
-- [ ] 업로드 키는 저장소 밖에 보관, 백업 2곳, GitHub 비밀값 등록
+- [ ] 업로드 키는 저장소 밖에 보관, 백업 2곳 (GitHub 비밀값은 Actions에서 서명할 때만)
 
 **서버**
 - [ ] 항상 켜진 요금제 + 영구 디스크
