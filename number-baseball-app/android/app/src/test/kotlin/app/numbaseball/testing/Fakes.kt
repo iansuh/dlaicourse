@@ -98,6 +98,12 @@ class FakeSafetyApi : SafetyApi {
         reports += request
         return reportResult
     }
+    var cardResult: ApiResult<app.numbaseball.core.protocol.PlayerCard> = ApiResult.Failure(404, "not_found")
+    val cardKeys = mutableListOf<String>()
+    override suspend fun playerCard(token: String, key: String): ApiResult<app.numbaseball.core.protocol.PlayerCard> {
+        cardKeys += key
+        return cardResult
+    }
 }
 
 /** In-memory online client. Messages with a `rid` are acknowledged at once unless [errorFor] says otherwise. */

@@ -1,5 +1,7 @@
 package app.numbaseball.ui.chat
 
+import app.numbaseball.core.protocol.SystemChatCodes
+
 import app.numbaseball.ui.design.isLargeFont
 
 import androidx.compose.foundation.verticalScroll
@@ -324,8 +326,37 @@ private fun MutedState(modifier: Modifier, onUnmute: () -> Unit) {
 }
 
 @Composable
-private fun messageText(message: ChatMessage): String =
-    if (message.kind == ChatKind.PHRASE) message.phraseId?.let { phraseText(it) }.orEmpty() else message.text.orEmpty()
+private fun messageText(message: ChatMessage): String = when (message.kind) {
+    ChatKind.PHRASE -> message.phraseId?.let { phraseText(it) }.orEmpty()
+    ChatKind.SYSTEM -> systemText(message)
+    ChatKind.TEXT -> message.text.orEmpty()
+}
+
+/**
+ * A system line (protocol 1.1 §9.3): "민트초코#0912 님이 들어왔어요" / "… 님이 나갔어요"; a deleted subject reads "삭제된 플레이어";
+ * unknown codes get a generic line.
+ */
+@Composable
+fun systemText(message: ChatMessage): String {
+    val subject = message.subjectNickname?.let { name -> message.subjectTag?.let { "$name#$it" } ?: name } ?: stringResource(R.string.chat_deleted_player)
+    return when (message.systemCode) {
+        SystemChatCodes.PLAYER_JOINED -> stringResource(R.string.chat_system_joined, subject)
+        SystemChatCodes.PLAYER_LEFT -> stringResource(R.string.chat_system_left, subject)
+        else -> stringResource(R.string.chat_system_generic)
+    }
+}
+
+/** System line: centred `caption` `text3`, no bubble, no actions (09 Message anatomy). */
+@Composable
+private fun SystemLine(message: ChatMessage) {
+    Text(
+        systemText(message),
+        style = NbType.caption,
+        color = NbColors.text3,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    )
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -345,6 +376,10 @@ private fun Messages(state: ChatUiState, modifier: Modifier, held: Long?, onLong
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp),
     ) {
         items(state.messages, key = { it.id }) { message ->
+            if (message.kind == ChatKind.SYSTEM) {
+                SystemLine(message)
+                return@items
+            }
             val mine = message.senderId != null && message.senderId == state.myId
             val showTime = mine && message == state.messages.lastOrNull { it.senderId == state.myId }
             ChatLine(message, mine, state.teamRoom, held == message.id, showTime, onLongPress, onName)

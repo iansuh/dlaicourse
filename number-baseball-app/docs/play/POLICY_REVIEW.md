@@ -1,6 +1,6 @@
 # Policy review of the README decisions
 
-Owner: Release lead. Reviewed: 2026-11-21, updated the same day for the owner's decisions (trader / worldwide, audience 13+, "숫자야구"-style name, quick phrases only in quick match), against `../../README.md` and `../protocol.md` v1. Sources and verification notes are in `POLICY_CHECKLIST.md` (official Google pages were confirmed through search extracts; they could not be opened directly from this container).
+Owner: Release lead. Reviewed: 2026-11-21, updated 2026-11-25 for the optional one-time "Remove ads" purchase and the interstitial after online matches (R2, R11, R17, R22, teammate lists), and the same day 2026-11-21 for the owner's decisions (trader / worldwide, audience 13+, "숫자야구"-style name, quick phrases only in quick match), against `../../README.md` and `../protocol.md` v1. Sources and verification notes are in `POLICY_CHECKLIST.md` (official Google pages were confirmed through search extracts; they could not be opened directly from this container).
 
 Severity: **Critical** = blocks launch or breaks an owner requirement; **High** = likely rejection or policy violation if not done; **Medium** = real risk or notable gap; **Low** = good practice.
 
@@ -11,6 +11,13 @@ Severity: **Critical** = blocks launch or breaks an owner requirement; **High** 
 - 대상 연령 13세 이상, 미성년자 접근 제한 끔 (R3).
 - 앱 이름은 "숫자야구" 계열 (R14). 추천: **숫자야구: 조용한 한판 / Number Baseball: Quiet Duel** (`STORE_LISTING.md`).
 - 빠른 대결은 정해진 문구만, 자유 채팅은 비공개 방에서만 (R4 해결).
+- **(2026-11-25) 광고 제거 1회 구매 `remove_ads`, 4.99달러**, Google Play 결제, 구독 아님, 서버 확인 없음. 전면 광고는 컴퓨터 대결뿐 아니라 **온라인 대결 뒤, 결과 화면으로 가는 길**에도 나옵니다(3판에 1번, 4분 간격). 정책상 가능하지만 R11·R22의 안전장치가 필요합니다.
+
+**광고 제거 때문에 사장님이 하실 일 (R22)**
+1. **결제 프로필을 "판매"용으로 설정**합니다(은행 계좌, 세금 정보). 계정이 판매자(merchant) 계정이 됩니다. 주소는 이미 트레이더로 공개되므로 새로 공개되는 것은 없습니다.
+2. **한국 개인 개발자가 인앱 상품을 팔려면 사업자등록·통신판매업 신고 정보를 요구받을 수 있습니다.** 확인하지 못했으니 상품을 만들기 전에 Play Console 결제 프로필 화면에서 직접 확인하고, 세무사에게 개인사업자 등록 여부를 물어보세요. 막히면 1.0은 광고만으로 출시하고 업데이트로 `remove_ads`를 넣는 방법이 있습니다.
+3. 구매 수수료(처음 연 100만 달러까지 15%로 알고 있음, 확인 필요)와 한국 세금은 사장님 몫입니다.
+4. 약관 버전이 `2026-11-v3`로 올라갔습니다(구매 문구 추가). 출시 전이라 영향은 없지만 담당자가 테스트의 `2026-11-v2`를 확인해야 합니다.
 
 **아직 정하실 것**
 1. **최소 이용 나이를 만 14세로** (전 세계 공통) 정하는 것을 추천합니다 (R19). 한국 개인정보 보호법은 만 14세 미만 아동의 개인정보를 "동의"로 처리할 때 법정대리인 동의를 요구하고, 개인정보위는 만 14세 미만에게 맞춤형 광고용 행태정보를 쓰지 말라고 권고합니다. 보호자 동의 절차를 만들지 않으려면 14세 미만은 받지 않는 것이 가장 안전합니다. 13세로 두려면 보호자 동의 절차나 한국 이용자만 따로 막는 방법이 필요합니다.
@@ -53,7 +60,7 @@ Update 2026-11-21: as a trader, the legal name, address, phone and email are pub
 - Get a **separate phone number** for the game (for example a second SIM/second line). It must receive the verification code by SMS or automated voice call. Whether internet-phone (070) or virtual numbers are accepted is **[UNCONFIRMED]**; test before relying on one.
 - Set the **developer name** to a game or studio name (the legal name is shown separately as a trader).
 - During sign-up, read the screen that shows which details will be public before submitting.
-- Do not add Play Billing (paid app, IAP, tip jar): a merchant account shows the full address (R17).
+- Play Billing: since 2026-11-25 the app sells the in-app product `remove_ads`, so the account is a merchant account. The address is public anyway as a trader; see R17 and R22 for what else Play and Korea may require.
 
 ## R3. Target audience — **DECIDED: 13 and over, Restrict Minor Access off (2026-11-21)**
 
@@ -130,7 +137,7 @@ Operator rule (because we cannot verify an email sender): delete within 7 days u
 ## R11. Ads implementation details — **Medium**
 
 The README's ad rules are compliant with the Play Ads policy and AdMob guidance. Add these specifics (README "Monetization"):
-- Interstitial is shown only **when the player leaves the vs-computer result screen** (Home or Rematch), never the instant the last guess lands, and not within 1 second of the result appearing (AdMob advises a pause in tap-heavy games).
+- **Updated 2026-11-25.** Interstitial is shown only **after a finished match, vs computer or online, on the way to the results screen**, never the instant the last guess lands, not within 1 second of the result being decided (AdMob advises a pause in tap-heavy games), cap 1 per 3 finished matches and 4 minutes apart (online and computer matches counted together; a team match counts once). Never during a match, secret entry or the waiting practice game, never on app start or exit, never while a rematch or the next team duel is about to start. Because an online match ends without a tap, add: not while the chat box or keyboard is open; skip the ad if the player already left the screen; never in the review room / practice game, so Play reviewers always reach the result screens without an ad; skip it if `remove_ads` is owned. Compliance reasoning: `POLICY_CHECKLIST.md` 11.1.
 - Banner keeps clear space from every button (no tappable control directly above or below it) and is hidden when the window is too small (pop-up window, small split-screen) to keep that space; banners never overlap content.
 - `setMaxAdContentRating` set from the IARC result, never above it (see R20).
 - Muting: Google warns muting reduces video ad eligibility and revenue. Keep ads muted while the game's sound setting is off (default); follow the setting if the player turns sound on.
@@ -160,9 +167,9 @@ Including the token in Auto Backup is fine and is disclosed in the privacy polic
 
 Not required by Play. Deleting accounts unused for 24 months would reduce stored data. If implemented, add one row to the retention table in `PRIVACY_POLICY.md`.
 
-## R17. Future tip jar or paid features — **Low**
+## R17. Tip jar and other paid features — **Low** (the `remove_ads` purchase is decided: see R22)
 
-A Play Billing tip jar or in-app purchase makes the account a merchant account and, for Korean developers distributing paid apps or in-app purchases, requires a business registration number and mail-order (e-commerce) license details. External donation links are not allowed. Keep both out of v1.
+A Play Billing tip jar makes no sense next to Remove ads and stays out; external donation links are not allowed. Any further paid item needs the same Billing set-up and the checks in R22.
 
 ## R18. Target API and build — **Low (do now)**
 
@@ -194,6 +201,21 @@ Google says Texas SB 2420 is in effect (injunction stayed by an appeals court); 
 
 **Change:** integrate the Play Age Signals API (latest version) in the app; feed it into the age handling of R19/R20; before any release that changes social features, decide whether it is a significant change and notify Play if so.
 
+## R22. Optional one-time purchase "Remove ads" (`remove_ads`, US$4.99) — **High (set-up and wording) — DECIDED by the owner 2026-11-25**
+
+**Policy fit.** Allowed: digital feature sold only with Google Play Billing, no external payment link, one-time non-consumable, no gameplay advantage, no tip jar. Details and sources: `POLICY_CHECKLIST.md` 12.
+
+**What changes in the documents:** Data safety gets "Financial info → Purchase history" (checklist 5, conservative declaration; payment details are never ours); IARC "digital purchases" = Yes and the listing shows "Offers in-app purchases" (checklist 9, 11.3); privacy policy 7-1 and terms 7 say Google Play processes the payment and refunds, what the app receives (state and token, no payment details, nothing sent to our server), that the purchase stays with the Google account when the game account is deleted and is restored with Restore purchase; delete-account page has the same note; store listing mentions the optional one-time purchase without a price (Metadata policy).
+
+**Owner must decide or do** (also summarized in the Korean box at the top):
+1. Payments profile for selling, bank account, tax details; **Korean business registration / 통신판매업 requirement for a personal account is unconfirmed** and could block creating the product.
+2. Accept **no server check**: someone with a rooted phone can unlock it for themselves; no online or money loss. Fine for v1.
+3. Price: US$4.99 default; Play applies local templates (about ₩6,500 in Korea); review per-country prices once (some countries look odd).
+4. Minors: 14–17-year-olds can buy only as Google Play allows (parental approval for supervised accounts). No pressure patterns, no prompt during a match.
+5. Terms version bumped to `2026-11-v3`.
+
+**Implementation requirements** are in the Android engineer list (item 13) and the QA list.
+
 ## Decisions that are fine as they are
 
 - No ID, password or email: minimal data, no password leaks, smaller Data safety form.
@@ -202,7 +224,7 @@ Google says Texas SB 2420 is in effect (injunction stayed by an appeals court); 
 - Chat history only in memory (50 lines per room), never on disk.
 - No ads during matches, secret entry, the waiting practice game, lobby or chat; interstitial cap stricter than AdMob's minimum; no app-open ads; no rewarded ads.
 - Removal of the Excel disguise and the boss key (avoids trademark and deceptive-behaviour problems).
-- No external donation links.
+- No external donation links; the only sale is Play Billing `remove_ads`.
 - Quick match limited to quick phrases; free text only in private rooms; automatic 24 h chat restriction after 3 reporters; admin chat restriction (README 2026-11-21).
 - Terms gate, deletion without the app, 180-day report purge, no chat/IP logging, review room (README 2026-11-21).
 
@@ -216,13 +238,14 @@ Google says Texas SB 2420 is in effect (injunction stayed by an appeals court); 
 3. Settings must contain: Privacy policy (`/privacy`), Terms (`/terms`), **Privacy options** (only when UMP says required), Mute all chat, **Delete account** (with confirmation), **Contact** (opens email to the dedicated address), app version.
 4. Show the Terms and Privacy policy texts inside the app (bundled), linking to the public URLs only as a fallback.
 5. Report and block from a long-press on a message and from the player card; offer "Block too" after reporting.
-6. Ads: UMP first, then `MobileAds` init only when `canRequestAds()`; `setMaxAdContentRating`; mute tied to the game sound setting; banner only on home / results / profile with clear space from controls and hidden in small windows; interstitial only when leaving the vs-computer result screen, ≥1 s after the result, cap 1 per 3 finished matches and 4 minutes; never during a match, secret entry, waiting practice, lobby, chat, app start or exit; test ad unit IDs in debug; real IDs from build config / CI secrets only; keep the AD_ID permission.
+6. Ads: UMP first, then `MobileAds` init only when `canRequestAds()`; `setMaxAdContentRating`; mute tied to the game sound setting; banner only on home / results / profile with clear space from controls and hidden in small windows; interstitial after a finished vs-computer or online match on the way to the results screen (R11), ≥1 s after the result, not while chat/keyboard is open, skipped if the player left the screen, skipped in the review room and practice game, skipped when `remove_ads` is owned, cap 1 per 3 finished matches and 4 minutes (shared by both match types); never during a match, secret entry, waiting practice, lobby, chat, app start or exit; test ad unit IDs in debug; real IDs from build config / CI secrets only; keep the AD_ID permission.
 7. Auto Backup: back up only the token/settings; clear the token on deletion; `dataExtractionRules`.
-8. No analytics or crash SDK without the release lead; no donate button.
+8. No analytics or crash SDK without the release lead; no donate button. (The Play Billing library is allowed: it is the `remove_ads` purchase, R22.)
 9. Quick-match chat limited to quick phrases (README); free text in private rooms, ideally only after one finished online match.
 10. **Neutral age screen on first launch**, before any ad loads or account is created (no default, no hint): under 14 → explain the app is for 14+ and stop (no account, no ads), no immediate retry on that device; keep the age band on the device only (R19).
 11. **Ad age treatment** before `MobileAds` init: 14–15 → `AgeRestrictedTreatment.CHILD`, 16–17 → `TEEN`, 18+ → `UNSPECIFIED` + UMP; max ad content rating from build config matching the IARC rating (R20).
 12. **Play Age Signals API**: request on app open; 0–12 → refuse online features; 13–17 → minor ad treatment; respect `significantChangeStatus` for supervised users (R21).
+13. **Remove ads (R22):** Play Billing Library (current version), one non-consumable product `remove_ads`; `queryProductDetailsAsync` and show Play's formatted price (never hard-code US$4.99); `queryPurchasesAsync` at start and on resume; grant only on `PURCHASED` (not `PENDING`); **acknowledge** after a purchase and retry at the next start (3-day limit, else Google refunds); no other payment path, no external link; entry points only in Settings and a quiet link on the results screen, no pop-up pitch, never during a match; **Restore purchase** in Settings re-queries Play; when owned: no banners, no interstitials, do not initialise the Mobile Ads SDK and do not show UMP (keep "Privacy options" hidden); when the purchase disappears (refund) ads return; keep the purchase token on the device only: **no logging, no sending to our server** (privacy policy 7-1 says so); Settings text and the delete-account dialog tell the player that deleting the game account keeps the purchase on the Google account and that it can be restored; debug build works with license testers.
 
 ### Backend engineer (`backend/`, `docs/protocol.md`)
 1. Static pages only: `/privacy`, `/terms` (with `#child-safety`), `/delete-account` (text only), `/app-ads.txt`. Text from the `docs/play/*.md` files, both languages; no landing page, forms, cookies or analytics; HTTPS with same-host HTTP→HTTPS redirect.
@@ -243,7 +266,8 @@ Google says Texas SB 2420 is in effect (injunction stayed by an appeals court); 
 - Confirm font licenses allow app embedding.
 
 ### QA lead (`docs/qa/`)
-- Ads never appear during a match, secret entry, waiting practice, lobby or chat; interstitial cap and timing; banner hidden in small windows.
+- Ads never appear during a match, secret entry, waiting practice, lobby or chat; interstitial cap and timing for **both vs-computer and online matches** (shared counter, 4-minute gap, team match counts once); not while the keyboard/chat is open; skipped if the player left; never in the review room; banner hidden in small windows.
+- Remove ads: buy with a license tester account (no charge), ads disappear at once without restart, also after reinstall and on a second device with the same Google account; Restore purchase works; pending purchase does not remove ads; refund (Play Console order → refund) brings ads back after the next check; purchase is acknowledged (Play Console order shows it); the Mobile Ads SDK is not initialised and UMP does not show after purchase; account deletion keeps the entitlement (restore after reinstall); price shown equals Play's; no ad request, no purchase token in the proxy traffic to our server or in logs.
 - UMP: EEA/UK debug geography shows the form; refusal still shows non-personalized ads; Privacy options entry appears only when required.
 - Deletion: in-app; `/delete-account` page loads as plain text with app/developer name and the contact email; admin deletion by `Nickname#tag`.
 - Terms gate cannot be bypassed (app and server).

@@ -10,6 +10,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object HowToPlayRoute
 
+/** The interactive tutorial (01 §2). [firstRun]: after the nickname step; finishing goes Home. */
+@Serializable data class TutorialRoute(val firstRun: Boolean = false)
+
 /** [level] is a ComputerLevel name. [practice] = waiting-room practice; switches to the real match when it starts. */
 @Serializable data class ComputerMatchRoute(val digits: Int, val level: String, val practice: Boolean = false, val roundSeconds: Int = 600)
 

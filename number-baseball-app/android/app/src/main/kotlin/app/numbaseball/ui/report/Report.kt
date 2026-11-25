@@ -1,5 +1,7 @@
 package app.numbaseball.ui.report
 
+import androidx.compose.foundation.layout.heightIn
+
 import app.numbaseball.ui.design.InsetDivider
 import androidx.compose.foundation.layout.Arrangement
 import app.numbaseball.core.protocol.Stats
@@ -140,8 +142,11 @@ fun PlayerCard(
     onReport: () -> Unit,
     onBlock: () -> Unit,
     onUnblock: () -> Unit,
-    /** Quick-match record (12 §2); only known for my own card (the protocol has no record of other players). */
+    /** The player's record (12 §2; protocol 1.1 `GET /api/v1/players/{id}`). */
     record: Stats? = null,
+    /** While the record loads (chase lamps), or why it is missing (`caption` `text3`); both null: nothing shown. */
+    recordLoading: Boolean = false,
+    recordMessage: String? = null,
 ) {
     // Prototype `.card-h`: 8 / 16 / 16, 12 dp gap.
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -161,6 +166,10 @@ fun PlayerCard(
             RecordValue(record.losses, stringResource(R.string.record_loss))
             RecordValue(record.draws, stringResource(R.string.record_draw))
         }
+    } else if (recordLoading && !blocked) {
+        Box(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp).heightIn(min = 48.dp), contentAlignment = Alignment.CenterStart) { ChaseLamps() }
+    } else if (recordMessage != null && !blocked) {
+        Text(recordMessage, style = NbType.caption, color = NbColors.text3, modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp))
     }
     if (!self) {
         Hairline()

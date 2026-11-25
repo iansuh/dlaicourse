@@ -1,6 +1,6 @@
 # Google Play policy checklist
 
-Owner: Release lead. Checked: 2026-11-20, updated 2026-11-21 for the owner's decisions (trader with worldwide distribution, audience 13+, "숫자야구"-style name, quick match limited to quick phrases). Applies to: Number Baseball for Android as described in `../../README.md`, including AdMob ads.
+Owner: Release lead. Checked: 2026-11-20, updated 2026-11-21 for the owner's decisions (trader with worldwide distribution, audience 13+, "숫자야구"-style name, quick match limited to quick phrases). Updated 2026-11-25 for the owner's decisions: one-time in-app product `remove_ads` (US$4.99, Google Play Billing, no server check) and the interstitial now also after online matches (sections 2.2, 5, 9, 10, 11, 12, 17, 19). Applies to: Number Baseball for Android as described in `../../README.md`, including AdMob ads and the Remove ads purchase.
 
 ## How this was checked (read first)
 
@@ -59,7 +59,7 @@ Sources: 13628312 (above); View and manage developer account information, https:
 | Country | Yes |
 | Developer email | Yes. Use a **dedicated game email**, not a personal one. |
 | Phone number | Normally no for personal accounts, **but Korea-based personal accounts must provide and verify a developer phone number that is displayed on Google Play** (6223646, 10841920). Publishing is blocked without it. |
-| Full address | Shown if the account **monetizes through Play** (paid apps or in-app purchases = "merchant account"), and for **traders** (2.4). AdMob ads alone do not make a merchant account, but they do make the owner a trader. |
+| Full address | Shown if the account **monetizes through Play** (paid apps or in-app purchases = "merchant account"), and for **traders** (2.4). AdMob ads alone do not make a merchant account, but they do make the owner a trader. **Since 2026-11-25 the app sells `remove_ads`, so the account is also a merchant account** (needs a Google payments profile set up for selling, and Korea-based sellers of in-app items may have to give business registration / mail-order (통신판매업) details: see section 12). The address is already public as a trader, so nothing new becomes public. |
 | Per-app support email/phone/website | Store settings → contact details. Optional phone; email required. Use the dedicated email and our domain. |
 
 ### 2.3 Organization account
@@ -133,12 +133,15 @@ Definitions used: "collected" = sent off the device; "shared" = transferred to a
 | App activity → App interactions | Ad interactions (launches, taps, video views) sent by the Ads SDK | Yes | Yes | No | Required | Advertising or marketing, Analytics, Fraud prevention |
 | App info and performance → Diagnostics | SDK performance data sent by the Ads SDK | Yes | Yes | No | Required | Analytics, Fraud prevention |
 | Device or other IDs | Android advertising ID, app set ID (Ads SDK) | Yes | Yes | No | Required | Advertising or marketing, Analytics, Fraud prevention |
+| Financial info → Purchase history | `remove_ads` purchase state, purchase token and acknowledgement, read on the phone through Google Play Billing (decision 2026-11-25: declare it) | Yes (see note) | No | No | Optional (only if the player buys) | App functionality |
 
 Notes:
 - The four Ads SDK rows follow Google's AdMob disclosure page, which says the SDK collects and shares IP address, user product interactions, diagnostic information and device/account identifiers for advertising, analytics and fraud prevention. The search extract cut off before the full table, so **the owner must open that page and match each row and purpose exactly** for the SDK version we ship.
 - Our server's own use of IP addresses (rate limiting in memory) is ephemeral and is not a separate data type, as long as the server does **not** write IPs to its own logs or database. Hosting-provider access logs must be described in the privacy policy.
 - The age band from the neutral age screen (section 10) stays on the device and is not sent to our server, so it is not a collected data type. The ads SDK receives only an age-treatment flag. If the age band is ever sent to the server, add "Personal info → Other info" (or the closest age type the form offers).
 - No crash-reporting or analytics SDK is planned. If one is added (Firebase Crashlytics, Analytics), the form must be updated.
+- **Purchase history (added 2026-11-25).** Payment details (card, bank, name, billing address) are handled by Google Play and never reach the app or our server, so **do not declare Payment info**. The app does see the purchase state and purchase token from the Play Billing library and, with no server check, **keeps them only on the device and sends them nowhere**. Under Play's definition ("collected" = sent off the device) that alone may not be "collection", and Google's Data safety guidance says data handled only by Google Play Billing need not be declared by the developer **[UNCONFIRMED: I could not open the Data safety FAQ; confirm in Play Console help]**. The README decision is to declare "Financial info → Purchase history" anyway; that is the conservative answer, it costs nothing and it matches the privacy policy. Answer: collected Yes, **shared No** (Google Play is the payment processor acting for the user, not a third party we send data to; if the Console wizard's wording makes you doubt that, the safe fallback is "shared: No" plus the explanation in the privacy policy section 7-1), not ephemeral, optional, purpose App functionality. If a **server check** is ever added (purchase token sent to our server), the row stays but the privacy policy, retention table and `docs/protocol.md` must change, and the token must be handled as a secret.
+- When the Remove ads purchase is active the app should not initialise the Mobile Ads SDK, so the ad rows apply only to users who have not bought. The Data safety form still declares them, because the form covers what the app can do.
 - Keep the form identical to `PRIVACY_POLICY.md`; Play requires them to match.
 
 ## 6. Account deletion
@@ -185,7 +188,7 @@ Sources: Content ratings, https://support.google.com/googleplay/android-develope
 - Complete the questionnaire before publishing; redo it when features change. Answer honestly; Google warns that inaccurate answers can lead to removal.
 - Guidance for our answers: category **Game**; no violence, fear, sexuality, gambling or simulated gambling, drugs, crude humour created by us.
 - **Users can interact / exchange content: Yes** (text chat between users). Multiplayer alone would be "No", but chat makes it "Yes". This produces the "Users interact" interactive element; it is shown separately from the age rating.
-- Shares user location: No. Digital purchases: No. Unrestricted internet/web browser: No.
+- Shares user location: No. Digital purchases: **Yes** (the optional `remove_ads` in-app purchase; the IARC questionnaire asks about digital purchases and adds the "Offers in-app purchases" interactive element, shown separately from the age rating, and does not change the rating by itself). Unrestricted internet/web browser: No.
 - Do not tune answers to get a lower rating. Whatever rating IARC gives, ads must not exceed it: set AdMob's max ad content rating to match (section 11.6).
 - The answers do not change with the 13+ target audience: target audience and content rating are separate declarations. Expect the lowest or a low age bracket plus the "Users interact" notice, but the result is IARC's.
 - Korea: the IARC certificate covers the Korean (GRAC) rating for Play distribution.
@@ -204,6 +207,7 @@ Sources: Manage target audience and app content settings, https://support.google
 - **Neutral age screen (required by our design):** on **first launch, before any ad loads and before the account is created**, ask the age in a neutral way (for example a year-of-birth picker or age bands, with no default and no hint of the "right" answer). Under 14 → the app explains that it is for ages 14 and over and stops (no account, no ads, no online play); it does not allow an immediate retry on that device. Do not offer an offline-with-ads mode to under-14s: that would make us knowingly serve ads to children. Store only the resulting age band **on the device**; it drives the ad treatment (section 11.5) and is not sent to our server.
 - **Play Age Signals API** (beta, global from 2026-12-11): integrate it as a second signal. If it reports 0–12, refuse online features; if it reports 13–15 or 16–17, apply the minor ad treatment even if the age screen said 18+. Age Signals data may only be used to provide age-appropriate experiences in the receiving app (policy effective 2026-01-01). Required for Texas users in practice (section 19).
 - Restrict Minor Access stays off (it requires an 18+-only audience).
+- **In-app purchase and teens (2026-11-25).** The audience includes 14–17-year-olds, so teens can reach the Remove ads purchase. This is allowed: Families policy does not apply (section above), and Play's own controls decide who may buy: a supervised account (Family Link) needs parental approval for purchases, and Google handles payment-method and age checks. The app must not nudge teens harder than adults (no countdowns, no pressure, no pop-up pitches; README: only Settings and a quiet link on the results screen). Minors are never shown a sales prompt during a match. Show the price exactly as Play returns it (`ProductDetails`), never a hard-coded US$4.99. Texas SB 2420 may require age ratings for in-app products (section 19); `remove_ads` does not unlock content, only removes ads.
 
 ## 11. Ads (Google Play policy + AdMob)
 
@@ -213,19 +217,22 @@ Sources: Ads policy, https://support.google.com/googleplay/android-developer/ans
 
 | Rule | Our design | OK? |
 | --- | --- | --- |
-| No full-screen ads that appear unexpectedly when the user chose to do something else | Interstitial only after a finished vs-computer match, when leaving the result screen | Yes, if shown at that break only |
+| No full-screen ads that appear unexpectedly when the user chose to do something else | **Updated 2026-11-25:** interstitial only after a **finished match, vs computer or online**, at the natural break between the match end and the results screen; never during a match, secret entry or the waiting practice game; never on app start or exit; never while a rematch or the next team duel is about to start; cap 1 per 3 finished matches and 4 minutes apart | **Yes, with the safeguards below** |
 | No ads at the beginning of a game level / content segment | Never at match start, never before secret entry | Yes |
 | No full-screen video before the splash screen; no ad on app start or exit | README forbids | Yes |
 | Full-screen ads must be closeable after 15 s, unless they do not block the user (e.g. after the score screen) | After the result screen; prefer formats closeable within 15 s anyway | Yes |
 | Ads must not interfere with app use, mimic UI, or be placed to cause accidental clicks | Banner on calm screens only, away from buttons | Implement spacing |
 | Ads only inside the app that serves them; no lock-screen ads | Banner/interstitial inside app | Yes |
 | Rewarded ads that give an advantage | None | Yes |
+| Ads must not be hard to tell from or block a way to pay / no deceptive offers around the purchase | The Remove ads entry is plain: Settings and one quiet link on the results screen, price from Play, no fake close buttons, no sales pop-ups | Yes |
+
+**Safeguards for the interstitial after an online match (new 2026-11-25).** An online match ends by itself (the last guess lands, the opponent leaves, time runs out), not because the player tapped something, so the ad could pop up while the player is still tapping or typing. Google's rule targets full-screen ads that appear unexpectedly when someone chose to do something else; the end of a match is a natural break of the kind AdMob recommends ("between stages"), so the placement is allowed, but it needs these rules in the app: (1) wait at least 1 s after the result is decided, and never show it while the chat box or keyboard is open or the player is mid-tap on a control; (2) the player must not be able to hit an ad's close or install area by a tap meant for the game (the 1 s delay and a full-screen transition do this); (3) if the player has already left the screen (opponent disconnect, back pressed), skip the ad rather than show it later; (4) never show it in the review room or the practice game (the Play reviewers' path): a reviewer must be able to reach the result screens without an interstitial; (5) skip it when the player owns `remove_ads`; (6) the cap counts online and computer matches together. QA must test each of these (`POLICY_REVIEW.md` R11). The results screen shown after the ad still contains the result, so the player does not lose it.
 
 ### 11.2 AdMob placement guidance
 
 Sources: Interstitial guidance, https://support.google.com/admob/answer/6066980 ; Disallowed interstitials, https://support.google.com/admob/answer/6201362 ; Discouraged banner implementations, https://support.google.com/admob/answer/6275345 ; Implementation guidance, https://support.google.com/admob/answer/2936217
 
-- Interstitials at natural breaks between stages; never during a focused task; no more than one interstitial per two user actions (our cap: at most one per 3 finished matches and 4 minutes apart, stricter).
+- Interstitials at natural breaks between stages; never during a focused task; no more than one interstitial per two user actions (our cap, also for online matches since 2026-11-25: at most one per 3 finished matches and 4 minutes apart, stricter; one match is one natural break, so a team match shows at most one ad at its end, not one per duel).
 - In tap-heavy games, add a short delay before the interstitial so players stop tapping (we add at least 1 s after the result appears before any ad can show).
 - Banners must not sit right next to buttons or overlap/float over content. Leave clear space between the banner and the nearest control; hide the banner when the window is too small (pop-up window / split-screen) to keep that space.
 
@@ -233,7 +240,8 @@ Sources: Interstitial guidance, https://support.google.com/admob/answer/6066980 
 
 Source: Prepare your app for review, https://support.google.com/googleplay/android-developer/answer/9859455
 
-- App content → Ads → **Yes, my app contains ads**. The "Contains ads" label then appears on the listing. Google can verify this at any time.
+- App content → Ads → **Yes, my app contains ads**. The "Contains ads" label then appears on the listing. Google can verify this at any time. The answer stays **Yes** even though a player can buy Remove ads: the app contains ads for everyone who has not bought. Never write "no ads" or "ad-free" as a feature claim in the listing.
+- App content → **In-app purchases** is not a form: it is a label Play derives from the app. Once the app's AAB has Play Billing and the product `remove_ads` is active, the listing shows **"Offers in-app purchases"** automatically (also shown with the price range in the listing details). To check: Play Console → Monetize with Play → Products → In-app products, and the store listing preview.
 
 ### 11.4 Advertising ID declaration and AD_ID permission
 
@@ -293,13 +301,31 @@ Sources: Sign up for AdMob, https://support.google.com/admob/answer/7356219 ; Ag
 - Third-party benchmarks (not Google, figures differ between sources): banner eCPM roughly **USD 0.1–1.5**, interstitial roughly **USD 4–15** in top markets (US, Japan, Korea, UK), e.g. Playwire's AdMob benchmark article https://www.playwire.com/blog/admob-ecpm-benchmarks-what-publishers-should-expect and Tenjin's ad-monetization reports https://tenjin.com/tr/blog/ad-mon-gaming-2026/ . Muted ads and our strict caps push toward the low end.
 - Illustration only: 100 daily players × (3 banner views + 0.3 interstitials) ≈ 300 × $0.5/1000 + 30 × $5/1000 ≈ **USD 0.3 per day ≈ USD 9 per month**; the USD 100 payout threshold would take about a year. At 1,000 daily players, roughly USD 90 per month, which is in the range of server cost (the prototype deploy guide lists about USD 7.25/month for Render Starter + disk). Treat ads as cost recovery at best, not income.
 
-## 12. Payments policy (donations, tips)
+## 12. Payments policy, in-app purchase "Remove ads" (updated 2026-11-25)
 
-Source: Understanding Google Play's Payments policy, https://support.google.com/googleplay/android-developer/answer/10281818
+Sources: Understanding Google Play's Payments policy, https://support.google.com/googleplay/android-developer/answer/10281818 ; Play Billing overview, https://developer.android.com/google/play/billing ; Integrate Play Billing, https://developer.android.com/google/play/billing/integrate ; Create an in-app product, https://support.google.com/googleplay/android-developer/answer/1153481 ; Test in-app billing, https://developer.android.com/google/play/billing/test ; Korea requirements, https://support.google.com/googleplay/android-developer/answer/6223646 (none of these pages could be opened from this container; statements are from search extracts and the Play Billing documentation as I know it, marked **[UNCONFIRMED]** where I am not sure)
 
-- Digital goods and services in Play apps must use Play Billing (with program-specific exceptions such as the US external content links program, which has fees and enrollment).
-- Play's peer-to-peer exception covers tips where 100% goes **to a creator** and nothing digital is unlocked; a tip to the developer is not that case. **[UNCONFIRMED]** whether a developer "tip jar" without perks can skip Play Billing; assume it cannot.
-- Keep the README rule: **no external donation links** (the web prototype's donate button must not come to Android). A Play Billing tip jar would also make the account a merchant account (full address public, section 2.2) and require Korean business registration details for paid items (6223646).
+**Owner decision 2026-11-25:** one-time non-consumable in-app product `remove_ads`, **US$4.99** (Play converts to local prices), through **Google Play Billing**; removes all ads; no subscription; entitlement from Play (`queryPurchasesAsync` at start and on resume), restore in Settings; no server check in v1.
+
+| Rule | Our design | OK? |
+| --- | --- | --- |
+| Digital goods and features in Play apps must be sold with Google Play Billing | Only Play Billing; no other payment method, no external link or text steering to another way to pay | Yes |
+| Do not mislead about the purchase; show the Play price, what it gives and that it is one-time | Name "Remove ads", description "Removes all ads. One-time purchase.", price from `ProductDetails.getOneTimePurchaseOfferDetails().getFormattedPrice()` | Yes, if the app shows Play's price |
+| Acknowledge purchases within 3 days or Google refunds them automatically | Acknowledge immediately after a verified `PURCHASED` state (no server: verify on device by checking state, product ID and that it is not pending); retry at the next start if it failed | Implement (README) |
+| Pending purchases (cash, slow payment methods) must not grant the item until `PURCHASED` | Treat `PENDING` as "not bought", show a neutral "payment pending" note, re-check on resume | Implement |
+| Refunds/revocations must be respected | `queryPurchasesAsync` at start and on resume; if the purchase is gone, ads return | Implement |
+| No external donation links, no tip jar | None (README) | Yes |
+| Non-consumable that follows the account | Same Google account on a new phone: found by `queryPurchasesAsync`; Settings → **Restore purchase** re-queries | Implement |
+| Server-side verification | **Not done in v1 (owner decision).** Risk accepted: a rooted device can fake the state locally and hide ads for itself; there is no server-side loss, the purchase unlocks no online advantage. Google recommends server verification with the Play Developer API for anything that matters; revisit if fraud shows up or if the product ever unlocks online features | Accepted risk |
+| Refunds | **Handled entirely by Google Play** (the user asks Google; the developer only sees the purchase disappear). The app, terms and policy say so; no refund form of our own. | Yes |
+| Price display, tax | Play shows the local price including tax where required and converts US$4.99 using its price templates; the owner can edit any country's price | Yes |
+
+**What it means for the account (owner must do):**
+- The account becomes a **merchant account**. A **Google payments profile** must be set up for selling (legal name, address, **bank account for payouts**, tax information). The address is public already as a trader (section 2.4), so nothing new is shown.
+- **Korea [UNCONFIRMED]:** the earlier review (`POLICY_REVIEW.md` R17) found that Korean developers distributing paid apps or in-app purchases must give **business registration (사업자등록) and mail-order business (통신판매업 신고) details** in the payments profile / store listing. Whether a personal account without a business registration can sell an in-app item in Korea, or must register first, I could not confirm: **the owner must check Play Console (Settings → Developer account → Payments profile, and the Korea requirements page) before creating the product**, and ask a 세무사 about registering as an individual business. This may also delay the first release; if it blocks, the fallback is to ship v1 with ads only and add `remove_ads` in an update.
+- Income tax / VAT: Play collects and remits VAT/sales tax in many countries; Korean income tax on the sales is the owner's (ask a 세무사). Google's service fee on the first US$1M of yearly sales is 15% as far as I know (**[UNCONFIRMED]**: check the current Google Play service fees page), so US$4.99 nets roughly US$4.2 before tax and Korean income tax.
+- **Test purchases:** add license testers (Play Console → Settings → License testing) and use an internal test track; license testers buy without being charged. Details in `RELEASE_GUIDE.md` 9장.
+- **App review:** the reviewers must be able to see the Remove ads entry; the product must be **active** before the release that contains it, and the app version with Play Billing must be uploaded at least to the internal track so Console accepts the product.
 
 ## 13. Impersonation, intellectual property, metadata
 
@@ -349,12 +375,13 @@ Source: Prepare your app for review, https://support.google.com/googleplay/andro
 | --- | --- |
 | Privacy policy | `https://[도메인]/privacy` |
 | App access | Restricted functionality + instructions (section 15) |
-| Ads | Yes |
+| Ads | Yes (also with Remove ads) |
 | Content rating | IARC questionnaire (section 9) |
 | Target audience and content | 13–15, 16–17, 18+; Restrict Minor Access off; no child-appealing listing |
 | News app | No |
 | Health apps | Complete the form: no health features |
-| Financial features | None |
+| Financial features | None (an in-app purchase is not a financial feature) |
+| In-app purchases | No form; Play shows the "Offers in-app purchases" label from the active `remove_ads` product (section 12). Create the product in Monetize with Play → Products → In-app products |
 | Government app | No |
 | Data safety | Section 5 |
 | Advertising ID | Yes (section 11.4) |
@@ -386,7 +413,7 @@ Sources (Korean statutes and regulator material found by search; law.go.kr pages
 Sources: Changes to Google Play for app store bills in applicable US states, https://support.google.com/googleplay/android-developer/answer/16569691 ; Notify Google Play of significant changes, https://developer.android.com/google/play/age-signals/notify-significant-changes ; Future of Privacy Forum comparison, https://fpf.org/blog/comparing-enacted-app-store-accountability-acts/
 
 - Google's help page says **Texas SB 2420 is in effect** after a federal appeals court stayed the December 2025 injunction; the Play Age Signals API returns signals for eligible Texas users whose accounts were created after 2026-05-28. Utah and Louisiana laws were postponed to 2027-05-06 and 2027-07-01 (third-party source).
-- Developer responsibilities per Google: provide age-appropriate experiences using the signals; **restrict content or functionality related to "significant changes"** based on the approval status the API returns for supervised users; decide when a change is significant and **notify Google Play**; Texas may require age ratings for in-app products (we have none).
+- Developer responsibilities per Google: provide age-appropriate experiences using the signals; **restrict content or functionality related to "significant changes"** based on the approval status the API returns for supervised users; decide when a change is significant and **notify Google Play**; Texas may require age ratings for in-app products (we now have one, `remove_ads`: it unlocks no content, only removes ads; list it in the answers the Console asks for, if asked).
 - **Must do:** integrate the Play Age Signals API (latest version) and apply the minor handling in sections 10 and 11.5. Before each release that adds or changes social features (for example enabling free text in quick match, adding friends lists or DMs), decide with the release lead whether it is a significant change and notify Play if so.
 - Monitor: the Texas appeal is still pending, so its status could change.
 

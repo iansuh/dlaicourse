@@ -268,13 +268,14 @@ private fun ScoreBlock(scoreA: Int, scoreB: Int, teamSize: Int) {
     }
 }
 
-/** Best hint so far: most strikes, then most balls; null when every guess was out (OUT tag) or none yet. */
+/** Best hint so far from my own rounds: most strikes, then most balls; (0, 0) = OUT; null when none yet. */
 private fun bestHint(rounds: List<RoundEntry>): Pair<Int, Int>? =
     rounds.filter { it.guess != null }.maxWithOrNull(compareBy({ it.strikes }, { it.balls }))?.let { it.strikes to it.balls }
 
 /**
  * Duel row (DESIGN_SYSTEM 12.11): 72 dp; A player (flex) · status 88 dp · B player (right-aligned); 3 dp team stripes inset
- * 12 dp; my row `surface1`. Best hints exist only for my own duel (the protocol's duel summaries carry no hints).
+ * 12 dp; my row `surface1`. Best hints come from the duel summary (protocol 1.1 `bestHintA` / `bestHintB`); my own duel
+ * falls back to my rounds for servers that do not send them yet.
  */
 @Composable
 private fun DuelRow(
@@ -296,12 +297,16 @@ private fun DuelRow(
     // My rounds are guesses at the opponent's number: they are the hints of my side.
     val hintA = when (myTeam) { Team.A -> myRounds; Team.B -> opponentRounds; null -> null }
     val hintB = when (myTeam) { Team.B -> myRounds; Team.A -> opponentRounds; null -> null }
+    val bestA = duel.bestHintA?.let { it.strikes to it.balls } ?: hintA?.let(::bestHint)
+    val bestB = duel.bestHintB?.let { it.strikes to it.balls } ?: hintB?.let(::bestHint)
     val disconnected = !finished && listOfNotNull(a, b).any { !it.connected }
     val spoken = buildString {
         append(duel.index + 1).append(", ")
         append(a?.let { "${it.nickname} ${it.tag}" }.orEmpty())
+        bestA?.let { append(" ").append(it.first).append("S ").append(it.second).append("B") }
         append(", ")
         append(b?.let { "${it.nickname} ${it.tag}" }.orEmpty())
+        bestB?.let { append(" ").append(it.first).append("S ").append(it.second).append("B") }
         if (duel.round > 0) append(", R").append(duel.round)
     }
     // 72 dp minimum including the 1 dp hairline above: the row grows with large text instead of clipping (D2-03).
@@ -316,7 +321,7 @@ private fun DuelRow(
     ) {
         Box(Modifier.width(3.dp).fillMaxHeight().padding(vertical = 12.dp).background(NbColors.teamA, RoundedCornerShape(topEnd = 2.dp, bottomEnd = 2.dp)))
         Column(Modifier.weight(1f).padding(start = 13.dp, top = if (large) 8.dp else 0.dp, bottom = if (large) 8.dp else 0.dp)) {
-            PlayerCell(a, winner == Team.A, finished && winner != null && winner != Team.A, hintA?.let(::bestHint), hintA, end = false, stacked = large)
+            PlayerCell(a, winner == Team.A, finished && winner != null && winner != Team.A, bestA, end = false, stacked = large)
         }
         Column(Modifier.width(88.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             if (duel.round > 0) Text(stringResource(R.string.duel_round, duel.round), style = NbType.numLabel, color = NbColors.text3)
@@ -336,7 +341,7 @@ private fun DuelRow(
             }
         }
         Column(Modifier.weight(1f).padding(end = 13.dp, top = if (large) 8.dp else 0.dp, bottom = if (large) 8.dp else 0.dp), horizontalAlignment = Alignment.End) {
-            PlayerCell(b, winner == Team.B, finished && winner != null && winner != Team.B, hintB?.let(::bestHint), hintB, end = true, stacked = large)
+            PlayerCell(b, winner == Team.B, finished && winner != null && winner != Team.B, bestB, end = true, stacked = large)
         }
         Box(Modifier.width(3.dp).fillMaxHeight().padding(vertical = 12.dp).background(NbColors.teamB, RoundedCornerShape(topStart = 2.dp, bottomStart = 2.dp)))
     }
@@ -361,7 +366,7 @@ private fun ReconnectStatus(since: Long?, serverNow: () -> Long) {
 }
 
 @Composable
-private fun PlayerCell(player: PlayerView?, winner: Boolean, loser: Boolean, best: Pair<Int, Int>?, rounds: List<RoundEntry>?, end: Boolean, stacked: Boolean) {
+private fun PlayerCell(player: PlayerView?, winner: Boolean, loser: Boolean, best: Pair<Int, Int>?, end: Boolean, stacked: Boolean) {
     val name = when {
         player == null -> ""
         player.deleted -> stringResource(R.string.chat_deleted_player)
@@ -384,10 +389,10 @@ private fun PlayerCell(player: PlayerView?, winner: Boolean, loser: Boolean, bes
                 HSpacer(4.dp)
                 Text(stringResource(R.string.tag_won), style = NbType.micro, color = NbColors.strike)
             }
-            rounds != null && rounds.any { it.guess != null } -> {
+            best != null -> {
                 Text(stringResource(R.string.best), style = NbType.caption, color = NbColors.text3)
                 HSpacer(6.dp)
-                if (best == null || (best.first == 0 && best.second == 0)) {
+                if (best.first == 0 && best.second == 0) {
                     OutTag(height = 18.dp, fontSize = 11.sp, padding = 4.dp)
                 } else {
                     Text("${best.first}S ${best.second}B", style = NbType.numTag, color = if (loser) NbColors.text3 else NbColors.text2)

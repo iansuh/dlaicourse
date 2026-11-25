@@ -4,7 +4,7 @@
 >
 > - **앱 전용(2026-11-21 결정)**: 약관은 앱 안(약관 동의 화면, 설정)에서 보여 주고, 같은 글을 서버가 `GET /terms` 정적 페이지로도 보여 줍니다(Google·심사용 공개 URL). 아동 안전 단락에는 `id="child-safety"` 앵커를 달아 `/terms#child-safety` 로 바로 열리게 합니다(Play 아동 안전 표준용 공개 문서).
 > - Play UGC 정책: 이용자가 채팅하기 전에 약관에 동의해야 하고 이 단계를 건너뛸 수 없어야 합니다(https://support.google.com/googleplay/android-developer/answer/9876937). 앱은 첫 온라인 대결 또는 첫 채팅 전에 약관 요약과 링크, **동의** 버튼을 보여 주고, 서버는 동의한 약관 버전(`terms_version`)과 시각을 계정에 저장합니다. 약관 버전이 바뀌면 다시 동의받습니다.
-> - `[대괄호]` 값은 공개 전에 채웁니다. 약관 버전: `2026-11-v2` (v1에서 바뀐 점: 앱 이름, 최소 나이 14세, 운영자(트레이더) 정보).
+> - `[대괄호]` 값은 공개 전에 채웁니다. 약관 버전: `2026-11-v3` (v2에서 바뀐 점: 7절 광고 제거 인앱 구매 추가·"앱 안에서 판매하는 상품이 없습니다" 삭제, 9절 구매와 계정 삭제. v1에서 v2: 앱 이름, 최소 나이 14세, 운영자(트레이더) 정보). 서버는 이 문서의 "Version" 값을 읽어 약관 버전으로 쓰므로, 이미 v2에 동의한 계정은 다음 온라인 이용 때 다시 동의를 받습니다. 아직 출시 전이면 영향이 없습니다. **백엔드·앱 테스트나 `docs/protocol.md` 예시에 `2026-11-v2`가 남아 있으면 담당자가 맞춰야 합니다.**
 > - **앱 이름**은 추천안(숫자야구: 조용한 한판 / Number Baseball: Quiet Duel)으로 넣었습니다. 이름이 바뀌면 제목과 본문 첫 문단만 고치면 됩니다.
 > - **최소 나이 14세**는 릴리스 담당의 권고입니다(`POLICY_REVIEW.md` R19). 사장님이 13세를 고르시면 1절을 "만 13세 이상(대한민국 거주자는 만 14세 이상)"으로 바꾸고, 앱이 한국 이용자를 구분해야 합니다(권장하지 않음).
 > - **운영자 정보**는 트레이더 신고로 Google Play에도 공개되는 정보와 같게 채웁니다(사장님 결정 2026-11-21).
@@ -15,14 +15,14 @@
 
 # 숫자야구: 조용한 한판 이용약관
 
-버전 2026-11-v2 · 시행일: [시행일]
+버전 2026-11-v3 · 시행일: [시행일]
 
 이 약관은 [운영자 성명](Google Play 개발자 이름: [개발자 표시명], 이하 "운영자")이 제공하는 숫자야구 게임 앱 **숫자야구: 조용한 한판**(이하 "앱")의 이용 조건입니다. 온라인 대결이나 채팅을 시작하기 전에 동의를 받으며, 동의하지 않으면 컴퓨터 대결만 이용할 수 있습니다.
 
 ### 1. 이용 자격
 
 - 앱은 **만 14세 이상**만 이용할 수 있습니다. 처음 실행할 때 나이를 확인하며, 만 14세 미만이면 앱을 이용할 수 없습니다.
-- 만 19세 미만이라면 보호자와 함께 이 약관을 읽어 주세요.
+- 만 19세 미만이라면 보호자와 함께 이 약관을 읽어 주세요. 미성년자의 앱 안 구매는 Google Play의 가족·보호자 설정을 따릅니다.
 - 이용 정지된 사람이 새 계정을 만들어 계속 이용하는 것은 금지됩니다.
 
 ### 2. 계정
@@ -68,9 +68,13 @@
 
 아동 안전 위반, 심각한 위협, 개인정보 공개는 경고 없이 바로 영구 정지합니다. 같은 사람이 여러 사람에게 신고되면 검토 전에 임시로 채팅이 제한될 수 있습니다. 조치에 이의가 있으면 앱에 표시되는 `닉네임#태그`를 적어 [연락처 이메일]로 보내 주세요.
 
-### 7. 광고
+### 7. 광고와 광고 제거 구매
 
-앱은 무료이며 앱 안에서 판매하는 상품이 없습니다. Google AdMob 광고가 포함되어 있고, 대결 중에는 광고를 보여 주지 않습니다. 만 18세 미만 이용자에게는 맞춤형 광고를 하지 않습니다. 광고 관련 개인정보 처리는 [개인정보처리방침](/privacy)을 따릅니다.
+- 앱은 무료로 내려받아 쓸 수 있으며 Google AdMob 광고가 포함되어 있습니다. 대결 중에는 광고를 보여 주지 않습니다. 만 18세 미만 이용자에게는 맞춤형 광고를 하지 않습니다.
+- **광고 제거(선택)**: 앱 안에서 **"광고 제거"**를 **한 번만 구매**하면(구독 아님) 모든 광고(배너와 전면 광고)가 사라집니다. 게임 규칙과 온라인 대결에서의 유불리는 바뀌지 않습니다. 가격은 구매 전에 Google Play에 현지 통화로 표시됩니다.
+- **결제와 환불은 Google Play가 처리합니다.** 결제는 Google Play의 약관을 따르고, 환불은 Google Play의 환불 정책에 따라 Google Play를 통해 요청합니다. 환불되거나 취소된 구매는 광고 제거 효과가 없어집니다. 이 약관은 법이 보장하는 소비자의 권리(청약철회 등)를 제한하지 않습니다.
+- **구매는 Google 계정에 귀속됩니다.** 다른 사람이나 다른 Google 계정으로 옮길 수 없습니다. 같은 Google 계정으로 새 휴대폰을 쓰거나 앱을 다시 설치하면 자동으로 되살아나며, 설정의 **구매 복원**으로 직접 확인할 수도 있습니다.
+- 운영자는 서버에서 구매를 확인하지 않고 결제 정보를 받지 않습니다. 구매 관련 개인정보 처리는 [개인정보처리방침](/privacy)을 따릅니다.
 
 ### 8. 서비스 변경과 책임
 
@@ -80,7 +84,7 @@
 
 ### 9. 계정 삭제
 
-앱 **설정 → 계정 삭제**에서 언제든 계정을 삭제할 수 있습니다. 앱이 없으면 [연락처 이메일]로 `닉네임#태그`를 보내 요청할 수 있습니다.
+앱 **설정 → 계정 삭제**에서 언제든 계정을 삭제할 수 있습니다. 앱이 없으면 [연락처 이메일]로 `닉네임#태그`를 보내 요청할 수 있습니다. 계정을 삭제해도 "광고 제거" 구매는 Google 계정에 남으며, 같은 Google 계정으로 앱을 다시 설치해 **구매 복원**을 누르면 새 계정에서도 광고가 제거됩니다(환불은 되지 않습니다).
 
 ### 10. 준거법
 
@@ -105,14 +109,14 @@
 
 # Number Baseball: Quiet Duel — Terms of Use
 
-Version 2026-11-v2 · Effective: [시행일]
+Version 2026-11-v3 · Effective: [시행일]
 
 These terms govern your use of **Number Baseball: Quiet Duel** (the "app"), a number-guessing game provided by [운영자 성명] (developer name on Google Play: [개발자 표시명]; "we"). We ask you to accept them before your first online match or chat. If you do not accept, you can still play against the computer.
 
 ### 1. Who can use the app
 
 - You must be **at least 14 years old** to use the app. The app asks your age on first launch and cannot be used if you are under 14.
-- If you are under the age of majority where you live, please read these terms with a parent or guardian.
+- If you are under the age of majority where you live, please read these terms with a parent or guardian. In-app purchases by minors follow Google Play's family and parental settings.
 - If your account is suspended, you may not keep playing with a new account.
 
 ### 2. Your account
@@ -158,9 +162,13 @@ Depending on how serious and how repeated the violation is:
 
 Child-safety violations, serious threats and sharing personal information lead to an immediate permanent ban without warning. If several people report the same player, their chat may be restricted temporarily before we review. To appeal, email [연락처 이메일] with the `Nickname#tag` shown in the app.
 
-### 7. Ads
+### 7. Ads and the Remove ads purchase
 
-The app is free and sells nothing inside the app. It contains Google AdMob ads, and we never show ads during a match. Users under 18 do not get personalized ads. Ad-related data is handled as described in the [Privacy Policy](/privacy).
+- The app is free to download and contains Google AdMob ads. We never show ads during a match. Users under 18 do not get personalized ads.
+- **Remove ads (optional):** a **one-time purchase** of **"Remove ads"** in the app (not a subscription) removes all ads (banners and interstitials). It does not change the rules or give any advantage in online play. The price is shown in your local currency in Google Play before you buy.
+- **Google Play handles payment and refunds.** The purchase is subject to Google Play's terms, and refunds are requested through Google Play under its refund policy. A refunded or cancelled purchase no longer removes ads. These terms do not limit consumer rights you have by law (such as withdrawal rights).
+- **The purchase belongs to your Google account.** It cannot be transferred to another person or another Google account. If you use the same Google account on a new phone or reinstall the app, it is recognised automatically, and you can also check it with **Restore purchase** in Settings.
+- We do not verify purchases on a server and we do not receive your payment details. Purchase-related data is handled as described in the [Privacy Policy](/privacy).
 
 ### 8. Changes to the service and liability
 
@@ -170,7 +178,7 @@ The app is free and sells nothing inside the app. It contains Google AdMob ads, 
 
 ### 9. Deleting your account
 
-You can delete your account at any time in **Settings → Delete account**. Without the app, email your `Nickname#tag` to [연락처 이메일].
+You can delete your account at any time in **Settings → Delete account**. Without the app, email your `Nickname#tag` to [연락처 이메일]. Deleting your account does not remove the "Remove ads" purchase from your Google account: if you reinstall the app with the same Google account and tap **Restore purchase**, ads are removed for the new account too (no refund is given for deleting an account).
 
 ### 10. Governing law
 

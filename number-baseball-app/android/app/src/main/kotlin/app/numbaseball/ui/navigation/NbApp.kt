@@ -115,6 +115,9 @@ import app.numbaseball.ui.report.ReportTarget
 import app.numbaseball.ui.report.ReportViewModel
 import app.numbaseball.ui.results.ResultsScreen
 import app.numbaseball.ui.rules.HowToPlayScreen
+import app.numbaseball.ui.tutorial.TutorialScreen
+import app.numbaseball.core.protocol.ErrorCodes
+import app.numbaseball.core.protocol.Stats
 import app.numbaseball.ui.settings.BlockedPlayersScreen
 import app.numbaseball.ui.settings.LICENCES
 import app.numbaseball.ui.settings.LicenceTextScreen
@@ -267,13 +270,19 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
         composable<FirstRunRoute> {
             val vm = containerViewModel { FirstRunViewModel(accountRepository) }
             val state by vm.state.collectAsStateWithLifecycle()
-            LaunchedEffect(state.done) { if (state.done) navController.resetTo(HomeRoute) }
+            // First run: age → nickname → tutorial → Home (FLOW, 01 §2).
+            LaunchedEffect(state.done) { if (state.done) navController.resetTo(TutorialRoute(firstRun = true)) }
             FirstRunScreen(state, vm::onNicknameChange, vm::onTransferCodeChange, vm::onTransferModeChange, vm::onSubmit, readPrivacy)
         }
 
         composable<HomeRoute> { HomeDestination(navController) }
 
         composable<HowToPlayRoute> { HowToPlayScreen(onBack = back) }
+
+        composable<TutorialRoute> { entry ->
+            val route = entry.toRoute<TutorialRoute>()
+            TutorialScreen(onFinish = { if (route.firstRun) navController.resetTo(HomeRoute) else back() })
+        }
 
         composable<ComputerMatchRoute> { entry ->
             val route = entry.toRoute<ComputerMatchRoute>()
@@ -507,7 +516,8 @@ private fun HomeDestination(navController: NavHostController) {
         onVsComputer = { cpuSheet = true },
         onCreateRoom = { roomSheet = true },
         onJoinRoom = { navController.navigate(JoinRoute) },
-        onHowToPlay = { navController.navigate(HowToPlayRoute) },
+        // Home's help replays the interactive tutorial (02, 01 §2); matches and the lobby keep the rules page.
+        onHowToPlay = { navController.navigate(TutorialRoute()) },
         onProfile = { navController.navigate(ProfileRoute) },
         onSettings = { navController.navigate(SettingsRoute) },
         onChooseNickname = { navController.resetTo(FirstRunRoute) },
@@ -796,8 +806,19 @@ private fun PlayerCardDestination(route: PlayerCardRoute, navController: NavHost
     val blockedText = stringResource(R.string.blocked_toast)
     val undo = stringResource(R.string.action_undo)
     val close: () -> Unit = { navController.popBackStack() }
+    // The record comes from `GET /api/v1/players/{id}` (protocol 1.1); 404 = unknown, deleted or blocked.
+    var record by remember { mutableStateOf<ApiResult<Stats>?>(null) }
+    LaunchedEffect(route.playerId) { record = container.safety.playerRecord(route.playerId) }
+    val recordMessage = when (val r = record) {
+        is ApiResult.Failure -> stringResource(if (r.code == ErrorCodes.NOT_FOUND) R.string.card_record_none else R.string.card_record_error)
+        ApiResult.NetworkError -> stringResource(R.string.card_record_error)
+        else -> null
+    }
     SheetFrame(onDismiss = close) {
         PlayerCard(
+            record = (record as? ApiResult.Success)?.value,
+            recordLoading = record == null,
+            recordMessage = recordMessage,
             target = target,
             context = context,
             self = route.self,

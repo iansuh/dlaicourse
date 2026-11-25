@@ -22,6 +22,8 @@
 
 **잠시 남을 수 있는 것:** 다른 사람에 대한 신고 기록에 들어 있는 내 메시지("삭제된 플레이어"로 표시, 신고 처리 후 최대 180일), 호스팅 업체의 접속 기록(최대 [로그 보관 일수]일), 삭제 요청 이메일(처리 후 30일). 광고 정보는 Google 정책에 따릅니다.
 
+**"광고 제거" 구매:** 계정을 삭제해도 구매는 Google 계정에 남습니다(우리 서버에는 구매 정보가 없습니다). 같은 Google 계정으로 앱을 다시 설치하고 설정의 **구매 복원**을 누르면 광고가 다시 제거됩니다. 구매 기록 삭제와 환불은 Google Play에서 요청하세요.
+
 자세한 내용: [개인정보처리방침](/privacy)
 
 ---
@@ -39,5 +41,7 @@ App: Number Baseball: Quiet Duel · Developer: [개발자 표시명]
 **What is deleted:** nickname, tag, account ID, account token (hash), game record, block list, transfer code, reports about you and their conversation snapshots. Your account ID is removed from reports you filed.
 
 **What may remain for a limited time:** your messages inside snapshots attached to reports about other players (shown as "deleted player", up to 180 days after the report is resolved), our hosting provider's access logs (up to [로그 보관 일수] days), and your deletion email (30 days after we handle it). Ad data is handled under Google's policies.
+
+**"Remove ads" purchase:** deleting your account does not remove the purchase from your Google account (our server holds no purchase data). If you reinstall the app with the same Google account and tap **Restore purchase** in Settings, ads are removed again. Ask Google Play to delete purchase records or to refund.
 
 More details: [Privacy Policy](/privacy)

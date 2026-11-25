@@ -10,6 +10,7 @@
 >   2. 앱 안 **문의하기 폼**(설정 → 문의하기): 서버에 문의 내용만 저장하고 답장은 앱 안 알림으로 보냅니다. 이메일을 받지 않으므로 수집 항목이 늘지 않지만 개발이 필요하고, 앱을 지운 사람은 쓸 수 없어 이메일을 대신하지는 못합니다. 만들면 아래 2절 표에 "문의 내용(보관 1년)"을 추가하세요.
 > - 이 방침은 `docs/protocol.md`(v1) 기준입니다. 서버가 실제로 그렇게 동작하는지 백엔드 담당이 확인해야 하며, 다르면 방침을 고쳐야 합니다. 특히 확인할 것: 서버 로그에 IP·채팅·토큰을 남기지 않는지, 대결 중 비밀 숫자·추측이 메모리에만 있는지, 처리된 신고 180일 후 삭제, 계정 삭제 시 다른 신고 스냅샷의 닉네임을 "삭제된 플레이어"로 바꾸는지, 호스팅 업체 로그 보관 기간. (이 중 180일 삭제와 닉네임 치환은 아직 프로토콜에 없으므로 `POLICY_REVIEW.md`의 요구사항으로 요청했습니다.)
 > - Play Console 데이터 보안(Data safety) 답변(`POLICY_CHECKLIST.md` 5절)과 이 방침은 항상 같아야 합니다.
+> - **2026-11-25 변경(광고 제거 인앱 구매 `remove_ads`)**: 2절 표에 "구매 정보" 행, 3절 보유 기간 행, 4절 문장, 7-1절(새 절), 8절 삭제 항목이 추가됐습니다. 앱은 Google Play에서 구매 상태·구매 토큰만 받고 서버로 보내지 않는다는 전제입니다(서버 확인 없음). Android 담당이 (1) 구매 토큰을 우리 서버나 로그로 보내지 않는지, (2) 광고 제거 후 Mobile Ads SDK를 초기화하지 않고 동의 화면도 띄우지 않는지 확인해야 하며, 다르면 7-1절을 고칩니다. 구매 내역은 Data safety의 "금융 정보 → 구매 내역" 행과 맞춥니다.
 >
 > 채울 값: `[시행일]`, `[운영자 성명]`, `[운영자 주소]`, `[게임 전용 전화번호]`, `[개발자 표시명]`(스토어에 보이는 개발자 이름), `[연락처 이메일]`, `[도메인]`, `[개인정보 보호책임자: 직책 또는 성명]`, `[호스팅 업체명]`, `[호스팅 업체 연락처 또는 개인정보 문의 페이지]`, `[서버 국가]`, `[로그 보관 일수]`.
 
@@ -31,6 +32,7 @@
 - 서버에는 닉네임, 무작위로 만든 계정 번호, 전적, 차단 목록, 신고 기록만 저장합니다.
 - 채팅은 서버 메모리에서만 전달되고 디스크에 저장하지 않습니다. 단, 신고된 대화는 신고 처리를 위해 일부 저장합니다.
 - 앱에는 **Google AdMob 광고**가 있습니다. 광고를 위해 Google이 광고 ID 등 기기 정보를 수집합니다(7절).
+- 선택 사항인 **"광고 제거" 1회 구매**는 Google Play가 결제합니다. 운영자는 카드번호 등 결제 정보를 받지 않습니다(7-1절).
 - 개인정보를 판매하지 않습니다.
 - **만 14세 이상만** 이용할 수 있으며, 만 18세 미만에게는 맞춤형 광고를 하지 않습니다.
 - 계정은 앱 설정에서 언제든 삭제할 수 있고, 앱이 없으면 이메일로 요청할 수 있습니다.
@@ -51,6 +53,7 @@
 | 접속 정보 | IP 주소, 앱 버전, 접속 시각 | 과도한 요청 차단(예: 시간당 계정 생성 횟수 제한), 장애 대응, 보안 | 서버 접속 시 자동 |
 | 연령대 | 처음 실행할 때 고른 연령대(만 14세 미만 / 14~15세 / 16~17세 / 18세 이상) | 이용 가능 여부 확인, 미성년자 광고 보호 설정 | **휴대폰에만 저장**, 서버로 보내지 않음 |
 | 약관 동의 | 동의한 약관 버전, 동의 시각, 만 14세 이상 확인 여부 | 이용약관 동의 기록 | 약관 동의 화면 |
+| 구매 정보 (Google Play가 처리) | 상품 ID(`remove_ads`), 구매 상태(구매됨/보류), 구매 토큰, 구매 확인(acknowledge) 여부. **카드번호·계좌·결제 수단·실명은 받지 않습니다.** | "광고 제거" 구매 확인, 광고 숨기기, 구매 복원 | Google Play 결제 라이브러리가 앱에 전달 (**휴대폰에서만 확인하며 운영자 서버로 보내지 않음**) |
 | 광고 정보 (Google이 수집) | 광고 ID, 앱 세트 ID, IP 주소(대략적인 위치 추정), 광고 상호작용, 진단 정보 | 광고 표시와 측정, 부정 클릭 방지 | Google Mobile Ads SDK가 자동 수집 (7절) |
 
 앱은 계정 토큰을 기기에 저장하고, 안드로이드 자동 백업을 켠 경우 이용자 본인의 Google 계정 백업에 포함됩니다. 이 백업은 Google이 관리하며 운영자는 볼 수 없습니다. 같은 Google 계정으로 새 휴대폰을 설정하면 계정을 되찾는 데 쓰입니다.
@@ -61,6 +64,7 @@
 | --- | --- |
 | 계정, 전적, 차단 목록, 약관 동의 기록 | 계정을 삭제할 때까지. 삭제하면 즉시 지웁니다. |
 | 기기 이전 코드 | 10분 또는 사용 즉시 |
+| 구매 정보(구매 상태·구매 토큰) | 운영자는 서버에 저장하지 않습니다. 앱이 휴대폰에서 Google Play에 조회한 결과만 쓰며, 앱을 지우면 함께 사라집니다. 구매 기록 자체는 Google이 이용자의 Google 계정에 Google의 정책에 따라 보관합니다. |
 | 삭제 요청 이메일 | 처리 완료 후 30일 |
 | 채팅 메시지 | 방이 있는 동안 서버 메모리에 최근 50개만. 방이 비거나 10분간 접속자가 없어 닫히면 사라지며 디스크에 저장하지 않습니다. |
 | 대결 정보 | 대결이 끝날 때까지 메모리에서만 |
@@ -73,7 +77,7 @@
 
 ### 4. 제3자 제공
 
-운영자는 이용자의 개인정보를 다른 회사나 개인에게 판매하거나 제공하지 않습니다. 다만 법령에 따른 수사기관의 적법한 요청이 있으면 그 범위에서 제공할 수 있습니다. 앱 안 광고에 쓰이는 정보는 Google이 앱에서 직접 수집합니다(7절).
+운영자는 이용자의 개인정보를 다른 회사나 개인에게 판매하거나 제공하지 않습니다. 다만 법령에 따른 수사기관의 적법한 요청이 있으면 그 범위에서 제공할 수 있습니다. 앱 안 광고에 쓰이는 정보는 Google이 앱에서 직접 수집합니다(7절). 앱 안 구매의 결제는 Google Play가 Google의 약관과 개인정보처리방침에 따라 직접 처리하며, 운영자는 그 결제 정보를 받지 않습니다(7-1절).
 
 ### 5. 처리 위탁
 
@@ -103,11 +107,21 @@
 - **만 18세 미만 이용자**: 처음 실행할 때 고른 연령대에 따라 앱이 Google에 "연령 제한 처리"를 요청합니다. 만 14~15세는 맞춤형 광고를 하지 않고 광고 ID도 보내지 않으며, 만 16~17세는 Google의 청소년 보호 기준을 적용합니다. Google Play가 알려 주는 연령 정보(Play 연령 신호)도 같은 목적에만 씁니다.
 - 운영자는 광고 ID를 직접 받거나 저장하지 않습니다.
 
+### 7-1. 인앱 구매 (광고 제거)
+
+- 앱은 **"광고 제거"**(상품 ID `remove_ads`, 1회 구매, 구독 아님)를 **Google Play 결제**로 판매합니다. 가격은 구매 전에 Google Play에 현지 통화로 표시됩니다.
+- **결제는 Google Play가 처리합니다.** 카드번호, 계좌, 결제 수단, 청구 주소, 이름은 Google이 받으며 운영자는 받지 못합니다. 그 정보의 처리는 Google의 약관과 개인정보처리방침(https://policies.google.com/privacy)을 따릅니다.
+- **앱이 받는 것은** 구매 상품 ID, 구매 상태(구매됨·보류·취소), 구매 토큰, 구매 확인 여부뿐입니다. 앱은 이를 휴대폰에서 Google Play 결제 라이브러리로 조회해 광고를 숨길지 정합니다. **운영자 서버로 보내거나 서버에 저장하지 않습니다**(서버 확인 없음).
+- **구매는 Google 계정에 묶입니다.** 같은 Google 계정으로 새 휴대폰을 쓰거나 앱을 다시 설치하면 앱이 자동으로 구매를 확인하고, 설정의 **구매 복원**으로 직접 다시 확인할 수도 있습니다.
+- **환불**은 Google Play의 환불 정책에 따라 Google Play를 통해 요청합니다. 환불되거나 취소된 구매는 앱이 다음에 확인할 때 광고가 다시 나옵니다. 운영자가 결제 내역에 접근할 수는 없습니다.
+- 광고를 제거하면 앱은 광고를 불러오지 않고 광고 동의 화면도 더 이상 띄우지 않습니다. 만 18세 미만 이용자의 구매는 Google Play의 가족·보호자 설정에 따라 보호자 승인이 필요할 수 있습니다.
+
 ### 8. 이용자의 권리
 
 - **열람**: 앱의 프로필에서 닉네임, 태그, 전적을 볼 수 있습니다. 그 밖의 정보는 [연락처 이메일]로 요청하세요.
 - **정정**: 앱 설정에서 닉네임을 바꿀 수 있습니다.
 - **삭제**: 앱 **설정 → 계정 삭제**(즉시). 앱이 없으면 [연락처 이메일]로 `닉네임#태그`를 보내 주세요(7일 안에 삭제). 안내: `https://[도메인]/delete-account`
+  - **계정을 삭제해도 "광고 제거" 구매는 Google 계정에 그대로 남습니다.** 운영자 서버에는 구매 정보가 없으므로 지울 것이 없고, 환불도 되지 않습니다. 같은 Google 계정으로 앱을 다시 설치하고 설정의 **구매 복원**을 누르면 새 계정에서도 광고가 제거됩니다. 구매 기록 삭제와 환불은 Google Play에서 요청합니다.
 - **처리 정지·동의 철회**: 광고는 7절의 방법으로, 그 밖의 처리는 계정 삭제 또는 이메일 요청으로.
 - 요청은 [연락처 이메일]로 보내 주세요. 이메일이나 이름을 묻지 않는 서비스이므로, 계정 확인을 위해 앱에 표시되는 `닉네임#태그`를 적어 주세요. 그 계정이 계속 앱에서 쓰이고 있으면 앱에서 직접 처리해 달라고 안내할 수 있습니다. 10일 이내에 답변합니다.
 
@@ -164,6 +178,7 @@ Who we are: [운영자 성명] / address [운영자 주소] / phone [게임 전�
 - Our server stores only a nickname, a random account number, your game record, your block list and reports.
 - Chat is relayed through server memory and is not saved to disk, except conversations that someone reports.
 - The app shows **Google AdMob ads**. Google collects device information such as the advertising ID for ads (section 7).
+- An optional one-time **"Remove ads" purchase** is paid through Google Play. We never receive your card or other payment details (section 7-1).
 - We do not sell personal data.
 - The app is for people **aged 14 and over**, and users under 18 do not get personalized ads.
 - You can delete your account at any time in the app, or by email if you no longer have the app.
@@ -184,6 +199,7 @@ Who we are: [운영자 성명] / address [운영자 주소] / phone [게임 전�
 | Connection data | IP address, app version, time | Rate limiting (e.g. account creations per hour), troubleshooting, security | Automatically when you connect |
 | Age band | The age band chosen on first launch (under 14 / 14–15 / 16–17 / 18+) | Decide whether the app can be used; apply ad protections for minors | **Stored only on your phone**, never sent to us |
 | Terms acceptance | Terms version accepted, time, confirmation of being 14 or older | Record that you accepted the Terms | Terms screen |
+| Purchase data (handled by Google Play) | Product ID (`remove_ads`), purchase state (purchased / pending), purchase token, whether the purchase has been acknowledged. **We do not receive card numbers, bank details, payment methods or your real name.** | Confirm the "Remove ads" purchase, hide ads, restore the purchase | Passed to the app by the Google Play Billing library (**checked on your phone only; not sent to our server**) |
 | Ad data (collected by Google) | Advertising ID, app set ID, IP address (to estimate approximate location), ad interactions, diagnostics | Serve and measure ads, prevent ad fraud | Google Mobile Ads SDK (section 7) |
 
 The app stores your account token on your device. If Android Auto Backup is on, it is included in your own Google account backup, which Google manages and we cannot see. It lets you restore your account on a new phone set up with the same Google account.
@@ -194,6 +210,7 @@ The app stores your account token on your device. If Android Auto Backup is on, 
 | --- | --- |
 | Account, game record, block list, Terms acceptance | Until you delete your account; deleted immediately when you do |
 | Device transfer code | 10 minutes or until used |
+| Purchase data (purchase state, purchase token) | We do not store it on our server. The app only uses what it queries from Google Play on your phone, and it disappears when you uninstall the app. The purchase record itself is kept by Google in your Google account under Google's policies. |
 | Deletion request email | 30 days after we handle it |
 | Chat messages | Only the last 50 per room, in server memory, while the room exists. Gone when the room closes (empty, or 10 minutes with nobody connected). Never written to disk. |
 | Match data | In memory until the match ends |
@@ -206,7 +223,7 @@ Deletion means irreversible removal from our database. No law currently requires
 
 ### 4. Sharing
 
-We do not sell or give your personal data to other companies or people, except when required by law (for example a valid request from law enforcement). Ad data is collected directly by Google inside the app (section 7).
+We do not sell or give your personal data to other companies or people, except when required by law (for example a valid request from law enforcement). Ad data is collected directly by Google inside the app (section 7). Payment for in-app purchases is processed directly by Google Play under Google's terms and privacy policy; we do not receive that payment data (section 7-1).
 
 ### 5. Service providers
 
@@ -234,11 +251,21 @@ We do not sell or give your personal data to other companies or people, except w
 - **Users under 18**: based on the age band chosen on first launch, the app asks Google for age-restricted ad treatment. Users aged 14–15 get no personalized ads and their advertising ID is not sent; users aged 16–17 get Google's teen protections. Age information provided by Google Play (Play Age Signals) is used only for the same purpose.
 - We do not receive or store your advertising ID ourselves.
 
+### 7-1. In-app purchase (Remove ads)
+
+- The app sells **"Remove ads"** (product ID `remove_ads`, a one-time purchase, not a subscription) through **Google Play Billing**. The price is shown in your local currency in Google Play before you buy.
+- **Google Play processes the payment.** Google, not us, receives your card number, bank details, payment method, billing address and name; Google handles them under its terms and privacy policy (https://policies.google.com/privacy).
+- **What the app receives** is only the product ID, the purchase state (purchased, pending, cancelled), the purchase token and whether the purchase is acknowledged. The app queries this on your phone through the Google Play Billing library to decide whether to hide ads. **It is not sent to or stored on our server** (there is no server-side check).
+- **The purchase belongs to your Google account.** If you use the same Google account on a new phone or reinstall the app, the app finds the purchase automatically, and you can also check it yourself with **Restore purchase** in Settings.
+- **Refunds** are requested through Google Play under Google Play's refund policy. If a purchase is refunded or cancelled, ads come back the next time the app checks. We cannot see your payment history.
+- Once ads are removed the app does not load ads and no longer shows the ad consent screen. For users under 18, purchases may need parental approval under Google Play's family settings.
+
 ### 8. Your rights
 
 - **Access**: your profile in the app shows your nickname, tag and record. Ask us at [연락처 이메일] for anything else.
 - **Correction**: change your nickname in Settings.
 - **Deletion**: **Settings → Delete account** in the app (immediate). Without the app, email your `Nickname#tag` to [연락처 이메일] (deleted within 7 days). Instructions: `https://[도메인]/delete-account`
+  - **Deleting your account does not remove the "Remove ads" purchase from your Google account.** Our server holds no purchase data, so there is nothing for us to erase, and nothing is refunded. If you reinstall the app with the same Google account and tap **Restore purchase** in Settings, ads are removed for the new account too. Ask Google Play to delete purchase records or to refund.
 - **Objection / withdrawing consent**: for ads, see section 7; for everything else, delete your account or email us.
 - Send requests to [연락처 이메일]. Because we never ask for your name or email, please include the `Nickname#tag` shown in the app. If that account is still being used in the app, we may ask you to handle it in the app instead. We reply within 10 days.
 

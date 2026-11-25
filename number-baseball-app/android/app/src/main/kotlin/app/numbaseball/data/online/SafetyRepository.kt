@@ -2,6 +2,7 @@ package app.numbaseball.data.online
 
 import app.numbaseball.core.protocol.BlockedPlayer
 import app.numbaseball.core.protocol.ErrorCodes
+import app.numbaseball.core.protocol.Stats
 import app.numbaseball.core.protocol.ReportReason
 import app.numbaseball.core.protocol.ReportRequest
 import app.numbaseball.data.account.AccountRepository
@@ -56,6 +57,16 @@ class SafetyRepository(
                 _blocked.value = r.value.blocked
                 ApiResult.Success(Unit)
             }
+            is ApiResult.Failure -> ApiResult.Failure(r.status, r.code, r.retryAfterSeconds)
+            ApiResult.NetworkError -> ApiResult.NetworkError
+        }
+    }
+
+    /** The player card's record (protocol 1.1 §3.4). `not_found` covers unknown, deleted and blocked players. */
+    suspend fun playerRecord(playerId: String): ApiResult<Stats> {
+        val token = accounts.token() ?: return ApiResult.Failure(401, ErrorCodes.UNAUTHORIZED)
+        return when (val r = api.playerCard(token, playerId)) {
+            is ApiResult.Success -> ApiResult.Success(r.value.stats)
             is ApiResult.Failure -> ApiResult.Failure(r.status, r.code, r.retryAfterSeconds)
             ApiResult.NetworkError -> ApiResult.NetworkError
         }

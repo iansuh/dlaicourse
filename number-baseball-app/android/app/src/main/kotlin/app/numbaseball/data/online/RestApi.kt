@@ -8,6 +8,7 @@ import app.numbaseball.core.protocol.CodeResponse
 import app.numbaseball.core.protocol.CreateAccountRequest
 import app.numbaseball.core.protocol.ErrorCodes
 import app.numbaseball.core.protocol.ErrorResponse
+import app.numbaseball.core.protocol.PlayerCard
 import app.numbaseball.core.protocol.ProtocolJson
 import app.numbaseball.core.protocol.RedeemTransferRequest
 import app.numbaseball.core.protocol.RenameRequest
@@ -81,6 +82,10 @@ class RestApi(
 
     override suspend fun report(token: String, request: ReportRequest): ApiResult<ReportResponse> =
         call(request("reports", token).post(body(ReportRequest.serializer(), request)), ReportResponse.serializer())
+
+    /** `addPathSegment` percent-encodes the key, so a handle's `#` goes out as `%23`. */
+    override suspend fun playerCard(token: String, key: String): ApiResult<PlayerCard> =
+        call(request("players", token, key).get(), PlayerCard.serializer())
 
     private fun request(path: String, token: String? = null, lastSegment: String? = null): Request.Builder {
         val url = endpoints.api.newBuilder().addPathSegments(path)

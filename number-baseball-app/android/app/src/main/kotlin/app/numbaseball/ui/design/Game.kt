@@ -325,12 +325,14 @@ fun DigitKeypad(
     memo: Map<Char, MemoMark> = emptyMap(),
     compact: Boolean = false,
     waitingLabel: String? = null,
+    /** A key the tutorial asks for: 2 dp chalk inset (01 §2). */
+    highlight: Char? = null,
 ) {
     val gap = if (compact) 4.dp else NbSize.keyGap
     val keyHeight = if (compact) NbSize.keyHeightCompact else NbSize.keyHeight
     val digitKey: @Composable (Char, Modifier) -> Unit = { d, m ->
         val isUsed = mode != KeypadMode.AGE && d in used
-        DigitKey(d, isUsed, locked, memo[d] ?: MemoMark.NONE, keyHeight, m) { onDigit(d) }
+        DigitKey(d, isUsed, locked, memo[d] ?: MemoMark.NONE, keyHeight, if (d == highlight) m.border(2.dp, NbColors.chalk, RoundedCornerShape(NbRadius.m)) else m) { onDigit(d) }
     }
     val backspace: @Composable (Modifier) -> Unit = { m -> IconKey(R.drawable.ic_backspace, stringResource(R.string.backspace), locked, keyHeight, m, onBackspace, onClear) }
     val action: @Composable (Modifier) -> Unit = { m ->

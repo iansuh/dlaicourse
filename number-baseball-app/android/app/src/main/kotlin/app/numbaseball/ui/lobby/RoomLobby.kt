@@ -557,6 +557,8 @@ private fun ChatPeek(state: LobbyUiState, onChat: () -> Unit, onPractice: (() ->
             HSpacer(12.dp)
             val text = if (last == null) {
                 buildAnnotatedString { withStyle(SpanStyle(color = NbColors.text3)) { append(stringResource(R.string.chat_title)) } }
+            } else if (last.kind == ChatKind.SYSTEM) {
+                buildAnnotatedString { withStyle(SpanStyle(color = NbColors.text3)) { append(app.numbaseball.ui.chat.systemText(last)) } }
             } else {
                 val sender = last.senderNickname ?: stringResource(R.string.chat_deleted_player)
                 val body = if (last.kind == ChatKind.PHRASE) last.phraseId?.let { phraseText(it) }.orEmpty() else last.text.orEmpty()

@@ -1,6 +1,6 @@
 # Store listing (10 languages)
 
-Owner: Release lead. Status: updated 2026-11-21 for the owner's decisions ("숫자야구"-style name, 13+ audience, quick match limited to quick phrases).
+Owner: Release lead. Status: updated 2026-11-21 for the owner's decisions ("숫자야구"-style name, 13+ audience, quick match limited to quick phrases); updated 2026-11-25 for the optional one-time "remove ads" purchase (the "Good to know" ads line in all 10 languages; counts recomputed).
 
 Limits (Play Console, "Create and set up your app" / store listing help, https://support.google.com/googleplay/android-developer/answer/9859152): app name max 30 characters, short description max 80, full description max 4000. Limits count every character the same way, full-width or half-width. Counts below were computed with a script (Unicode code points, line breaks included in the full description), so they are exact for the text as written. Re-count after any edit.
 
@@ -72,7 +72,7 @@ Notes: es-419, pt-BR and vi option 1 are exactly 30 characters; any edit must sh
 ## 3. Copy rules for every language
 
 - The "Contains ads" line is required (honest ads disclosure). The listing does not state a minimum age: the content rating shows on the listing, and the minimum age (14, see `POLICY_REVIEW.md` R19) is enforced by the in-app age screen and the Terms. Do not add "for kids" or child-oriented wording; the target audience is 13+ teens and adults, not children.
-- Never write "no ads", "free forever", "safe for kids", rankings or "best".
+- Never write "no ads", "free forever", "safe for kids", rankings or "best". The ads line also mentions the optional one-time purchase that removes ads (owner decision 2026-11-25), without a price (the Metadata policy bans price and promo text; Play shows the local price and the "In-app purchases" label itself). Do not write "ad-free" as a feature claim; the app still contains ads until the player buys.
 - Game terms follow the in-app terms from the prototype (`../number-baseball/public/i18n.js`): ja ストライク/ボール/アウト, zh 好球/坏球/出局, es/pt Bola, fr Balle, ru Страйк/Болл.
 
 ---
@@ -89,7 +89,7 @@ Notes: es-419, pt-BR and vi option 1 are exactly 30 characters; any edit must sh
 서로 다른 숫자 3~6개, 스트라이크와 볼로 먼저 맞히는 조용한 1:1 숫자야구
 ```
 
-**Full description** (943/4000)
+**Full description** (975/4000)
 ```text
 쉬는 시간 5분, 조용하게 한 판.
 상대의 비밀 숫자를 먼저 맞히는 숫자야구로 1:1 대결과 팀 대결을 즐겨 보세요.
@@ -120,7 +120,7 @@ Notes: es-419, pt-BR and vi option 1 are exactly 30 characters; any edit must sh
 • 빠른 대결에서는 정해진 문구만, 자유 채팅은 방 코드로 모인 친구끼리만
 
 ■ 알아 두세요
-• 광고가 포함되어 있습니다. 대결 중에는 광고가 나오지 않습니다.
+• 광고가 포함되어 있으며, 선택 사항인 1회성 구매로 광고를 모두 없앨 수 있습니다. 대결 중에는 광고가 나오지 않습니다.
 • 온라인 대결과 채팅은 인터넷 연결이 필요합니다.
 • 설정에서 언제든 계정을 삭제할 수 있습니다.
 • 지원 언어: 한국어, English, 日本語, 简体中文, Español, Français, Deutsch, Português (BR), Русский, Tiếng Việt
@@ -148,7 +148,7 @@ Number Baseball: Quiet Duel
 Crack your rival's secret number first. Strikes, balls and quiet 1v1 duels.
 ```
 
-**Full description** (1733/4000)
+**Full description** (1780/4000)
 ```text
 A quiet, quick duel for a short break.
 Number Baseball, also known as Bulls and Cows, is a number-deduction duel: work out your opponent's secret number before they work out yours.
@@ -179,7 +179,7 @@ CHAT WITH CARE
 • Quick Match chat uses preset phrases only; free text is for private rooms with friends
 
 GOOD TO KNOW
-• Contains ads. Ads never appear during a match.
+• Contains ads. An optional one-time purchase removes all ads. Ads never appear during a match.
 • Online play and chat need an internet connection.
 • You can delete your account at any time in Settings.
 • Languages: English, 한국어, 日本語, 简体中文, Español, Français, Deutsch, Português (BR), Русский, Tiếng Việt
@@ -207,7 +207,7 @@ GOOD TO KNOW
 相手の秘密の数字を先に当てよう。ストライクとボールで推理する、静かな1対1の対戦
 ```
 
-**Full description** (874/4000)
+**Full description** (900/4000)
 ```text
 ちょっとした休憩に、静かに一局。
 数字野球は、相手の秘密の数字を先に当てる数字推理の対戦ゲームです。韓国で親しまれている遊びを、オンラインで気軽に楽しめます。
@@ -238,7 +238,7 @@ GOOD TO KNOW
 ・クイック対戦では定型フレーズのみ。自由なチャットはルームコードで集まった友だち同士だけ
 
 ■ ご注意
-・広告が含まれます。対戦中に広告は表示されません。
+・広告が含まれます。任意の1回限りの購入で広告をすべて非表示にできます。対戦中に広告は表示されません。
 ・オンライン対戦とチャットにはインターネット接続が必要です。
 ・アカウントは設定からいつでも削除できます。
 ・対応言語：日本語、한국어、English、简体中文、Español、Français、Deutsch、Português（BR）、Русский、Tiếng Việt
@@ -266,7 +266,7 @@ GOOD TO KNOW
 抢先猜出对手的秘密数字！靠好球和坏球的提示推理，安静地来一局一对一对决。
 ```
 
-**Full description** (676/4000)
+**Full description** (694/4000)
 ```text
 短暂休息时，安静地来一局。
 数字棒球是一款数字推理对战游戏，也叫“猜数字（1A2B）”：抢在对手之前猜出他的秘密数字。
@@ -297,7 +297,7 @@ GOOD TO KNOW
 • 快速匹配中只能发送预设短语，自由聊天仅限用房间代码加入的好友之间
 
 温馨提示
-• 本应用含广告。对局过程中绝不显示广告。
+• 本应用含广告，可通过一次性的可选购买移除所有广告。对局过程中绝不显示广告。
 • 在线对战和聊天需要联网。
 • 可随时在“设置”中删除账号。
 • 支持语言：简体中文、English、한국어、日本語、Español、Français、Deutsch、Português（BR）、Русский、Tiếng Việt
@@ -325,7 +325,7 @@ Béisbol Numérico: Duelo Sereno
 Descifra primero el número secreto de tu rival. Strikes, bolas y duelos 1 vs 1.
 ```
 
-**Full description** (1929/4000)
+**Full description** (1974/4000)
 ```text
 Un duelo rápido y tranquilo para tu descanso.
 El Béisbol Numérico, también conocido como Picas y Fijas o Toros y Vacas, es un duelo de deducción: descifra el número secreto de tu rival antes de que descifre el tuyo.
@@ -356,7 +356,7 @@ CHAT CON CUIDADO
 • En la partida rápida solo hay frases predefinidas; el chat libre es para salas privadas con amigos
 
 TEN EN CUENTA
-• Contiene anuncios. Nunca aparecen durante una partida.
+• Contiene anuncios. Una compra única opcional los elimina todos. Nunca aparecen durante una partida.
 • El juego en línea y el chat requieren conexión a internet.
 • Puedes eliminar tu cuenta cuando quieras desde Ajustes.
 • Idiomas: Español, English, 한국어, 日本語, 简体中文, Français, Deutsch, Português (BR), Русский, Tiếng Việt
@@ -384,7 +384,7 @@ Baseball des chiffres : duel
 Trouvez avant l'autre son nombre secret. Strikes, balles et duels en 1 contre 1.
 ```
 
-**Full description** (2095/4000)
+**Full description** (2143/4000)
 ```text
 Un duel calme et rapide pour votre pause.
 Le Baseball des chiffres, aussi appelé Bulls and Cows, est un duel de déduction : trouvez le nombre secret de votre adversaire avant qu'il ne trouve le vôtre.
@@ -415,7 +415,7 @@ UNE DISCUSSION SEREINE
 • En partie rapide, uniquement des phrases prédéfinies ; la discussion libre est réservée aux salons privés entre amis
 
 BON À SAVOIR
-• Contient des publicités. Aucune publicité pendant une partie.
+• Contient des publicités. Un achat unique facultatif les supprime toutes. Aucune publicité pendant une partie.
 • Le jeu en ligne et la discussion nécessitent une connexion Internet.
 • Vous pouvez supprimer votre compte à tout moment dans les paramètres.
 • Langues : français, English, 한국어, 日本語, 简体中文, Español, Deutsch, Português (BR), Русский, Tiếng Việt
@@ -443,7 +443,7 @@ Zahlen-Baseball: Leises Duell
 Knacke zuerst die Geheimzahl deines Gegners. Strikes, Balls, ruhige 1:1-Duelle.
 ```
 
-**Full description** (1936/4000)
+**Full description** (1996/4000)
 ```text
 Ein ruhiges, schnelles Duell für die kurze Pause.
 Zahlen-Baseball, auch bekannt als Bulls and Cows, ist ein Logik-Duell: Knacke die Geheimzahl deines Gegners, bevor er deine knackt.
@@ -474,7 +474,7 @@ ENTSPANNT CHATTEN
 • Im schnellen Spiel nur vorgegebene Sätze; freier Chat nur in privaten Räumen mit Freunden
 
 GUT ZU WISSEN
-• Enthält Werbung. Während eines Spiels wird nie Werbung gezeigt.
+• Enthält Werbung. Mit einem optionalen Einmalkauf entfällt sämtliche Werbung. Während eines Spiels wird nie Werbung gezeigt.
 • Online-Spiele und Chat brauchen eine Internetverbindung.
 • Du kannst dein Konto jederzeit in den Einstellungen löschen.
 • Sprachen: Deutsch, English, 한국어, 日本語, 简体中文, Español, Français, Português (BR), Русский, Tiếng Việt
@@ -502,7 +502,7 @@ Beisebol Numérico: Duelo Calmo
 Descubra primeiro o número secreto do adversário. Strikes, bolas e duelos 1x1.
 ```
 
-**Full description** (1916/4000)
+**Full description** (1961/4000)
 ```text
 Um duelo rápido e tranquilo para a sua pausa.
 O Beisebol Numérico, também conhecido como Bulls and Cows, é um duelo de dedução: descubra o número secreto do adversário antes que ele descubra o seu.
@@ -533,7 +533,7 @@ CHAT TRANQUILO
 • Na partida rápida, só frases prontas; o chat livre fica para salas privadas com amigos
 
 BOM SABER
-• Contém anúncios. Eles nunca aparecem durante uma partida.
+• Contém anúncios. Uma compra única opcional remove todos eles. Eles nunca aparecem durante uma partida.
 • Partidas online e chat exigem conexão com a internet.
 • Você pode excluir sua conta a qualquer momento nas Configurações.
 • Idiomas: Português (BR), English, 한국어, 日本語, 简体中文, Español, Français, Deutsch, Русский, Tiếng Việt
@@ -561,7 +561,7 @@ BOM SABER
 Разгадайте секретное число соперника первым. Страйки, боллы и дуэли 1 на 1.
 ```
 
-**Full description** (1818/4000)
+**Full description** (1870/4000)
 ```text
 Тихая быстрая дуэль для короткого перерыва.
 Числовой бейсбол, он же «Быки и коровы», — логическая дуэль: разгадайте секретное число соперника раньше, чем он разгадает ваше.
@@ -592,7 +592,7 @@ BOM SABER
 • В быстрой игре — только готовые фразы; свободный чат — в приватных комнатах с друзьями
 
 ВАЖНО
-• Содержит рекламу. Во время игры реклама не показывается.
+• Содержит рекламу. Разовая покупка (по желанию) отключает всю рекламу. Во время игры реклама не показывается.
 • Для онлайн-игр и чата нужен интернет.
 • Аккаунт можно удалить в любой момент в настройках.
 • Языки: русский, English, 한국어, 日本語, 简体中文, Español, Français, Deutsch, Português (BR), Tiếng Việt
@@ -620,7 +620,7 @@ Bóng chày số: Đấu trí yên tĩnh
 Đoán trúng số bí mật của đối thủ trước. Strike, Ball và đấu 1 đối 1 yên tĩnh.
 ```
 
-**Full description** (1783/4000)
+**Full description** (1838/4000)
 ```text
 Một trận đấu nhanh, yên tĩnh cho giờ nghỉ ngắn.
 Bóng chày số, còn gọi là Bulls and Cows, là trò đấu trí suy luận con số: hãy đoán ra số bí mật của đối thủ trước khi họ đoán ra số của bạn.
@@ -651,7 +651,7 @@ TRÒ CHUYỆN AN TÂM
 • Ghép trận nhanh chỉ dùng câu soạn sẵn; chat tự do chỉ trong phòng riêng với bạn bè
 
 LƯU Ý
-• Có quảng cáo. Quảng cáo không bao giờ xuất hiện trong trận đấu.
+• Có quảng cáo. Có thể mua một lần (tùy chọn) để gỡ toàn bộ quảng cáo. Quảng cáo không bao giờ xuất hiện trong trận đấu.
 • Chơi trực tuyến và trò chuyện cần kết nối internet.
 • Bạn có thể xóa tài khoản bất cứ lúc nào trong phần Cài đặt.
 • Ngôn ngữ: Tiếng Việt, English, 한국어, 日本語, 简体中文, Español, Français, Deutsch, Português (BR), Русский

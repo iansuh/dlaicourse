@@ -453,4 +453,19 @@
     <string name="profile_by_mode">모드별</string>
     <string name="profile_cpu_mode">컴퓨터 (기록 미포함)</string>
     <string name="profile_no_record">기록 없음</string>
+    <string name="tut_skip">건너뛰기</string>
+    <string name="tut_next">다음</string>
+    <string name="tut_start">시작하기</string>
+    <string name="tut_1">상대가 **서로 다른 숫자 3개**를 숨겼어요. 맞혀 볼까요?</string>
+    <string name="tut_2">**0**, **7**, **5**를 눌러 보세요.</string>
+    <string name="tut_3">**0**은 숫자와 자리가 맞아서 스트라이크(S), **7**은 숫자만 맞아서 볼(B)이에요. 5는 없어요.</string>
+    <string name="tut_legend">S 숫자와 자리가 맞음 · B 숫자만 맞음</string>
+    <string name="tut_out">하나도 맞지 않으면 **아웃**이에요.</string>
+    <string name="tut_4">숨긴 숫자는 **0 4 7**. 직접 맞혀 보세요.</string>
+    <string name="tut_done">모두 스트라이크면 **승리**! 같은 회에 둘 다 맞히면 무승부예요.</string>
+    <string name="chat_system_joined">%1$s 님이 들어왔어요</string>
+    <string name="chat_system_left">%1$s 님이 나갔어요</string>
+    <string name="chat_system_generic">방에 변화가 있어요</string>
+    <string name="card_record_error">기록을 불러오지 못했어요</string>
+    <string name="card_record_none">볼 수 있는 기록이 없어요</string>
 </resources>

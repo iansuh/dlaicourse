@@ -40,6 +40,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -86,6 +87,7 @@ import app.numbaseball.ui.design.formatClock
 import app.numbaseball.ui.design.isCompactHeight
 import app.numbaseball.ui.design.isLargeFont
 import app.numbaseball.ui.design.SheetFrame
+import app.numbaseball.ui.design.targetOverflow
 import app.numbaseball.ui.design.rememberToastState
 import app.numbaseball.ui.theme.NbColors
 import app.numbaseball.ui.theme.NbLayout
@@ -128,7 +130,14 @@ data class PhraseBubble(val id: Long, val sender: String, val text: String)
  * memo · entry. Height-compact windows (< 480 dp): ADAPTIVE.md §1.
  */
 @Composable
-fun MatchScreen(state: MatchUiState, actions: MatchActions, bubble: PhraseBubble? = null, initialLargeMemo: Boolean = false) {
+fun MatchScreen(
+    state: MatchUiState,
+    actions: MatchActions,
+    bubble: PhraseBubble? = null,
+    initialLargeMemo: Boolean = false,
+    /** The interactive tutorial (01 §2) runs on this screen with a coach band and its own action key. */
+    tutorial: app.numbaseball.ui.tutorial.TutorialUi? = null,
+) {
     val audio = LocalGameAudio.current
     val haptics = LocalGameHaptics.current
     val compact = isCompactHeight()
@@ -186,7 +195,7 @@ fun MatchScreen(state: MatchUiState, actions: MatchActions, bubble: PhraseBubble
         actions.onMemoCell(p, d)
     }
     val onLeave: () -> Unit = {
-        if (!state.mode.online && state.myRounds.isEmpty()) actions.onLeave() else confirmLeave = true
+        if (tutorial != null || (!state.mode.online && state.myRounds.isEmpty())) actions.onLeave() else confirmLeave = true
     }
     val mySecretToast = state.mySecret?.let { stringResource(R.string.my_secret) + " " + it }
 
@@ -197,7 +206,8 @@ fun MatchScreen(state: MatchUiState, actions: MatchActions, bubble: PhraseBubble
                 compact = compact,
                 onClose = onLeave,
                 onMenu = { showMenu = true },
-                memoToggle = if (compact && !secretPhase) ({ memoInCompact = !memoInCompact }) else null,
+                memoToggle = if (compact && !secretPhase && tutorial?.showMemo != false) ({ memoInCompact = !memoInCompact }) else null,
+                tutorial = tutorial,
                 onTitleClick = actions.onTeamBoard,
                 menu = {
                     MatchMenu(
@@ -228,7 +238,7 @@ fun MatchScreen(state: MatchUiState, actions: MatchActions, bubble: PhraseBubble
         state.reconnectSeconds?.let {
             ConnectionBanner(stringResource(R.string.reconnecting_title), stringResource(R.string.reconnecting_match), formatClock(it))
         }
-        if (!compact) DuelStrip(state, actions.onChat, bubble)
+        if (tutorial != null) CoachBand(tutorial, compact) else if (!compact) DuelStrip(state, actions.onChat, bubble)
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
             val available = maxHeight
             Column(Modifier.fillMaxSize()) {
@@ -246,7 +256,8 @@ fun MatchScreen(state: MatchUiState, actions: MatchActions, bubble: PhraseBubble
                         val collapsed = large || (state.memo.collapsed ?: autoCollapse)
                         if (!compact) PitchLogHeader(state.digits)
                         PitchLog(state.digits, state.myRounds, state.opponentRounds, reveal.progress, compact, Modifier.weight(1f))
-                        if (!compact) {
+                        tutorial?.legend?.let { TutorialLegend(it, compact) }
+                        if (!compact && tutorial?.showMemo != false) {
                             MemoBoard(
                                 state.memo, collapsed, onMemoDigit, onMemoCell, actions.onMemoClear,
                                 onCollapse = { collapse -> if (large && !collapse) largeMemo = true else actions.onMemoCollapse(collapse) },
@@ -269,6 +280,7 @@ fun MatchScreen(state: MatchUiState, actions: MatchActions, bubble: PhraseBubble
             onSubmit = onSubmit,
             onRandom = actions.onRandomSecret,
             onTeamBoard = actions.onTeamBoard,
+            tutorial = tutorial,
         )
     }
 
@@ -324,9 +336,11 @@ private fun MatchTopBar(
     memoToggle: (() -> Unit)?,
     onTitleClick: (() -> Unit)?,
     menu: @Composable () -> Unit,
+    tutorial: app.numbaseball.ui.tutorial.TutorialUi? = null,
 ) {
     val secretPhase = state.phase == MatchPhase.CHOOSING_SECRET || state.phase == MatchPhase.WAITING_FOR_OPPONENT_SECRET
     val title = when {
+        tutorial != null -> stringResource(R.string.menu_how_to)
         compact && secretPhase -> stringResource(R.string.secret_short)
         secretPhase -> modeName(state)
         else -> stringResource(R.string.round_n, state.round.coerceAtLeast(1))
@@ -351,7 +365,9 @@ private fun MatchTopBar(
                         .then(if (onTitleClick != null) Modifier.clickable(onClick = onTitleClick) else Modifier),
                 ) {
                     Text(title, style = NbType.subtitle, color = NbColors.chalk, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    if (compact && !secretPhase) {
+                    if (tutorial != null) {
+                        Unit
+                    } else if (compact && !secretPhase) {
                         StatusLine(state.opponentStatus)
                     } else if (!isLargeFont()) {
                         // Large text: the mode subtitle is hidden (ADAPTIVE.md §2).
@@ -360,6 +376,14 @@ private fun MatchTopBar(
                 }
             },
             actions = {
+                if (tutorial != null) {
+                    // Tutorial: step "1/4" (`numLabel` `text3`) + "건너뛰기"; no clock, no menu (01 §2).
+                    Text("${tutorial.step}/${tutorial.total}", style = NbType.numLabel, color = NbColors.text3, maxLines = 1, softWrap = false)
+                    HSpacer(4.dp)
+                    if (memoToggle != null) IconButton48(R.drawable.ic_edit_note, stringResource(R.string.memo), memoToggle, tint = NbColors.text2)
+                    NbButton(stringResource(R.string.tut_skip), tutorial.onSkip, kind = ButtonKind.TEXT, modifier = Modifier.targetOverflow(if (compact) 46.dp else 54.dp))
+                    return@TopBar
+                }
                 // Secondary top-bar action: `text2` (DESIGN_SYSTEM 7, D2-06).
                 if (memoToggle != null) IconButton48(R.drawable.ic_edit_note, stringResource(R.string.memo), memoToggle, tint = NbColors.text2)
                 state.secondsLeft?.let { PitchClock(it, level, Modifier.padding(start = 8.dp, end = 8.dp)) }
@@ -556,6 +580,7 @@ private fun EntryBlock(
     onSubmit: () -> Unit,
     onRandom: () -> Unit,
     onTeamBoard: (() -> Unit)?,
+    tutorial: app.numbaseball.ui.tutorial.TutorialUi? = null,
 ) {
     val margin = if (compact) 12.dp else 16.dp
     val gap = if (compact) 8.dp else 12.dp
@@ -594,6 +619,7 @@ private fun EntryBlock(
             error = state.inputProblem != null || state.error != null,
             compact = compact,
             showActive = state.acceptsInput,
+            placeholder = tutorial?.slotPlaceholder,
             shakeKey = shakeKey,
             onTapSlot = onTapSlot,
         )
@@ -602,8 +628,10 @@ private fun EntryBlock(
             mode = if (secretPhase && !compact) KeypadMode.SECRET else KeypadMode.GUESS,
             used = state.input.toSet(),
             locked = keypadLocked,
-            actionLabel = stringResource(if (secretPhase && (compact || isLargeFont())) R.string.lock_in_short else if (secretPhase) R.string.lock_in else R.string.pitch),
+            actionLabel = tutorial?.actionLabel ?: stringResource(if (secretPhase && (compact || isLargeFont())) R.string.lock_in_short else if (secretPhase) R.string.lock_in else R.string.pitch),
             actionState = when {
+                tutorial?.actionLabel != null -> ActionState.ENABLED
+                tutorial != null -> if (tutorial.canPitch) ActionState.ENABLED else ActionState.DISABLED
                 waiting -> ActionState.WAITING
                 state.reconnectSeconds != null -> ActionState.OFFLINE
                 keypadLocked || state.input.length < state.digits -> ActionState.DISABLED
@@ -612,7 +640,8 @@ private fun EntryBlock(
             waitingLabel = stringResource(if (secretPhase) R.string.waiting_ready else R.string.waiting_opp),
             onDigit = onDigit,
             onBackspace = onDelete,
-            onAction = onSubmit,
+            onAction = tutorial?.onAction ?: onSubmit,
+            highlight = tutorial?.expectedKey,
             onClear = onClear,
             onRandom = onRandom,
             memo = if (secretPhase) emptyMap() else state.memo.keyMarks,
@@ -724,5 +753,32 @@ private fun MatchHooks(state: MatchUiState, revealing: Boolean, audio: GameAudio
     }
     LaunchedEffect(state.opponentStatus) {
         if (state.opponentStatus == OpponentStatus.Pitched && state.mode.online && !revealing) audio.play(SoundCue.OPPONENT_PITCHED)
+    }
+}
+
+/** Coach band (01 §2): `surface1`, min 96 dp (compact: content height), 16 dp padding, `body`, key words `bodyStrong`. */
+@Composable
+private fun CoachBand(tutorial: app.numbaseball.ui.tutorial.TutorialUi, compact: Boolean) {
+    Column(Modifier.fillMaxWidth().background(NbColors.surface1)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = if (compact) 0.dp else 96.dp)
+                .padding(horizontal = if (compact) 12.dp else 16.dp, vertical = if (compact) 8.dp else 16.dp)
+                .semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite },
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Text(tutorial.coach, style = NbType.body, color = NbColors.text2)
+        }
+        Hairline()
+    }
+}
+
+/** Step 3: a one-line legend under the highlighted log row. */
+@Composable
+private fun TutorialLegend(text: String, compact: Boolean) {
+    Column(Modifier.fillMaxWidth()) {
+        Hairline()
+        Text(text, style = NbType.caption, color = NbColors.text3, modifier = Modifier.padding(horizontal = if (compact) 12.dp else 16.dp, vertical = 8.dp))
     }
 }
