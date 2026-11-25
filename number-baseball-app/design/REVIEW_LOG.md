@@ -115,3 +115,21 @@ Method: every reference shot paired with its render (reference | render | diff),
 Deviation decisions: font-fallback offset accepted for `sans` glyphs only; tabular digits accepted (shots to be regenerated); team board `close` accepted (my duel finished); disabled send / chips accepted; transfer-code entry accepted but must sit under the field (D2-17); line-score scroll accepted at 1.0, rejected at 200 %; no active slot ring while reconnecting accepted.
 
 Design follow-ups (mine): regenerate the shots with tabular digits; re-shoot `team-board-ko` and `match-reconnect-ko`; update 05 / 09 phrase lists to the protocol IDs, 12.15 masked colour (`text2` on `surface4`), ADAPTIVE §1 (compact secret row, compact team result) and 06 / 11 / 13 for remove ads and the online interstitial.
+
+## 2026-11-25: Design follow-ups after the phase 2 review (59 shots)
+
+Done before the re-review, as promised in [`REVIEW_PHASE2.md`](REVIEW_PHASE2.md). Also covers the owner decisions of 2026-11-25 (remove ads, interstitial after online matches) and protocol 1.1.
+
+| # | Area | Change | Defects |
+| --- | --- | --- | --- |
+| 1 | Shot pipeline | Written down as `prototype/shoot.js` (Playwright, density 2). `proto.js` sets tabular digits inline on every Barlow element (the CSS `font` shorthand was resetting `tnum`, so the old log and line-score digits were proportional). All 47 screen shots regenerated | deviation "tabular digits" |
+| 2 | Re-shoots | `team-board-ko` with `close` (my duel finished); `match-reconnect-ko` without the active slot ring; result shots no longer overflow (upper area is a scroll region), band at y = 725 dp | deviations, result note |
+| 3 | Phrases | 12 protocol ids with ko / en copy in 09 §4; quick-match sheet = 6 fixed ids (아까워요 replaces 어렵네요); room chips = all 12 | D2-24 |
+| 4 | Masked text | `text2` on `surface4` (5.59) for others, `textDisabled` on chalk (5.48) for mine; 2.2 and 12.15 no longer contradict | D2-12 |
+| 5 | Small window | ADAPTIVE §1: secret row ("정하기", random fill in the menu), reconnect banner one line, duel result, team result with inline score, live board, lobby as one scroll region, no interstitial below 480 dp | D2-04, D2-26, D2-27, D2-35, D2-36 |
+| 6 | 200 % font | ADAPTIVE §2 rewritten (2.1–2.6): one numeral rule (every `num` style × min(fontScale, 1.3) in dp, DESIGN_SYSTEM 3.3), a full large-text match table, the large memo sheet in full, results and team board | D2-01, D2-02, D2-03, D2-25, D2-34 |
+| 7 | Remove ads | Settings 11 §1.1 (구매 section: loading, not purchased with Play's price, purchased, pending, error, restore, toasts); quiet "광고 제거" text button in the result top bar (06 §1), never a pop-up; DESIGN_SYSTEM 13. Shots `settings-ads-*` (7) and `result-link-ko/en` | D2-31 |
+| 8 | Interstitial | Now after vs-computer **and** online matches, on the way to the results screen (06 §3): 1 s hold with no touch down, skip if chat or IME is open or the player left, never in the review room, practice or small windows, one per team match, shared cap; the old "다음 화면 전에 짧은 광고가 나와요" note removed | D2-31 |
+| 9 | Protocol 1.1 | Chat system lines (09 §2.1, shot `chat-system-ko`); best hints on every team-board row incl. the null state (08 §2, 12.11); any player's record on the player card with loading / not available / failed states (12 §2, shot `report-card-norecord-ko`) | D2-13, D2-32 |
+
+Self-check on the new shots: no non-token colour, no banner on Settings, the purchase rows use no lamp colour (only `strike` for the error line, as the silent-mode warning does), the result link sits 0 dp from the `flag` button with 48 dp targets that do not overlap, and the result band keeps its 24 dp clear space.

@@ -30,7 +30,11 @@
   .ls .tot { width: 56px; text-align: right; font: var(--t-num-hint); }
   .ls th.tot { font: var(--t-label-small); color: var(--c-text3); }
   .ls tr + tr td { border-top: 1px solid var(--c-line); }
-  .spacer { flex: 1 1 auto; min-height: 16px; }
+  /* Upper area (hero → line score) is one vertical scroll region; actions and band stay pinned (06 §1). */
+  .upper { flex: 1 1 auto; min-height: 0; overflow: hidden; padding-bottom: 16px; }
+  .upper.fade { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent); }
+  .topbar .adlink { margin-right: 0; }
+  .topbar .adlink.end { margin-right: 4px; }
   .actions { flex: none; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 8px; }
   .adnote { display: flex; align-items: center; justify-content: center; gap: 6px; font: var(--t-caption); color: var(--c-text3); padding-bottom: 4px; text-align: center; }
   .adnote .ic { width: 16px; height: 16px; }
@@ -41,7 +45,8 @@
 <script>
 window.build = function (qs) {
   const t = P.t, outcome = qs.get('outcome') || 'win', mode = qs.get('mode') || 'online';
-  const adDue = mode === 'cpu' && qs.get('ad') !== 'notdue';
+  // ?ad=after: this result was reached through an interstitial (06 §3) → no banner on it. ?ads=removed: purchased, no link, no banner.
+  const removed = qs.get('ads') === 'removed', afterAd = qs.get('ad') === 'after', banner = !removed && !afterAd;
   const secretOpp = '3916', secretMine = '0472';
   const mine = ['1234', '5780', '3196', '3169', '3961', '3916'];
   const theirs = outcome === 'win' ? ['5832', '0291', '0724', '0742', '0427', '0478'] : ['5832', '0291', '0724', '0742', '0427', '0472'];
@@ -61,8 +66,10 @@ window.build = function (qs) {
     <header class="topbar">
       <button class="iconbtn" aria-label="${t('home')}">${P.icon('close')}</button>
       <span class="tb-title"></span>
+      ${removed ? '' : `<button class="btn-text adlink${mode === 'online' ? '' : ' end'}">${t('removeAds')}</button>`}
       ${mode === 'online' ? `<button class="iconbtn dim" aria-label="${t('report')}">${P.icon('flag')}</button>` : ''}
     </header>
+    <div class="upper">
     <section class="hero">
       <span class="lamps l" aria-hidden="true">${lamps}</span>
       <h1>${head}</h1>
@@ -80,14 +87,14 @@ window.build = function (qs) {
         <tr><td class="who">${oppName}</td>${sTheirs.map(cell).join('')}<td class="tot">${best.s === n ? `<span class="h-s">${n}S</span>` : `${best.s}S`}</td></tr>
       </table>
     </section>
-    <div class="spacer"></div>
+    </div>
     <section class="actions">
-      ${adDue ? `<div class="adnote">${P.icon('info')}${t('adNotice')}</div>` : ''}
       <button class="btn btn-primary">${t('rematch')}</button>
       <button class="btn btn-secondary">${t('home')}</button>
     </section>
-    ${adDue ? '' : '<div class="adslot"><div class="creative"><i>AD</i>Sample banner creative · adaptive 360×50</div></div>'}
+    ${!banner ? '' : '<div class="adslot"><div class="creative"><i>AD</i>Sample banner creative · adaptive 360×50</div></div>'}
     <div class="gesture"></div>`;
+  const up = document.querySelector('.upper'); up.classList.toggle('fade', up.scrollHeight > up.clientHeight + 1);
 };
 </script>
 </head>

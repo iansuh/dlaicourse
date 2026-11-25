@@ -1,6 +1,6 @@
 # Navigation map
 
-All screens are specified in this folder; values refer to [`../DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md) and [`../tokens.json`](../tokens.json). Shots: [`../shots/`](../shots/).
+All screens are specified in this folder; values refer to [`../DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md) and [`../tokens.json`](../tokens.json). Shots: [`../shots/`](../shots/), rendered from the prototypes by [`../prototype/shoot.js`](../prototype/shoot.js) (`node shoot.js [filter]`).
 
 ```mermaid
 flowchart TD
@@ -33,7 +33,10 @@ flowchart TD
   Guess -- team match --> Board[08 Team match board]
   Guess --> Phrases[09 Quick phrases sheet]
   Board --> TeamResult[06 Team result]
-  Result -- vs Computer, ad due --> Inter([Interstitial ad]) --> Next{{chosen next screen}}
+  Guess -- match over, ad due --> Inter([Interstitial ad]) --> Result
+  Board -- all duels over, ad due --> Inter2([Interstitial ad]) --> TeamResult
+  Settings -- 광고 제거 --> Play([Play purchase sheet])
+  Result -- 광고 제거 link --> Play
   Result --> Home
   TeamResult --> Lobby
 
@@ -49,7 +52,7 @@ flowchart TD
 - **App only** (owner decision): no screen opens a web page. Terms and the privacy policy are read in-app (15); account deletion is in Settings; deletion without the app is by email (server's static `/delete-account` page, not part of the app).
 - **Process death / app switch during a match:** returning within 60 s restores the match screen with the reconnecting banner (14); after 60 s the duel is forfeited and the result screen shows the forfeit line.
 - **Deep link** `numbaseball://room/K7Q2M` (and the share link) opens Join with the code filled; Terms gate first if needed.
-- **Ads** appear only on Home, results and Profile (DESIGN_SYSTEM section 13). The interstitial is only between a vs-computer result and the next screen.
+- **Ads** appear only on Home, results and Profile (DESIGN_SYSTEM section 13). The interstitial (owner decision 2026-11-25) comes after any finished match, vs computer or online, on the way **to** the results screen, with the safeguards in 06 §3 (team match: once, before the team result). Owning `remove_ads` removes all of it; its entry points are Settings (11 §1.1) and a quiet top-bar link on the result screens (06 §1).
 
 ## Screen index
 
@@ -60,13 +63,13 @@ flowchart TD
 | 03 | [03-vs-computer-setup.md](03-vs-computer-setup.md) | — | — |
 | 04 | [04-quick-match.md](04-quick-match.md) | `search.html` | `search-ko`, `search-found-ko` |
 | 05 | [05-match.md](05-match.md) | `match.html` | `match-*` |
-| 06 | [06-results.md](06-results.md) | `result.html`, `team-board.html?state=final` | `result-*`, `team-final-ko` |
+| 06 | [06-results.md](06-results.md) | `result.html`, `team-board.html?state=final` | `result-*` (incl. `result-link-ko/en`), `team-final-ko` |
 | 07 | [07-room-lobby.md](07-room-lobby.md) | `lobby.html` | `lobby-ko/en/de/ru` |
 | 08 | [08-team-board.md](08-team-board.md) | `team-board.html` | `team-board-ko` |
-| 09 | [09-chat.md](09-chat.md) | `chat.html`, `match.html?state=phrases` | `chat-*`, `match-phrases-ko` |
+| 09 | [09-chat.md](09-chat.md) | `chat.html`, `match.html?state=phrases` | `chat-*` (incl. `chat-system-ko`), `match-phrases-ko` |
 | 10 | [10-profile.md](10-profile.md) | — | — |
-| 11 | [11-settings.md](11-settings.md) | `settings.html` | `settings-*` |
-| 12 | [12-safety-report-block.md](12-safety-report-block.md) | `report.html`, `chat.html?state=actions` | `report-*`, `chat-actions-ko` |
+| 11 | [11-settings.md](11-settings.md) | `settings.html` | `settings-*` (incl. `settings-ads-*`) |
+| 12 | [12-safety-report-block.md](12-safety-report-block.md) | `report.html`, `chat.html?state=actions` | `report-*` (incl. `report-card-norecord-ko`), `chat-actions-ko` |
 | 13 | [13-terms-gate.md](13-terms-gate.md) | `terms.html` | `terms-ko/en` |
 | 15 | [15-legal-reader.md](15-legal-reader.md) | `legal.html` | `legal-ko` |
 | 14 | [14-connection-and-errors.md](14-connection-and-errors.md) | `match.html?state=reconnect` | `match-reconnect-ko` |

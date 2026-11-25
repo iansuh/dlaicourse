@@ -50,7 +50,8 @@
 <script src="js/proto.js"></script>
 <script>
 window.build = function (qs) {
-  const t = P.t, final = qs.get('state') === 'final';
+  // ?mine=live: my duel still running (board opened as a sheet from my duel → arrow_back, no watching note).
+  const t = P.t, final = qs.get('state') === 'final', mineLive = !final && qs.get('mine') === 'live';
   const hint = (s, b) => (s === 0 && b === 0) ? '<span class="h-out" style="height:18px;font-size:11px;padding:0 4px">OUT</span>' : `<span>${s}S ${b}B</span>`;
   const won = `<span class="won"><span class="lamp on st"></span>${t('wonTag')}</span>`;
   const rows = final ? [
@@ -63,6 +64,7 @@ window.build = function (qs) {
     { a: ['밤하늘', '5530'], b: ['Volna', '1187'], st: `<span class="rn">R4</span><span>${t('disconnected', { s: '0:41' })}</span>`, warn: true, bestA: [1, 1], bestB: [0, 0] }
   ];
   if (final) document.getElementById('app').classList.add('tint-win');
+  if (mineLive) Object.assign(rows[0], { st: `<span class="rn">R5</span><span class="dot"><span class="lamp s on ch"></span>${t('playing')}</span>`, win: null, live: true, bestA: [2, 1], bestB: [1, 1] });
   const scoreA = rows.filter((r) => r.win === 'a').length, scoreB = rows.filter((r) => r.win === 'b').length;
   const rowHtml = (r) => `
     <div class="duel-row${r.me ? ' me' : ''}">
@@ -73,8 +75,9 @@ window.build = function (qs) {
   document.getElementById('app').innerHTML = `
     <div class="sysbar"></div>
     <header class="topbar">
-      <button class="iconbtn" aria-label="${final ? t('home') : t('backToDuel')}">${P.icon(final ? 'close' : 'arrow_back')}</button>
+      <button class="iconbtn" aria-label="${mineLive ? t('backToDuel') : final ? t('home') : t('leave')}">${P.icon(mineLive ? 'arrow_back' : 'close')}</button>
       <span class="tb-title">${t('teamMatch')}</span>
+      ${final && qs.get('ads') !== 'removed' ? `<button class="btn-text">${t('removeAds')}</button>` : ''}
       <button class="iconbtn" aria-label="${t('chat')}">${P.icon('chat')}</button>
     </header>
     ${final ? `<section class="final win"><span class="lamps l" style="justify-content:center;margin-bottom:12px">${'<span class="lamp l on st"></span>'.repeat(2)}<span class="lamp l"></span></span><h1>${t('resWin')}</h1></section>` : ''}
@@ -87,7 +90,7 @@ window.build = function (qs) {
     <section class="duels">
       ${rows.map(rowHtml).join('')}
     </section>
-    ${final ? '' : `<p class="watch-note">${P.icon('visibility', 'ic sm')}${t('watching')}</p>`}
+    ${final || mineLive ? '' : `<p class="watch-note">${P.icon('visibility', 'ic sm')}${t('watching')}</p>`}
     <div class="spacer"></div>
     <section class="foot">
       ${final ? `<button class="btn btn-primary">${t('backToRoom')}</button><button class="btn btn-secondary">${t('home')}</button>` : ''}

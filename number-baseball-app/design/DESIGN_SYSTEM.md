@@ -84,7 +84,10 @@ All values are `#AARRGGBB` in `tokens.json` (Kotlin `Color(0xAARRGGBB)`). Ratios
 | onChalk on chalk | 16.27 | 4.5 text |
 | lit strike / ball / out vs lampOff | 6.66 / 5.63 / 4.05 | 3.0 UI |
 
-`text3` must never sit on `surface4` (4.39). `textDisabled` is only for disabled controls and zero counts, which are exempt.
+| text2 on surface4 (masked `***` in others' chat bubbles) | 5.59 | 4.5 text |
+| textDisabled on chalk (masked `***` in my own chat bubble) | 5.48 | 4.5 text |
+
+`text3` must never sit on `surface4` (4.39). `textDisabled` is only for disabled controls, zero counts (both exempt) and the masked `***` inside my own chalk bubble, where it passes (5.48).
 
 ### 2.3 Colour-blind check
 
@@ -109,7 +112,7 @@ Simulated with Machado 2009 at full severity: under protanopia strike and ball r
 
 Licence check for app embedding: OFL 1.1 explicitly allows bundling and embedding with software. The copyright line declares **no Reserved Font Name**, so our subset conversion (Fontsource Latin subset, WOFF2 to TTF) may keep the name; `OS/2 fsType = 0` (installable embedding, no restriction). The licence text must appear in the in-app Open-source licences screen together with Material Symbols (Apache 2.0).
 
-Barlow's default figures are proportional. Every `num` style sets `fontFeatureSettings = "tnum"` (tokens: `"tnum": true`) so columns of numbers align.
+Barlow's default figures are proportional. Every `num` style sets `fontFeatureSettings = "tnum"` (tokens: `"tnum": true`) so columns of numbers align. The reference shots use tabular digits too (regenerated 2026-11-25 by `prototype/shoot.js`; `proto.js` sets `font-variant-numeric: tabular-nums` on every element in the display face, because the CSS `font` shorthand resets it).
 
 ### 3.2 Scale
 
@@ -149,8 +152,10 @@ Rules:
 ### 3.3 Font scale
 
 - `sans` text scales fully to 200 % (Android 14 non-linear scaling applies automatically).
-- Numerals inside fixed controls (slots, keys, memo cells, lamps, code plates) use `size × min(fontScale, 1.3)`; the control grows with `heightIn(min = token)` if the text needs more.
-- At `fontScale ≥ 1.5` screens switch to their large-text layout, described in [`screens/ADAPTIVE.md`](screens/ADAPTIVE.md).
+- **Every `num` style is capped: rendered size = token size × min(fontScale, 1.3), in dp.** This holds for every element set in Barlow, in every screen, with no exceptions: slots and result plates, keypad and age keys, memo digits and cells, mini plates, room and transfer code plates, team badge letters, the `OUT` tag, hint counts, log guesses and round numbers, the opponent column, pitch clock and countdowns, scores, stats, segmented-control numbers, `#tag`s and counters. At 2.0 that is 1.3× (`numLog` 22 → 28.6 dp, `numTag` 15 → 19.5 dp, `numLabel` 14 → 18.2 dp). Reason: these numerals are already large, they sit in fixed grids, and the words around them (which carry the meaning for TalkBack and large-text users) scale fully.
+- Compose: compute the size in dp so Android 14 non-linear scaling cannot change it: `val capped = with(LocalDensity.current) { (token.fontSize.value * min(fontScale, 1.3f)).dp.toSp() }` (same for `lineHeight`), wrapped in one helper (`NbType.capped(style)`) that every `num` style goes through. Letter spacing stays in em.
+- Controls still use `heightIn(min = token)` / `widthIn(min = token)`, never a fixed `height`, so a capped numeral plus `sans` text next to it never clips.
+- At `fontScale ≥ 1.5` screens switch to their large-text layout, described in [`screens/ADAPTIVE.md`](screens/ADAPTIVE.md) §2 (match, memo sheet, results, team board, lobby, settings). Between 1.0 and 1.5 the normal layout must hold with `sans` text grown and numerals capped.
 
 ---
 
@@ -425,7 +430,7 @@ Owner request (README "Sound"): effects and music, made in-house. Assets, mixing
 ### 11.1 Targets
 
 - Minimum touch target 48 × 48 dp everywhere, with these spaced exceptions:
-  - **Memo grid cells**: visual cell = (content width − 24) ÷ 10 wide (30.4 dp at 360 dp) × 28 dp; digit header cells 30.4 × 32 dp. This meets WCAG 2.2 target size (minimum, 24 × 24) but not 48 dp. Alternatives that are fully accessible: (a) TalkBack users get each cell as a single focusable item with a spoken state and the "double-tap to change" action; (b) at `fontScale ≥ 1.5` or when "Larger memo" (Settings, phase 2) is on, the memo opens as a bottom sheet with a transposed grid (rows = digits, columns = positions, cells 48 × 48 dp).
+  - **Memo grid cells**: visual cell = (content width − 24) ÷ 10 wide (30.4 dp at 360 dp) × 28 dp; digit header cells 30.4 × 32 dp. This meets WCAG 2.2 target size (minimum, 24 × 24) but not 48 dp. Alternatives that are fully accessible: (a) TalkBack users get each cell as a single focusable item with a spoken state and the "double-tap to change" action; (b) at `fontScale ≥ 1.5` or when "Larger memo" (Settings, phase 2) is on, the memo opens as a bottom sheet with a transposed grid (rows = digits, columns = positions, cells 48 × 48 dp), specified in [`screens/ADAPTIVE.md`](screens/ADAPTIVE.md) §2.3.
   - Keypad keys in the compact window are 48 dp tall but 50.4 dp wide minimum; fine.
 - Adjacent targets never overlap; touch areas expand into padding, not into neighbours.
 
@@ -477,7 +482,7 @@ Each component lists anatomy, size and every state. "Prototype" points to a page
 
 ### 12.4 Digit slots (`DigitSlots`)
 - n plates centred, gap 8 dp; width = min(56, (content width − (n − 1) × 8) ÷ n) dp, height 64 dp (48 compact; 60 on result); radius 8; digit `numSlot` (28 sp compact).
-- States: **empty** (`bg` fill, 1 dp `outline` inset); **active** (next to fill: 2 dp `chalk` inset, no caret); **filled** (`surface2`, chalk digit); **locked** (after pitching: `surface1`, `text2` digit); **error** (`outTint` fill, 2 dp `out` inset, row shakes; error text appears in a toast); **hit** (result, solved digit: `strike` fill, `onChalk` digit).
+- States: **empty** (`bg` fill, 1 dp `outline` inset); **active** (next to fill: 2 dp `chalk` inset, no caret; never shown while the keypad is locked, e.g. reconnecting: entered digits stay filled, the next slot stays empty, shot `match-reconnect-ko`); **filled** (`surface2`, chalk digit); **locked** (after pitching: `surface1`, `text2` digit); **error** (`outTint` fill, 2 dp `out` inset, row shakes; error text appears in a toast); **hit** (result, solved digit: `strike` fill, `onChalk` digit).
 - Tapping a filled slot clears it and every slot after it (keeps entry left-to-right; simple and predictable).
 
 ### 12.5 Digit keypad (`DigitKeypad`), custom, never the system keyboard
@@ -523,7 +528,7 @@ Each component lists anatomy, size and every state. "Prototype" points to a page
 
 ### 12.11 Team match board row (`DuelRow`)
 - 72 dp; columns: A player (flex) · status 88 dp · B player (flex, right-aligned); 3 dp stripes inset 12 dp top and bottom; my row `surface1`.
-- Under each name: "최고" (`caption` `text3`) + best hint (`numTag` `text2`) or, for the winner, a 6 dp lit strike lamp + "승" (`micro`, `strike`). Loser's name and hint in `text3`.
+- Under each name, for **every** duel (not only mine): "최고" (`caption` `text3`) + best hint (`numTag` `text2`, "2S 1B"; the `OUT` tag at 18 dp when the best is 0S 0B) or, for the winner, a 6 dp lit strike lamp + "승" (`micro`, `strike`). Loser's name and hint in `text3`. Source: `DuelSummary.bestHintA / bestHintB` (protocol 1.1 §7, never digits); my own duel may use `MyDuelView` (same value). While a side's best hint is null (no resolved guess yet, e.g. round 1) show "최고 –" with the dash in `text3`, so every row keeps its two-line shape.
 - Status column: round `R7` (`numLabel` `text3`) + one of: "진행 중" with chalk lamp, "무승부", "기권", "재접속 대기 0:41" (`strike`).
 
 ### 12.12 Segmented control (digit count)
@@ -551,10 +556,11 @@ Radius 8; icon 20 dp, 8 dp gap; horizontal padding 24 dp (12 small). One primary
 
 ### 12.15 Chat
 - Sheet (rooms) from y = 136 dp (phone) with `scrim` behind; header 48 dp: "채팅" `title`, "전체 채팅 끄기" + switch, close.
-- Message: name line (`micro`, team badge 16 dp + name + `#tag`) over bubble; bubble padding 10 × 12 dp, radius 8, max width 80 %, hugs its text. Others `surface4` / chalk text; mine `chalk` / `onChalk`, right-aligned, time `caption` 12 sp `text3` under it. System line centred `caption` `text3`.
-- Masked words render as `***` in `text3` (TalkBack "가려진 말").
+- Message: name line (`micro`, team badge 16 dp + name + `#tag`) over bubble; bubble padding 10 × 12 dp, radius 8, max width 80 %, hugs its text. Others `surface4` / chalk text; mine `chalk` / `onChalk`, right-aligned, time `caption` 12 sp `text3` under it.
+- System line (protocol 1.1 `kind: "system"`): centred `caption` `text3`, max 2 lines, no bubble, no name line, not long-pressable, no player card. The client builds the sentence from `systemCode` + `subjectNickname#subjectTag`: `player_joined` "민트초코#0912 님이 들어왔어요" / "민트초코#0912 joined the room"; `player_left` "… 님이 나갔어요" / "… left the room"; subject deleted (`subject*` null): "탈퇴한 플레이어가 들어왔어요 / 나갔어요"; unknown code: "방에 변화가 있어요" / "Something changed in the room". Shot `chat-system-ko`.
+- Masked words render as `***`, tracking 0.1 em: in others' bubbles `text2` on `surface4` (5.59 : 1), in my bubble `textDisabled` on chalk (5.48 : 1). Never `text3` on `surface4` (2.2). TalkBack "가려진 말".
 - Long-press a message: `held` state (2 dp chalk ring) + action sheet: context line, 복사, 메시지 신고, 이 플레이어 차단 (destructive, with subtitle).
-- Quick phrases row: 32 dp chips (`labelSmall`, 1 dp `outline`, radius 4, 12 dp padding, 8 dp gap), horizontally scrollable with a 16 dp right fade; 48 dp touch height via vertical padding.
+- Quick phrases row: all 12 protocol phrase ids in protocol order (09 §4), 32 dp chips (`labelSmall`, 1 dp `outline`, radius 4, 12 dp padding, 8 dp gap), horizontally scrollable with a 16 dp right fade; 48 dp touch height via vertical padding.
 - Composer: 48 dp field `surface2` "메시지 (최대 80자)" + 48 dp chalk send button (disabled `surface2` / `textDisabled` while empty or rate-limited). Rate limit line above: `timer` 16 dp + `caption` `strike` "너무 빨라요. 3초 뒤에 보낼 수 있어요".
 - Muted: messages hidden, a centred empty state "채팅을 꺼 두었어요" + text button "켜기".
 
@@ -585,13 +591,14 @@ See section 13.
 
 Placement rules from the README and the release lead, turned into layout:
 
-- **Where:** Home, duel and team results, Profile. **Never** on match, secret entry, waiting practice, quick-match search, room lobby, chat, Terms gate, Settings, dialogs, or any sheet.
+- **Where (banner):** Home, duel and team results, Profile. **Never** on match, secret entry, waiting practice, quick-match search, room lobby, chat, Terms gate, Settings, dialogs, or any sheet.
 - **Anchored adaptive banner** at the bottom of the window, directly above the navigation-bar inset: `AdBand` = 1 dp `line` top edge + `surface1` band whose height = the ad's height (50 to 90 dp, from `AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width)`); the creative is centred if narrower than the band; `windowInsets.navigationBars` padding goes **below** the band and is filled with `bg`.
 - **Clear space:** no tappable control within 24 dp above the band (the dock and action areas end with 24 dp bottom padding). Nothing scrolls under the band.
 - **Loading / no fill:** the band is not in the layout (0 dp, no placeholder, no "AD" box). When an ad loads, the band expands from 0 to its height in `medium` 240 ms (`decelerate`); the content above moves up, and taps on controls that moved are ignored for 300 ms after the expansion ends (settle guard against accidental clicks). If the ad fails or is closed, the band collapses the same way.
 - **Small windows:** when the window height is < 480 dp, no banner is requested or shown.
-- **One ad per moment:** on a vs-computer result where an interstitial is due, the banner is not shown on that screen.
-- **Interstitial (vs computer only):** never the instant the last guess lands. The result screen shows first; its buttons accept input only after the result animation (≥ 1 s after the result appears). When an interstitial is due (cap: 1 per 3 finished matches and 4 minutes apart), the result shows a quiet note above the buttons: `info` 16 dp + "다음 화면 전에 짧은 광고가 나와요" (`caption` `text3`, centred). Tapping 다시 하기 or 홈으로 shows the ad, then continues to the chosen screen. Ads are always muted. Game music pauses while the interstitial is open and resumes after it closes.
+- **One ad per moment:** a result screen reached through an interstitial shows no banner (shots `result-cpu-lose-ko`, `result-link-ko/en`).
+- **Interstitial (owner decision 2026-11-25: vs computer and online)**, at the natural break **between the end of a match and its results screen**, never the instant the last guess lands. Full flow and the release lead's safeguards (`docs/play/POLICY_CHECKLIST.md` 11.1) in [`screens/06-results.md`](screens/06-results.md) §3: the final reveal finishes on the match screen, then ≥ 1 s with no touch down and no chat or keyboard open, then the ad (if due and loaded), then the results screen with its full hero animation. Cap: 1 per 3 finished matches (online and vs computer counted together) and ≥ 4 minutes apart; a team match is one match (one ad at its very end, never between duels). Never during a match, secret entry or the waiting practice game, never on app start or exit, never in the review room, never in a window shorter than 480 dp, never when the player owns `remove_ads`. Ads are always muted. Game music pauses while the interstitial is open and resumes after it closes. There is no pre-announcement note any more (the ad comes before the result screen, so a note there would be too late).
+- **Remove ads (owner decision 2026-11-25):** one-time Play purchase `remove_ads`. Entry points only in Settings ("구매" section, [`screens/11-settings.md`](screens/11-settings.md)) and as a quiet text button "광고 제거" in the top bar of the duel and team **result** screens ([`screens/06-results.md`](screens/06-results.md) §1). Never a pop-up, dialog, toast, badge or animation that pitches it; never on the match, secret, waiting, search, lobby or chat screens. Once owned: no banner is requested (bands stay at 0 dp), no interstitial, no UMP form, and the result link disappears. The price is always Play's formatted price, never a hard-coded string.
 - Banners never appear behind a scrim-less overlay; when a dialog is open on Home the banner stays where it is under the scrim.
 
 ---

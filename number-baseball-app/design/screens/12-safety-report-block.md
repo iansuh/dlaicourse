@@ -1,6 +1,6 @@
 # 12 Player card, report and block
 
-Prototype: `prototype/report.html` (`?state=card|reasons|done|dialog`), `prototype/chat.html?state=actions`. Shots: `report-card-ko.png`, `report-reasons-ko.png`, `report-done-ko.png`, `report-dialog-ko.png`, `chat-actions-ko.png`.
+Prototype: `prototype/report.html` (`?state=card|reasons|done|dialog`, `?rec=none|loading|fail`), `prototype/chat.html?state=actions`. Shots: `report-card-ko.png`, `report-card-norecord-ko.png`, `report-reasons-ko.png`, `report-done-ko.png`, `report-dialog-ko.png`, `chat-actions-ko.png`.
 
 Play UGC policy tools: report a message or a player, block a player (hides their chat and avoids matching, both directions), mute all chat (Settings and chat header). Reports are reviewed within 24 hours (release lead).
 
@@ -21,12 +21,22 @@ Play UGC policy tools: report a message or a player, block a player (hides their
 | Element | Spec |
 | --- | --- |
 | Grab handle | 32 × 4 dp |
-| Identity | 8 / 16 / 16 dp padding: team badge 24 dp (team rooms only) · nickname `title` + tag `numTag` 18 sp; under it `caption` `text3` context ("B팀 · 빠른 대전 기록") |
-| Record | 0 / 16 / 16: 승 / 패 / 무 values Barlow 600 24 sp + `caption` labels, 20 dp gaps (quick-match record only) |
+| Identity | 8 / 16 / 16 dp padding: team badge 24 dp (team rooms only) · nickname `title` + tag `numTag` 18 sp; under it `caption` `text3` context ("B팀 · 온라인 대전 기록"; no team: "온라인 대전 기록"; when no record is shown, only "B팀" or nothing) |
+| Record | 0 / 16 / 16: 승 / 패 / 무 values Barlow 600 24 sp + `caption` labels, 20 dp gaps. **Any player's** overall online record (all modes together; vs-computer games never count) from `GET /api/v1/players/{id}` (protocol 1.1 §3.4), fetched when the card opens, cached for the card's lifetime |
 | Actions | 1 dp `line` top; rows: `flag` 신고하기 + chevron (56 dp) · `block` 차단하기 in `out` with subtitle "채팅이 보이지 않고 다시 매칭되지 않아요" (64 dp) |
 | Bottom | 24 dp + navigation inset |
 
-Already blocked: the block row reads "차단 해제" in chalk and the record is hidden.
+Record states (the sheet height changes by at most 2 dp between them, so nothing jumps):
+
+| State | Record area |
+| --- | --- |
+| Loading | the three values as "–" in `textDisabled`, labels as normal; no spinner |
+| Loaded | values in chalk (shot `report-card-ko`) |
+| Not available (`404 not_found`: deleted, banned or bot account, **or a block in either direction**) | one 48 dp line "기록을 볼 수 없어요" `caption` `text3`; the context line drops "온라인 대전 기록". The same words for every cause, so a block is never revealed (shot `report-card-norecord-ko`) |
+| Failed (network, `429 rate_limited`) | "기록을 불러오지 못했어요" `caption` `text3` + text button "다시 시도" at the end of the line |
+| My own card | my record (same call) |
+
+The report and block rows work in every record state. Already blocked: the block row reads "차단 해제" in chalk and the record shows the Not available line.
 
 ## 3. Report flow
 

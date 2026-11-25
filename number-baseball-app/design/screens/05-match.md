@@ -60,18 +60,19 @@ Same layout; included because it is the store hero shot: latest row `3S 0B` with
 - First miss also shows a one-time warning toast at the next round start: "한 번 더 시간이 지나면 기권 처리돼요".
 
 ### 2.8 Quick phrases (shot `match-phrases-ko`)
-- Online modes only; the `chat` button in the duel strip opens a sheet: "빠른 문구" `title`, close; note "빠른 대전에서는 정해진 문구만 보낼 수 있어요" `caption` `text3`; a 2 × 3 grid of tonal 48 dp buttons (잘 부탁해요 · 좋은 게임! · 잠깐만요 · 어렵네요 · 한 판 더? · 수고했어요), 8 dp gaps.
+- Online modes only; the `chat` button in the duel strip opens a sheet: "빠른 문구" `title`, close; note "빠른 대전에서는 정해진 문구만 보낼 수 있어요" `caption` `text3`; a 2 × 3 grid of tonal 48 dp buttons, 8 dp gaps, holding exactly these 6 protocol phrase ids in this order (ko / en): `good_luck` 잘 부탁해요 / Good luck · `good_game` 좋은 게임! / Good game! · `thinking` 잠깐만요 / One sec · `close_one` 아까워요 / So close · `rematch` 한 판 더? / Again? · `well_played` 수고했어요 / Well played. ("어렵네요" is gone: it has no protocol id.) Received phrases can be any of the 12 ids (09 §4) and are shown in the receiver's language; unknown ids are ignored.
 - Sending closes the sheet and shows my phrase as a bubble under the duel strip for 2.8 s. Rate limit: one phrase per 3 s; buttons disable during the cooldown.
 - Receiving: bubble (opponent name `micro` + phrase `body`, `surface4`, radius 8, max width 240 dp) appears 8 dp below the duel strip, right-aligned under the opponent's side, 2.8 s; it overlays the log, never the slots or keypad. Hidden when chat is muted or the sender is blocked.
 - In private rooms the same button opens the full chat (09).
 
 ### 2.9 Overflow menu (`more_vert`)
 게임 방법 (opens the tutorial in a sheet, match keeps running) · 상대 기록 보기 (opponent's full log sheet) · 신고 (opens the player card 12; online only) · 기권 (destructive).
+- Small window only (ADAPTIVE §1): during secret entry the menu starts with 무작위로 채우기 / Fill randomly (the compact keypad has no `shuffle` key); in guessing it adds 내 숫자 보기.
 - 기권 → dialog "기권할까요?" / "이 대결은 패배로 기록돼요." / 취소 · 기권 (`out`).
 - `close` (leave) in an online match → dialog "대결에서 나갈까요?" / "60초 안에 돌아오지 않으면 기권 처리돼요." / 계속하기 · 나가기 (`out`). vs Computer: leave without a dialog if no guess has been made; otherwise "나가면 이 판은 기록되지 않아요."
 
 ### 2.10 Connection
-- My connection lost (shot `match-reconnect-ko`): connection banner under the top bar (DESIGN_SYSTEM 12.16): chase lamps, "연결이 끊겼어요 · 다시 연결하는 중", "시간 안에 돌아오지 못하면 이 대결은 기권 처리돼요", countdown `0:48` in `strike`. Clock paused, keypad locked, Pitch disabled ("던지기"), memo usable. On reconnect the banner collapses (240 ms) and a toast "다시 연결됐어요" shows.
+- My connection lost (shot `match-reconnect-ko`): connection banner under the top bar (DESIGN_SYSTEM 12.16): chase lamps, "연결이 끊겼어요 · 다시 연결하는 중", "시간 안에 돌아오지 못하면 이 대결은 기권 처리돼요", countdown `0:48` in `strike`. Clock paused, keypad locked, Pitch disabled ("던지기"), memo usable. Slots keep the digits already entered (`filled`) and show **no active ring** on the next slot while the keypad is locked (phase 2 decision: a ring on a locked keypad suggests input is possible). On reconnect the banner collapses (240 ms) and a toast "다시 연결됐어요" shows.
 - Opponent disconnected: duel strip status "연결 끊김 · 0:41" in `strike` with an unlit lamp; I can keep pitching; if they do not return, result "상대가 돌아오지 않아 이겼어요".
 
 ### 2.11 Practice while waiting (room host)

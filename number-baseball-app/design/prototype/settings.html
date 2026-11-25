@@ -25,6 +25,16 @@ window.build = function (qs) {
   const ext = (ic, k) => `<button class="row single" style="width:100%;text-align:left">${P.icon(ic, 'ic lead')}<span class="rt"><span class="t">${t(k)}</span></span>${P.icon('open_in_new', 'ic ext')}</button>`;
   const vol = (k, v, on) => `<div class="vol${on ? '' : ' off'}" role="slider" aria-label="${t(k)}" aria-valuenow="${v}" aria-valuemin="0" aria-valuemax="100"><span class="slider${on ? '' : ' off'}"><span class="tr"></span><span class="fi" style="width:${v}%"></span><span class="th" style="left:${v}%"></span></span><span class="v">${v}</span></div>`;
   const sw = (ic, k, sub, on) => `<div class="row" role="switch" aria-checked="${on}">${P.icon(ic, 'ic lead')}<span class="rt"><span class="t">${t(k)}</span>${sub ? `<span class="s">${t(sub)}</span>` : ''}</span><span class="switch${on ? ' on' : ''}"></span></div>`;
+  // Remove ads (11 §1 "구매"): ?ads=done|pending|error; default = not purchased, price loaded from Play.
+  const ads = qs.get('ads') || '';
+  const purchase = () => {
+    const lead = P.icon('ad_off', 'ic lead');
+    const restore = `<button class="row" style="width:100%;text-align:left">${P.icon('history', 'ic lead')}<span class="rt"><span class="t">${t('restore')}</span><span class="s">${t('restoreSub')}</span></span></button>`;
+    if (ads === 'done') return `<div class="row" aria-label="${t('removeAds')}, ${t('removeAdsDone')}">${lead}<span class="rt"><span class="t">${t('removeAds')}</span><span class="s">${t('removeAdsDone')}</span></span>${P.icon('check_circle', 'ic lead')}</div>`;
+    if (ads === 'pending') return `<div class="row">${lead}<span class="rt"><span class="t">${t('removeAds')}</span><span class="s">${t('removeAdsPending')}</span></span>${P.icon('hourglass_empty', 'ic lead')}</div>${restore}`;
+    if (ads === 'error') return `<div class="row">${lead}<span class="rt"><span class="t">${t('removeAds')}</span><span class="s" style="color:var(--c-strike)">${t('removeAdsError')}</span></span><button class="iconbtn dim" style="margin-right:-12px" aria-label="${t('retry')}">${P.icon('refresh')}</button></div>${restore}`;
+    return `<button class="row" style="width:100%;text-align:left">${lead}<span class="rt"><span class="t">${t('removeAds')}</span><span class="s">${t('removeAdsSub')}</span></span><span class="val">${t('price')}</span></button>${restore}`;
+  };
   document.getElementById('app').innerHTML = `
     <div class="sysbar"></div>
     <header class="topbar">
@@ -56,6 +66,8 @@ window.build = function (qs) {
         ${nav('key', 'transfer', 'transferSub')}
         ${nav('delete', 'deleteAcc', 'deleteSub', '', ' danger')}
       </div>
+      <div class="sec-head" id="purchase"><span class="sec-label">${t('secPurchase')}</span></div>
+      <div class="list">${purchase()}</div>
       <div class="sec-head"><span class="sec-label">${t('secAbout')}</span></div>
       <div class="list">
         ${qs.get('ump') === '0' ? '' : nav('shield', 'privacyOptions', 'privacyOptionsSub')}
@@ -67,7 +79,7 @@ window.build = function (qs) {
       </div>
     </div>
     <div class="gesture"></div>`;
-  if (qs.get('scroll')) { const sc = document.querySelector('.scroll'); document.querySelector('.topbar').classList.add('scrolled'); document.querySelector('.sysbar').classList.add('scrolled'); requestAnimationFrame(() => { sc.scrollTop = qs.get('scroll') === 'end' ? sc.scrollHeight : +qs.get('scroll'); }); }
+  if (qs.get('scroll')) { const sc = document.querySelector('.scroll'); document.querySelector('.topbar').classList.add('scrolled'); document.querySelector('.sysbar').classList.add('scrolled'); requestAnimationFrame(() => { sc.scrollTop = qs.get('scroll') === 'end' ? sc.scrollHeight : qs.get('scroll') === 'ads' ? document.getElementById('purchase').offsetTop - sc.offsetTop - 64 : +qs.get('scroll'); }); }
 };
 </script>
 </head>

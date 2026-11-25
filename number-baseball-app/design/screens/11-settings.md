@@ -1,8 +1,8 @@
 # 11 Settings
 
-Prototype: `prototype/settings.html` (`?scroll=end`, `?ump=0`). Shots: `settings-ko.png`, `settings-ko-end.png`, `settings-en.png`.
+Prototype: `prototype/settings.html` (`?scroll=end|ads`, `?ads=done|pending|error`, `?ump=0`). Shots: `settings-ko.png`, `settings-ko-end.png`, `settings-en.png`; remove ads: `settings-ads-ko/en` (not purchased), `settings-ads-done-ko/en` (purchased), `settings-ads-pending-ko/en` (payment pending), `settings-ads-error-ko` (Play unavailable).
 
-**Purpose:** sound and vibration, chat safety, account and legal items. Required items come from README (including "App only": no web pages, no web deletion code) and the release lead (`docs/play/POLICY_REVIEW.md`). No ads on this screen.
+**Purpose:** sound and vibration, chat safety, account, the "Remove ads" purchase, and legal items. Required items come from README (including "App only": no web pages, no web deletion code) and the release lead (`docs/play/POLICY_REVIEW.md`). No ads on this screen.
 
 ## 1. Layout
 
@@ -22,12 +22,34 @@ Top bar 56 dp: `arrow_back` · "설정". On scroll the top bar and the status-ba
 | 계정 | 닉네임 (`person`) | value "새벽투수#4821" + chevron | | nickname sheet (01 rules) |
 | | 다른 기기로 계정 옮기기 (`key`), sub "10분 동안 쓸 수 있는 코드를 만들어요" | chevron | | transfer-code sheet |
 | | 계정 삭제 (`delete`, title in `out`), sub "기록과 닉네임이 영구히 지워져요" | chevron | | confirmation dialog |
+| 구매 | 광고 제거 (`ad_off`) | see §1.1 | not purchased | Play purchase sheet |
+| | 구매 복원 (`history`) | see §1.1 | | re-queries Play |
 | 정보 및 지원 | 개인정보 보호 옵션 (`shield`), sub "광고 맞춤 설정 동의를 바꿔요" | chevron | **shown only when UMP reports `privacyOptionsRequirementStatus == REQUIRED`** (`?ump=0` hides it) | UMP privacy options form |
 | | 개인정보 처리방침 (`policy`) | chevron | | in-app reader (15) |
 | | 이용약관 (`description`) | chevron | | in-app reader (15) |
 | | 문의하기 (`send`), second line = the contact email address (`body` `text2`, selectable) | trailing copy icon button 48 dp (`content_copy`, `text2`) | | tap the copy button or long-press the row: copies the address, toast "이메일 주소를 복사했어요" (Android 13+ shows its own clipboard preview; then no toast). No mail app is opened (app only); the address comes from a resource so it never sits in the layout |
 | | 오픈소스 라이선스 (`info`) | chevron | | licences screen |
 | | 버전 | text only, no icon, text at x = 56, `body` `text3`, value `numTag` `text3` "1.0.0 (1)" | | long-press copies the version |
+
+### 1.1 구매 section: Remove ads (owner decision 2026-11-25)
+
+Product `remove_ads`, non-consumable, Google Play Billing only (README; `docs/play/POLICY_CHECKLIST.md` 12). The section sits between 계정 and 정보 및 지원 and is always present (also in the review build), so reviewers find it. Rows follow 12.14 (64 dp with subtitle, grows if the subtitle wraps to 2 lines; icon at x = 16 `text2`). Nothing here uses lamp colours, badges or "sale" wording; the price is the only number.
+
+| State | 광고 제거 row | 구매 복원 row | Shot |
+| --- | --- | --- | --- |
+| **Loading** (product details not back yet, < 1 s usually) | title "광고 제거", sub "모든 광고가 사라져요 · 한 번만 결제해요", no trailing value; row not tappable | shown | — |
+| **Not purchased** | same title and sub; trailing value = Play's formatted price (`ProductDetails.oneTimePurchaseOfferDetails.formattedPrice`, `body` `text2`, e.g. "₩6,500" / "$4.99"; never hard-coded); whole row tappable, no chevron (it starts a purchase, it does not navigate) | sub "이 Google 계정으로 산 구매를 다시 확인해요"; tappable | `settings-ads-ko/en` |
+| **Purchased** | sub "구매함 · 광고가 나오지 않아요" / "Purchased · no ads"; trailing `check_circle` 24 dp `text2`; not tappable, no ripple | hidden | `settings-ads-done-ko/en` |
+| **Pending** (`PENDING`: cash, slow payment methods) | sub "결제 대기 중 · 결제가 끝나면 광고가 사라져요"; trailing `hourglass_empty` 24 dp `text2`; not tappable; ads keep showing (not bought until `PURCHASED`); re-checked on every resume | shown (re-checks now) | `settings-ads-pending-ko/en` |
+| **Error** (billing unavailable, not signed in to Play, product details failed) | sub "지금은 구매할 수 없어요. 잠시 후 다시 시도해 주세요" in `strike` (same warning colour as the silent-mode subtitle); trailing `refresh` icon button 48 dp `text2` "다시 시도" (also the whole row) reconnects and reloads | shown | `settings-ads-error-ko` |
+
+Flows and feedback (toasts, DESIGN_SYSTEM 12.16):
+- Tap 광고 제거 → Play purchase sheet over the app. Success (`PURCHASED`, acknowledged at once; acknowledgement retried at next start if it failed): toast "광고를 제거했어요", the row turns to Purchased, every banner collapses, no further interstitials, the result link disappears, the UMP form is no longer shown. User cancelled: nothing. Play error: toast "구매를 마치지 못했어요. 다시 시도해 주세요". Result `PENDING`: toast "결제가 끝나면 광고가 사라져요" and the Pending state.
+- Tap 구매 복원 → `queryPurchasesAsync`; the row shows a 3-lamp chase (chalk) in place of the subtitle for the call. Found: toast "광고 제거를 복원했어요" → Purchased. Nothing found: toast "이 Google 계정에는 복원할 구매가 없어요". Failed: toast "Google Play에 연결할 수 없어요".
+- Refund or revocation (purchase gone at start or resume): back to Not purchased silently; ads return.
+- The 개인정보 보호 옵션 row keeps following UMP's `REQUIRED` status (consent can still be changed after purchase).
+- TalkBack: "광고 제거, 6,500원, 구매" / "광고 제거, 구매함" / "광고 제거, 결제 대기 중".
+- Copy rule: never "ad-free" (14.2); en "Remove ads", "Restore purchase".
 
 ## 2. Sub-screens and dialogs
 

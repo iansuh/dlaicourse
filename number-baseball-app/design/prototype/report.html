@@ -16,6 +16,7 @@
   .card-rec { display: flex; gap: 20px; padding: 0 16px 16px; }
   .card-rec div { display: flex; flex-direction: column; }
   .card-rec .v { font: var(--t-num-stat); font-size: 24px; line-height: 28px; font-feature-settings: "tnum" 1; }
+  .rec-none { display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 8px 16px 16px; font: var(--t-caption); color: var(--c-text3); margin-top: -4px; }
   .card-rec .k { font: var(--t-caption); color: var(--c-text3); }
   .sheet .row { min-height: 56px; }
   .sheet .row .lead { color: var(--c-text2); }
@@ -45,12 +46,12 @@
 <script src="js/proto.js"></script>
 <script>
 const R = {
-  ko: { team: 'B팀 · 빠른 대전 기록', report: '신고하기', block: '차단하기', blockSub: '채팅이 보이지 않고 다시 매칭되지 않아요', close: '닫기',
+  ko: { team: 'B팀 · 온라인 대전 기록', noRec: '기록을 볼 수 없어요', failRec: '기록을 불러오지 못했어요', retry: '다시 시도', report: '신고하기', block: '차단하기', blockSub: '채팅이 보이지 않고 다시 매칭되지 않아요', close: '닫기',
     rTitle: 'Größenwahn#7731 신고', rSub: '이유를 하나 골라 주세요', reasons: ['욕설이나 괴롭힘', '혐오 표현', '성적인 내용', '개인정보 요구 또는 공개', '스팸이나 광고', '부정행위', '아동 안전 문제', '기타'],
     note: '자세한 내용 (선택, 최대 200자)', evidence: '신고하면 이 방의 최근 대화 20줄이 증거로 함께 저장돼요.', send: '신고 보내기',
     doneT: '신고했어요', doneP: '보통 24시간 안에 확인해요. 결과는 따로 알려 드리지 않아요.', blockToo: '이 플레이어도 차단하기',
     dT: 'Größenwahn#7731 님을 차단할까요?', dP: '서로의 채팅이 보이지 않고, 빠른 대결에서 다시 만나지 않아요. 설정 > 차단한 플레이어에서 풀 수 있어요.', cancel: '취소', blockBtn: '차단' },
-  en: { team: 'Team B · quick match record', report: 'Report', block: 'Block', blockSub: 'Hides their chat and never matches you again', close: 'Close',
+  en: { team: 'Team B · online record', noRec: 'Record not available', failRec: 'Couldn’t load the record', retry: 'Try again', report: 'Report', block: 'Block', blockSub: 'Hides their chat and never matches you again', close: 'Close',
     rTitle: 'Report Größenwahn#7731', rSub: 'Pick one reason', reasons: ['Insults or harassment', 'Hate speech', 'Sexual content', 'Asking for or sharing personal data', 'Spam or ads', 'Cheating', 'Child safety', 'Something else'],
     note: 'Details (optional, up to 200)', evidence: 'The last 20 lines of this room are saved with the report as evidence.', send: 'Send report',
     doneT: 'Report sent', doneP: 'We usually review within 24 hours. You will not get a separate result.', blockToo: 'Block this player too',
@@ -58,10 +59,17 @@ const R = {
 };
 window.build = function (qs) {
   const c = R[P.lang] || R.en, st = qs.get('state') || 'card';
+  // Record from GET /api/v1/players/{id} (protocol 1.1 §3.4). ?rec=none: 404 (deleted, bot, or a block either way: same text, nothing revealed);
+  // ?rec=loading: values as "–" in textDisabled; ?rec=fail: network error with retry.
+  const r = qs.get('rec') || '';
+  const stat = (v, k) => `<div><span class="v"${v === '–' ? ' style="color:var(--c-text-disabled)"' : ''}>${v}</span><span class="k">${P.t(k)}</span></div>`;
+  const rec = () => r === 'none' ? `<p class="rec-none">${c.noRec}</p>`
+    : r === 'fail' ? `<p class="rec-none">${c.failRec}<button class="btn-text">${c.retry}</button></p>`
+    : `<div class="card-rec">${stat(r === 'loading' ? '–' : '31', 'win')}${stat(r === 'loading' ? '–' : '27', 'loss')}${stat(r === 'loading' ? '–' : '4', 'draw')}</div>`;
   let sheet = '';
   if (st === 'card') sheet = `<section class="sheet"><div class="grab"></div>
-      <div class="card-h"><span class="tbadge b">B</span><div><span class="pname">Größenwahn<span class="ptag">#7731</span></span><div class="sub">${c.team}</div></div></div>
-      <div class="card-rec"><div><span class="v">31</span><span class="k">${P.t('win')}</span></div><div><span class="v">27</span><span class="k">${P.t('loss')}</span></div><div><span class="v">4</span><span class="k">${P.t('draw')}</span></div></div>
+      <div class="card-h"><span class="tbadge b">B</span><div><span class="pname">Größenwahn<span class="ptag">#7731</span></span><div class="sub">${r === 'none' ? c.team.split(' · ')[0] : c.team}</div></div></div>
+      ${rec()}
       <div class="list" style="border-top:1px solid var(--c-line)">
         <button class="row single" style="width:100%;text-align:left">${P.icon('flag', 'ic lead')}<span class="rt"><span class="t">${c.report}</span></span>${P.icon('chevron_right', 'ic chev')}</button>
         <button class="row danger" style="width:100%;text-align:left">${P.icon('block', 'ic lead')}<span class="rt"><span class="t">${c.block}</span><span class="s">${c.blockSub}</span></span></button>

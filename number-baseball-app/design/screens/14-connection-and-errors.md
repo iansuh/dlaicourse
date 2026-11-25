@@ -31,6 +31,8 @@ Principles: never block the screen with a spinner; keep what can still work usab
 - Placed directly under the top bar, pushes the duel strip and the rest down; never overlays the keypad.
 - `surface3`, 1 dp `line` bottom, padding 10 × 16 dp, 12 dp gaps: chase lamps (3 × 8 dp) · text column (`bodyStrong` title, `caption` `text2` line, max 2 lines) · countdown `numTimer` `strike` (`m:ss`, whole seconds).
 - The memo board may auto-collapse to keep the log rule (05 §1).
+- Slots keep entered digits but show no active ring while the keypad is locked (DESIGN_SYSTEM 12.4).
+- Small window (height < 480 dp): one line, 40 dp: chase lamps · title · countdown; the second line moves to TalkBack only (ADAPTIVE §1).
 - Live region: assertive on appear ("연결이 끊겼어요"), polite at 10 s left.
 - Collapse 240 ms on reconnect.
 
