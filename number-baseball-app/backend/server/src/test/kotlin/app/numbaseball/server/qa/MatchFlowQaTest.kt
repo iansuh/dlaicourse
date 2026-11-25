@@ -373,7 +373,7 @@ class MatchFlowQaTest {
             val end = b.awaitRoom { it.match?.myDuel?.phase?.name == "FINISHED" }
             assertEquals("DISCONNECT", end.match!!.myDuel!!.result!!.reason.name)
             assertEquals("B", end.match!!.myDuel!!.result!!.winner!!.name)
-            assertEquals("1/0/0".replace("1/0/0", "1/0/0"), stats(inst, b.auth.token))
+            assertEquals("1/0/0", stats(inst, b.auth.token))
             // The forfeiting player is not a leaver: they get the team result (a loss here), and the seat is kept until freed.
             assertEquals("0/1/0", stats(inst, a.auth.token))
             val back = QaWs.connect(a.auth.token, inst)
@@ -466,7 +466,6 @@ class MatchFlowQaTest {
             val (a2, b2) = room.teamA[1] to room.opponentOf(room.teamA[1])
             // B1's duel is lost by disconnect, A2 beats B2: A wins 2:0.
             b1.close(); Thread.sleep(500)
-            QaFlows.guessBoth(a1, b1, "456", "456", 1).let { }
             a2.ws.send(Guess("123", 1)); b2.ws.send(Guess("456", 1))
             a1.ws.send(Guess("456", 1))
             inst.advance(60_000)
