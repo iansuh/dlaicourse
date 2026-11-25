@@ -63,6 +63,11 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -176,17 +181,33 @@ fun ContentColumn(modifier: Modifier = Modifier, content: @Composable ColumnScop
  */
 @Composable
 fun ConnectionBanner(title: String, line: String?, countdown: String?) {
-    Column(Modifier.fillMaxWidth().background(NbColors.surface3).semantics { liveRegion = LiveRegionMode.Assertive }) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    // Small windows: one 40 dp line (title + countdown); the explanation stays for TalkBack only (ADAPTIVE.md §1, D2-27).
+    val compact = isCompactHeight()
+    val spoken = listOfNotNull(title, line, countdown).joinToString(". ")
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .background(NbColors.surface3)
+            .semantics(mergeDescendants = true) {
+                liveRegion = LiveRegionMode.Assertive
+                if (compact) contentDescription = spoken
+            },
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .then(if (compact) Modifier.heightIn(min = 39.dp).padding(horizontal = 12.dp) else Modifier.padding(horizontal = 16.dp, vertical = 10.dp)),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             ChaseLamps(NbSize.lampM)
             HSpacer(12.dp)
             Column(Modifier.weight(1f)) {
-                Text(title, style = NbType.bodyStrong, color = NbColors.chalk)
-                if (line != null) Text(line, style = NbType.caption, color = NbColors.text2, maxLines = 2)
+                Text(title, style = NbType.bodyStrong, color = NbColors.chalk, maxLines = if (compact) 1 else Int.MAX_VALUE, overflow = TextOverflow.Ellipsis)
+                if (line != null && !compact) Text(line, style = NbType.caption, color = NbColors.text2)
             }
             if (countdown != null) {
                 HSpacer(12.dp)
-                Text(countdown, style = NbType.numTimer, color = NbColors.strike)
+                Text(countdown, style = NbType.numTimer, color = NbColors.strike, maxLines = 1, softWrap = false)
             }
         }
         Hairline()
@@ -272,8 +293,19 @@ fun NbDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = dismissible),
     ) {
+        ScrimDim()
         DialogSurface(title, body, confirmLabel, onConfirm, dismissLabel, onDismiss, destructive)
     }
+}
+
+/**
+ * Dialog windows dim the screen with the `scrim` token (#A3000000 = 64 %) instead of the platform's 60 % (D2-23). Call
+ * inside a `Dialog` content.
+ */
+@Composable
+fun ScrimDim() {
+    val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+    SideEffect { window?.setDimAmount(NbColors.scrim.alpha) }
 }
 
 @Composable

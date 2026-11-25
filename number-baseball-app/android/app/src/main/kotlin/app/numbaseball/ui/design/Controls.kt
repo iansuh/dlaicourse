@@ -113,7 +113,7 @@ fun NbButton(
             .background(fill, shape)
             .then(if (border != null) Modifier.border(1.dp, border, shape) else Modifier)
             .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
-            .padding(horizontal = if (small || kind == ButtonKind.TEXT) 12.dp else 24.dp, vertical = 8.dp),
+            .padding(horizontal = if (kind == ButtonKind.TEXT) 8.dp else if (small) 12.dp else 24.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {

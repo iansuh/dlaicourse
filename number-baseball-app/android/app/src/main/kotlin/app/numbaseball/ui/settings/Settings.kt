@@ -383,6 +383,7 @@ fun SettingsScreen(
     state.transferCode?.let { TransferSheet(it, state.transferLoading, actions) }
     if (deleteDialog || state.deleting) {
         Dialog(onDismissRequest = { if (!state.deleting) deleteDialog = false }) {
+            app.numbaseball.ui.design.ScrimDim()
             DeleteDialog(state.deleting, onCancel = { deleteDialog = false }, onConfirm = actions.onDeleteConfirm)
         }
     }

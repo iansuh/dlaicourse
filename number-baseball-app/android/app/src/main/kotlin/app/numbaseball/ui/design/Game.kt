@@ -123,7 +123,7 @@ fun ChaseLamps(size: Dp = NbSize.lampM, color: LampColor = LampColor.CHALK) {
 fun OutTag(modifier: Modifier = Modifier, height: Dp = 22.dp, fontSize: TextUnit = 14.sp, padding: Dp = 6.dp) {
     Box(
         modifier
-            .height(height)
+            .heightIn(min = height)
             .border(1.dp, NbColors.out, RoundedCornerShape(NbRadius.s))
             .padding(horizontal = padding),
         contentAlignment = Alignment.Center,
@@ -223,7 +223,8 @@ fun DigitSlots(
         contentAlignment = Alignment.Center,
     ) {
         val gap = NbSize.slotGap
-        val w = plateWidth ?: minOf(NbSize.slotWidth, (maxWidth - gap * (digits - 1)) / digits).coerceAtLeast(NbSize.slotWidthMin)
+        // Compact slots are 48 × 48 (ADAPTIVE.md §1, D2-05).
+        val w = plateWidth ?: minOf(if (compact) NbSize.slotHeightCompact else NbSize.slotWidth, (maxWidth - gap * (digits - 1)) / digits).coerceAtLeast(NbSize.slotWidthMin)
         val h = plateHeight ?: if (compact) NbSize.slotHeightCompact else NbSize.slotHeight
         Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
             repeat(digits) { i ->
@@ -414,7 +415,8 @@ private fun IconKey(icon: Int, description: String, locked: Boolean, height: Dp,
             .then(if (!locked) Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick, role = Role.Button) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        NbIcon(icon, description, if (locked) NbColors.textDisabled else NbColors.chalk)
+        // Function keys are secondary: `text2` glyphs (prototype `.key.fn`, D2-06).
+        NbIcon(icon, description, if (locked) NbColors.textDisabled else NbColors.text2)
     }
 }
 
@@ -448,10 +450,10 @@ private fun ActionKey(
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp)) {
                 ChaseLamps(NbSize.lampS)
                 HSpacer(8.dp)
-                Text(waitingLabel ?: label, style = NbType.labelSmall, color = textColor, maxLines = 1)
+                Text(waitingLabel ?: label, style = NbType.label, color = textColor, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             }
         } else {
-            Text(label, style = if (compact) NbType.labelSmall else NbType.label, color = textColor, textAlign = TextAlign.Center, maxLines = 2)
+            Text(label, style = if (compact) NbType.labelSmall else NbType.label, color = textColor, textAlign = TextAlign.Center, maxLines = if (compact) 1 else 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         }
     }
 }
@@ -499,7 +501,8 @@ fun ClockLine(fraction: Float, level: ClockLevel, modifier: Modifier = Modifier)
 fun MiniPlates(value: String, plate: Dp = 18.dp, height: Dp = 22.dp) {
     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
         value.forEach { ch ->
-            Box(Modifier.size(plate, height).background(NbColors.surface2, RoundedCornerShape(NbRadius.s)), contentAlignment = Alignment.Center) {
+            // Plates grow with the capped numeral at large text instead of cutting it (D2-01).
+            Box(Modifier.widthIn(min = plate).heightIn(min = height).background(NbColors.surface2, RoundedCornerShape(NbRadius.s)).padding(horizontal = 1.dp), contentAlignment = Alignment.Center) {
                 Text(ch.toString(), style = NbType.numTag.copy(fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, letterSpacing = 0.sp), color = NbColors.text2)
             }
         }

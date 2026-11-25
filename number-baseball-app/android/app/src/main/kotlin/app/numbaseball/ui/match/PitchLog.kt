@@ -1,6 +1,5 @@
 package app.numbaseball.ui.match
 
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,6 +41,8 @@ import app.numbaseball.ui.design.Lamp
 import app.numbaseball.ui.design.LampColor
 import app.numbaseball.ui.design.OutTag
 import app.numbaseball.ui.design.fadingEdges
+import app.numbaseball.ui.design.FitText
+import app.numbaseball.ui.design.isLargeFont
 import app.numbaseball.ui.theme.NbColors
 import app.numbaseball.ui.theme.NbSize
 import app.numbaseball.ui.theme.NbType
@@ -57,11 +59,12 @@ fun PitchLogHeader(digits: Int) {
     val c = columns(digits, compact = false)
     Column {
         Hairline()
-        Row(Modifier.fillMaxWidth().height(NbSize.historyHeader).padding(horizontal = c.padding), verticalAlignment = Alignment.CenterVertically) {
-            Text("#", style = NbType.labelSmall, color = NbColors.text3, modifier = Modifier.width(c.round))
-            Text(stringResource(R.string.col_guess), style = NbType.labelSmall, color = NbColors.text3, modifier = Modifier.weight(1f))
-            Text(stringResource(R.string.col_hint), style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.Center, modifier = Modifier.width(c.hint * 2))
-            Text(stringResource(R.string.col_opp), style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.End, modifier = Modifier.width(c.opponent))
+        // Grows with large text instead of clipping the header labels (D2-01).
+        Row(Modifier.fillMaxWidth().heightIn(min = NbSize.historyHeader).padding(horizontal = c.padding), verticalAlignment = Alignment.CenterVertically) {
+            Text("#", style = NbType.labelSmall, color = NbColors.text3, maxLines = 1, softWrap = false, modifier = Modifier.width(c.round))
+            Text(stringResource(R.string.col_guess), style = NbType.labelSmall, color = NbColors.text3, maxLines = 1, softWrap = false, modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.col_hint), style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.Center, maxLines = 1, softWrap = false, modifier = Modifier.width(c.hint * 2))
+            Text(stringResource(R.string.col_opp), style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.End, maxLines = 1, softWrap = false, modifier = Modifier.width(c.opponent))
         }
     }
 }
@@ -101,7 +104,7 @@ private fun LogRow(
     columns: LogColumns,
     reveal: RevealProgress,
 ) {
-    val large = LocalDensity.current.fontScale >= 1.5f
+    val large = isLargeFont()
     val height = when {
         compact && latest -> 48.dp
         compact -> 40.dp
@@ -120,18 +123,19 @@ private fun LogRow(
     Column(Modifier.fillMaxWidth().background(if (latest) NbColors.surface1 else NbColors.bg).semantics(mergeDescendants = true) { contentDescription = spoken }) {
         // Row heights include the 1 dp top line (prototype `.log-row`, border-box).
         Hairline()
-        Row(Modifier.fillMaxWidth().height(height - 1.dp).padding(horizontal = columns.padding), verticalAlignment = Alignment.CenterVertically) {
+        // Minimum heights: the row grows rather than clip (DESIGN_SYSTEM 11.3).
+        Row(Modifier.fillMaxWidth().heightIn(min = height - 1.dp).padding(horizontal = columns.padding), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 entry.round.toString(),
                 style = NbType.numLabel,
                 color = if (latest) NbColors.chalk else NbColors.text3,
                 modifier = Modifier.width(columns.round),
             )
-            Text(
+            // The guess never truncates (D2-01): it takes the flexible column and steps its size down if it must.
+            FitText(
                 entry.guess ?: "—",
                 style = if (latest && !compact) NbType.numSlotSm.copy(letterSpacing = 0.12.em) else NbType.numLog,
                 color = if (entry.guess == null) NbColors.text3 else NbColors.chalk,
-                maxLines = 1,
                 modifier = Modifier.weight(1f).clearAndSetSemantics {},
             )
             Box(Modifier.clearAndSetSemantics {}) {
@@ -206,8 +210,9 @@ private fun LegendRow(padding: Dp, height: Dp, lead: @Composable () -> Unit, nam
     // 44 dp including its 1 dp top line (prototype `.lg-row`, border-box).
     Column(Modifier.fillMaxWidth()) {
         Hairline()
-        Row(Modifier.fillMaxWidth().height(height - 1.dp).padding(horizontal = padding), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.width(56.dp)) { lead() }
+        // Wraps to more lines at large text instead of truncating (D2-25).
+        Row(Modifier.fillMaxWidth().heightIn(min = height - 1.dp).padding(horizontal = padding, vertical = if (isLargeFont()) 6.dp else 0.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.width(if (isLargeFont()) 64.dp else 56.dp)) { lead() }
             Text(
                 buildAnnotatedString {
                     withStyle(SpanStyle(fontWeight = NbType.bodyStrong.fontWeight, color = NbColors.chalk)) { append(name) }
@@ -216,7 +221,6 @@ private fun LegendRow(padding: Dp, height: Dp, lead: @Composable () -> Unit, nam
                 },
                 style = NbType.caption,
                 color = NbColors.text2,
-                maxLines = 2,
             )
         }
     }
