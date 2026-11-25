@@ -1,5 +1,6 @@
 package app.numbaseball.ui.match
 
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -100,9 +101,12 @@ private fun LogRow(
     columns: LogColumns,
     reveal: RevealProgress,
 ) {
+    val large = LocalDensity.current.fontScale >= 1.5f
     val height = when {
         compact && latest -> 48.dp
         compact -> 40.dp
+        large && latest -> 72.dp // ADAPTIVE.md §2
+        large -> 52.dp
         latest -> NbSize.historyRowLatest
         else -> NbSize.historyRow
     }

@@ -22,10 +22,14 @@ protocol messages and text filters come from the shared `:core` module in `../ba
 | `./gradlew :app:verifyRoborazziDebug` | Same, and fails if a screenshot differs from `app/screenshots/` (CI) |
 | `./gradlew :app:lintDebug` | Android lint (`app/build/reports/lint-results-debug.html`) |
 
-Screenshots: every screen in English and Korean at phone size (360×800 dp) and a small split-screen window
-(360×320 dp), file names `NN_screen_<phone|small>_<en|ko>.png`. After a UI change run `recordRoborazziDebug`, look at
-the diff, and commit the new PNGs with the change; CI verifies them. Diff images from a failed CI run are in the
-`android-test-reports` artifact.
+Screenshots (`src/test/.../screenshots/Screenshots.kt`): every screen and state, named after the reference renders in
+`../design/shots/` so they can be compared side by side: `match-guess-ko.png` here ↔ `design/shots/match-guess-ko.png`.
+Variants: `<name>-ko` / `<name>-en` phone 360 × 800 dp; `<name>-small-<lang>` split-screen 360 × 320 dp (the match is
+`match-small-<lang>` like the shot); `<name>-ko-font200` at 200 % font scale. States without a reference shot use the
+same scheme (`home-offline-ko`, `profile-ko`, `cpu-setup-ko`, …). The frame reproduces the shots' window: 24 dp status
+bar and gesture area as real insets, a 230 dp IME on text-field screens and the shots' sample creative in the ad band
+(test only, `LocalAdPreview`). After a UI change run `recordRoborazziDebug`, look at the diff, and commit the new PNGs
+with the change; CI verifies them. Diff images from a failed CI run are in the `android-test-reports` artifact.
 
 Ads, audio and haptics are disabled in tests: `TestNumBaseballApp` (set in `src/test/resources/robolectric.properties`)
 supplies a fake container with `DisabledAdsController`, `SilentGameAudio` and fakes for network and storage; screens

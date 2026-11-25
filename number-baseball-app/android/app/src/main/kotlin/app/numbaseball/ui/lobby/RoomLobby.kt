@@ -1,5 +1,8 @@
 package app.numbaseball.ui.lobby
 
+import app.numbaseball.ui.design.IconButton48
+import app.numbaseball.ui.design.isCompactHeight
+import androidx.compose.ui.platform.LocalDensity
 import app.numbaseball.audio.ScreenMusic
 import app.numbaseball.audio.MusicTrack
 import app.numbaseball.audio.LocalGameAudio
@@ -331,6 +334,16 @@ internal val RoomSettingsSaver = androidx.compose.runtime.saveable.listSaver<Roo
 @Composable
 private fun Invite(room: RoomView, alone: Boolean, onCopy: (String) -> Unit, onShare: (String) -> Unit) {
     val code = room.code ?: return
+    if (isCompactHeight()) {
+        // Small window (ADAPTIVE.md §1): 40 × 48 plates with copy and share icon buttons on the same row.
+        val label = stringResource(R.string.invite_code)
+        Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            CodePlates(code, description = label, plateWidth = 40.dp, plateHeight = 48.dp, modifier = Modifier.weight(1f))
+            IconButton48(R.drawable.ic_content_copy, stringResource(R.string.action_copy), { onCopy(code) }, tint = NbColors.text2)
+            IconButton48(R.drawable.ic_share, stringResource(R.string.action_share), { onShare(code) }, tint = NbColors.text2)
+        }
+        return
+    }
     Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         val label = stringResource(R.string.invite_code)
         Text(label, style = NbType.caption, color = NbColors.text3)
@@ -395,16 +408,24 @@ private fun FillStatus(state: LobbyUiState) {
 private fun Teams(state: LobbyUiState, greyed: Boolean, actions: LobbyActions) {
     val teamSize = state.room?.settings?.teamSize ?: 1
     val myTeam = state.me?.team
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Team.entries.forEach { team ->
-            val members = state.players.filter { it.team == team }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TeamHeader(team, members.size, teamSize, myTeam)
-                members.forEachIndexed { index, player -> Seat(player, team, index, greyed, actions.onPlayerCard) }
-                repeat((teamSize - members.size).coerceAtLeast(0)) { i ->
-                    EmptySeat(team, members.size + i, canMove = myTeam != null && team != myTeam && !greyed, onMove = actions.onMove)
-                }
+    val team: @Composable (Team, Modifier) -> Unit = { team, modifier ->
+        val members = state.players.filter { it.team == team }
+        Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            TeamHeader(team, members.size, teamSize, myTeam)
+            members.forEachIndexed { index, player -> Seat(player, team, index, greyed, actions.onPlayerCard) }
+            repeat((teamSize - members.size).coerceAtLeast(0)) { i ->
+                EmptySeat(team, members.size + i, canMove = myTeam != null && team != myTeam && !greyed, onMove = actions.onMove)
             }
+        }
+    }
+    if (LocalDensity.current.fontScale >= 1.5f) {
+        // Large text (ADAPTIVE.md §2): A above B instead of two columns.
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Team.entries.forEach { team(it, Modifier.fillMaxWidth()) }
+        }
+    } else {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Team.entries.forEach { team(it, Modifier.weight(1f)) }
         }
     }
 }

@@ -453,6 +453,8 @@ val LocalAppToast = staticCompositionLocalOf { ToastState() }
  */
 @Composable
 fun SheetFrame(onDismiss: () -> Unit, top: Dp? = null, content: @Composable ColumnScope.() -> Unit) {
+    // Small windows: sheets open at full window height (ADAPTIVE.md §1).
+    val top = if (top != null && isCompactHeight()) 0.dp else top
     Box(
         Modifier
             .fillMaxSize()
@@ -465,7 +467,7 @@ fun SheetFrame(onDismiss: () -> Unit, top: Dp? = null, content: @Composable Colu
             Modifier
                 .fillMaxWidth()
                 .widthIn(max = 640.dp)
-                .then(if (top != null) Modifier.padding(top = top).fillMaxHeight() else Modifier.statusBarsPadding().padding(top = 48.dp))
+                .then(if (top != null) Modifier.padding(top = top).fillMaxHeight() else Modifier.statusBarsPadding().padding(top = if (isCompactHeight()) 0.dp else 48.dp))
                 .clickable(interactionSource = null, indication = null) {},
             contentAlignment = Alignment.BottomCenter,
         ) {

@@ -105,31 +105,36 @@ fun AgeScreen(state: AgeUiState, onDigit: (Char) -> Unit, onDelete: () -> Unit, 
     val margin = if (compact) 12.dp else 16.dp
     NbScreen {
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = margin)) {
-            VSpacer(if (compact) 16.dp else 32.dp)
-            Eyebrow {
-                Column {
-                    Text(stringResource(R.string.app_name_main), style = NbType.labelSmall, color = NbColors.text2)
-                    Text(stringResource(R.string.app_name_sub), style = NbType.caption, color = NbColors.text3)
+            // Small window: title and the year only, so the slots stay above the pinned keypad (ADAPTIVE.md §1).
+            VSpacer(if (compact) 12.dp else 32.dp)
+            if (!compact) {
+                Eyebrow {
+                    Column {
+                        Text(stringResource(R.string.app_name_main), style = NbType.labelSmall, color = NbColors.text2)
+                        Text(stringResource(R.string.app_name_sub), style = NbType.caption, color = NbColors.text3)
+                    }
                 }
+                VSpacer(24.dp)
             }
-            VSpacer(24.dp)
-            Text(stringResource(R.string.age_title), style = NbType.headline, color = NbColors.chalk, modifier = Modifier.exactLineHeight(NbType.headline))
-            VSpacer(8.dp)
-            Text(stringResource(R.string.age_lead), style = NbType.body, color = NbColors.text2)
-            VSpacer(if (compact) 16.dp else 40.dp)
+            Text(stringResource(R.string.age_title), style = if (compact) NbType.title else NbType.headline, color = NbColors.chalk)
+            if (!compact) {
+                VSpacer(8.dp)
+                Text(stringResource(R.string.age_lead), style = NbType.body, color = NbColors.text2)
+            }
+            VSpacer(if (compact) 12.dp else 40.dp)
             Text(stringResource(R.string.age_year), style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             VSpacer(12.dp)
             DigitSlots(
                 digits = 4,
                 value = state.year,
-                plateWidth = 56.dp,
-                plateHeight = 64.dp,
+                plateWidth = if (compact) 48.dp else 56.dp,
+                plateHeight = if (compact) 48.dp else 64.dp,
                 error = state.invalid,
                 shakeKey = state.shake,
                 contentDescription = stringResource(R.string.age_year) + ", " + state.year.toList().joinToString(" "),
             )
             VSpacer(12.dp)
-            Box(Modifier.fillMaxWidth().height(18.dp).semantics { liveRegion = LiveRegionMode.Polite }, contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxWidth().heightIn(min = 18.dp).semantics { liveRegion = LiveRegionMode.Polite }, contentAlignment = Alignment.Center) {
                 if (state.invalid) Text(stringResource(R.string.age_invalid), style = NbType.caption, color = NbColors.out)
             }
         }

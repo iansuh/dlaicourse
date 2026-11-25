@@ -1,5 +1,6 @@
 package app.numbaseball.ui.results
 
+import androidx.compose.ui.unit.sp
 import app.numbaseball.audio.ScreenMusic
 import app.numbaseball.audio.MusicTrack
 import androidx.compose.foundation.background
@@ -119,27 +120,63 @@ fun ResultsScreen(
         bottomBar = { if (showBanner) AdBanner() },
     ) {
         val scroll = rememberScrollState()
+        val (primaryLabel, primary, secondaryLabel, secondary) = when {
+            summary.mode == MatchMode.ROOM && onBackToRoom != null -> Actions(R.string.back_to_room, onBackToRoom, R.string.home, onHome)
+            summary.mode == MatchMode.PRACTICE && onBackToRoom != null -> Actions(R.string.rematch, onRematch ?: onBackToRoom, R.string.back_to_room, onBackToRoom)
+            onRematch != null -> Actions(R.string.rematch, onRematch, R.string.home, onHome)
+            else -> Actions(R.string.home, onHome, null, null)
+        }
+        if (compact) {
+            // Small window (ADAPTIVE.md §1): headline row 56 dp, the opponent's number as 40 × 44 plates, buttons side by
+            // side (48 dp); no line score, no banner.
+            Column(
+                Modifier.weight(1f).fillMaxWidth().fadingEdges(bottom = 16.dp, enabled = scroll.canScrollForward).verticalScroll(scroll),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                val headline = NbType.display.copy(fontSize = 32.sp, lineHeight = 40.sp)
+                Box(Modifier.fillMaxWidth().height(56.dp), contentAlignment = Alignment.Center) {
+                    Text(stringResource(headlineRes(summary.outcome)), style = headline, color = NbColors.chalk, modifier = Modifier.semantics { heading() })
+                }
+                Text(resultSubline(summary), style = NbType.caption, color = NbColors.text2, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 12.dp))
+                VSpacer(12.dp)
+                val theirs = stringResource(R.string.opp_secret)
+                Text(theirs, style = NbType.caption, color = NbColors.text3)
+                VSpacer(8.dp)
+                DigitSlots(
+                    digits = summary.digits,
+                    value = summary.opponentSecret,
+                    hit = summary.outcome == Outcome.WIN,
+                    showActive = false,
+                    plateWidth = 40.dp,
+                    plateHeight = 44.dp,
+                    compact = true,
+                    contentDescription = theirs + " " + summary.opponentSecret.toList().joinToString(" "),
+                )
+                VSpacer(12.dp)
+            }
+            Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (secondaryLabel != null && secondary != null) {
+                    NbButton(stringResource(secondaryLabel), guard(secondary), kind = ButtonKind.SECONDARY, heightOverride = 48.dp, modifier = Modifier.weight(1f).testTag("resultSecondary"))
+                }
+                NbButton(stringResource(primaryLabel), guard(primary), heightOverride = 48.dp, modifier = Modifier.weight(1f).testTag("resultPrimary"))
+            }
+            return@NbScreen
+        }
         Column(
             Modifier.weight(1f).fillMaxWidth().fadingEdges(bottom = 16.dp, enabled = scroll.canScrollForward).verticalScroll(scroll),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Hero(summary, compact)
             Reveal(summary, compact)
-            VSpacer(if (compact) 16.dp else 28.dp)
+            VSpacer(28.dp)
             LineScore(summary, Modifier.padding(horizontal = 16.dp))
             Spacer(Modifier.heightIn(min = 16.dp).weight(1f))
         }
-        Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = if (compact) 12.dp else 24.dp)) {
+        Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp)) {
             if (adDue) {
                 Box(Modifier.fillMaxWidth().padding(bottom = 16.dp), contentAlignment = Alignment.Center) {
                     IconNote(R.drawable.ic_info, stringResource(R.string.ad_notice))
                 }
-            }
-            val (primaryLabel, primary, secondaryLabel, secondary) = when {
-                summary.mode == MatchMode.ROOM && onBackToRoom != null -> Actions(R.string.back_to_room, onBackToRoom, R.string.home, onHome)
-                summary.mode == MatchMode.PRACTICE && onBackToRoom != null -> Actions(R.string.rematch, onRematch ?: onBackToRoom, R.string.back_to_room, onBackToRoom)
-                onRematch != null -> Actions(R.string.rematch, onRematch, R.string.home, onHome)
-                else -> Actions(R.string.home, onHome, null, null)
             }
             NbButton(stringResource(primaryLabel), guard(primary), modifier = Modifier.fillMaxWidth().testTag("resultPrimary"))
             if (secondaryLabel != null && secondary != null) {
@@ -152,15 +189,15 @@ fun ResultsScreen(
 
 private data class Actions(val primaryLabel: Int, val primary: () -> Unit, val secondaryLabel: Int?, val secondary: (() -> Unit)?)
 
+private fun headlineRes(outcome: Outcome) = when (outcome) {
+    Outcome.WIN -> R.string.res_win
+    Outcome.LOSE -> R.string.res_lose
+    Outcome.DRAW -> R.string.res_draw
+}
+
 @Composable
 private fun Hero(summary: MatchSummary, compact: Boolean) {
-    val headline = stringResource(
-        when (summary.outcome) {
-            Outcome.WIN -> R.string.res_win
-            Outcome.LOSE -> R.string.res_lose
-            Outcome.DRAW -> R.string.res_draw
-        },
-    )
+    val headline = stringResource(headlineRes(summary.outcome))
     val sub = resultSubline(summary)
     Column(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = if (compact) 12.dp else 24.dp),

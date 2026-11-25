@@ -1,5 +1,6 @@
 package app.numbaseball.ui.lobby
 
+import androidx.compose.ui.unit.Dp
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -118,7 +119,7 @@ enum class CodePlateState { EMPTY, ACTIVE, FILLED, ERROR }
  * 2 dp `out`. [shakeKey] changes trigger the 280 ms shake. Read as single characters.
  */
 @Composable
-fun CodePlates(code: String, modifier: Modifier = Modifier, active: Boolean = false, error: Boolean = false, shakeKey: Int = 0, description: String? = null) {
+fun CodePlates(code: String, modifier: Modifier = Modifier, active: Boolean = false, error: Boolean = false, shakeKey: Int = 0, description: String? = null, plateWidth: Dp = 48.dp, plateHeight: Dp = 60.dp) {
     val density = LocalDensity.current
     val shake = remember { Animatable(0f) }
     val reduce = LocalReduceMotion.current
@@ -147,7 +148,7 @@ fun CodePlates(code: String, modifier: Modifier = Modifier, active: Boolean = fa
             val shape = RoundedCornerShape(NbRadius.m)
             Box(
                 Modifier
-                    .size(48.dp, 60.dp)
+                    .size(plateWidth, plateHeight)
                     .background(if (ch != null) NbColors.surface2 else NbColors.bg, shape)
                     .then(
                         when (state) {
@@ -159,7 +160,7 @@ fun CodePlates(code: String, modifier: Modifier = Modifier, active: Boolean = fa
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                if (ch != null) Text(ch.toString(), style = NbType.numCode, color = NbColors.chalk)
+                if (ch != null) Text(ch.toString(), style = if (plateHeight < 60.dp) NbType.numCode.copy(fontSize = 28.sp, lineHeight = 32.sp) else NbType.numCode, color = NbColors.chalk)
             }
         }
     }

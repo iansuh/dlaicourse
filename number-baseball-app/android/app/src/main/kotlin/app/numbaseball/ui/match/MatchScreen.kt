@@ -1,5 +1,6 @@
 package app.numbaseball.ui.match
 
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -231,7 +232,8 @@ fun MatchScreen(state: MatchUiState, actions: MatchActions, bubble: PhraseBubble
                         val expandedMemo = memoHeight(state.digits, collapsed = false)
                         val header = if (compact) 0.dp else NbSize.historyHeader + 1.dp
                         val autoCollapse = available - header - expandedMemo < NbSize.historyRowLatest + NbSize.historyRow
-                        val collapsed = state.memo.collapsed ?: autoCollapse
+                        // Large text (ADAPTIVE.md §2): the memo starts collapsed.
+                        val collapsed = state.memo.collapsed ?: (autoCollapse || LocalDensity.current.fontScale >= 1.5f)
                         if (!compact) PitchLogHeader(state.digits)
                         PitchLog(state.digits, state.myRounds, state.opponentRounds, reveal.progress, compact, Modifier.weight(1f))
                         if (!compact) {
@@ -338,7 +340,8 @@ private fun MatchTopBar(
                     Text(title, style = NbType.subtitle, color = NbColors.chalk, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (compact && !secretPhase) {
                         StatusLine(state.opponentStatus)
-                    } else {
+                    } else if (LocalDensity.current.fontScale < 1.5f) {
+                        // Large text: the mode subtitle is hidden (ADAPTIVE.md §2).
                         Text(subtitle, style = NbType.caption, color = NbColors.text3, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
@@ -423,7 +426,8 @@ private fun DuelStrip(state: MatchUiState, onChat: (() -> Unit)?, bubble: Phrase
     val secretPhase = state.phase == MatchPhase.CHOOSING_SECRET || state.phase == MatchPhase.WAITING_FOR_OPPONENT_SECRET
     Box {
         Row(
-            Modifier.fillMaxWidth().height(NbLayout.duelStrip).padding(horizontal = 16.dp),
+            // Grows with large text instead of clipping (ADAPTIVE.md §2: two lines, 72 dp).
+            Modifier.fillMaxWidth().heightIn(min = NbLayout.duelStrip).padding(horizontal = 16.dp, vertical = if (LocalDensity.current.fontScale >= 1.5f) 8.dp else 0.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             when (val o = state.opponent) {

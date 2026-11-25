@@ -82,12 +82,15 @@ fun NbButton(
     enabled: Boolean = true,
     @DrawableRes icon: Int? = null,
     small: Boolean = false,
+    /** Overrides the variant's height (buttons side by side in small windows are 48 dp, ADAPTIVE.md §1). */
+    heightOverride: Dp? = null,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val shape = RoundedCornerShape(NbRadius.m)
     val height = when {
+        heightOverride != null -> heightOverride
         small -> NbSize.buttonHeightSmall
         kind == ButtonKind.PRIMARY -> NbSize.buttonHeight
         kind == ButtonKind.TEXT || kind == ButtonKind.DESTRUCTIVE_TEXT -> NbSize.buttonHeightSmall

@@ -221,7 +221,7 @@ fun HomeScreen(
 
 @Composable
 private fun HomeHeader(onHowToPlay: () -> Unit, onSettings: () -> Unit) {
-    Row(Modifier.fillMaxWidth().height(56.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         BrandMark()
         HSpacer(12.dp)
         Column(Modifier.weight(1f).semantics(mergeDescendants = true) { heading() }) {

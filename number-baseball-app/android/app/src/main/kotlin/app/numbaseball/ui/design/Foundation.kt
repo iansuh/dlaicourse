@@ -155,7 +155,7 @@ fun Modifier.fadingEnd(width: Dp = 16.dp): Modifier =
  */
 fun Modifier.exactLineHeight(style: TextStyle): Modifier = layout { measurable, constraints ->
     val placeable = measurable.measure(constraints)
-    val line = style.lineHeight.toPx()
+    val line = if (style.lineHeight.isSp) lineBoxPx(style.lineHeight, style.fontSize) else 0f
     if (line <= 0f) return@layout layout(placeable.width, placeable.height) { placeable.place(0, 0) }
     val lines = (placeable.height / line).toInt().coerceAtLeast(1)
     val height = (lines * line).roundToInt().coerceIn(constraints.minHeight, placeable.height)

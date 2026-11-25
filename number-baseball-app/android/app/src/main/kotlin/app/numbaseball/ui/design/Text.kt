@@ -49,7 +49,7 @@ fun Text(
     val lines = remember { LineCount() }
     MaterialText(
         text = text,
-        modifier = modifier.designLineBoxes(if (lineHeight.isSpecified()) lineHeight else style.lineHeight, lines),
+        modifier = modifier.designLineBoxes(if (lineHeight.isSpecified()) lineHeight else style.lineHeight, if (fontSize.isSpecified()) fontSize else style.fontSize, lines),
         color = color, fontSize = fontSize, fontStyle = fontStyle, fontWeight = fontWeight, fontFamily = fontFamily,
         letterSpacing = letterSpacing, textDecoration = textDecoration, textAlign = textAlign, lineHeight = lineHeight,
         overflow = overflow, softWrap = softWrap, maxLines = maxLines, minLines = minLines,
@@ -84,7 +84,7 @@ fun Text(
     val lines = remember { LineCount() }
     MaterialText(
         text = text,
-        modifier = modifier.designLineBoxes(if (lineHeight.isSpecified()) lineHeight else style.lineHeight, lines),
+        modifier = modifier.designLineBoxes(if (lineHeight.isSpecified()) lineHeight else style.lineHeight, if (fontSize.isSpecified()) fontSize else style.fontSize, lines),
         color = color, fontSize = fontSize, fontStyle = fontStyle, fontWeight = fontWeight, fontFamily = fontFamily,
         letterSpacing = letterSpacing, textDecoration = textDecoration, textAlign = textAlign, lineHeight = lineHeight,
         overflow = overflow, softWrap = softWrap, maxLines = maxLines, minLines = minLines,
@@ -104,13 +104,13 @@ private class LineCount {
 private fun TextUnit.isSpecified() = this != TextUnit.Unspecified
 
 /** Crops the measured text to lines × [lineHeight], centred, when Android made it taller (never grows it). */
-private fun Modifier.designLineBoxes(lineHeight: TextUnit, lines: LineCount): Modifier =
+private fun Modifier.designLineBoxes(lineHeight: TextUnit, fontSize: TextUnit, lines: LineCount): Modifier =
     if (!lineHeight.isSp) {
         this
     } else {
         layout { measurable, constraints ->
             val placeable = measurable.measure(constraints)
-            val target = (lines.value.coerceAtLeast(1) * lineHeight.toPx()).roundToInt().coerceAtLeast(constraints.minHeight)
+            val target = (lines.value.coerceAtLeast(1) * lineBoxPx(lineHeight, fontSize)).roundToInt().coerceAtLeast(constraints.minHeight)
             if (target >= placeable.height) {
                 layout(placeable.width, placeable.height) { placeable.place(0, 0) }
             } else {
@@ -118,3 +118,10 @@ private fun Modifier.designLineBoxes(lineHeight: TextUnit, lines: LineCount): Mo
             }
         }
     }
+
+/**
+ * One line box in px as Compose lays it out: with non-linear font scaling (Android 14, large font sizes) the line
+ * height keeps its ratio to the scaled font size instead of being scaled on its own.
+ */
+internal fun androidx.compose.ui.unit.Density.lineBoxPx(lineHeight: TextUnit, fontSize: TextUnit): Float =
+    if (fontSize.isSp && fontSize.value > 0f) fontSize.toPx() * (lineHeight.value / fontSize.value) else lineHeight.toPx()
