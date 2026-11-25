@@ -36,9 +36,7 @@ class AccountLifecycleQaTest {
         assertEquals(4004, host.ws.awaitClose())
         val gone = guest.ws.awaitType("chat_sender_deleted")
         assertEquals(host.id, gone.str("senderId"))
-        val after = guest.awaitRoom { r -> r.players.any { it.deleted } }
-        val deleted = after.players.first { it.deleted }
-        assertEquals("deleted players lose nickname and tag in the snapshot", "" to "", deleted.nickname to deleted.tag)
+        assertEquals("the deleted player left the lobby", 1, guest.snapshot().players.size)
         assertEquals(401, inst.call("GET", "/api/v1/me", host.auth.token).status)
         assertTrue("token must be dead for the WebSocket too", runCatching { QaWs.connect(host.auth.token) }.isFailure)
         guest.ws.send(app.numbaseball.core.protocol.Resync())

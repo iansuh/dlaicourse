@@ -31,7 +31,7 @@ R-017	GET	/api/v1/me	DELETED	-	401	unauthorized	after deletion the token is dead
 R-018	PATCH	/api/v1/me	NONE	{"nickname":"Leo"}	401	unauthorized	
 R-019	DELETE	/api/v1/me	NONE	-	401	unauthorized	
 R-020	POST	/api/v1/me/transfer-code	NONE	-	401	unauthorized	
-R-021	POST	/api/v1/me/deletion-code	NONE	-	401	unauthorized	
+R-021	POST	/api/v1/me/deletion-code	NONE	-	404	not_found	removed in the final protocol (no web deletion code)
 R-022	GET	/api/v1/me/blocks	NONE	-	401	unauthorized	
 R-023	PUT	/api/v1/me/blocks/{other}	NONE	-	401	unauthorized	
 R-024	DELETE	/api/v1/me/blocks/{other}	NONE	-	401	unauthorized	
@@ -57,7 +57,7 @@ R-043	GET	/api/v1/config	NONE	-	200	-
 R-044	GET	/api/v2/config	NONE	-	404	not_found|-	unknown version
 R-045	GET	/api/v1/accounts	NONE	-	404|405	-	wrong method
 R-046	GET	/api/v1/../../etc/passwd	NONE	-	400|404	-	path traversal
-R-047	POST	/delete-account	NONE	code=&confirm=yes	400|200	-	empty code: error page, nothing deleted
-R-048	POST	/delete-account	NONE	code=AAAA-AAAA-AAAA	400|200	-	missing confirm checkbox: nothing deleted
+R-047	POST	/delete-account	NONE	code=&confirm=yes	404|405	-	no web deletion form in the final protocol
+R-048	POST	/delete-account	NONE	code=AAAA-AAAA-AAAA	404|405	-	no web deletion form in the final protocol
 R-049	GET	/app-ads.txt	NONE	-	200|404	-	200 text/plain with APP_ADS_TXT, 404 when unset
 R-050	POST	/api/v1/me/transfer-code	GARBAGE	-	401	unauthorized	

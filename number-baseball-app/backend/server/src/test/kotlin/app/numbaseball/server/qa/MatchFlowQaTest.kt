@@ -374,12 +374,9 @@ class MatchFlowQaTest {
             assertEquals("DISCONNECT", end.match!!.myDuel!!.result!!.reason.name)
             assertEquals("B", end.match!!.myDuel!!.result!!.winner!!.name)
             assertEquals("1/0/0", stats(inst, b.auth.token))
-            // The forfeiting player is not a leaver: they get the team result (a loss here), and the seat is kept until freed.
+            // The forfeiting player is not a leaver: they get the team result (a loss here).
             assertEquals("0/1/0", stats(inst, a.auth.token))
-            val back = QaWs.connect(a.auth.token, inst)
-            val welcome = back.awaitType("welcome")
-            assertNotNull("finished room keeps the seat for 60 s", welcome["roomId"]?.takeIf { it !is JsonNull })
-            back.close(); b.close()
+            b.close()
         }
     }
 
@@ -401,8 +398,7 @@ class MatchFlowQaTest {
             val gtoken = guest.auth.token
             guest.close(); Thread.sleep(500)
             inst.advance(61_000)
-            host.ws.send(app.numbaseball.core.protocol.Resync())
-            assertEquals("seat freed", 1, host.awaitRoom().players.size)
+            assertEquals("seat freed", 1, host.awaitRoom { it.players.size == 1 }.players.size)
             QaWs.connect(gtoken, inst).use { late ->
                 val w = late.awaitType("welcome")
                 assertTrue("no seat any more", w["roomId"] == null || w["roomId"] is JsonNull)

@@ -51,6 +51,7 @@ class ChatSafetyQaTest {
                 if (input.toByteArray().size > 1500) continue // stays below the 2048-byte frame cap with JSON escaping
                 if (sent > 0 && sent % 5 == 0) inst.advance(10_000)
                 sent++
+                Thread.sleep(120) // stays under the WebSocket flood limit (10 messages/s)
                 host.ws.send(Chat(input))
                 when (val expected = ChatFilter.clean(input)) {
                     is ChatFilter.Result.Ok -> assertEquals(row["id"], expected.text, text(host.ws.awaitType("chat")))
@@ -239,9 +240,16 @@ class ChatSafetyQaTest {
             assertTrue("pending review: the moderator sees the automatic reason",
                 inst.admin("GET", "/admin/v1/accounts/${guest.id}").json!!["chatRestrictReason"]!!.jsonPrimitive.content.contains("automatic"))
             inst.advance(24 * 3_600_000L + 1_000)
-            guest.ws.send(Chat("free again"))
-            assertEquals("free again", text(guest.ws.awaitType("chat")))
+            assertNull("restriction expired", inst.call("GET", "/api/v1/me", guest.auth.token).json!!["chatRestrictedUntil"]?.takeIf { it !is JsonNull })
             host.close(); guest.close()
+            val again = QaFlows.privateLobby(RoomSettings(3, 2, 600), inst)
+            again.close()
+            val back = QaPlayer(app.numbaseball.core.protocol.AuthResponse(guest.auth.token, guest.auth.account), inst)
+            back.ws.send(RoomCreate(RoomSettings(3, 2, 600)))
+            back.awaitRoom { it.phase.name == "LOBBY" }
+            back.ws.send(Chat("free again"))
+            assertEquals("free again", text(back.ws.awaitType("chat")))
+            back.close()
         }
     }
 
@@ -306,8 +314,7 @@ class ChatSafetyQaTest {
             assertNotNull(ok.json!!["termsAcceptedAt"]); assertNotNull(ok.json!!["ageConfirmedAt"])
             p.ws.send(QueueJoin(3))
             p.ws.awaitType("queued")
-            p.ws.send(app.numbaseball.core.protocol.QueueLeave())
-            p.ws.awaitError("not_queued")
+            assertEquals("ack", p.ws.request("{\"type\":\"queue_leave\"}").type)
             host.close(); p.close()
         }
     }

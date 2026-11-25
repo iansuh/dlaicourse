@@ -102,7 +102,7 @@ object QaFlows {
         val code = host.room!!.code!!
         val all = mutableListOf(host)
         repeat(2 * teamSize - 1) { all += QaPlayer.fresh("QaJ", inst).also { join(it, code) } }
-        all.forEach { it.awaitRoom(10_000) { r -> r.phase.name == "PLAYING" } }
+        all.forEach { if (it.room?.phase?.name != "PLAYING") it.awaitRoom(10_000) { r -> r.phase.name == "PLAYING" } }
         return QaTeamRoom(code, all)
     }
 
