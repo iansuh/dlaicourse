@@ -67,3 +67,6 @@ fun ApiResult<*>.toUiError(): UiError? = when (this) {
     is ApiResult.Failure -> UiError.Code(code)
     ApiResult.NetworkError -> UiError.Network
 }
+
+/** A failure the player cannot act on except by retrying (5xx, unknown codes): shown as the server-error dialog (12.17). */
+fun UiError.isServerError(): Boolean = this is UiError.Code && errorMessage(code) == R.string.error_generic

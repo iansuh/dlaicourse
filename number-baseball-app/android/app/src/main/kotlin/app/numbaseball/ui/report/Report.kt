@@ -1,5 +1,6 @@
 package app.numbaseball.ui.report
 
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.heightIn
 
 import app.numbaseball.ui.design.InsetDivider
@@ -148,7 +149,7 @@ sealed interface CardRecord {
  * work in every record state). The context line is "B팀 · 온라인 대전 기록", or just "B팀" / nothing when no record is shown.
  */
 @Composable
-fun PlayerCard(
+fun ColumnScope.PlayerCard(
     target: ReportTarget,
     self: Boolean,
     blocked: Boolean,
@@ -158,63 +159,66 @@ fun PlayerCard(
     record: CardRecord = CardRecord.Loading,
     onRetryRecord: () -> Unit = {},
 ) {
-    // Already blocked: the record shows the Not available line.
-    val shown = if (blocked) CardRecord.NotAvailable else record
-    val teamName = target.team?.let { stringResource(if (it == Team.A) R.string.team_a else R.string.team_b) }
-    val withRecord = shown is CardRecord.Loading || shown is CardRecord.Loaded
-    val context = listOfNotNull(teamName, if (withRecord) stringResource(R.string.card_context_online) else null).joinToString(" · ").ifEmpty { null }
-    // Prototype `.card-h`: 8 / 16 / 16, 12 dp gap.
-    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (target.team != null) {
-            TeamBadge(target.team)
-            HSpacer(12.dp)
-        }
-        Column(Modifier.weight(1f)) {
-            NameWithTag(target.nickname, target.tag, nameStyle = NbType.title, tagStyle = NbType.numTag.copy(fontSize = 18.sp, lineHeight = 28.sp))
-            if (context != null) Text(context, style = NbType.caption, color = NbColors.text3)
-        }
-    }
-    // `.card-rec`: 20 dp gaps, 0 / 16 / 16; values Barlow 600 24 / 28 over `caption` labels (46 dp); the message
-    // states use one 48 dp line, so the sheet moves by at most 2 dp between states.
-    when (shown) {
-        is CardRecord.Loaded, CardRecord.Loading -> {
-            val stats = (shown as? CardRecord.Loaded)?.stats
-            Row(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                RecordValue(stats?.wins, stringResource(R.string.record_win))
-                RecordValue(stats?.losses, stringResource(R.string.record_loss))
-                RecordValue(stats?.draws, stringResource(R.string.record_draw))
+    // Scrolls in short windows and at large text (the block row's subtitle must not be clipped).
+    Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+        // Already blocked: the record shows the Not available line.
+        val shown = if (blocked) CardRecord.NotAvailable else record
+        val teamName = target.team?.let { stringResource(if (it == Team.A) R.string.team_a else R.string.team_b) }
+        val withRecord = shown is CardRecord.Loading || shown is CardRecord.Loaded
+        val context = listOfNotNull(teamName, if (withRecord) stringResource(R.string.card_context_online) else null).joinToString(" · ").ifEmpty { null }
+        // Prototype `.card-h`: 8 / 16 / 16, 12 dp gap.
+        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (target.team != null) {
+                TeamBadge(target.team)
+                HSpacer(12.dp)
+            }
+            Column(Modifier.weight(1f)) {
+                NameWithTag(target.nickname, target.tag, nameStyle = NbType.title, tagStyle = NbType.numTag.copy(fontSize = 18.sp, lineHeight = 28.sp))
+                if (context != null) Text(context, style = NbType.caption, color = NbColors.text3)
             }
         }
-        CardRecord.NotAvailable -> Box(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp).padding(bottom = 14.dp), contentAlignment = Alignment.CenterStart) {
-            Text(stringResource(R.string.card_record_none), style = NbType.caption, color = NbColors.text3)
+        // `.card-rec`: 20 dp gaps, 0 / 16 / 16; values Barlow 600 24 / 28 over `caption` labels (46 dp); the message
+        // states use one 48 dp line, so the sheet moves by at most 2 dp between states.
+        when (shown) {
+            is CardRecord.Loaded, CardRecord.Loading -> {
+                val stats = (shown as? CardRecord.Loaded)?.stats
+                Row(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                    RecordValue(stats?.wins, stringResource(R.string.record_win))
+                    RecordValue(stats?.losses, stringResource(R.string.record_loss))
+                    RecordValue(stats?.draws, stringResource(R.string.record_draw))
+                }
+            }
+            CardRecord.NotAvailable -> Box(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp).padding(bottom = 10.dp), contentAlignment = Alignment.CenterStart) {
+                Text(stringResource(R.string.card_record_none), style = NbType.caption, color = NbColors.text3)
+            }
+            CardRecord.Failed -> Row(
+                Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = 16.dp, end = 8.dp).padding(bottom = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(stringResource(R.string.card_record_error), style = NbType.caption, color = NbColors.text3, modifier = Modifier.weight(1f))
+                NbButton(stringResource(R.string.action_retry), onRetryRecord, kind = ButtonKind.TEXT)
+            }
         }
-        CardRecord.Failed -> Row(
-            Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = 16.dp, end = 8.dp).padding(bottom = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(stringResource(R.string.card_record_error), style = NbType.caption, color = NbColors.text3, modifier = Modifier.weight(1f))
-            NbButton(stringResource(R.string.action_retry), onRetryRecord, kind = ButtonKind.TEXT)
+        if (!self) {
+            Hairline()
+            ListRow(stringResource(R.string.report_action), icon = R.drawable.ic_flag, chevron = true, onClick = onReport, modifier = Modifier.testTag("cardReport"))
+            InsetDivider(56.dp)
+            if (blocked) {
+                ListRow(stringResource(R.string.unblock_action), icon = R.drawable.ic_block, onClick = onUnblock)
+            } else {
+                ListRow(
+                    stringResource(R.string.block_action),
+                    icon = R.drawable.ic_block,
+                    subtitle = stringResource(R.string.block_sub),
+                    destructive = true,
+                    onClick = onBlock,
+                    modifier = Modifier.testTag("cardBlock"),
+                )
+            }
         }
+        // Measured against report-card-ko (D2-22): 6 dp above the navigation inset the sheet surface adds.
+        VSpacer(6.dp)
     }
-    if (!self) {
-        Hairline()
-        ListRow(stringResource(R.string.report_action), icon = R.drawable.ic_flag, chevron = true, onClick = onReport, modifier = Modifier.testTag("cardReport"))
-        InsetDivider(56.dp)
-        if (blocked) {
-            ListRow(stringResource(R.string.unblock_action), icon = R.drawable.ic_block, onClick = onUnblock)
-        } else {
-            ListRow(
-                stringResource(R.string.block_action),
-                icon = R.drawable.ic_block,
-                subtitle = stringResource(R.string.block_sub),
-                destructive = true,
-                onClick = onBlock,
-                modifier = Modifier.testTag("cardBlock"),
-            )
-        }
-    }
-    // 24 dp + the sheet's 8 dp bottom padding, of which the navigation inset below the sheet covers 24 (shot report-card).
-    VSpacer(8.dp)
 }
 
 /** A value, or "–" in `textDisabled` while loading (labels as normal, no spinner). */

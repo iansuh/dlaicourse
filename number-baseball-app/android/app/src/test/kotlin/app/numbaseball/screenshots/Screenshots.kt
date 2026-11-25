@@ -340,7 +340,15 @@ private fun SampleBannerCreative() {
  * (DESIGN_SYSTEM 8.4: final states). Audio and haptics are the silent defaults.
  */
 @OptIn(ExperimentalRoborazziApi::class)
-abstract class ScreenshotSuite(protected val lang: String, private val small: Boolean = false, private val suffix: String = "") {
+abstract class ScreenshotSuite(
+    protected val lang: String,
+    private val small: Boolean = false,
+    private val suffix: String = "",
+    /** Only these shots (names with `{lang}`) are recorded by this suite; null = all. */
+    private val only: Set<String>? = null,
+    /** Shots this suite never records. */
+    private val skip: Set<String> = setOf(TOO_SMALL),
+) {
     @get:Rule val compose = createComposeRule()
 
     @Before fun utc() = TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
@@ -353,6 +361,7 @@ abstract class ScreenshotSuite(protected val lang: String, private val small: Bo
         before: ComposeContentTestRule.() -> Unit = {},
         content: @Composable () -> Unit,
     ) {
+        org.junit.Assume.assumeTrue("not recorded by this suite", (only == null || shot in only) && shot !in skip)
         compose.setContent {
             NumBaseballTheme {
                 CompositionLocalProvider(
@@ -380,9 +389,9 @@ abstract class ScreenshotSuite(protected val lang: String, private val small: Bo
 
     // 01 First run
     // age-en shot: 1998 entered, Confirm enabled; age-ko: 199.
-    @Test fun age() = capture("age-{lang}") { AgeScreen(AgeUiState(year = if (lang == "en") "1998" else "199"), {}, {}, {}, {}) }
+    @Test fun age() = capture("age-{lang}") { AgeScreen(if (lang == "en") AgeUiState(year = "1998", month = "0") else AgeUiState(year = "199"), {}, {}, {}, {}) }
 
-    @Test fun ageError() = capture("age-error-{lang}") { AgeScreen(AgeUiState(year = "2091", invalid = true), {}, {}, {}, {}) }
+    @Test fun ageError() = capture("age-error-{lang}") { AgeScreen(AgeUiState(year = "2091", month = "01", invalid = true), {}, {}, {}, {}) }
 
     @Test fun ageNotAvailable() = capture("age-na-{lang}") { NotAvailableScreen(onPrivacyPolicy = {}) }
 
@@ -621,10 +630,18 @@ abstract class ScreenshotSuite(protected val lang: String, private val small: Bo
         SettingsScreen(Design.settingsState, true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions(), purchase = PurchaseUiState(RemoveAdsState.Available(price)))
     }
 
-    // 11 §1.1 구매 section, scrolled to the end like the shots.
+    // 11 §1.1 구매 section, scrolled to the end like the shots; the small and 200 % variants scroll only until the
+    // section's last row is on screen, so the section itself is visible (D2-42 b).
     private fun settingsAds(shot: String, purchase: PurchaseUiState) = capture(
         shot,
-        before = { onNode(hasScrollAction()).performScrollToNode(hasText("1.0.0 (1)")) },
+        before = {
+            val target = if (small || suffix.isNotEmpty()) {
+                androidx.compose.ui.test.hasTestTag("restorePurchase") or hasText(string(app.numbaseball.R.string.remove_ads_done))
+            } else {
+                hasText("1.0.0 (1)")
+            }
+            onNode(hasScrollAction()).performScrollToNode(target)
+        },
     ) {
         SettingsScreen(Design.settingsState, true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions(), purchase = purchase)
     }
@@ -805,12 +822,34 @@ abstract class ScreenshotSuite(protected val lang: String, private val small: Bo
         ProfileScreen(ProfileUiState(nickname = "새벽투수", tag = "4821", registered = true, stats = Stats(12, 8, 3), recentForm = "WWLWDLWWLW", online = false), {}, {}, {})
     }
 
+    // D2-42 c: a raw 12-character code (protocol: XXXX-XXXX-XXXX) and a fixed clock, so the active state shows 9:12 left.
     @Test fun settingsTransferSheet() = capture("settings-transfer-{lang}") {
-        SettingsScreen(Design.settingsState.copy(transferCode = app.numbaseball.ui.settings.TransferCode("7KQ2-M9XA", Design.AT + 10 * 60_000)), true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions())
+        SettingsScreen(
+            Design.settingsState.copy(transferCode = app.numbaseball.ui.settings.TransferCode("7KQ2M9XAP4HD", Design.AT + 9 * 60_000 + 12_000)),
+            true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions(), now = { Design.AT },
+        )
     }
 
+    @Test fun settingsTransferExpired() = capture("settings-transfer-expired-{lang}") {
+        SettingsScreen(
+            Design.settingsState.copy(transferCode = app.numbaseball.ui.settings.TransferCode("7KQ2M9XAP4HD", Design.AT - 1_000)),
+            true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions(), now = { Design.AT },
+        )
+    }
+
+    // D2-43: the opponent's full log (05 §2.9) and the server-error dialog (12.17).
+    @Test fun matchOpponentLog() = capture("match-opponent-log-{lang}") { MatchScreen(Design.lateState(), matchActions().withChat(), initialOpponentLog = true) }
+
+    @Test fun serverErrorDialog() = capture("server-error-dialog-{lang}") {
+        Box(Modifier.fillMaxSize()) {
+            HomeScreen(homeState, {}, {}, {}, {}, {}, {}, {}, {}, {})
+            app.numbaseball.ui.design.ServerErrorDialog(onRetry = {}, onHome = {}, onDismiss = {})
+        }
+    }
+
+    // Production passes all ten languages (D2-42 a).
     @Test fun settingsLanguage() = capture("settings-language-{lang}", before = { onNodeWithText(string(app.numbaseball.R.string.language)).performClick() }) {
-        SettingsScreen(Design.settingsState, true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions())
+        SettingsScreen(Design.settingsState, true, "1.0.0 (1)", "support@example.com", app.numbaseball.data.settings.SupportedLanguages.TAGS, settingsActions())
     }
 
     @Test fun settingsDeleteDialog() = capture(
@@ -823,8 +862,8 @@ abstract class ScreenshotSuite(protected val lang: String, private val small: Bo
         SettingsScreen(Design.settingsState, true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions())
     }
 
-    // The 320 × 320 notice is drawn over the app below the smallest supported window (ADAPTIVE.md).
-    @Test fun windowTooSmall() = capture("window-too-small-{lang}") { app.numbaseball.ui.navigation.WindowTooSmall() }
+    // The notice is drawn over the app below the smallest supported window (ADAPTIVE.md), recorded at 300 × 300 dp.
+    @Test fun windowTooSmall() = capture(TOO_SMALL, smallShot = TOO_SMALL) { app.numbaseball.ui.navigation.WindowTooSmall() }
 
     @Test fun chatSystemOnly() = capture("chat-system-{lang}") {
         Box(Modifier.fillMaxSize()) {
@@ -849,7 +888,13 @@ abstract class ScreenshotSuite(protected val lang: String, private val small: Bo
 
     private fun settingsActions() = SettingsActions({}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {})
 
-    private companion object {
+    companion object {
+        /** The notice shown below 320 × 320 dp is recorded only by [TooSmallWindowScreenshots] (D2-47). */
+        const val TOO_SMALL = "window-too-small-{lang}"
+
+        /** D2-30: the shots that exist in de / ru (design/shots) plus settings, also recorded for vi (ADAPTIVE §4). */
+        val LOCALE_SHOTS = setOf("home-{lang}", "lobby-{lang}", "match-guess-{lang}", "result-lose-{lang}", "settings-{lang}")
+
         /** Tolerates tiny anti-aliasing differences between machines when CI verifies the committed images. */
         val OPTIONS = RoborazziOptions(compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0.005f))
     }
@@ -902,3 +947,46 @@ class SmallEnglishScreenshots : ScreenshotSuite("en", small = true)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "ko-w360dp-h800dp-xhdpi", fontScale = 2.0f)
 class LargeFontKoreanScreenshots : ScreenshotSuite("ko", suffix = "-font200")
+
+/** D2-30: German, Russian and Vietnamese renders of the shots that exist in those languages (phone) ... */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = "de-w360dp-h800dp-xhdpi")
+class PhoneGermanScreenshots : ScreenshotSuite("de", only = LOCALE_SHOTS)
+
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = "ru-w360dp-h800dp-xhdpi")
+class PhoneRussianScreenshots : ScreenshotSuite("ru", only = LOCALE_SHOTS)
+
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = "vi-w360dp-h800dp-xhdpi")
+class PhoneVietnameseScreenshots : ScreenshotSuite("vi", only = LOCALE_SHOTS)
+
+/** ... and the small-window match (`match-small-de` etc.). */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = "de-w360dp-h320dp-xhdpi")
+class SmallGermanScreenshots : ScreenshotSuite("de", small = true, only = setOf("match-guess-{lang}"))
+
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = "ru-w360dp-h320dp-xhdpi")
+class SmallRussianScreenshots : ScreenshotSuite("ru", small = true, only = setOf("match-guess-{lang}"))
+
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = "vi-w360dp-h320dp-xhdpi")
+class SmallVietnameseScreenshots : ScreenshotSuite("vi", small = true, only = setOf("match-guess-{lang}"))
+
+/** D2-47: the "window too small" notice in the window that shows it (below 320 × 320 dp). */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = "ko-w300dp-h300dp-xhdpi")
+class TooSmallWindowKoreanScreenshots : ScreenshotSuite("ko", small = true, only = setOf(ScreenshotSuite.TOO_SMALL), skip = emptySet())
+
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = "en-w300dp-h300dp-xhdpi")
+class TooSmallWindowEnglishScreenshots : ScreenshotSuite("en", small = true, only = setOf(ScreenshotSuite.TOO_SMALL), skip = emptySet())

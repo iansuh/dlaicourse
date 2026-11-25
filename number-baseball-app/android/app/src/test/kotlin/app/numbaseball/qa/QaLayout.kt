@@ -160,7 +160,7 @@ object QaScreens {
 
     val all: List<QaScreen> = listOf(
         QaScreen("age", keys = digitKeys + Key.Txt(R.string.age_confirm)) { AgeScreen(AgeUiState(year = "199"), {}, {}, {}, {}) },
-        QaScreen("age-error", keys = digitKeys + Key.Txt(R.string.age_confirm)) { AgeScreen(AgeUiState(year = "2091", invalid = true), {}, {}, {}, {}) },
+        QaScreen("age-error", keys = digitKeys + Key.Txt(R.string.age_confirm)) { AgeScreen(AgeUiState(year = "2091", month = "01", invalid = true), {}, {}, {}, {}) },
         QaScreen("age-na", keys = listOf(Key.Txt(R.string.privacy_policy))) { NotAvailableScreen(onPrivacyPolicy = {}) },
         QaScreen("nickname", ime = 230, keys = listOf(Key.Tag("nickname"), Key.Txt(R.string.action_start))) { FirstRunScreen(FirstRunUiState(nickname = "Mina"), {}, {}, {}, {}, {}) },
         QaScreen("nickname-transfer", ime = 230, keys = listOf(Key.Tag("transferCode"))) { FirstRunScreen(FirstRunUiState(transferMode = true, transferCode = "7KQ2-M9XA"), {}, {}, {}, {}, {}) },

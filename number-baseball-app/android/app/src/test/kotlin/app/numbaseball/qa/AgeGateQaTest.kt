@@ -47,7 +47,7 @@ class AgeGateQaTest {
     private val ui = QaDriver(compose)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
 
-    private fun repo(minimum: Int, year: Int = 2026, store: AgeStore = FakeAgeStore()) = AgeRepository(store, { null }, minimum, scope) { year }
+    private fun repo(minimum: Int, year: Int = 2026, month: Int = 11, store: AgeStore = FakeAgeStore()) = AgeRepository(store, { null }, minimum, scope) { java.time.YearMonth.of(year, month) }
 
     // ---- build config ----
 
@@ -68,14 +68,14 @@ class AgeGateQaTest {
     @Test fun theBandFollowsTheConfiguredMinimumAge() = runBlocking {
         for (minimum in listOf(13, 14, 16, 18)) {
             val r = repo(minimum)
-            assertEquals("min $minimum, age = minimum", if (minimum >= 18) AgeBand.ADULT else if (minimum >= 16) AgeBand.TEEN else AgeBand.CHILD, r.submitBirthYear(2026 - minimum))
-            assertEquals("min $minimum, one year younger", AgeBand.UNDER_MINIMUM, r.submitBirthYear(2026 - minimum + 1))
+            assertEquals("min $minimum, age = minimum", if (minimum >= 18) AgeBand.ADULT else if (minimum >= 16) AgeBand.TEEN else AgeBand.CHILD, r.submitBirth(2026 - minimum, 11))
+            assertEquals("min $minimum, one month younger", AgeBand.UNDER_MINIMUM, r.submitBirth(2026 - minimum, 12))
         }
         val r = repo(14)
-        assertEquals(AgeBand.CHILD, r.submitBirthYear(2011))
-        assertEquals(AgeBand.TEEN, r.submitBirthYear(2010))
-        assertEquals(AgeBand.TEEN, r.submitBirthYear(2009))
-        assertEquals(AgeBand.ADULT, r.submitBirthYear(2008))
+        assertEquals(AgeBand.CHILD, r.submitBirth(2011, 6))
+        assertEquals(AgeBand.TEEN, r.submitBirth(2010, 6))
+        assertEquals(AgeBand.TEEN, r.submitBirth(2009, 6))
+        assertEquals(AgeBand.ADULT, r.submitBirth(2008, 6))
     }
 
     @Test fun adTreatmentPerBand() {
@@ -91,17 +91,17 @@ class AgeGateQaTest {
     }
 
     /**
-     * DEF-051: "allowed when current year − birth year ≥ minimum" admits a player who is still a year younger for most
-     * of the boundary year (born 2012 and 13 until the birthday in 2026), against README "minimum age 14".
+     * DEF-051 (fixed, owner decision 2026-11-25): the screen asks birth year and month; the age is full years as of the
+     * current month. In November 2026, a player born in November 2012 is 14 (allowed); one born in December 2012 is
+     * still 13 (refused).
      */
-    @Test fun def051_aPlayerBornInTheBoundaryYearMayStillBeUnderTheMinimumAge() = runBlocking {
-        val r = repo(14, year = 2026)
-        val band = r.submitBirthYear(2012)
-        assertEquals("characterisation: the year-only rule lets the boundary year in", AgeBand.CHILD, band)
-        knownDefect("DEF-051") {
-            // A player who certainly is 14 needs birth year <= 2011 in 2026; 2012 should be refused or asked again.
-            assertEquals(AgeBand.UNDER_MINIMUM, band)
-        }
+    @Test fun def051_theBoundaryFollowsTheBirthMonth() = runBlocking {
+        assertEquals("born this month 14 years ago: allowed", AgeBand.CHILD, repo(14, 2026, 11).submitBirth(2012, 11))
+        assertEquals("born next month 14 years ago: blocked", AgeBand.UNDER_MINIMUM, repo(14, 2026, 11).submitBirth(2012, 12))
+        assertEquals("earlier in the year: allowed", AgeBand.CHILD, repo(14, 2026, 11).submitBirth(2012, 1))
+        // January: someone born in February 2012 is still 13, born in January 2012 is 14.
+        assertEquals(AgeBand.UNDER_MINIMUM, repo(14, 2026, 1).submitBirth(2012, 2))
+        assertEquals(AgeBand.CHILD, repo(14, 2026, 1).submitBirth(2012, 1))
     }
 
     // ---- under-age block screen, through the real navigation ----
@@ -110,9 +110,9 @@ class AgeGateQaTest {
         val api = FakeAccountApi()
         val c = QaContainer(ageStore = FakeAgeStore(null), accountApi = api)
         compose.setQaApp(c)
-        compose.onNodeWithText("Enter the year you were born").assertIsDisplayed()
+        compose.onNodeWithText("Enter the year and month you were born").assertIsDisplayed()
         assertTrue("nothing ad related before the age answer", c.ads.consentCalls.isEmpty() && !c.ads.sdkInitialised)
-        ui.type("2015")
+        ui.type("201503")
         compose.onNodeWithText("Confirm").performClick()
         ui.waitText("Not available right now")
         compose.onNodeWithText("Not available right now").assertIsDisplayed()
@@ -132,7 +132,7 @@ class AgeGateQaTest {
         val c = QaContainer(ageStore = store)
         compose.setQaApp(c)
         ui.waitText("Not available right now")
-        assertFalse("the age screen is not offered again", ui.shows("Enter the year you were born"))
+        assertFalse("the age screen is not offered again", ui.shows("Enter the year and month you were born"))
         assertTrue(c.ads.consentCalls.isEmpty())
     }
 
@@ -149,8 +149,8 @@ class AgeGateQaTest {
     @Test fun theAgeBandIsStoredAsABandOnlyAndStaysOutOfBackup() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val store = DataStoreAgeStore(context)
-        val repository = AgeRepository(store, { null }, 14, scope) { 2026 }
-        repository.submitBirthYear(1987)
+        val repository = AgeRepository(store, { null }, 14, scope) { java.time.YearMonth.of(2026, 11) }
+        repository.submitBirth(1987, 4)
         assertEquals(AgeBand.ADULT, store.band.first())
         val file = context.preferencesDataStoreFile("age")
         assertTrue(file.exists())
@@ -178,13 +178,13 @@ class AgeGateQaTest {
                 saved += band
             }
         }
-        runBlocking { AgeRepository(store, { null }, 14, scope) { 2026 }.submitBirthYear(1999) }
+        runBlocking { AgeRepository(store, { null }, 14, scope) { java.time.YearMonth.of(2026, 11) }.submitBirth(1999, 7) }
         assertEquals(listOf<Any>(AgeBand.ADULT), saved)
     }
 
     /**
      * DEF-052 (fixed): an under-minimum answer is final below the UI too. The keypad and Confirm are locked once an answer
-     * is submitted, and `AgeRepository.submitBirthYear` ignores any later answer, even while the first write is pending.
+     * is submitted, and `AgeRepository.submitBirth` ignores any later answer, even while the first write is pending.
      */
     @Test fun def052_anUnderMinimumAnswerIsFinal() = runBlocking {
         val saved = mutableListOf<AgeBand>()
@@ -196,16 +196,16 @@ class AgeGateQaTest {
                 saved += band
             }
         }
-        val repository = AgeRepository(store, { null }, 14, scope) { 2026 }
+        val repository = AgeRepository(store, { null }, 14, scope) { java.time.YearMonth.of(2026, 11) }
         val vm = AgeViewModel(repository)
-        "2015".forEach(vm::onDigit)
+        "201503".forEach(vm::onDigit)
         vm.onConfirm()
         vm.onClear()
-        "1990".forEach(vm::onDigit)
+        "199005".forEach(vm::onDigit)
         assertEquals("the keypad is locked while the answer is stored", "2015", vm.state.value.year)
         vm.onConfirm()
         // Below the UI: a second answer through the repository itself is ignored as well.
-        val second = scope.async { repository.submitBirthYear(1990) }
+        val second = scope.async { repository.submitBirth(1990, 5) }
         gate.complete(Unit)
         assertEquals(AgeBand.UNDER_MINIMUM, second.await())
         kotlinx.coroutines.delay(50)

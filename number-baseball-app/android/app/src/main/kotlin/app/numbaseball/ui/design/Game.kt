@@ -128,7 +128,7 @@ fun OutTag(modifier: Modifier = Modifier, height: Dp = 22.dp, fontSize: TextUnit
             .padding(horizontal = padding),
         contentAlignment = Alignment.Center,
     ) {
-        Text("OUT", style = NbType.numLabel.copy(fontSize = fontSize, letterSpacing = 0.08.em), color = NbColors.out)
+        Text("OUT", style = NbType.numLabel.copy(fontSize = fontSize, letterSpacing = 0.08.em), color = NbColors.out, maxLines = 1, softWrap = false, fitMinScale = 0.5f)
     }
 }
 
@@ -448,14 +448,29 @@ private fun ActionKey(
             .then(if (enabled) Modifier.combinedClickableCompat(onClick) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        if (state == ActionState.WAITING && !compact) {
+        if (state == ActionState.WAITING && !compact && isLargeFont()) {
+            // Large text (D2-38, ADAPTIVE §2.2): the key grows to 64 dp, the lamps move above a label of up to two lines.
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.heightIn(min = 64.dp).padding(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.Center) {
+                ChaseLamps(NbSize.lampS)
+                VSpacer(4.dp)
+                Text(waitingLabel ?: label, style = NbType.label, color = textColor, textAlign = TextAlign.Center, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            }
+        } else if (state == ActionState.WAITING && !compact) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp)) {
                 ChaseLamps(NbSize.lampS)
                 HSpacer(8.dp)
                 Text(waitingLabel ?: label, style = NbType.label, color = textColor, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             }
         } else {
-            Text(label, style = if (compact) NbType.labelSmall else NbType.label, color = textColor, textAlign = TextAlign.Center, maxLines = if (compact) 1 else 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            Text(
+                label,
+                style = if (compact) NbType.labelSmall else NbType.label,
+                color = textColor,
+                textAlign = TextAlign.Center,
+                maxLines = if (compact) 1 else 2,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                fitMinScale = if (compact) 0.5f else 0.7f,
+            )
         }
     }
 }

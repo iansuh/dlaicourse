@@ -1,5 +1,10 @@
 package app.numbaseball.ui.settings
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import app.numbaseball.ui.theme.NbRadius
+import androidx.compose.foundation.shape.RoundedCornerShape
 import app.numbaseball.audio.ScreenMusic
 import app.numbaseball.audio.MusicTrack
 import android.media.AudioManager
@@ -61,6 +66,7 @@ import app.numbaseball.data.settings.LanguageSettings
 import app.numbaseball.data.settings.SettingsRepository
 import app.numbaseball.ui.common.UiError
 import app.numbaseball.ui.common.message
+import app.numbaseball.ui.common.isServerError
 import app.numbaseball.ui.common.toUiError
 import app.numbaseball.ui.design.ButtonKind
 import app.numbaseball.ui.design.ChaseLamps
@@ -194,7 +200,10 @@ class SettingsViewModel(
         const val TRANSFER_MS = 10 * 60_000L
 
         /** 12-character codes are shown as XXXX-XXXX-XXXX (docs/protocol.md §3.1); the server ignores the dashes. */
-        fun formatCode(code: String): String = code.chunked(4).joinToString("-")
+        fun formatCode(code: String): String = codeGroups(code).joinToString("-")
+
+        /** The code's characters in groups of four, whatever separators it came with (D2-42). */
+        fun codeGroups(code: String): List<String> = code.filter { it.isLetterOrDigit() }.uppercase().chunked(4)
     }
 }
 
@@ -230,6 +239,8 @@ fun SettingsScreen(
     languageTags: List<String>,
     actions: SettingsActions,
     purchase: PurchaseUiState = PurchaseUiState(),
+    /** Wall clock for the transfer-code countdown (injected so renders and tests are deterministic, D2-42). */
+    now: () -> Long = System::currentTimeMillis,
 ) {
     val audio = LocalGameAudio.current
     val haptics = LocalGameHaptics.current
@@ -244,7 +255,19 @@ fun SettingsScreen(
         context.getSystemService(AudioManager::class.java)?.ringerMode?.let { it != AudioManager.RINGER_MODE_NORMAL } == true
     }
     val emailCopied = stringResource(R.string.contact_copied)
+    // Server errors (5xx, unknown codes) get the 12.17 dialog; everything else a toast (D2-43).
+    var serverError by rememberSaveable { mutableStateOf(false) }
+    if (serverError) {
+        app.numbaseball.ui.design.ServerErrorDialog(onRetry = { serverError = false }, onHome = { serverError = false; actions.onBack() }, onDismiss = { serverError = false })
+    }
     state.error?.let { error ->
+        if (error.isServerError()) {
+            LaunchedEffect(error) {
+                serverError = true
+                actions.onErrorShown()
+            }
+            return@let
+        }
         val text = stringResource(error.message())
         LaunchedEffect(error) {
             toast.show(text, error = true)
@@ -365,7 +388,8 @@ fun SettingsScreen(
     if (languageSheet) {
         NbModalSheet(onDismiss = { languageSheet = false }) {
             SheetTitle(stringResource(R.string.language))
-            Column(Modifier.selectableGroup()) {
+            // Ten languages plus "follow system": the list scrolls in short windows (D2-42).
+            Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).selectableGroup()) {
                 RadioRow(stringResource(R.string.language_system), state.language == null, {
                     languageSheet = false
                     actions.onLanguageChange(null)
@@ -392,7 +416,7 @@ fun SettingsScreen(
             }
         }
     }
-    state.transferCode?.let { TransferSheet(it, state.transferLoading, actions) }
+    state.transferCode?.let { TransferSheet(it, state.transferLoading, actions, now) }
     if (deleteDialog || state.deleting) {
         Dialog(onDismissRequest = { if (!state.deleting) deleteDialog = false }) {
             app.numbaseball.ui.design.ScrimDim()
@@ -562,7 +586,7 @@ private fun ContactRow(email: String, onCopy: () -> Unit) {
         Column(Modifier.weight(1f).padding(vertical = 10.dp)) {
             Text(stringResource(R.string.contact), style = NbType.subtitle, color = NbColors.chalk)
             VSpacer(2.dp)
-            SelectionContainer { Text(email, style = NbType.body, color = NbColors.text2) }
+            SelectionContainer { Text(email, style = NbType.body, color = NbColors.text2, maxLines = 1, softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, fitMinScale = 0.5f) }
         }
         HSpacer(16.dp)
         IconButton48(R.drawable.ic_content_copy, stringResource(R.string.action_copy), onCopy, tint = NbColors.text2)
@@ -619,14 +643,17 @@ fun NicknameChangeSheet(nickname: String, renaming: Boolean, error: UiError?, on
     }
 }
 
-/** Transfer-code sheet (11 §2): code, "m:ss 남음" countdown, copy; expired → plates disabled and "new code". */
+/**
+ * Transfer-code sheet (11 §2): the code as plates (`numCode`, 3 groups of 4, D2-51), "m:ss 남음" countdown, copy. Expired:
+ * plates `textDisabled`, no countdown but "코드가 만료됐어요", and "새 코드 만들기".
+ */
 @Composable
-private fun TransferSheet(code: TransferCode, loading: Boolean, actions: SettingsActions) {
-    var left by remember(code) { mutableIntStateOf(((code.expiresAt - System.currentTimeMillis()) / 1000).toInt().coerceAtLeast(0)) }
+private fun TransferSheet(code: TransferCode, loading: Boolean, actions: SettingsActions, now: () -> Long) {
+    var left by remember(code) { mutableIntStateOf(((code.expiresAt - now()) / 1000).toInt().coerceAtLeast(0)) }
     LaunchedEffect(code) {
         while (left > 0) {
             delay(1000)
-            left = ((code.expiresAt - System.currentTimeMillis()) / 1000).toInt().coerceAtLeast(0)
+            left = ((code.expiresAt - now()) / 1000).toInt().coerceAtLeast(0)
         }
     }
     val expired = left == 0
@@ -637,25 +664,49 @@ private fun TransferSheet(code: TransferCode, loading: Boolean, actions: Setting
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(stringResource(R.string.transfer_body), style = NbType.body, color = NbColors.text2)
             VSpacer(24.dp)
-            val formatted = SettingsViewModel.formatCode(code.code)
+            val groups = SettingsViewModel.codeGroups(code.code)
             SelectionContainer {
-                Text(
-                    formatted,
-                    style = NbType.numCode.copy(fontSize = NbType.numSlotSm.fontSize),
-                    color = if (expired) NbColors.textDisabled else NbColors.chalk,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.semantics { contentDescription = code.code.toList().joinToString(" ") },
-                )
+                CodePlates(groups, expired, Modifier.semantics(mergeDescendants = true) { contentDescription = groups.joinToString("").toList().joinToString(" ") })
             }
             VSpacer(8.dp)
-            Text(stringResource(R.string.transfer_left, formatClock(left)), style = NbType.numTimer, color = NbColors.text2)
+            if (expired) {
+                Text(stringResource(R.string.transfer_expired), style = NbType.caption, color = NbColors.text3)
+            } else {
+                Text(stringResource(R.string.transfer_left, formatClock(left)), style = NbType.numTimer, color = NbColors.text2)
+            }
             VSpacer(24.dp)
             if (expired) {
                 NbButton(stringResource(R.string.transfer_new), actions.onTransferCode, enabled = !loading, modifier = Modifier.fillMaxWidth())
             } else {
-                NbButton(stringResource(R.string.action_copy), { actions.onCopy("code", code.code) }, kind = ButtonKind.TONAL, icon = R.drawable.ic_content_copy, modifier = Modifier.fillMaxWidth())
+                NbButton(stringResource(R.string.action_copy), { actions.onCopy("code", groups.joinToString("")) }, kind = ButtonKind.TONAL, icon = R.drawable.ic_content_copy, modifier = Modifier.fillMaxWidth())
             }
             VSpacer(24.dp)
+        }
+    }
+}
+
+/** Code plates: 28 × 40 dp (narrower when the window needs it), 2 dp apart, 8 dp between groups of four. */
+@Composable
+private fun CodePlates(groups: List<String>, disabled: Boolean, modifier: Modifier = Modifier) {
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        val count = groups.sumOf { it.length }.coerceAtLeast(1)
+        val inner = 2.dp
+        val between = 8.dp
+        val gaps = inner * (count - groups.size) + between * (groups.size - 1).coerceAtLeast(0)
+        val w = minOf(28.dp, (maxWidth - gaps) / count)
+        Row(horizontalArrangement = Arrangement.spacedBy(between)) {
+            groups.forEach { group ->
+                Row(horizontalArrangement = Arrangement.spacedBy(inner)) {
+                    group.forEach { ch ->
+                        Box(
+                            Modifier.width(w).heightIn(min = 40.dp).background(if (disabled) NbColors.surface1 else NbColors.surface2, RoundedCornerShape(NbRadius.s)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(ch.toString(), style = NbType.numCode, color = if (disabled) NbColors.textDisabled else NbColors.chalk, maxLines = 1, softWrap = false)
+                        }
+                    }
+                }
+            }
         }
     }
 }

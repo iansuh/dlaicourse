@@ -1,6 +1,6 @@
 package app.numbaseball.data.age
 
-/** Age bands from the neutral first-launch age screen (policy review R19/R20). Only the band is stored, never the year. */
+/** Age bands from the neutral first-launch age screen (policy review R19/R20). Only the band is stored, never the year or month. */
 enum class AgeBand {
     /** Below the configured minimum age (default 14): the app stops. */
     UNDER_MINIMUM,
@@ -22,7 +22,7 @@ data class AgeSignal(val ageLower: Int?, val ageUpper: Int?, val approvalPending
 sealed interface AgeState {
     data object Loading : AgeState
 
-    /** First launch: ask the birth year before any ad or account. */
+    /** First launch: ask the birth year and month before any ad or account. */
     data object Unknown : AgeState
 
     data class Known(val declared: AgeBand, val signal: AgeSignal? = null) : AgeState {
@@ -38,10 +38,12 @@ sealed interface AgeState {
 
 object AgeRules {
     /**
-     * Year only, so the age is known to ±1 year. Design 01 §0: allowed when current year − birth year ≥ the minimum
-     * (the player reaches that age at some point this calendar year).
+     * Owner decision for DEF-051 (2026-11-25): the age screen asks birth year and month. The age is the number of full
+     * years as of the current month; a player born in the current month counts as having had the birthday (generous by
+     * a few days at most). Only the resulting band is stored, never the year or month.
      */
-    fun ageThisYear(birthYear: Int, currentYear: Int): Int = currentYear - birthYear
+    fun ageInMonth(birthYear: Int, birthMonth: Int, currentYear: Int, currentMonth: Int): Int =
+        currentYear - birthYear - if (birthMonth > currentMonth) 1 else 0
 
     fun bandForAge(age: Int, minimumAge: Int): AgeBand = when {
         age < minimumAge -> AgeBand.UNDER_MINIMUM
@@ -50,8 +52,12 @@ object AgeRules {
         else -> AgeBand.ADULT
     }
 
-    fun bandForBirthYear(birthYear: Int, currentYear: Int, minimumAge: Int): AgeBand =
-        bandForAge(ageThisYear(birthYear, currentYear), minimumAge)
+    fun bandForBirth(birthYear: Int, birthMonth: Int, currentYear: Int, currentMonth: Int, minimumAge: Int): AgeBand =
+        bandForAge(ageInMonth(birthYear, birthMonth, currentYear, currentMonth), minimumAge)
+
+    /** A real month that is not in the future (01 §0: 1900 to now). */
+    fun isValidBirth(birthYear: Int, birthMonth: Int, currentYear: Int, currentMonth: Int): Boolean =
+        birthYear in 1900..currentYear && birthMonth in 1..12 && (birthYear < currentYear || birthMonth <= currentMonth)
 
     /**
      * Signals only tighten ad treatment; the app-wide stop stays with the declared band (signals below 13 refuse online

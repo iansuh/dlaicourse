@@ -226,7 +226,7 @@ fun NameWithTag(
 ) {
     // Name and tag sit on one baseline, like the prototype's inline `.pname` + `.ptag`.
     Row(modifier) {
-        Text(name, style = nameStyle, color = nameColor, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false).alignByBaseline())
+        Text(name, style = nameStyle, color = nameColor, maxLines = 1, overflow = TextOverflow.Ellipsis, autoFit = false, modifier = Modifier.weight(1f, fill = false).alignByBaseline())
         if (tag != null) {
             Spacer(Modifier.width(1.dp))
             Text("#$tag", style = tagStyle, color = tagColor, maxLines = 1, softWrap = false, modifier = Modifier.alignByBaseline())
@@ -243,8 +243,11 @@ fun TeamBadge(team: Team, size: Dp = 24.dp) {
     ) {
         Text(
             if (team == Team.A) "A" else "B",
-            style = TextStyle(fontFamily = NbFonts.num, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = if (size >= 24.dp) 16.sp else 12.sp),
+            style = TextStyle(fontFamily = NbFonts.num, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = if (size >= 24.dp) 16.sp else 12.sp, lineHeight = if (size >= 24.dp) 16.sp else 12.sp),
             color = NbColors.onChalk,
+            maxLines = 1,
+            softWrap = false,
+            fitMinScale = 0.5f,
         )
     }
 }

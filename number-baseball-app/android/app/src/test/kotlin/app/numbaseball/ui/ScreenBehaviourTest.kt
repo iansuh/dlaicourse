@@ -118,6 +118,8 @@ class ScreenBehaviourTest {
         compose.onNodeWithTag("key_1").performClick()
         assertEquals(listOf('1', '1'), typed)
         state = AgeUiState(year = "1990")
+        compose.onNodeWithText("Confirm").assertIsNotEnabled()
+        state = AgeUiState(year = "1990", month = "05")
         compose.onNodeWithText("Confirm").assertIsEnabled()
     }
 

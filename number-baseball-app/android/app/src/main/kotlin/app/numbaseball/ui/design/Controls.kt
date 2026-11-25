@@ -124,7 +124,8 @@ fun NbButton(
                 NbIcon(icon, null, textColor, 20.dp)
                 HSpacer(8.dp)
             }
-            Text(text, style = textStyle, color = textColor, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            // Two lines at most; a long word steps the size down instead of breaking (DEF-059).
+            Text(text, style = textStyle, color = textColor, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, fitMinScale = 0.55f)
         }
     }
 }
@@ -182,6 +183,10 @@ fun TextSegmentLabel(text: String, selected: Boolean) {
         style = NbType.labelSmall,
         color = if (selected) NbColors.onChalk else NbColors.text2,
         textAlign = TextAlign.Center,
+        // One line, never broken inside a word (D2-44): the shared Text steps the size down when it does not fit.
+        maxLines = 1,
+        softWrap = false,
+        fitMinScale = 0.5f,
         modifier = Modifier.padding(horizontal = 4.dp),
     )
 }
@@ -299,7 +304,7 @@ fun RadioRow(text: String, selected: Boolean, onClick: () -> Unit, modifier: Mod
 @Composable
 fun SectionHeader(text: String, first: Boolean = false, modifier: Modifier = Modifier) {
     Box(
-        modifier.fillMaxWidth().height(if (first) 40.dp else 48.dp).padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+        modifier.fillMaxWidth().heightIn(min = if (first) 40.dp else 48.dp).padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
         contentAlignment = Alignment.BottomStart,
     ) {
         Text(text, style = NbType.labelSmall, color = NbColors.text3)
@@ -353,8 +358,13 @@ fun ListRow(
                 VSpacer(2.dp)
                 Text(subtitle, style = NbType.caption, color = if (enabled) subtitleColor else NbColors.textDisabled)
             }
+            // Large text: the value moves under the title so the title keeps the row's width (DEF-061).
+            if (value != null && isLargeFont()) {
+                VSpacer(2.dp)
+                Text(value, style = NbType.body, color = NbColors.text2)
+            }
         }
-        if (value != null) {
+        if (value != null && !isLargeFont()) {
             HSpacer(16.dp)
             Text(value, style = NbType.body, color = NbColors.text2, maxLines = 1)
         }

@@ -72,6 +72,8 @@ fun MemoBoard(
     onCollapse: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
     margin: androidx.compose.ui.unit.Dp = 16.dp,
+    /** Only the toolbar, whose `open_in_full` opens the large memo sheet: large text, or no room for the grid. */
+    toolbarOnly: Boolean = isLargeFont(),
 ) {
     val large = isLargeFont()
     // At large text the toolbar row is itself 48 dp; otherwise it is 32 dp and its two controls get 48 dp targets that
@@ -99,8 +101,14 @@ fun MemoBoard(
                     style = NbType.labelSmall,
                     color = if (memo.isEmpty) NbColors.textDisabled else NbColors.text2,
                     maxLines = 1,
-                    modifier = Modifier.padding(horizontal = 8.dp),
+                    // 8 dp start, 0 dp end (prototype `margin-right: -8px`, D2-09).
+                    modifier = Modifier.padding(start = 8.dp),
                 )
+            }
+            if (toolbarOnly && onCollapse != null) {
+                // Large text (D2-34, ADAPTIVE §2.3): the inline memo is only this 48 dp toolbar; the grid lives in the sheet.
+                IconButton48(R.drawable.ic_open_in_full, stringResource(R.string.memo_expand), { onCollapse(false) }, tint = NbColors.text2)
+                return@Row
             }
             if (onCollapse != null) {
                 ToolbarAction(toolbar, enabled = true, onClick = { onCollapse(!collapsed) }, description = stringResource(if (collapsed) R.string.memo_expand else R.string.memo_collapse)) {
@@ -108,6 +116,7 @@ fun MemoBoard(
                 }
             }
         }
+        if (toolbarOnly && onCollapse != null) return@Column
         Column(Modifier.padding(start = margin, end = margin, bottom = 8.dp)) {
             Row(Modifier.fillMaxWidth().heightIn(min = NbSize.memoHeader), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.width(24.dp))
@@ -169,29 +178,46 @@ private fun Modifier.extendTargetUp(visual: Dp, target: Dp): Modifier = layout {
  * 48 × 48 dp, with the same state cycles as the board.
  */
 @Composable
-fun ColumnScope.LargeMemoSheet(memo: MemoState, onDigit: (Int) -> Unit, onCell: (Int, Int) -> Unit, onClear: () -> Unit, onClose: () -> Unit) {
+fun ColumnScope.LargeMemoSheet(
+    memo: MemoState,
+    onDigit: (Int) -> Unit,
+    onCell: (Int, Int) -> Unit,
+    onClear: () -> Unit,
+    onClose: () -> Unit,
+    /** The pitch clock stays visible while the sheet covers the match (D2-34 a). */
+    clock: (@Composable () -> Unit)? = null,
+) {
     SheetTitle(stringResource(R.string.memo)) {
+        clock?.invoke()
         NbButton(stringResource(R.string.memo_clear), onClear, kind = ButtonKind.TEXT, enabled = !memo.isEmpty)
         IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), onClose, tint = NbColors.text2)
     }
-    Column(
-        Modifier
-            .weight(1f, fill = false)
-            .verticalScroll(rememberScrollState())
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-    ) {
-        Row(Modifier.heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+    val gridWidth = LARGE_CELL * (memo.digits + 1)
+    // Position row: 40 dp, pinned above the scrolling digit rows (D2-34 d); the grid is centred (b).
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Row(Modifier.width(gridWidth).heightIn(min = 40.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.width(LARGE_CELL))
             repeat(memo.digits) { p ->
                 Text((p + 1).toString(), style = NbType.numLabel, color = NbColors.text3, textAlign = TextAlign.Center, modifier = Modifier.width(LARGE_CELL))
             }
         }
+    }
+    Column(
+        Modifier
+            .weight(1f, fill = false)
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         (0..9).forEach { d ->
             val columnOut = memo.digitMarks[d] == MemoMark.OUT
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // 1 dp `line` between digit rows (D2-34 c).
+            Hairline(Modifier.width(gridWidth))
+            Row(Modifier.width(gridWidth), verticalAlignment = Alignment.CenterVertically) {
                 DigitHeaderCell(d, memo.digitMarks[d], Modifier.size(LARGE_CELL)) { onDigit(d) }
                 repeat(memo.digits) { p ->
-                    PositionCell(p, d, memo.cells[p][d], Modifier.size(LARGE_CELL).alpha(if (columnOut) 0.35f else 1f)) { onCell(p, d) }
+                    PositionCell(p, d, memo.cells[p][d], Modifier.size(LARGE_CELL).alpha(if (columnOut) 0.35f else 1f), plate = 32.dp) { onCell(p, d) }
                 }
             }
         }
@@ -227,7 +253,7 @@ private fun DigitHeaderCell(digit: Int, mark: MemoMark, modifier: Modifier, onCl
 }
 
 @Composable
-private fun PositionCell(position: Int, digit: Int, mark: MemoMark, modifier: Modifier, onClick: () -> Unit) {
+private fun PositionCell(position: Int, digit: Int, mark: MemoMark, modifier: Modifier, plate: Dp = 24.dp, onClick: () -> Unit) {
     val spoken = stringResource(R.string.memo_cell_spoken, position + 1, digit, stringResource(markLabel(mark)))
     val actionLabel = stringResource(R.string.memo_change)
     Box(
@@ -244,7 +270,8 @@ private fun PositionCell(position: Int, digit: Int, mark: MemoMark, modifier: Mo
             // Prototype `.mc.x`: two 10 × 1.5 dp bars crossed at 45°.
             MemoMark.OUT -> Canvas(Modifier.size(10.dp)) { crossBars(NbColors.text3, armLength = 10.dp.toPx(), stroke = 1.5.dp.toPx()) }
             // `.mc > b`: the memo digit at 16 sp inside a cell plate.
-            MemoMark.IN -> Box(Modifier.size(24.dp).background(NbColors.chalk, RoundedCornerShape(NbRadius.s)), contentAlignment = Alignment.Center) {
+            // 32 dp plates in the large sheet (D2-34 e).
+            MemoMark.IN -> Box(Modifier.size(plate).background(NbColors.chalk, RoundedCornerShape(NbRadius.s)), contentAlignment = Alignment.Center) {
                 Text(digit.toString(), style = NbType.numMemo.copy(fontSize = 16.sp), color = NbColors.onChalk)
             }
         }

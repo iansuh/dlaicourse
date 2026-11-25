@@ -21,11 +21,12 @@
     <string name="action_start">Start</string>
 
     <!-- First run: age (neutral, never mention the required age) -->
-    <string name="age_title">Enter the year you were born</string>
-    <string name="age_lead">We only ask for the year. No name, no birthday.</string>
+    <string name="age_title">Enter the year and month you were born</string>
+    <string name="age_lead">We only ask for the year and month. No name, no exact date.</string>
     <string name="age_year">Birth year</string>
+    <string name="age_month">Month</string>
     <string name="age_confirm">Confirm</string>
-    <string name="age_invalid">Enter a valid year</string>
+    <string name="age_invalid">Enter a valid year and month</string>
     <string name="na_title">Not available right now</string>
     <string name="na_body">Based on the information entered, this game is not available. Thank you for your interest.</string>
 
@@ -128,6 +129,12 @@
     <string name="col_guess">My guess</string>
     <string name="col_hint">Hint</string>
     <string name="col_opp">Opp.</string>
+    <string name="opp_log_title">Opponent\'s log</string>
+    <string name="menu_opp_log">Opponent\'s log</string>
+    <string name="opp_log_empty">No pitches yet</string>
+    <string name="col_opp_guess">Their guess</string>
+    <string name="server_error_title">Something went wrong</string>
+    <string name="server_error_body">Please try again in a moment.</string>
     <string name="legend_title">Reading the hints</string>
     <string name="legend_strike_name">Strike</string>
     <string name="legend_strike">right digit, right place</string>
@@ -289,6 +296,7 @@
     <string name="duel_round">R%1$d</string>
     <string name="status_playing">Playing</string>
     <string name="status_reconnecting">Reconnecting %1$s</string>
+    <string name="status_reconnecting_short">Away %1$s</string>
     <string name="status_draw">Draw</string>
     <string name="status_forfeit">Forfeit</string>
     <string name="status_decided">Decided</string>
@@ -439,6 +447,7 @@
     <string name="blocked_empty">You haven’t blocked anyone</string>
     <string name="unblocked_toast">Unblocked</string>
     <string name="transfer_left">%1$s left</string>
+    <string name="transfer_expired">This code has expired</string>
     <string name="transfer_new">Create a new code</string>
     <string name="licences">Open-source licences</string>
     <string name="privacy_web">Public version of this policy</string>

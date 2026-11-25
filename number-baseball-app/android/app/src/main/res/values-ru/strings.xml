@@ -15,11 +15,12 @@
     <string name="action_undo">Отменить</string>
     <string name="action_edit">Изменить</string>
     <string name="action_start">Начать</string>
-    <string name="age_title">Укажите год рождения</string>
-    <string name="age_lead">Нужен только год. Без имени и даты.</string>
+    <string name="age_title">Укажите год и месяц рождения</string>
+    <string name="age_lead">Нужны только год и месяц. Без имени и точной даты.</string>
     <string name="age_year">Год рождения</string>
+    <string name="age_month">Месяц</string>
     <string name="age_confirm">Подтвердить</string>
-    <string name="age_invalid">Укажите верный год</string>
+    <string name="age_invalid">Укажите верные год и месяц</string>
     <string name="na_title">Пока недоступно</string>
     <string name="na_body">По указанным данным эта игра недоступна. Спасибо за интерес.</string>
     <string name="nick_eyebrow">Добро пожаловать</string>
@@ -118,6 +119,12 @@
     <string name="col_guess">Мой ход</string>
     <string name="col_hint">Подсказка</string>
     <string name="col_opp">Сопер.</string>
+    <string name="opp_log_title">Ходы соперника</string>
+    <string name="menu_opp_log">Ходы соперника</string>
+    <string name="opp_log_empty">Ходов пока нет</string>
+    <string name="col_opp_guess">Его попытка</string>
+    <string name="server_error_title">Что-то пошло не так</string>
+    <string name="server_error_body">Попробуйте ещё раз чуть позже.</string>
     <string name="legend_title">Как читать подсказки</string>
     <string name="legend_strike_name">Страйк</string>
     <string name="legend_strike">цифра верна и на своём месте</string>
@@ -276,6 +283,7 @@
     <string name="duel_round">Р%1$d</string>
     <string name="status_playing">Играют</string>
     <string name="status_reconnecting">Переподключение %1$s</string>
+    <string name="status_reconnecting_short">Нет связи %1$s</string>
     <string name="status_draw">Ничья</string>
     <string name="status_forfeit">Сдался</string>
     <string name="status_decided">Решено</string>
@@ -415,6 +423,7 @@
     <string name="blocked_empty">Вы никого не блокировали</string>
     <string name="unblocked_toast">Разблокировано</string>
     <string name="transfer_left">Осталось %1$s</string>
+    <string name="transfer_expired">Срок действия кода истёк</string>
     <string name="transfer_new">Создать новый код</string>
     <string name="licences">Лицензии открытого ПО</string>
     <string name="privacy_web">Публичная версия политики</string>

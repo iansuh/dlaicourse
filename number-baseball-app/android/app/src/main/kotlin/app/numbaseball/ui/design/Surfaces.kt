@@ -105,7 +105,7 @@ fun TopBar(
     Column(modifier.fillMaxWidth().background(bg)) {
         Spacer(Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
         Row(
-            Modifier.fillMaxWidth().then(if (compact) Modifier.height(compactHeight) else Modifier.heightIn(min = height)).padding(start = 4.dp, end = 4.dp),
+            Modifier.fillMaxWidth().heightIn(min = if (compact) compactHeight else height).padding(start = 4.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (navIcon != null) {
@@ -201,9 +201,12 @@ fun ConnectionBanner(title: String, line: String?, countdown: String?) {
         ) {
             ChaseLamps(NbSize.lampM)
             HSpacer(12.dp)
-            Column(Modifier.weight(1f)) {
-                Text(title, style = NbType.bodyStrong, color = NbColors.chalk, maxLines = if (compact) 1 else Int.MAX_VALUE, overflow = TextOverflow.Ellipsis)
-                if (line != null && !compact) Text(line, style = NbType.caption, color = NbColors.text2)
+            // Large text (D2-37, ADAPTIVE §2.2): at most two title lines and the countdown; the explanation is read by
+            // TalkBack only, so the banner never pushes the log below its latest row.
+            val large = isLargeFont()
+            Column(Modifier.weight(1f).then(if (large) Modifier.semantics { contentDescription = spoken } else Modifier)) {
+                Text(title, style = NbType.bodyStrong, color = NbColors.chalk, maxLines = if (compact) 1 else if (large) 2 else Int.MAX_VALUE, overflow = TextOverflow.Ellipsis, fitMinScale = 0.5f)
+                if (line != null && !compact && !large) Text(line, style = NbType.caption, color = NbColors.text2)
             }
             if (countdown != null) {
                 HSpacer(12.dp)
@@ -241,7 +244,7 @@ fun SheetHandle() {
 @Composable
 fun SheetTitle(title: String, trailing: @Composable RowScope.() -> Unit = {}) {
     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = NbType.title, color = NbColors.chalk, modifier = Modifier.weight(1f).semantics { heading() })
+        Text(title, style = NbType.title, color = NbColors.chalk, fitMinScale = 0.5f, modifier = Modifier.weight(1f).semantics { heading() })
         trailing()
     }
 }
@@ -295,6 +298,26 @@ fun NbDialog(
     ) {
         ScrimDim()
         DialogSurface(title, body, confirmLabel, onConfirm, dismissLabel, onDismiss, destructive)
+    }
+}
+
+/**
+ * Server error / unknown failure (DESIGN_SYSTEM 12.17, 14 §1, D2-43): "문제가 생겼어요" / "잠시 후 다시 시도해 주세요." with
+ * 다시 시도 (primary, chalk) and 홈으로. Back or a tap outside only closes it.
+ */
+@Composable
+fun ServerErrorDialog(onRetry: () -> Unit, onHome: () -> Unit, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        ScrimDim()
+        DialogSurface(
+            title = androidx.compose.ui.res.stringResource(R.string.server_error_title),
+            body = androidx.compose.ui.res.stringResource(R.string.server_error_body),
+            confirmLabel = androidx.compose.ui.res.stringResource(R.string.action_retry),
+            onConfirm = onRetry,
+            dismissLabel = androidx.compose.ui.res.stringResource(R.string.home),
+            onDismiss = onHome,
+            destructive = false,
+        )
     }
 }
 

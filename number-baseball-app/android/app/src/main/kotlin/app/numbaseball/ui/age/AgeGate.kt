@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -56,33 +57,51 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class AgeUiState(val year: String = "", val invalid: Boolean = false, val submitting: Boolean = false, val shake: Int = 0)
+/** The answer being typed: four year digits, then two month digits (DEF-051). */
+data class AgeUiState(val year: String = "", val month: String = "", val invalid: Boolean = false, val submitting: Boolean = false, val shake: Int = 0) {
+    val complete: Boolean get() = year.length == 4 && month.length == 2
+}
 
 class AgeViewModel(private val ages: AgeRepository) : ViewModel() {
     private val _state = MutableStateFlow(AgeUiState())
     val state: StateFlow<AgeUiState> = _state.asStateFlow()
 
-    /** Repeated digits are allowed here; after an invalid year the slots clear on the next key (01 §0). */
+    /** Repeated digits are allowed here; the year fills first, then the month; after an invalid answer the slots clear on the next key (01 §0). */
     fun onDigit(digit: Char) = _state.update {
         if (it.submitting) return@update it
-        val base = if (it.invalid) "" else it.year
-        if (base.length >= 4) it else it.copy(year = base + digit, invalid = false)
+        val year = if (it.invalid) "" else it.year
+        val month = if (it.invalid) "" else it.month
+        when {
+            year.length < 4 -> it.copy(year = year + digit, month = "", invalid = false)
+            month.length < 2 -> it.copy(year = year, month = month + digit, invalid = false)
+            else -> it
+        }
     }
 
-    fun onDelete() = _state.update { if (it.submitting) it else it.copy(year = if (it.invalid) "" else it.year.dropLast(1), invalid = false) }
-    fun onClear() = _state.update { if (it.submitting) it else it.copy(year = "", invalid = false) }
+    fun onDelete() = _state.update {
+        when {
+            it.submitting -> it
+            it.invalid -> it.copy(year = "", month = "", invalid = false)
+            it.month.isNotEmpty() -> it.copy(month = it.month.dropLast(1))
+            else -> it.copy(year = it.year.dropLast(1))
+        }
+    }
+
+    fun onClear() = _state.update { if (it.submitting) it else it.copy(year = "", month = "", invalid = false) }
 
     /** One answer only: once submitted, the keypad and Confirm are locked until NbApp leaves the screen (DEF-052). */
     fun onConfirm() {
-        if (_state.value.submitting) return
-        val year = _state.value.year.toIntOrNull() ?: return
-        if (_state.value.year.length != 4 || year !in ages.validYears()) {
+        val current = _state.value
+        if (current.submitting) return
+        val year = current.year.toIntOrNull() ?: return
+        val month = current.month.toIntOrNull()
+        if (!current.complete || month == null || !ages.isValid(year, month)) {
             _state.update { it.copy(invalid = true, shake = it.shake + 1) }
             return
         }
         _state.update { it.copy(submitting = true) }
         // The stored band drives NbApp (continue or stop); nothing else to do here.
-        viewModelScope.launch { ages.submitBirthYear(year) }
+        viewModelScope.launch { ages.submitBirth(year, month) }
     }
 }
 
@@ -97,7 +116,7 @@ fun Eyebrow(content: @Composable () -> Unit) {
 }
 
 /**
- * Neutral first-launch age screen (01 §0): birth year only, no default, nothing that hints at the required age. Shown
+ * Neutral first-launch age screen (01 §0, DEF-051): birth year and month only, no default, nothing that hints at the required age. Shown
  * before any ad SDK call and before account creation; the digit keypad is pinned at the bottom.
  */
 @Composable
@@ -125,17 +144,7 @@ fun AgeScreen(state: AgeUiState, onDigit: (Char) -> Unit, onDelete: () -> Unit, 
                 Text(stringResource(R.string.age_lead), style = NbType.body, color = NbColors.text2)
             }
             VSpacer(if (compact) 12.dp else 40.dp)
-            Text(stringResource(R.string.age_year), style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-            VSpacer(12.dp)
-            DigitSlots(
-                digits = 4,
-                value = state.year,
-                plateWidth = if (compact) 48.dp else 56.dp,
-                plateHeight = if (compact) 48.dp else 64.dp,
-                error = state.invalid,
-                shakeKey = state.shake,
-                contentDescription = stringResource(R.string.age_year) + ", " + state.year.toList().joinToString(" "),
-            )
+            BirthFields(state, compact)
             VSpacer(12.dp)
             Box(Modifier.fillMaxWidth().heightIn(min = 18.dp).semantics { liveRegion = LiveRegionMode.Polite }, contentAlignment = Alignment.Center) {
                 if (state.invalid) Text(stringResource(R.string.age_invalid), style = NbType.caption, color = NbColors.out)
@@ -146,7 +155,7 @@ fun AgeScreen(state: AgeUiState, onDigit: (Char) -> Unit, onDelete: () -> Unit, 
             used = emptySet(),
             locked = state.submitting,
             actionLabel = stringResource(R.string.age_confirm),
-            actionState = if (state.year.length == 4 && !state.invalid && !state.submitting) ActionState.ENABLED else ActionState.DISABLED,
+            actionState = if (state.complete && !state.invalid && !state.submitting) ActionState.ENABLED else ActionState.DISABLED,
             onDigit = {
                 audio.play(SoundCue.KEY_DOWN)
                 haptics.perform(HapticCue.KEY_TAP)
@@ -170,14 +179,65 @@ fun AgeScreen(state: AgeUiState, onDigit: (Char) -> Unit, onDelete: () -> Unit, 
 }
 
 /**
+ * Year (four plates) and month (two plates) side by side, each with its label above (DEF-051). The keypad fills the
+ * year, then the month; the plates shrink to fit narrow windows.
+ */
+@Composable
+private fun BirthFields(state: AgeUiState, compact: Boolean) {
+    val yearLabel = stringResource(R.string.age_year)
+    val monthLabel = stringResource(R.string.age_month)
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        val gap = app.numbaseball.ui.theme.NbSize.slotGap
+        val between = 16.dp
+        val fit = (maxWidth - between - gap * 4) / 6
+        val w = minOf(if (compact) 40.dp else 44.dp, fit)
+        val h = if (compact) 48.dp else 56.dp
+        Row(horizontalArrangement = Arrangement.spacedBy(between), verticalAlignment = Alignment.Bottom) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(yearLabel, style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.Center, maxLines = 1)
+                VSpacer(12.dp)
+                DigitSlots(
+                    digits = 4,
+                    value = state.year,
+                    modifier = Modifier.width(w * 4 + gap * 3),
+                    plateWidth = w,
+                    plateHeight = h,
+                    error = state.invalid,
+                    showActive = state.year.length < 4,
+                    shakeKey = state.shake,
+                    contentDescription = yearLabel + ", " + state.year.toList().joinToString(" "),
+                )
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(monthLabel, style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.Center, maxLines = 1)
+                VSpacer(12.dp)
+                DigitSlots(
+                    digits = 2,
+                    value = state.month,
+                    modifier = Modifier.width(w * 2 + gap),
+                    plateWidth = w,
+                    plateHeight = h,
+                    error = state.invalid,
+                    showActive = state.year.length == 4,
+                    shakeKey = state.shake,
+                    contentDescription = monthLabel + ", " + state.month.toList().joinToString(" "),
+                )
+            }
+        }
+    }
+}
+
+/**
  * Below the minimum age (01 §0.1): calm, final, no blame, no number. Vertically centred column, 32 dp side margins.
  * No buttons, no ads, no sound; the answer is stored, so re-opening the app shows this again.
  */
 @Composable
 fun NotAvailableScreen(onPrivacyPolicy: () -> Unit) {
     NbScreen {
+        // Centred, and scrolls when large text makes it taller than a small window.
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
         Column(
-            Modifier.fillMaxSize().padding(horizontal = 32.dp),
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = maxHeight).padding(horizontal = 32.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -203,6 +263,7 @@ fun NotAvailableScreen(onPrivacyPolicy: () -> Unit) {
                     modifier = Modifier.underlined(),
                 )
             }
+        }
         }
     }
 }

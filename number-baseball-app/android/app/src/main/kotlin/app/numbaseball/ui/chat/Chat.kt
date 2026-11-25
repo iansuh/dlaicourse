@@ -294,7 +294,8 @@ fun ChatSheet(state: ChatUiState, actions: ChatActions) {
                     .padding(start = 4.dp, end = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(muteLabel, style = NbType.labelSmall, color = NbColors.text2)
+                // Capped so the sheet title keeps its room in narrow windows (DEF-059: "Discussion" broke mid-word).
+                Text(muteLabel, style = NbType.labelSmall, color = NbColors.text2, maxLines = 2, modifier = Modifier.widthIn(max = 96.dp))
                 HSpacer(9.dp)
                 NbSwitchVisual(state.muted)
             }
@@ -604,8 +605,8 @@ private fun MessageActions(
     onPlayerCard: () -> Unit,
 ) {
     NbModalSheet(onDismiss = onDismiss) {
-        // Prototype `.menu .ctx`: 4 / 16 / 12, 2 dp before the bold line; `.menu` 24 dp bottom padding.
-        Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)) {
+        // Context block 16 / 16 dp (D2-22: the shot's block is 82 dp, divider included), 2 dp before the bold line.
+        Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp)) {
             Text(stringResource(R.string.msg_selected), style = NbType.caption, color = NbColors.text3)
             VSpacer(2.dp)
             val name = message.senderNickname?.let { "$it#${message.senderTag.orEmpty()}" } ?: stringResource(R.string.chat_deleted_player)

@@ -24,8 +24,9 @@ protocol messages and text filters come from the shared `:core` module in `../ba
 
 Screenshots (`src/test/.../screenshots/Screenshots.kt`): every screen and state, named after the reference renders in
 `../design/shots/` so they can be compared side by side: `match-guess-ko.png` here ↔ `design/shots/match-guess-ko.png`.
-Variants: `<name>-ko` / `<name>-en` phone 360 × 800 dp; `<name>-small-<lang>` split-screen 360 × 320 dp (the match is
-`match-small-<lang>` like the shot); `<name>-ko-font200` at 200 % font scale. States without a reference shot use the
+Variants: `<name>-ko` / `<name>-en` phone 360 × 800 dp (plus `-de` / `-ru` / `-vi` for home, lobby, match-guess,
+match-small, result-lose and settings); `<name>-small-<lang>` split-screen 360 × 320 dp (the match is
+`match-small-<lang>` like the shot); `<name>-ko-font200` at 200 % font scale; `window-too-small-*` at 300 × 300 dp. States without a reference shot use the
 same scheme (`home-offline-ko`, `profile-ko`, `cpu-setup-ko`, …). The frame reproduces the shots' window: 24 dp status
 bar and gesture area as real insets, a 230 dp IME on text-field screens and the shots' sample creative in the ad band
 (test only, `LocalAdPreview`). After a UI change run `recordRoborazziDebug`, look at the diff, and commit the new PNGs
@@ -52,7 +53,9 @@ How it works (`billing/DefaultBillingRepository.kt`):
 - A cached boolean (`billing` DataStore file) answers at once on an offline start; it is replaced by every successful Play
   answer and kept while Play cannot be reached.
 - `entitlement` is `UNKNOWN` until the cache says "owned", Play answered, or 5 s passed. UMP and Mobile Ads start only once it
-  is `ADS_ALLOWED` (`NbApp.AdsAfterAgeCheck`), so an owner never sees the consent form and the SDK is never initialised;
+  is `ADS_ALLOWED` (`NbApp.AdsAfterAgeCheck`), so an owner never sees the consent form and the SDK is never initialised
+  (the SDK's auto-init `MobileAdsInitProvider` is removed from the merged manifest and app measurement is delayed, DEF-062;
+  `AdsIntegrationQaTest.def062_*` checks the merged manifest);
   banners (`AdBanner`) and interstitials check it too. "Privacy options" follows UMP's `REQUIRED` status: hidden for an owner
   (UMP never runs), still shown if consent was gathered earlier in the same process (consent can still be changed).
 - The purchase token stays inside `billing/`: `PlayPurchase.toString()` hides it, nothing in the package logs, and it never
@@ -116,27 +119,35 @@ A release without the real server URL, contact email or AdMob IDs fails in `chec
 The terms and privacy policy shown in the app are generated at build time from the public sections of
 `../docs/play/TERMS_OF_USE.md` and `PRIVACY_POLICY.md` (`generateLegalTexts`), so edit them there.
 
-Languages: `values/` (English) and `values-ko/`. Add a language by adding `values-xx/strings.xml`, its tag to
+Languages: ten (`values/` English, `values-ko/`, `ja`, `b+zh+Hans`, `es`, `fr`, `de`, `pt`, `ru`, `vi`). Add a language by adding `values-xx/strings.xml`, its tag to
 `res/xml/locales_config.xml` and `SupportedLanguages`; `ResourcesTest` checks they agree.
 
 ## Deviations from the design (for design sign-off)
 
-Written down per the phase 2 review (`../design/REVIEW_PHASE2.md`); none is accepted until design approves it.
+Updated after design review round 2 (`../design/REVIEW_PHASE2_ROUND2.md`, §3 decisions). Rows marked *accepted* were
+approved there; the rest still need design approval.
 
-| Spec | What the app does | Why |
+| Spec | What the app does | Why / status |
 | --- | --- | --- |
-| 10 Profile: "자리수별 기록" and "모드별" tables (D2-15) | Both sections are laid out as specified but show the empty state (`–`) | `/api/v1/me` returns only total W/L/D and the app keeps no per-digit or per-mode history. Needs per-digit / per-mode stats in the account response (server change). |
-| 09 / 12.15: tapping the sender name opens the player card (D2-10) | The player card opens from the long-press sheet ("플레이어 정보 보기") and as a TalkBack action on the bubble | The 20 dp name line cannot get a 48 dp target without overlapping the bubble. |
-| 08 reconnect countdown (D2-14) | Counted from the server time the session first saw the player offline (shared by the duel strip and the team board) | The protocol sends no disconnect deadline; exact only if this client was connected when the player dropped. |
-| 05 §2.9 "상대 기록 보기" sheet, 12.17 server-error dialog | Not built; errors use toasts | Separate items, not part of review round 1. |
-| 01 §2 tutorial: optional team-play card, "tutorial seen" flag | Not built; first run always goes age → nickname → tutorial → Home once, Home's help replays it | Small follow-up. |
-| 06 §3 "never in the review room" | The review room is recognised by its bot opponent (`REVIEW_BOT_ID = "reviewbot0001"`, the server's `Hub.BOT_ID`) | The protocol has no review-room flag; a `RoomView` flag from the server would be cleaner. |
-| 06 §3 hold "1000 ms since the result was decided" | Counted from the moment the final reveal ends on the match screen (later than the decision); a finger held down for 5 s skips the ad instead of showing it late | The client sees the decision and the reveal end as separate moments; counting from the later one is the safer reading. The 5 s give-up is not in the spec. |
-| 11 §2 delete-account dialog | Adds a second paragraph: the remove-ads purchase stays with the Google account and Restore purchase brings it back | Required by POLICY_REVIEW Android item 13; the design text predates the purchase. |
-| 11 §1.1 "개인정보 보호 옵션 keeps following UMP" vs POLICY_REVIEW item 13 "keep Privacy options hidden" | Hidden for an owner because UMP never runs; shown after a purchase made later in the same process, until restart | Satisfies both texts; design and release lead should agree on one wording. |
-| 08 §1 leave dialog on the live board | Title reuses "방에서 나갈까요?", new body "내 대결은 끝났어요. 지금 나가면 팀 결과를 볼 수 없어요." · 취소 · 나가기 | The design names the dialog but gives no copy. |
-| 08 §2 best hint 150 ms cross-fade | Hints update without the cross-fade | Small follow-up. |
-| ADAPTIVE §1 small-window team rows | The status column shows the round over the winner ("승 A"), a status word, or both best hints ("2S 1B · 1S 2B"); "진행 중" is dropped there | 56 dp rows have room for two lines in the 72 dp column. |
+| 10 Profile: "자리수별 기록" and "모드별" (D2-15) | Both sections (headers included) are hidden until `/api/v1/me` sends per-digit / per-mode records; they render as specified when the data exists (`ProfileUiState.byDigits` / `byMode`) | Interim reduced profile approved in round 2 (a table of dashes was rejected). Needs the server change. |
+| 01 §0 age screen: birth year only | Birth **year and month** (four plates + two plates, one keypad); age = full years as of the current month, the birth month counts as passed; only the band is stored | Owner decision 2026-11-25 on DEF-051 (minimum age 14 must hold). Copy updated in all ten languages. Design to update 01 §0 and the `age-*` shots. |
+| 09 / 12.15 player card from the name line (D2-10) | From the long-press sheet ("플레이어 정보 보기") and as a TalkBack action | *Accepted* (round 2). |
+| 08 reconnect countdown (D2-14) | Counted from the server time the session first saw the player offline | *Accepted as interim* until protocol 1.2 sends `disconnectDeadline`. |
+| 08 / ADAPTIVE §1 team status | "재접속 대기" over the countdown on its own line; small windows and large text use the short word (`status_reconnecting_short`: "재접속" / "Away") | D2-03, D2-44; the short string is the one design proposed for 08 §5. |
+| 01 §2 tutorial: optional team-play card, "seen" flag | Not built; Home's help replays the tutorial | *Accepted for 1.0*. |
+| 06 §3 "never in the review room" | Recognised by the bot opponent (`REVIEW_BOT_ID`) | *Accepted*; a `RoomView` flag is preferred for 1.1. |
+| 06 §3 interstitial hold | Counted from the end of the final reveal; a finger held for 5 s skips the ad | *Accepted*. |
+| 11 §2 delete-account dialog | Extra paragraph: the remove-ads purchase stays with the Google account | *Accepted*. |
+| 11 §1.1 개인정보 보호 옵션 | Hidden for an owner (UMP never runs), shown after a purchase in the same process | *Accepted*. |
+| 08 §1 leave dialog on the live board | "방에서 나갈까요?" / "내 대결은 끝났어요. 지금 나가면 팀 결과를 볼 수 없어요." · 취소 · 나가기 | *Accepted*. |
+| 08 §2 best hint 150 ms cross-fade | Not yet | *Accepted as a follow-up*; must land before release. |
+| ADAPTIVE §1 small-window team rows | Round over the winner, a status word, or both best hints | *Accepted*. |
+| 11 §2 transfer plates (D2-51) | 3 groups of 4 `numCode` plates, 28 × 40 dp, narrower when 12 plates do not fit 328 dp (24.5 dp at 360 dp); expired: plates disabled, "코드가 만료됐어요", "새 코드 만들기" | Waiting for design's 11 §2 update; the 28 dp plates only fit from about 380 dp. |
+| 12.17 server-error dialog (D2-43) | Built (`ServerErrorDialog`): used for 5xx / unknown codes on the terms gate (다시 시도 = agree again, 홈으로 = close), join, lobby (홈으로 = leave the room) and settings (홈으로 = back). Other errors stay toasts | The catalogue names no screen-specific actions; these are the obvious ones. |
+| 05 §2.9 opponent-log sheet (D2-43) | Built (`OpponentLogSheet`): from the duel strip's opponent area, the overflow menu ("상대 기록 보기") and the log header button when the opponent column is hidden (6 digits at large text, log narrower than 320 dp) | — |
+| Large text, team final top bar | The "광고 제거" link is hidden at large text (as in small windows) | The title would lose its width; Settings keeps the purchase. |
+| Large text / long translations (DEF-054 … 061) | One-line and two-line labels that would clip, ellipsize or break inside a word step their size down (to 70 %, 50–55 % for segment labels, table headers, buttons and the team badge) before anything else (`WordFit` in `design/Text.kt`); the lobby's copy / share buttons stack at large text; list-row values move under the title at large text; small-window opponent status at large text shows the lamp and countdown only (the word is read by TalkBack) | 7 findings remain, all in the 360 × 320 window at 200 % (see `src/test/resources/qa/layout-baseline.tsv`). |
+| Lobby practice button (D2-48) | Scrolls with the content at large text and when the region is shorter than 420 dp; small windows keep it in the chat bar | The small window with the reconnect banner still shows only part of a seat before scrolling. |
 
 ## CI
 

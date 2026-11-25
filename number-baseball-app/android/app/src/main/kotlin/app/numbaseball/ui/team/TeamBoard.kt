@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -132,7 +133,8 @@ fun TeamBoardScreen(
                     BoardMode.FINAL -> onHome
                 },
                 actions = {
-                    if (mode == BoardMode.FINAL && onRemoveAds != null && !compact) RemoveAdsLink(onRemoveAds)
+                    // Not at large text either: the title would lose its width (DEF-059); Settings keeps the purchase.
+                    if (mode == BoardMode.FINAL && onRemoveAds != null && !compact && !isLargeFont()) RemoveAdsLink(onRemoveAds)
                     IconButton48(R.drawable.ic_chat, stringResource(R.string.chat_title), onChat, tint = NbColors.chalk)
                 },
             )
@@ -201,7 +203,7 @@ fun TeamBoardScreen(
                 Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                     NbIcon(R.drawable.ic_visibility, null, NbColors.text3, 20.dp)
                     HSpacer(8.dp)
-                    Text(stringResource(R.string.watching), style = NbType.caption, color = NbColors.text3, textAlign = TextAlign.Center, maxLines = if (compact) 1 else Int.MAX_VALUE, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.watching), style = NbType.caption, color = NbColors.text3, textAlign = TextAlign.Center, maxLines = if (compact) 2 else Int.MAX_VALUE, overflow = TextOverflow.Ellipsis)
                 }
             }
             Spacer(Modifier.heightIn(min = 16.dp))
@@ -324,15 +326,15 @@ private fun CompactDuelRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min)
             .heightIn(min = 55.dp)
             .background(if (mine) NbColors.surface1 else NbColors.bg)
+            .teamStripes(10.dp)
+            .padding(horizontal = 3.dp)
             .clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.width(3.dp).fillMaxHeight().padding(vertical = 10.dp).background(NbColors.teamA, RoundedCornerShape(topEnd = 2.dp, bottomEnd = 2.dp)))
         CompactName(a, finished && winner != null && winner != Team.A, Modifier.weight(1f).padding(start = 9.dp))
-        Column(Modifier.width(72.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.width(72.dp).padding(vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             if (duel.round > 0) Text(stringResource(R.string.duel_round, duel.round), style = NbType.numLabel, color = NbColors.text3)
             when {
                 winner != null -> Row(verticalAlignment = Alignment.CenterVertically) {
@@ -342,7 +344,7 @@ private fun CompactDuelRow(
                 }
                 cancelled -> Text(stringResource(R.string.status_decided), style = NbType.caption, color = NbColors.text2, maxLines = 1)
                 finished && result?.winner == null -> Text(stringResource(R.string.status_draw), style = NbType.caption, color = NbColors.text2, maxLines = 1)
-                disconnected -> ReconnectStatus(listOfNotNull(a, b).filter { !it.connected }.mapNotNull { offlineSince[it.id] }.minOrNull(), serverNow)
+                disconnected -> ReconnectStatus(listOfNotNull(a, b).filter { !it.connected }.mapNotNull { offlineSince[it.id] }.minOrNull(), serverNow, short = true)
                 // 72 dp column: numLabel without tracking fits "2S 1B · 1S 2B".
                 else -> Text(
                     "${hint(duel.bestHintA)} · ${hint(duel.bestHintB)}",
@@ -355,7 +357,6 @@ private fun CompactDuelRow(
             }
         }
         CompactName(b, finished && winner != null && winner != Team.B, Modifier.weight(1f).padding(end = 9.dp), end = true)
-        Box(Modifier.width(3.dp).fillMaxHeight().padding(vertical = 10.dp).background(NbColors.teamB, RoundedCornerShape(topStart = 2.dp, bottomStart = 2.dp)))
     }
 }
 
@@ -408,7 +409,7 @@ private fun ScoreBlock(scoreA: Int, scoreB: Int, teamSize: Int) {
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 TeamBadge(Team.A)
                 HSpacer(10.dp)
-                Text(teamA, style = NbType.subtitle, color = NbColors.chalk, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(teamA, style = NbType.subtitle, color = NbColors.chalk, maxLines = 2, overflow = TextOverflow.Ellipsis, fitMinScale = 0.5f)
             }
             HSpacer(12.dp)
             Text(a.toString(), style = NbType.numScore, color = if (scoreA >= scoreB) NbColors.chalk else NbColors.text3, textAlign = TextAlign.Center, modifier = Modifier.widthIn(min = 32.dp))
@@ -418,7 +419,7 @@ private fun ScoreBlock(scoreA: Int, scoreB: Int, teamSize: Int) {
             Text(b.toString(), style = NbType.numScore, color = if (scoreB >= scoreA) NbColors.chalk else NbColors.text3, textAlign = TextAlign.Center, modifier = Modifier.widthIn(min = 32.dp))
             HSpacer(12.dp)
             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                Text(teamB, style = NbType.subtitle, color = NbColors.chalk, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(teamB, style = NbType.subtitle, color = NbColors.chalk, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End, fitMinScale = 0.5f)
                 HSpacer(10.dp)
                 TeamBadge(Team.B)
             }
@@ -484,20 +485,21 @@ private fun DuelRow(
         if (duel.round > 0) append(", R").append(duel.round)
     }
     // 72 dp minimum including the 1 dp hairline above: the row grows with large text instead of clipping (D2-03).
+    // No intrinsic measurement (D2-03, round 2): the stripes are drawn behind the row, so a tall status column grows it.
     Row(
         Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min)
             .heightIn(min = 71.dp)
             .background(if (mine) NbColors.surface1 else NbColors.bg)
+            .teamStripes(12.dp)
+            .padding(horizontal = 3.dp)
             .clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.width(3.dp).fillMaxHeight().padding(vertical = 12.dp).background(NbColors.teamA, RoundedCornerShape(topEnd = 2.dp, bottomEnd = 2.dp)))
         Column(Modifier.weight(1f).padding(start = 13.dp, top = if (large) 8.dp else 0.dp, bottom = if (large) 8.dp else 0.dp)) {
             PlayerCell(a, winner == Team.A, finished && winner != null && winner != Team.A, bestA, end = false, stacked = large)
         }
-        Column(Modifier.width(88.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.width(88.dp).padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             if (duel.round > 0) Text(stringResource(R.string.duel_round, duel.round), style = NbType.numLabel, color = NbColors.text3)
             if (duel.round > 0 && !(finished && !cancelled && result?.winner != null && result.reason != EndReason.FORFEIT && result.reason != EndReason.DISCONNECT)) VSpacer(2.dp)
             when {
@@ -517,7 +519,6 @@ private fun DuelRow(
         Column(Modifier.weight(1f).padding(end = 13.dp, top = if (large) 8.dp else 0.dp, bottom = if (large) 8.dp else 0.dp), horizontalAlignment = Alignment.End) {
             PlayerCell(b, winner == Team.B, finished && winner != null && winner != Team.B, bestB, end = true, stacked = large)
         }
-        Box(Modifier.width(3.dp).fillMaxHeight().padding(vertical = 12.dp).background(NbColors.teamB, RoundedCornerShape(topStart = 2.dp, bottomStart = 2.dp)))
     }
 }
 
@@ -526,7 +527,7 @@ private fun DuelRow(
  * ([since]), so opening the board late still shows the real time left (D2-14). Without a sighting it counts from now.
  */
 @Composable
-private fun ReconnectStatus(since: Long?, serverNow: () -> Long) {
+private fun ReconnectStatus(since: Long?, serverNow: () -> Long, short: Boolean = false) {
     val start = remember(since) { since ?: serverNow() }
     var now by remember { mutableLongStateOf(serverNow()) }
     LaunchedEffect(start) {
@@ -536,7 +537,34 @@ private fun ReconnectStatus(since: Long?, serverNow: () -> Long) {
         }
     }
     val left = ((Limits.DISCONNECT_GRACE_MS - (now - start)) / 1000).toInt().coerceIn(0, (Limits.DISCONNECT_GRACE_MS / 1000).toInt())
-    Text(stringResource(R.string.status_reconnecting, formatClock(left)), style = NbType.caption, color = NbColors.strike, textAlign = TextAlign.Center)
+    // The countdown sits on its own line under the word (D2-03, DEF-056), so it is never clipped or split; small windows
+    // use the short word (D2-44: "재접속" / "Away").
+    val label = stringResource(if (short || isLargeFont()) R.string.status_reconnecting_short else R.string.status_reconnecting, "").trim()
+    val spoken = stringResource(R.string.status_reconnecting, formatClock(left))
+    Column(Modifier.semantics(mergeDescendants = true) { contentDescription = spoken }, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, style = NbType.caption, color = NbColors.strike, textAlign = TextAlign.Center, maxLines = 2)
+        Text(formatClock(left), style = NbType.numTag, color = NbColors.strike, maxLines = 1, softWrap = false)
+    }
+}
+
+/** 3 dp team stripes at both row edges, inset [inset] top and bottom (DESIGN_SYSTEM 12.11), drawn behind the row. */
+private fun Modifier.teamStripes(inset: androidx.compose.ui.unit.Dp): Modifier = drawBehind {
+    val w = 3.dp.toPx()
+    val top = inset.toPx()
+    val h = (size.height - top * 2).coerceAtLeast(0f)
+    val r = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx())
+    drawPath(
+        androidx.compose.ui.graphics.Path().apply {
+            addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, top, w, top + h, topLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius.Zero, topRightCornerRadius = r, bottomRightCornerRadius = r, bottomLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius.Zero))
+        },
+        NbColors.teamA,
+    )
+    drawPath(
+        androidx.compose.ui.graphics.Path().apply {
+            addRoundRect(androidx.compose.ui.geometry.RoundRect(size.width - w, top, size.width, top + h, topLeftCornerRadius = r, topRightCornerRadius = androidx.compose.ui.geometry.CornerRadius.Zero, bottomRightCornerRadius = androidx.compose.ui.geometry.CornerRadius.Zero, bottomLeftCornerRadius = r))
+        },
+        NbColors.teamB,
+    )
 }
 
 @Composable

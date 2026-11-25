@@ -15,11 +15,12 @@
     <string name="action_undo">Desfazer</string>
     <string name="action_edit">Editar</string>
     <string name="action_start">Começar</string>
-    <string name="age_title">Informe seu ano de nascimento</string>
-    <string name="age_lead">Pedimos só o ano. Sem nome nem data de nascimento.</string>
+    <string name="age_title">Informe seu ano e mês de nascimento</string>
+    <string name="age_lead">Pedimos só o ano e o mês. Sem nome nem data exata.</string>
     <string name="age_year">Ano de nascimento</string>
+    <string name="age_month">Mês</string>
     <string name="age_confirm">Confirmar</string>
-    <string name="age_invalid">Informe um ano válido</string>
+    <string name="age_invalid">Informe um ano e um mês válidos</string>
     <string name="na_title">Indisponível no momento</string>
     <string name="na_body">Com base nas informações fornecidas, este jogo não está disponível. Obrigado pelo interesse.</string>
     <string name="nick_eyebrow">Boas-vindas</string>
@@ -115,6 +116,12 @@
     <string name="col_guess">Meu palpite</string>
     <string name="col_hint">Dica</string>
     <string name="col_opp">Adv.</string>
+    <string name="opp_log_title">Registro do rival</string>
+    <string name="menu_opp_log">Ver registro do rival</string>
+    <string name="opp_log_empty">Nenhum arremesso ainda</string>
+    <string name="col_opp_guess">Palpite dele</string>
+    <string name="server_error_title">Algo deu errado</string>
+    <string name="server_error_body">Tente de novo em instantes.</string>
     <string name="legend_title">Como ler as dicas</string>
     <string name="legend_strike_name">Strike</string>
     <string name="legend_strike">dígito certo no lugar certo</string>
@@ -269,6 +276,7 @@
     <string name="duel_round">R%1$d</string>
     <string name="status_playing">Jogando</string>
     <string name="status_reconnecting">Reconectando %1$s</string>
+    <string name="status_reconnecting_short">Fora %1$s</string>
     <string name="status_draw">Empate</string>
     <string name="status_forfeit">Desistiu</string>
     <string name="status_decided">Decidido</string>
@@ -407,6 +415,7 @@
     <string name="blocked_empty">Você não bloqueou ninguém</string>
     <string name="unblocked_toast">Desbloqueado</string>
     <string name="transfer_left">Faltam %1$s</string>
+    <string name="transfer_expired">Este código expirou</string>
     <string name="transfer_new">Criar um código novo</string>
     <string name="licences">Licenças de código aberto</string>
     <string name="privacy_web">Versão pública desta política</string>

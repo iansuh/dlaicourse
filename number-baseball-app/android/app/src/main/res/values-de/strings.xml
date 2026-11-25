@@ -15,11 +15,12 @@
     <string name="action_undo">Rückgängig</string>
     <string name="action_edit">Ändern</string>
     <string name="action_start">Los</string>
-    <string name="age_title">Gib dein Geburtsjahr ein</string>
-    <string name="age_lead">Wir fragen nur nach dem Jahr. Kein Name, kein Geburtstag.</string>
+    <string name="age_title">Gib dein Geburtsjahr und deinen Monat ein</string>
+    <string name="age_lead">Wir fragen nur nach Jahr und Monat. Kein Name, kein genaues Datum.</string>
     <string name="age_year">Geburtsjahr</string>
+    <string name="age_month">Monat</string>
     <string name="age_confirm">Bestätigen</string>
-    <string name="age_invalid">Gib ein gültiges Jahr ein</string>
+    <string name="age_invalid">Gib ein gültiges Jahr und einen Monat ein</string>
     <string name="na_title">Gerade nicht verfügbar</string>
     <string name="na_body">Nach den eingegebenen Angaben ist dieses Spiel nicht verfügbar. Danke für dein Interesse.</string>
     <string name="nick_eyebrow">Willkommen</string>
@@ -112,6 +113,12 @@
     <string name="col_guess">Mein Tipp</string>
     <string name="col_hint">Hinweis</string>
     <string name="col_opp">Geg.</string>
+    <string name="opp_log_title">Gegnerprotokoll</string>
+    <string name="menu_opp_log">Gegnerprotokoll</string>
+    <string name="opp_log_empty">Noch keine Würfe</string>
+    <string name="col_opp_guess">Gegner-Tipp</string>
+    <string name="server_error_title">Etwas ist schiefgelaufen</string>
+    <string name="server_error_body">Bitte versuch es gleich noch einmal.</string>
     <string name="legend_title">Hinweise lesen</string>
     <string name="legend_strike_name">Strike</string>
     <string name="legend_strike">richtige Ziffer, richtige Stelle</string>
@@ -262,6 +269,7 @@
     <string name="duel_round">R%1$d</string>
     <string name="status_playing">Läuft</string>
     <string name="status_reconnecting">Verbinde neu %1$s</string>
+    <string name="status_reconnecting_short">Weg %1$s</string>
     <string name="status_draw">Unentschieden</string>
     <string name="status_forfeit">Aufgegeben</string>
     <string name="status_decided">Entschieden</string>
@@ -399,6 +407,7 @@
     <string name="blocked_empty">Du hast niemanden blockiert</string>
     <string name="unblocked_toast">Freigegeben</string>
     <string name="transfer_left">Noch %1$s</string>
+    <string name="transfer_expired">Dieser Code ist abgelaufen</string>
     <string name="transfer_new">Neuen Code erzeugen</string>
     <string name="licences">Open-Source-Lizenzen</string>
     <string name="privacy_web">Öffentliche Fassung dieser Erklärung</string>

@@ -15,11 +15,12 @@
     <string name="action_undo">撤销</string>
     <string name="action_edit">编辑</string>
     <string name="action_start">开始</string>
-    <string name="age_title">请输入你的出生年份</string>
-    <string name="age_lead">只需填写年份，不需要姓名和生日。</string>
+    <string name="age_title">请输入你的出生年月</string>
+    <string name="age_lead">只需填写年份和月份，不需要姓名和具体日期。</string>
     <string name="age_year">出生年份</string>
+    <string name="age_month">月份</string>
     <string name="age_confirm">确认</string>
-    <string name="age_invalid">请输入有效的年份</string>
+    <string name="age_invalid">请输入有效的年月</string>
     <string name="na_title">暂时无法使用</string>
     <string name="na_body">根据你填写的信息，这款游戏暂不对你开放。感谢你的关注。</string>
     <string name="nick_eyebrow">欢迎</string>
@@ -109,6 +110,12 @@
     <string name="col_guess">我的猜测</string>
     <string name="col_hint">提示</string>
     <string name="col_opp">对手</string>
+    <string name="opp_log_title">对手记录</string>
+    <string name="menu_opp_log">查看对手记录</string>
+    <string name="opp_log_empty">还没有投球</string>
+    <string name="col_opp_guess">对手猜测</string>
+    <string name="server_error_title">出了点问题</string>
+    <string name="server_error_body">请稍后再试。</string>
     <string name="legend_title">如何看提示</string>
     <string name="legend_strike_name">好球</string>
     <string name="legend_strike">数字和位置都对</string>
@@ -255,6 +262,7 @@
     <string name="duel_round">R%1$d</string>
     <string name="status_playing">对局中</string>
     <string name="status_reconnecting">重连中 %1$s</string>
+    <string name="status_reconnecting_short">离线 %1$s</string>
     <string name="status_draw">平局</string>
     <string name="status_forfeit">认输</string>
     <string name="status_decided">已决出</string>
@@ -391,6 +399,7 @@
     <string name="blocked_empty">你还没有屏蔽任何人</string>
     <string name="unblocked_toast">已取消屏蔽</string>
     <string name="transfer_left">剩余 %1$s</string>
+    <string name="transfer_expired">此代码已过期</string>
     <string name="transfer_new">生成新的转移码</string>
     <string name="licences">开源许可</string>
     <string name="privacy_web">本政策的公开版本</string>

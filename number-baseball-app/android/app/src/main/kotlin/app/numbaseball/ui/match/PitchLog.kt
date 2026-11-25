@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -56,16 +57,22 @@ private fun columns(digits: Int, compact: Boolean) =
 
 /** Log header 28 dp: `#` · 내 추측 · 판정 (centred over S and B) · 상대, `labelSmall` `text3`, 1 dp `line` top. */
 @Composable
-fun PitchLogHeader(digits: Int) {
+fun PitchLogHeader(digits: Int, showOpponent: Boolean = true, onOpponentLog: (() -> Unit)? = null) {
     val c = columns(digits, compact = false)
     Column {
         Hairline()
         // Grows with large text instead of clipping the header labels (D2-01).
         Row(Modifier.fillMaxWidth().heightIn(min = NbSize.historyHeader).padding(horizontal = c.padding), verticalAlignment = Alignment.CenterVertically) {
-            Text("#", style = NbType.labelSmall, color = NbColors.text3, maxLines = 1, softWrap = false, modifier = Modifier.width(c.round))
-            Text(stringResource(R.string.col_guess), style = NbType.labelSmall, color = NbColors.text3, maxLines = 1, softWrap = false, modifier = Modifier.weight(1f))
-            Text(stringResource(R.string.col_hint), style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.Center, maxLines = 1, softWrap = false, modifier = Modifier.width(c.hint * 2))
-            Text(stringResource(R.string.col_opp), style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.End, maxLines = 1, softWrap = false, modifier = Modifier.width(c.opponent))
+            // One line each; long translations at large text step down to half size rather than clip (DEF-061).
+            Text("#", style = NbType.labelSmall, color = NbColors.text3, maxLines = 1, softWrap = false, fitMinScale = 0.5f, modifier = Modifier.width(c.round))
+            Text(stringResource(R.string.col_guess), style = NbType.labelSmall, color = NbColors.text3, maxLines = 1, softWrap = false, fitMinScale = 0.5f, modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.col_hint), style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.Center, maxLines = 1, softWrap = false, fitMinScale = 0.5f, modifier = Modifier.width(c.hint * 2))
+            if (showOpponent) {
+                Text(stringResource(R.string.col_opp), style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.End, maxLines = 1, softWrap = false, fitMinScale = 0.5f, modifier = Modifier.width(c.opponent))
+            } else if (onOpponentLog != null) {
+                // The hidden opponent column's header becomes the "상대 기록" button (ADAPTIVE §2.2, D2-43).
+                app.numbaseball.ui.design.NbButton(stringResource(R.string.opp_log_title), onOpponentLog, kind = app.numbaseball.ui.design.ButtonKind.TEXT, modifier = Modifier.widthIn(max = 128.dp))
+            }
         }
     }
 }
@@ -82,6 +89,7 @@ fun PitchLog(
     reveal: RevealProgress,
     compact: Boolean,
     modifier: Modifier = Modifier,
+    showOpponent: Boolean = true,
 ) {
     val c = columns(digits, compact)
     val rows = myRounds.asReversed()
@@ -90,7 +98,7 @@ fun PitchLog(
     LazyColumn(state = listState, modifier = modifier.fillMaxSize().fadingEdges(bottom = 16.dp, enabled = canScroll)) {
         itemsIndexed(rows, key = { _, r -> r.round }) { index, entry ->
             val opponentEntry = opponentRounds.firstOrNull { it.round == entry.round }
-            LogRow(entry, opponentEntry, digits, latest = index == 0, compact = compact, columns = c, reveal = if (index == 0) reveal else RevealProgress.Done)
+            LogRow(entry, opponentEntry, digits, latest = index == 0, compact = compact, columns = c, reveal = if (index == 0) reveal else RevealProgress.Done, showOpponent = showOpponent)
         }
     }
 }
@@ -104,6 +112,7 @@ private fun LogRow(
     compact: Boolean,
     columns: LogColumns,
     reveal: RevealProgress,
+    showOpponent: Boolean = true,
 ) {
     val large = isLargeFont()
     val height = when {
@@ -135,7 +144,14 @@ private fun LogRow(
             // The guess never truncates (D2-01): it takes the flexible column and steps its size down if it must.
             FitText(
                 entry.guess ?: "—",
-                style = if (latest && !compact) NbType.numSlotSm.copy(letterSpacing = 0.12.em) else NbType.numLog,
+                // Compact rows centre the digits in the line box like the normal rows (D2-46).
+                style = if (latest && !compact) {
+                    NbType.numSlotSm.copy(letterSpacing = 0.12.em)
+                } else if (compact) {
+                    NbType.numLog.copy(lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(androidx.compose.ui.text.style.LineHeightStyle.Alignment.Center, androidx.compose.ui.text.style.LineHeightStyle.Trim.None))
+                } else {
+                    NbType.numLog
+                },
                 color = if (entry.guess == null) NbColors.text3 else NbColors.chalk,
                 modifier = Modifier.weight(1f).clearAndSetSemantics {},
             )
@@ -157,8 +173,10 @@ private fun LogRow(
                     )
                 }
             }
-            Box(Modifier.width(columns.opponent).clearAndSetSemantics {}, contentAlignment = Alignment.CenterEnd) {
-                if (opponentEntry != null) OpponentHint(opponentEntry)
+            if (showOpponent) {
+                Box(Modifier.width(columns.opponent).clearAndSetSemantics {}, contentAlignment = Alignment.CenterEnd) {
+                    if (opponentEntry != null) OpponentHint(opponentEntry)
+                }
             }
         }
     }
@@ -176,7 +194,8 @@ private fun OpponentHint(entry: RoundEntry) {
         append(" ")
         withStyle(SpanStyle(color = if (entry.balls == 0) NbColors.textDisabled else NbColors.text2)) { append("${entry.balls}B") }
     }
-    Text(text, style = NbType.numTag.copy(fontSize = NbType.numHint.fontSize * 0.9f), maxLines = 1)
+    // `numTag` 15 sp like the prototype's opponent column (D2-45).
+    Text(text, style = NbType.numTag, maxLines = 1, softWrap = false)
 }
 
 /** Empty log during secret entry (DESIGN_SYSTEM 12.7): "판정 읽는 법" + three 44 dp legend rows. */

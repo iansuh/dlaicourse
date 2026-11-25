@@ -1,5 +1,8 @@
 package app.numbaseball.ui.terms
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
 import app.numbaseball.ui.design.underlined
 import app.numbaseball.ui.design.HSpacer
 import androidx.annotation.DrawableRes
@@ -52,10 +55,24 @@ fun TermsGateScreen(
     onAgree: () -> Unit,
     onClose: () -> Unit,
     @androidx.annotation.StringRes failureMessage: Int = R.string.error_network,
+    /** The last failure was a server error (5xx, unknown): the 12.17 dialog instead of a toast (D2-43). */
+    serverError: Boolean = false,
 ) {
     val toast = rememberToastState()
     val failure = stringResource(failureMessage)
-    androidx.compose.runtime.LaunchedEffect(failed) { if (failed > 0) toast.show(failure, error = true) }
+    var dialogFor by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
+    androidx.compose.runtime.LaunchedEffect(failed) {
+        if (failed > 0) {
+            if (serverError) dialogFor = failed else toast.show(failure, error = true)
+        }
+    }
+    if (dialogFor > 0) {
+        app.numbaseball.ui.design.ServerErrorDialog(
+            onRetry = { dialogFor = 0; onAgree() },
+            onHome = { dialogFor = 0; onClose() },
+            onDismiss = { dialogFor = 0 },
+        )
+    }
     NbScreen(
         topBar = { TopBar(null, R.drawable.ic_close, stringResource(R.string.action_close), onClose) },
         bottomBar = {

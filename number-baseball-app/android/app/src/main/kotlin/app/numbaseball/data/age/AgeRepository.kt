@@ -7,7 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.google.android.play.agesignals.AgeSignalsManagerFactory
 import com.google.android.play.agesignals.AgeSignalsRequest
 import com.google.android.play.agesignals.model.SignificantChangeStatus
-import java.time.Year
+import java.time.YearMonth
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -81,7 +81,7 @@ class AgeRepository(
     private val signals: AgeSignalsSource,
     private val minimumAge: Int,
     scope: CoroutineScope,
-    private val currentYear: () -> Int = { Year.now().value },
+    private val currentMonth: () -> YearMonth = { YearMonth.now() },
 ) {
     private val signal = MutableStateFlow<AgeSignal?>(null)
 
@@ -89,8 +89,8 @@ class AgeRepository(
         if (band == null) AgeState.Unknown else AgeState.Known(band, s)
     }.stateIn(scope, SharingStarted.Eagerly, AgeState.Loading)
 
-    /** Valid birth years (01 §0): 1900 to the current year. */
-    fun validYears(): IntRange = 1900..currentYear()
+    /** A valid answer (01 §0): a real month from 1900 up to the current month. */
+    fun isValid(year: Int, month: Int): Boolean = currentMonth().let { AgeRules.isValidBirth(year, month, it.year, it.monthValue) }
 
     private val submitLock = Mutex()
 
@@ -101,12 +101,13 @@ class AgeRepository(
      * Stores the band. An under-minimum answer is final on this device (no retry by re-answering, DEF-052): once one is
      * stored or being stored, a later answer is ignored and the stored band is returned.
      */
-    suspend fun submitBirthYear(year: Int): AgeBand = submitLock.withLock {
+    suspend fun submitBirth(year: Int, month: Int): AgeBand = submitLock.withLock {
         if (refused || store.band.first() == AgeBand.UNDER_MINIMUM) {
             refused = true
             return@withLock AgeBand.UNDER_MINIMUM
         }
-        val band = AgeRules.bandForBirthYear(year, currentYear(), minimumAge)
+        val now = currentMonth()
+        val band = AgeRules.bandForBirth(year, month, now.year, now.monthValue, minimumAge)
         if (band == AgeBand.UNDER_MINIMUM) refused = true
         store.save(band)
         band

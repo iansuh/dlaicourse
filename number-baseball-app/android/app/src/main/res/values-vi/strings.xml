@@ -15,11 +15,12 @@
     <string name="action_undo">Hoàn tác</string>
     <string name="action_edit">Sửa</string>
     <string name="action_start">Bắt đầu</string>
-    <string name="age_title">Nhập năm sinh của bạn</string>
-    <string name="age_lead">Chúng tôi chỉ hỏi năm sinh. Không cần tên hay ngày sinh.</string>
+    <string name="age_title">Nhập năm và tháng sinh của bạn</string>
+    <string name="age_lead">Chúng tôi chỉ hỏi năm và tháng sinh. Không cần tên hay ngày cụ thể.</string>
     <string name="age_year">Năm sinh</string>
+    <string name="age_month">Tháng</string>
     <string name="age_confirm">Xác nhận</string>
-    <string name="age_invalid">Nhập một năm hợp lệ</string>
+    <string name="age_invalid">Nhập năm và tháng hợp lệ</string>
     <string name="na_title">Hiện chưa thể dùng</string>
     <string name="na_body">Với thông tin đã nhập, trò chơi này hiện không khả dụng. Cảm ơn bạn đã quan tâm.</string>
     <string name="nick_eyebrow">Chào mừng</string>
@@ -109,6 +110,12 @@
     <string name="col_guess">Tôi đoán</string>
     <string name="col_hint">Gợi ý</string>
     <string name="col_opp">Đối thủ</string>
+    <string name="opp_log_title">Lượt của đối thủ</string>
+    <string name="menu_opp_log">Xem lượt của đối thủ</string>
+    <string name="opp_log_empty">Chưa có lượt ném nào</string>
+    <string name="col_opp_guess">Đối thủ đoán</string>
+    <string name="server_error_title">Đã xảy ra sự cố</string>
+    <string name="server_error_body">Vui lòng thử lại sau giây lát.</string>
     <string name="legend_title">Cách đọc gợi ý</string>
     <string name="legend_strike_name">Strike</string>
     <string name="legend_strike">đúng số, đúng vị trí</string>
@@ -255,6 +262,7 @@
     <string name="duel_round">L%1$d</string>
     <string name="status_playing">Đang chơi</string>
     <string name="status_reconnecting">Kết nối lại %1$s</string>
+    <string name="status_reconnecting_short">Vắng %1$s</string>
     <string name="status_draw">Hòa</string>
     <string name="status_forfeit">Bỏ cuộc</string>
     <string name="status_decided">Đã phân thắng bại</string>
@@ -391,6 +399,7 @@
     <string name="blocked_empty">Bạn chưa chặn ai</string>
     <string name="unblocked_toast">Đã bỏ chặn</string>
     <string name="transfer_left">Còn %1$s</string>
+    <string name="transfer_expired">Mã này đã hết hạn</string>
     <string name="transfer_new">Tạo mã mới</string>
     <string name="licences">Giấy phép nguồn mở</string>
     <string name="privacy_web">Bản công khai của chính sách này</string>

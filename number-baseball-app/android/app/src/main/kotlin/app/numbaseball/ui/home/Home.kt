@@ -1,5 +1,6 @@
 package app.numbaseball.ui.home
 
+import app.numbaseball.ui.design.isLargeFont
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
@@ -225,7 +226,7 @@ private fun HomeHeader(onHowToPlay: () -> Unit, onSettings: () -> Unit) {
         BrandMark()
         HSpacer(12.dp)
         Column(Modifier.weight(1f).semantics(mergeDescendants = true) { heading() }) {
-            Text(stringResource(R.string.app_name_main), style = NbType.subtitle, color = NbColors.chalk, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(stringResource(R.string.app_name_main), style = NbType.subtitle, color = NbColors.chalk, maxLines = if (isLargeFont() && !isCompactHeight()) 2 else 1, overflow = TextOverflow.Ellipsis)
             Text(stringResource(R.string.app_name_sub), style = NbType.caption, color = NbColors.text3, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         IconButton48(R.drawable.ic_help, stringResource(R.string.home_help), onHowToPlay, tint = NbColors.text2)

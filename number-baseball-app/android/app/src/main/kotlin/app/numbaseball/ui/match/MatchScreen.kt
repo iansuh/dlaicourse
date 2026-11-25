@@ -20,6 +20,10 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -135,6 +139,7 @@ fun MatchScreen(
     actions: MatchActions,
     bubble: PhraseBubble? = null,
     initialLargeMemo: Boolean = false,
+    initialOpponentLog: Boolean = false,
     /** The interactive tutorial (01 §2) runs on this screen with a coach band and its own action key. */
     tutorial: app.numbaseball.ui.tutorial.TutorialUi? = null,
 ) {
@@ -148,6 +153,7 @@ fun MatchScreen(
     var memoInCompact by rememberSaveable { mutableStateOf(false) }
     val large = isLargeFont()
     var largeMemo by rememberSaveable { mutableStateOf(initialLargeMemo) }
+    var opponentLog by rememberSaveable { mutableStateOf(initialOpponentLog) }
     var shakeKey by remember { mutableIntStateOf(0) }
     val reveal = rememberReveal(state, audio, haptics, actions.onFinished)
     ScreenMusic(MusicTrack.MATCH, audio)
@@ -219,6 +225,7 @@ fun MatchScreen(
                         onReport = actions.onReport,
                         onShowSecret = { mySecretToast?.let { toast.show(it) } },
                         onRandom = if (compact && state.phase == MatchPhase.CHOOSING_SECRET && state.acceptsInput) actions.onRandomSecret else null,
+                        onOpponentLog = if (!secretPhase && tutorial == null) ({ opponentLog = true }) else null,
                         onForfeit = { confirmForfeit = true },
                     )
                 },
@@ -226,10 +233,22 @@ fun MatchScreen(
         },
         overlay = {
             ToastHost(toast, bottomOffset = if (compact) 8.dp else 16.dp + 172.dp + 24.dp)
+            if (opponentLog && !secretPhase) {
+                BackHandler { opponentLog = false }
+                SheetFrame(onDismiss = { opponentLog = false }) {
+                    OpponentLogSheet(state.digits, state.opponentRounds, onClose = { opponentLog = false })
+                }
+            }
             if (largeMemo && !secretPhase) {
                 BackHandler { largeMemo = false }
-                SheetFrame(onDismiss = { largeMemo = false }) {
-                    LargeMemoSheet(state.memo, onMemoDigit, onMemoCell, actions.onMemoClear, onClose = { largeMemo = false })
+                // Full window height minus the status bar, so the header stays in one place (D2-52).
+                val statusTop = androidx.compose.foundation.layout.WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                SheetFrame(onDismiss = { largeMemo = false }, top = statusTop) {
+                    LargeMemoSheet(
+                        state.memo, onMemoDigit, onMemoCell, actions.onMemoClear,
+                        onClose = { largeMemo = false },
+                        clock = state.secondsLeft?.let { s -> { PitchClock(s, clockLevel(s, paused = state.reconnectSeconds != null), Modifier.padding(horizontal = 8.dp)) } },
+                    )
                 }
             }
         },
@@ -238,9 +257,13 @@ fun MatchScreen(
         state.reconnectSeconds?.let {
             ConnectionBanner(stringResource(R.string.reconnecting_title), stringResource(R.string.reconnecting_match), formatClock(it))
         }
-        if (tutorial != null) CoachBand(tutorial, compact) else if (!compact) DuelStrip(state, actions.onChat, bubble)
+        // Large text with the connection banner (D2-37): the duel strip gives way so the log keeps its latest row.
+        if (tutorial != null) CoachBand(tutorial, compact) else if (!compact && !((large || available600()) && state.reconnectSeconds != null)) {
+            DuelStrip(state, actions.onChat, bubble, onOpponent = if (!secretPhase) ({ opponentLog = true }) else null)
+        }
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
             val available = maxHeight
+            val logWidth = maxWidth
             Column(Modifier.fillMaxSize()) {
                 when {
                     secretPhase -> HintLegend(compact, Modifier.weight(1f))
@@ -254,13 +277,20 @@ fun MatchScreen(
                         val autoCollapse = available - header - expandedMemo < NbSize.historyRowLatest + NbSize.historyRow
                         // Large text (ADAPTIVE.md §2): the inline memo stays collapsed; expanding opens the large memo sheet.
                         val collapsed = large || (state.memo.collapsed ?: autoCollapse)
-                        if (!compact) PitchLogHeader(state.digits)
-                        PitchLog(state.digits, state.myRounds, state.opponentRounds, reveal.progress, compact, Modifier.weight(1f))
+                        // Not even the collapsed memo fits beside the latest row (narrow window with the connection
+                        // banner): only the memo toolbar stays, and it opens the memo sheet.
+                        val tight = available - header - memoHeight(state.digits, collapsed = true) < NbSize.historyRowLatest
+                        // ADAPTIVE §2.2: no room for a 56 dp opponent column (6 digits at large text, or narrower than 320 dp):
+                        // the column is hidden and its header opens the opponent sheet.
+                        val showOpponent = !(state.digits >= 6 && large) && logWidth >= 320.dp
+                        if (!compact) PitchLogHeader(state.digits, showOpponent, onOpponentLog = if (tutorial == null) ({ opponentLog = true }) else null)
+                        PitchLog(state.digits, state.myRounds, state.opponentRounds, reveal.progress, compact, Modifier.weight(1f), showOpponent = showOpponent || compact)
                         tutorial?.legend?.let { TutorialLegend(it, compact) }
                         if (!compact && tutorial?.showMemo != false) {
                             MemoBoard(
                                 state.memo, collapsed, onMemoDigit, onMemoCell, actions.onMemoClear,
-                                onCollapse = { collapse -> if (large && !collapse) largeMemo = true else actions.onMemoCollapse(collapse) },
+                                onCollapse = { collapse -> if ((large || tight) && !collapse) largeMemo = true else actions.onMemoCollapse(collapse) },
+                                toolbarOnly = large || tight,
                             )
                         }
                     }
@@ -364,14 +394,16 @@ private fun MatchTopBar(
                         .padding(start = 0.dp)
                         .then(if (onTitleClick != null) Modifier.clickable(onClick = onTitleClick) else Modifier),
                 ) {
-                    Text(title, style = NbType.subtitle, color = NbColors.chalk, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(title, style = NbType.subtitle, color = NbColors.chalk, maxLines = if (tutorial != null && isLargeFont() && !compact) 2 else 1, overflow = TextOverflow.Ellipsis, fitMinScale = 0.6f)
                     if (tutorial != null) {
                         Unit
                     } else if (compact && !secretPhase) {
-                        StatusLine(state.opponentStatus)
+                        // Small window at large text: lamp and countdown only; the word is read by TalkBack (DEF-055).
+                        StatusLine(state.opponentStatus, showLabel = !isLargeFont())
                     } else if (!isLargeFont()) {
                         // Large text: the mode subtitle is hidden (ADAPTIVE.md §2).
-                        Text(subtitle, style = NbType.caption, color = NbColors.text3, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        // Long translations wrap to a second line rather than lose the digit count (DEF-054).
+                        Text(subtitle, style = NbType.caption, color = NbColors.text3, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                 }
             },
@@ -393,9 +425,14 @@ private fun MatchTopBar(
                 }
             },
             bottom = {
-                val total = state.roundSeconds
-                val fraction = if (total != null && state.secondsLeft != null) state.secondsLeft / total.toFloat() else 1f
-                ClockLine(fraction, level)
+                // The tutorial has no pitch clock (01 §2): a plain hairline, not the clock line (D2-46).
+                if (tutorial != null) {
+                    Hairline()
+                } else {
+                    val total = state.roundSeconds
+                    val fraction = if (total != null && state.secondsLeft != null) state.secondsLeft / total.toFloat() else 1f
+                    ClockLine(fraction, level)
+                }
             },
             titleGap = 8.dp,
             height = 54.dp,
@@ -415,6 +452,7 @@ private fun MatchMenu(
     onShowSecret: () -> Unit,
     onForfeit: () -> Unit,
     onRandom: (() -> Unit)?,
+    onOpponentLog: (() -> Unit)? = null,
 ) {
     DropdownMenu(
         expanded = expanded,
@@ -428,6 +466,9 @@ private fun MatchMenu(
             DropdownMenuItem(text = { Text(stringResource(R.string.menu_random_fill), style = NbType.body) }, onClick = { onDismiss(); onRandom() }, colors = colors)
         }
         DropdownMenuItem(text = { Text(stringResource(R.string.menu_how_to), style = NbType.body) }, onClick = { onDismiss(); onHowTo() }, colors = colors)
+        if (onOpponentLog != null) {
+            DropdownMenuItem(text = { Text(stringResource(R.string.menu_opp_log), style = NbType.body) }, onClick = { onDismiss(); onOpponentLog() }, colors = colors)
+        }
         if (compact && state.mySecret != null) {
             DropdownMenuItem(text = { Text(stringResource(R.string.menu_show_secret), style = NbType.body) }, onClick = { onDismiss(); onShowSecret() }, colors = colors)
         }
@@ -445,18 +486,29 @@ private fun MatchMenu(
 
 /** Status line under the opponent's name: 6 dp lamp + `caption` (DESIGN_SYSTEM 12.3). */
 @Composable
-private fun StatusLine(status: OpponentStatus, wrap: Boolean = false) {
+private fun StatusLine(status: OpponentStatus, wrap: Boolean = false, showLabel: Boolean = true) {
     val (lit, text, color) = when (status) {
         OpponentStatus.Picking -> Triple(false, stringResource(R.string.opp_picking), NbColors.text2)
         OpponentStatus.Ready -> Triple(true, stringResource(R.string.opp_ready), NbColors.text2)
         OpponentStatus.Thinking -> Triple(false, stringResource(R.string.opp_thinking), NbColors.text2)
         OpponentStatus.Pitched -> Triple(true, stringResource(R.string.opp_pitched), NbColors.text2)
-        is OpponentStatus.Disconnected -> Triple(false, stringResource(R.string.opp_disconnected, formatClock(status.secondsLeft)), NbColors.strike)
+        // The word may shorten; the countdown never does (DEF-055).
+        is OpponentStatus.Disconnected -> Triple(false, stringResource(R.string.opp_disconnected, "").trimEnd(' ', '·', '・'), NbColors.strike)
     }
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    val clock = (status as? OpponentStatus.Disconnected)?.let { formatClock(it.secondsLeft) }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = if (!showLabel) Modifier.semantics(mergeDescendants = true) { contentDescription = listOfNotNull(text, clock).joinToString(" ") } else if (clock != null) Modifier.semantics(mergeDescendants = true) {} else Modifier,
+    ) {
         Lamp(LampColor.BALL, lit, NbSize.lampS)
-        HSpacer(8.dp)
-        Text(text, style = NbType.caption, color = color, maxLines = if (wrap) 2 else 1, overflow = TextOverflow.Ellipsis)
+        if (showLabel) {
+            HSpacer(8.dp)
+            Text(text, style = NbType.caption, color = color, maxLines = if (wrap) 2 else 1, overflow = TextOverflow.Ellipsis, fitMinScale = 0.5f, modifier = Modifier.weight(1f, fill = false))
+        }
+        if (clock != null) {
+            HSpacer(6.dp)
+            Text(clock, style = NbType.numTag, color = color, maxLines = 1, softWrap = false)
+        }
     }
 }
 
@@ -465,7 +517,8 @@ private fun StatusLine(status: OpponentStatus, wrap: Boolean = false) {
  * button (online) · "내 숫자" over mini plates.
  */
 @Composable
-private fun DuelStrip(state: MatchUiState, onChat: (() -> Unit)?, bubble: PhraseBubble?) {
+private fun DuelStrip(state: MatchUiState, onChat: (() -> Unit)?, bubble: PhraseBubble?, onOpponent: (() -> Unit)? = null) {
+    val opponentClick = if (onOpponent != null) Modifier.clickable(onClickLabel = stringResource(R.string.menu_opp_log), onClick = onOpponent) else Modifier
     val secretPhase = state.phase == MatchPhase.CHOOSING_SECRET || state.phase == MatchPhase.WAITING_FOR_OPPONENT_SECRET
     val large = isLargeFont()
     val lead: @Composable () -> Unit = {
@@ -493,7 +546,7 @@ private fun DuelStrip(state: MatchUiState, onChat: (() -> Unit)?, bubble: Phrase
         if (large) {
             // Large text (ADAPTIVE.md §2): two lines, 72 dp minimum: name row, then status + my secret.
             Row(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f).then(opponentClick)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         lead()
                         HSpacer(12.dp)
@@ -521,7 +574,7 @@ private fun DuelStrip(state: MatchUiState, onChat: (() -> Unit)?, bubble: Phrase
             ) {
                 lead()
                 HSpacer(12.dp)
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f).then(opponentClick)) {
                     name(Modifier)
                     StatusLine(state.opponentStatus)
                 }
@@ -556,12 +609,26 @@ private fun PhraseBubbleView(bubble: PhraseBubble, modifier: Modifier) {
     }
 }
 
-/** Practice band (05 §2.11): 40 dp `surface3`: "방 K7Q2M · 3/6명 기다리는 중" + "방으로". */
+/**
+ * Practice band (05 §2.11): 40 dp minimum, `surface3`: "방 K7Q2M · 3/6명 기다리는 중" + "방으로". The text button keeps its
+ * 48 dp target over the band edges (D2-39); at large text the band grows and its text wraps to two lines.
+ */
 @Composable
 private fun PracticeBand(info: PracticeInfo, onToRoom: (() -> Unit)?) {
-    Row(Modifier.fillMaxWidth().height(40.dp).background(NbColors.surface3).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(R.string.practice_band, info.roomCode, info.present, info.total), style = NbType.caption, color = NbColors.chalk, modifier = Modifier.weight(1f))
-        if (onToRoom != null) NbButton(stringResource(R.string.practice_to_room), onToRoom, kind = ButtonKind.TEXT)
+    // Small windows keep the one-line 40 dp band whatever the font size (the keypad needs the height).
+    val large = isLargeFont() && !isCompactHeight()
+    Row(Modifier.fillMaxWidth().heightIn(min = 40.dp).background(NbColors.surface3).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            stringResource(R.string.practice_band, info.roomCode, info.present, info.total),
+            style = NbType.caption,
+            color = NbColors.chalk,
+            maxLines = if (large) 2 else 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f).padding(vertical = if (large) 6.dp else 0.dp),
+        )
+        if (onToRoom != null) {
+            NbButton(stringResource(R.string.practice_to_room), onToRoom, kind = ButtonKind.TEXT, modifier = if (large) Modifier else Modifier.targetOverflow(40.dp))
+        }
     }
 }
 
@@ -760,25 +827,37 @@ private fun MatchHooks(state: MatchUiState, revealing: Boolean, audio: GameAudio
 @Composable
 private fun CoachBand(tutorial: app.numbaseball.ui.tutorial.TutorialUi, compact: Boolean) {
     Column(Modifier.fillMaxWidth().background(NbColors.surface1)) {
+        // Small windows (D2-41): no 96 dp minimum, `caption`, two lines visible and the rest scrolls, so the log keeps
+        // at least 88 dp for the row the coach is explaining.
         Box(
             Modifier
                 .fillMaxWidth()
-                .heightIn(min = if (compact) 0.dp else 96.dp)
+                .then(if (compact) Modifier.heightIn(max = 48.dp).verticalScroll(rememberScrollState()) else Modifier.heightIn(min = 96.dp))
                 .padding(horizontal = if (compact) 12.dp else 16.dp, vertical = if (compact) 8.dp else 16.dp)
                 .semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite },
             contentAlignment = Alignment.CenterStart,
         ) {
-            Text(tutorial.coach, style = NbType.body, color = NbColors.text2)
+            Text(tutorial.coach, style = if (compact) NbType.caption else NbType.body, color = NbColors.text2)
         }
-        Hairline()
+        // Normal windows: the log header below starts with its own 1 dp line (D2-46: no doubled 2 dp edge).
+        if (compact) Hairline()
     }
 }
 
 /** Step 3: a one-line legend under the highlighted log row. */
 @Composable
 private fun TutorialLegend(text: String, compact: Boolean) {
+    // Small windows: TalkBack only; the coach text already explains the row (D2-41).
+    if (compact) {
+        Box(Modifier.fillMaxWidth().semantics { contentDescription = text })
+        return
+    }
     Column(Modifier.fillMaxWidth()) {
         Hairline()
         Text(text, style = NbType.caption, color = NbColors.text3, modifier = Modifier.padding(horizontal = if (compact) 12.dp else 16.dp, vertical = 8.dp))
     }
 }
+
+/** Windows shorter than 600 dp: with the connection banner the duel strip gives way to the log (D2-37, DEF-060). */
+@Composable
+private fun available600(): Boolean = app.numbaseball.ui.common.rememberWindowHeightDp() < 600

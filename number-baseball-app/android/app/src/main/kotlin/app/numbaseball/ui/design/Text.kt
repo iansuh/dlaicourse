@@ -51,11 +51,15 @@ fun Text(
     minLines: Int = 1,
     onTextLayout: ((TextLayoutResult) -> Unit)? = null,
     style: TextStyle = LocalTextStyle.current,
+    /** Steps the size down (to [fitMinScale]) rather than clip, ellipsize or break a word; off for player content (names). */
+    autoFit: Boolean = true,
+    fitMinScale: Float = 0.7f,
 ) {
     val (cappedStyle, cappedSize) = numeralCap(style, fontFamily, fontSize)
     val lines = remember { LineCount() }
     MaterialText(
         text = text,
+        autoSize = if (autoFit) wordFit(if (cappedSize.isSpecified()) cappedSize else cappedStyle.fontSize, fitMinScale) else null,
         modifier = modifier.designLineBoxes(if (lineHeight.isSpecified()) lineHeight else cappedStyle.lineHeight, if (cappedSize.isSpecified()) cappedSize else cappedStyle.fontSize, lines),
         color = color, fontSize = cappedSize, fontStyle = fontStyle, fontWeight = fontWeight, fontFamily = fontFamily,
         letterSpacing = letterSpacing, textDecoration = textDecoration, textAlign = textAlign, lineHeight = lineHeight,
@@ -87,11 +91,13 @@ fun Text(
     minLines: Int = 1,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     style: TextStyle = LocalTextStyle.current,
+    autoFit: Boolean = true,
 ) {
     val (cappedStyle, cappedSize) = numeralCap(style, fontFamily, fontSize)
     val lines = remember { LineCount() }
     MaterialText(
         text = text,
+        autoSize = if (autoFit) wordFit(if (cappedSize.isSpecified()) cappedSize else cappedStyle.fontSize) else null,
         modifier = modifier.designLineBoxes(if (lineHeight.isSpecified()) lineHeight else cappedStyle.lineHeight, if (cappedSize.isSpecified()) cappedSize else cappedStyle.fontSize, lines),
         color = color, fontSize = cappedSize, fontStyle = fontStyle, fontWeight = fontWeight, fontFamily = fontFamily,
         letterSpacing = letterSpacing, textDecoration = textDecoration, textAlign = textAlign, lineHeight = lineHeight,
@@ -102,6 +108,55 @@ fun Text(
         },
         style = cappedStyle,
     )
+}
+
+/**
+ * DEF-054..061 / AC-FONT-01: a label that does not fit its space (long translations, 200 % font, narrow windows) steps
+ * its font size down in 5 % steps to [WordFit.minScale] of the token before it would clip, ellipsize or break inside a
+ * word. When it fits at full size nothing changes. Latin, Cyrillic and Vietnamese words never break; Hangul labels
+ * (up to three words) break only between 어절 (DESIGN_SYSTEM 3.2); Han and kana may break anywhere.
+ */
+private fun wordFit(size: TextUnit, minScale: Float = 0.7f): androidx.compose.foundation.text.TextAutoSize? = if (size.isSp && size.value > 0f) WordFit(size, minScale) else null
+
+private data class WordFit(val max: TextUnit, val minScale: Float = 0.7f) : androidx.compose.foundation.text.TextAutoSize {
+    override fun androidx.compose.foundation.text.modifiers.TextAutoSizeLayoutScope.getFontSize(
+        constraints: androidx.compose.ui.unit.Constraints,
+        text: AnnotatedString,
+    ): TextUnit {
+        var scale = 1f
+        while (true) {
+            val size = max * scale
+            val result = performLayout(constraints, text, size)
+            if (scale <= minScale + 0.001f || fits(result, text.text, size.toPx())) return size
+            scale = (scale - 0.05f).coerceAtLeast(minScale)
+        }
+    }
+}
+
+private fun fits(r: TextLayoutResult, text: String, fontPx: Float): Boolean {
+    if (r.didOverflowWidth && r.multiParagraph.width - r.size.width > 1f) return false
+    if (r.multiParagraph.height - r.size.height > fontPx * 0.25f) return false
+    if ((0 until r.lineCount).any { r.isLineEllipsized(it) }) return false
+    if (r.lineCount <= 1) return true
+    return !brokenInsideWord(r, text)
+}
+
+/** True when a line ends inside a word (see [wordFit] for the scripts). */
+internal fun brokenInsideWord(r: TextLayoutResult, text: String): Boolean {
+    val label = text.count { it == ' ' } <= 2
+    return (0 until r.lineCount - 1).any { i ->
+        val end = r.getLineEnd(i, visibleEnd = false)
+        if (end !in 1 until text.length) return@any false
+        val a = text[end - 1]
+        val b = text[end]
+        a.isLetterOrDigit() && b.isLetterOrDigit() && wordScript(a, label) && wordScript(b, label)
+    }
+}
+
+private fun wordScript(c: Char, label: Boolean): Boolean = when (Character.UnicodeScript.of(c.code)) {
+    Character.UnicodeScript.HAN, Character.UnicodeScript.HIRAGANA, Character.UnicodeScript.KATAKANA -> false
+    Character.UnicodeScript.HANGUL -> label
+    else -> true
 }
 
 /** Fonts scale above this factor only for `sans` text (DESIGN_SYSTEM 3.3). */
@@ -155,12 +210,18 @@ private fun Modifier.designLineBoxes(lineHeight: TextUnit, fontSize: TextUnit, l
         this
     } else {
         layout { measurable, constraints ->
-            val placeable = measurable.measure(constraints)
+            // The glyph extents (Barlow numerals, Hangul / kana fallbacks) may exceed the line box by up to about a third
+            // of the font size; give the text that room so a container sized to the line boxes does not clip it.
+            val slack = if (constraints.hasBoundedHeight && fontSize.isSp) (fontSize.toPx() * 0.35f).roundToInt() else 0
+            val inner = if (slack > 0) constraints.copy(maxHeight = constraints.maxHeight + slack) else constraints
+            val placeable = measurable.measure(inner)
             val target = (lines.value.coerceAtLeast(1) * lineBoxPx(lineHeight, fontSize)).roundToInt().coerceAtLeast(constraints.minHeight)
             if (target >= placeable.height) {
-                layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                val h = placeable.height.coerceAtMost(constraints.maxHeight)
+                layout(placeable.width, h) { placeable.place(0, -((placeable.height - h) / 2f).roundToInt()) }
             } else {
-                layout(placeable.width, target) { placeable.place(0, -((placeable.height - target) / 2f).roundToInt()) }
+                val h = target.coerceAtMost(constraints.maxHeight)
+                layout(placeable.width, h) { placeable.place(0, -((placeable.height - h) / 2f).roundToInt()) }
             }
         }
     }

@@ -1,5 +1,6 @@
 package app.numbaseball.ui.firstrun
 
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.focus.focusRequester
@@ -145,7 +146,26 @@ fun FirstRunScreen(
     }
     // The field is focused on open, IME up (01 §1).
     val focus = remember { FocusRequester() }
-    LaunchedEffect(state.transferMode) { if (!state.transferMode) runCatching { focus.requestFocus() } }
+    // Transfer mode (D2-40): the code field takes the focus and is scrolled into view above the IME and the pinned
+    // button, and again whenever an error line appears under it.
+    val codeFocus = remember { FocusRequester() }
+    val codeInView = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
+    LaunchedEffect(state.transferMode) {
+        if (!state.transferMode) {
+            runCatching { focus.requestFocus() }
+        } else {
+            runCatching { codeFocus.requestFocus() }
+            // After the IME and the window insets have settled.
+            repeat(3) { androidx.compose.runtime.withFrameNanos { } }
+            codeInView.bringIntoView()
+        }
+    }
+    LaunchedEffect(state.error, state.transferMode) {
+        if (state.transferMode && state.error != null) {
+            repeat(3) { androidx.compose.runtime.withFrameNanos { } }
+            codeInView.bringIntoView()
+        }
+    }
     NbScreen(imeAware = true) {
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             VSpacer(32.dp)
@@ -156,6 +176,7 @@ fun FirstRunScreen(
             Text(stringResource(R.string.nick_lead), style = NbType.body, color = NbColors.text2)
             VSpacer(32.dp)
             if (state.transferMode) {
+              Column(Modifier.bringIntoViewRequester(codeInView)) {
                 Text(stringResource(R.string.transfer_code_label), style = NbType.labelSmall, color = NbColors.text2)
                 VSpacer(8.dp)
                 NbTextField(
@@ -164,7 +185,7 @@ fun FirstRunScreen(
                     isError = state.error != null,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { onSubmit() }),
-                    modifier = Modifier.fillMaxWidth().testTag("transferCode"),
+                    modifier = Modifier.fillMaxWidth().focusRequester(codeFocus).testTag("transferCode"),
                 )
                 VSpacer(8.dp)
                 Text(
@@ -172,6 +193,7 @@ fun FirstRunScreen(
                     style = NbType.caption,
                     color = if (state.error != null) NbColors.out else NbColors.text3,
                 )
+              }
                 NbButton(stringResource(R.string.nick_new_account), { onTransferModeChange(false) }, kind = ButtonKind.TEXT, modifier = Modifier.offset(x = (-8).dp))
             } else {
                 Text(stringResource(R.string.nick_label), style = NbType.labelSmall, color = NbColors.text2)

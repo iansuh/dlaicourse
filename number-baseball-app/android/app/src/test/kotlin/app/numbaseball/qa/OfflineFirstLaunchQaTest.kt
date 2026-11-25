@@ -72,10 +72,10 @@ class OfflineFirstLaunchQaTest {
         launch()
 
         // 1. Age gate comes first; nothing ad-related ran yet.
-        compose.onNodeWithText("Enter the year you were born").assertIsDisplayed()
+        compose.onNodeWithText("Enter the year and month you were born").assertIsDisplayed()
         assertTrue("no consent / ads call before the age answer", c.ads.consentCalls.isEmpty())
         compose.onNodeWithText("Confirm").assertIsNotEnabled()
-        type("1990")
+        type("199005")
         compose.onNodeWithText("Confirm").performClick()
 
         // 2. Nickname. The server is down: the nickname is kept locally and the player goes on (AC-OFF-01).

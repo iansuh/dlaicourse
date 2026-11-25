@@ -203,8 +203,11 @@ private fun Blank() = Box(Modifier.fillMaxSize().background(NbColors.bg))
 @Composable
 internal fun WindowTooSmall() {
     Box(Modifier.fillMaxSize().background(NbColors.bg).padding(16.dp), contentAlignment = Alignment.Center) {
+        // DESIGN_SYSTEM 4.1 (D2-47): brand mark, `title`, then the `caption` line.
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(stringResource(R.string.window_too_small_title), style = NbType.subtitle, color = NbColors.chalk, textAlign = TextAlign.Center)
+            app.numbaseball.ui.design.BrandMark()
+            VSpacer(16.dp)
+            Text(stringResource(R.string.window_too_small_title), style = NbType.title, color = NbColors.chalk, textAlign = TextAlign.Center)
             VSpacer(8.dp)
             Text(stringResource(R.string.window_too_small_body), style = NbType.caption, color = NbColors.text3, textAlign = TextAlign.Center)
         }

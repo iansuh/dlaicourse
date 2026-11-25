@@ -13,6 +13,7 @@ import app.numbaseball.data.age.AgeState
 import app.numbaseball.ui.common.UiError
 import app.numbaseball.ui.common.containerViewModel
 import app.numbaseball.ui.common.message
+import app.numbaseball.ui.common.isServerError
 import app.numbaseball.ui.common.toUiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -81,6 +82,7 @@ fun TermsGate(onClose: () -> Unit, onReadTerms: () -> Unit, onReadPrivacy: () ->
             onAgree = vm::onAgree,
             onClose = onClose,
             failureMessage = state.error?.message() ?: app.numbaseball.R.string.error_network,
+            serverError = state.error?.isServerError() == true,
         )
     }
 }

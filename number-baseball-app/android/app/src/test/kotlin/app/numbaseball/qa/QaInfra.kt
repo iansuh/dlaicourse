@@ -182,7 +182,7 @@ class QaContainer(
         bannerAdUnitId = "",
         interstitialAdUnitId = "",
     )
-    override val ageRepository = AgeRepository(ageStore, { null }, minimumAge, scope, currentYear = { year })
+    override val ageRepository = AgeRepository(ageStore, { null }, minimumAge, scope, currentMonth = { java.time.YearMonth.of(year, 11) })
     override val accountRepository = AccountRepository(accountStore, accountApi, scope)
     override val languageSettings: LanguageSettings = FakeLanguageSettings()
     override val onlineClient = client

@@ -17,8 +17,8 @@ class NavigationTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     @Test fun firstLaunchAsksTheAgeThenTheNickname() {
-        compose.onNodeWithText("Enter the year you were born").assertExists()
-        "1990".forEach { compose.onNodeWithTag("key_$it").performClick() }
+        compose.onNodeWithText("Enter the year and month you were born").assertExists()
+        "199005".forEach { compose.onNodeWithTag("key_$it").performClick() }
         compose.onNodeWithText("Confirm").performClick()
         compose.waitUntil(5_000) { compose.onAllNodes(hasTestTag("nickname")).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag(AD_BANNER_TAG).assertDoesNotExist()

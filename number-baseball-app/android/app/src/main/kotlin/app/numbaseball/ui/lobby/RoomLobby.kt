@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -70,6 +71,7 @@ import app.numbaseball.ui.chat.phraseText
 import app.numbaseball.ui.common.OnlineConnectionBanner
 import app.numbaseball.ui.common.UiError
 import app.numbaseball.ui.common.message
+import app.numbaseball.ui.common.isServerError
 import app.numbaseball.ui.common.offline
 import app.numbaseball.ui.common.toUiError
 import app.numbaseball.ui.computer.RELAXED_SECONDS
@@ -241,7 +243,19 @@ fun RoomLobbyScreen(state: LobbyUiState, actions: LobbyActions) {
     val toast = rememberToastState()
     val room = state.room
     val copied = stringResource(R.string.code_copied)
+    // Server errors (5xx, unknown codes) get the 12.17 dialog; everything else a toast (D2-43).
+    var serverError by rememberSaveable { mutableStateOf(false) }
+    if (serverError) {
+        app.numbaseball.ui.design.ServerErrorDialog(onRetry = { serverError = false }, onHome = { serverError = false; actions.onLeave() }, onDismiss = { serverError = false })
+    }
     state.error?.let { error ->
+        if (error.isServerError()) {
+            LaunchedEffect(error) {
+                serverError = true
+                actions.onErrorShown()
+            }
+            return@let
+        }
         val text = stringResource(error.message())
         LaunchedEffect(error) {
             toast.show(text, error = true)
@@ -280,31 +294,43 @@ fun RoomLobbyScreen(state: LobbyUiState, actions: LobbyActions) {
         }
         val greyed = state.connection.offline
         val scroll = rememberScrollState()
-        Column(Modifier.weight(1f).fillMaxWidth().fadingEdges(bottom = 16.dp, enabled = scroll.canScrollForward).verticalScroll(scroll)) {
-            Invite(room, state.players.size <= 1, onCopy = {
-                actions.onCopy(it)
-                toast.show(copied)
-            }, onShare = actions.onShare)
-            RulesBand(room.settings, editable = state.isHost && !state.full && room.phase == RoomPhase.LOBBY) { settingsSheet = true }
-            if (!compact) FillStatus(state)
-            Teams(state, greyed, actions)
-            Spacer(Modifier.weight(1f).heightIn(min = 16.dp))
-        }
-        when {
-            room.phase == RoomPhase.PLAYING && room.match?.myDuel != null ->
-                NbButton(
-                    stringResource(R.string.open_match),
-                    actions.onOpenMatch,
-                    heightOverride = if (compact) 48.dp else null,
-                    modifier = Modifier.fillMaxWidth().padding(if (compact) 8.dp else 16.dp),
-                )
-            state.isHost && room.phase == RoomPhase.LOBBY && !compact -> NbButton(
+        val practice: @Composable (Modifier) -> Unit = { m ->
+            NbButton(
                 stringResource(R.string.practice),
                 actions.onPractice,
                 kind = ButtonKind.TONAL,
                 icon = R.drawable.ic_memory,
-                modifier = Modifier.fillMaxWidth().padding(16.dp).testTag("practice"),
+                modifier = m.fillMaxWidth().padding(16.dp).testTag("practice"),
             )
+        }
+        val showPractice = state.isHost && room.phase == RoomPhase.LOBBY && !compact
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+            // ADAPTIVE §1 (D2-48): the scroll region must show a team header and one full seat (36 + 56 dp) next to the
+            // pinned practice button (88 dp with its padding); when it cannot (banner, large text), the button scrolls.
+            val inlinePractice = showPractice && (app.numbaseball.ui.design.isLargeFont() || maxHeight < 420.dp)
+            Column(Modifier.fillMaxSize()) {
+                Column(Modifier.weight(1f).fillMaxWidth().fadingEdges(bottom = 16.dp, enabled = scroll.canScrollForward).verticalScroll(scroll)) {
+                    Invite(room, state.players.size <= 1, onCopy = {
+                        actions.onCopy(it)
+                        toast.show(copied)
+                    }, onShare = actions.onShare)
+                    RulesBand(room.settings, editable = state.isHost && !state.full && room.phase == RoomPhase.LOBBY) { settingsSheet = true }
+                    if (!compact) FillStatus(state)
+                    Teams(state, greyed, actions)
+                    Spacer(Modifier.weight(1f).heightIn(min = 16.dp))
+                    if (inlinePractice) practice(Modifier)
+                }
+                when {
+                    room.phase == RoomPhase.PLAYING && room.match?.myDuel != null ->
+                        NbButton(
+                            stringResource(R.string.open_match),
+                            actions.onOpenMatch,
+                            heightOverride = if (compact) 48.dp else null,
+                            modifier = Modifier.fillMaxWidth().padding(if (compact) 8.dp else 16.dp),
+                        )
+                    showPractice && !inlinePractice -> practice(Modifier)
+                }
+            }
         }
     }
     if (leaveDialog) {
@@ -363,9 +389,17 @@ private fun Invite(room: RoomView, alone: Boolean, onCopy: (String) -> Unit, onS
         VSpacer(12.dp)
         CodePlates(code, description = label)
         VSpacer(16.dp)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NbButton(stringResource(R.string.action_copy), { onCopy(code) }, kind = ButtonKind.TONAL, icon = R.drawable.ic_content_copy, modifier = Modifier.weight(1f))
-            NbButton(stringResource(R.string.action_share), { onShare(code) }, kind = ButtonKind.TONAL, icon = R.drawable.ic_share, modifier = Modifier.weight(1f))
+        if (app.numbaseball.ui.design.isLargeFont()) {
+            // Large text: one button per row, so "Kopieren" / "Поделиться" never break inside the word (DEF-059).
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                NbButton(stringResource(R.string.action_copy), { onCopy(code) }, kind = ButtonKind.TONAL, icon = R.drawable.ic_content_copy, modifier = Modifier.fillMaxWidth())
+                NbButton(stringResource(R.string.action_share), { onShare(code) }, kind = ButtonKind.TONAL, icon = R.drawable.ic_share, modifier = Modifier.fillMaxWidth())
+            }
+        } else {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                NbButton(stringResource(R.string.action_copy), { onCopy(code) }, kind = ButtonKind.TONAL, icon = R.drawable.ic_content_copy, modifier = Modifier.weight(1f))
+                NbButton(stringResource(R.string.action_share), { onShare(code) }, kind = ButtonKind.TONAL, icon = R.drawable.ic_share, modifier = Modifier.weight(1f))
+            }
         }
         if (alone) {
             VSpacer(12.dp)

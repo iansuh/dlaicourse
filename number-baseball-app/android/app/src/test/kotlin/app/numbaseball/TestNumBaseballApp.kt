@@ -47,7 +47,7 @@ class TestAppContainer(
         bannerAdUnitId = "",
         interstitialAdUnitId = "",
     )
-    override val ageRepository = AgeRepository(ageStore, { null }, minimumAge = 14, scope, currentYear = { 2026 })
+    override val ageRepository = AgeRepository(ageStore, { null }, minimumAge = 14, scope, currentMonth = { java.time.YearMonth.of(2026, 11) })
     override val accountRepository = AccountRepository(accountStore, FakeAccountApi(), scope)
     override val settingsRepository = FakeSettingsRepository()
     override val languageSettings = FakeLanguageSettings()

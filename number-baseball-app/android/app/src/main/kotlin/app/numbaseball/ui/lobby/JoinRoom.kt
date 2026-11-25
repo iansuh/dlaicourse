@@ -1,5 +1,9 @@
 package app.numbaseball.ui.lobby
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +39,7 @@ import app.numbaseball.data.online.ConnectionState
 import app.numbaseball.data.online.OnlineSession
 import app.numbaseball.ui.common.UiError
 import app.numbaseball.ui.common.message
+import app.numbaseball.ui.common.isServerError
 import app.numbaseball.ui.common.toUiError
 import app.numbaseball.ui.design.ChaseLamps
 import app.numbaseball.ui.design.NbButton
@@ -114,7 +119,19 @@ fun JoinScreen(state: JoinUiState, onCodeChange: (String) -> Unit, onJoin: () ->
     val keyboard = LocalSoftwareKeyboardController.current
     val toast = rememberToastState()
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    // Server errors (5xx, unknown codes) get the 12.17 dialog; everything else a toast (D2-43).
+    var serverError by rememberSaveable { mutableStateOf(false) }
+    if (serverError) {
+        app.numbaseball.ui.design.ServerErrorDialog(onRetry = { serverError = false }, onHome = { serverError = false; onBack() }, onDismiss = { serverError = false })
+    }
     state.error?.let { error ->
+        if (error.isServerError()) {
+            LaunchedEffect(error) {
+                serverError = true
+                onErrorShown()
+            }
+            return@let
+        }
         val text = stringResource(error.message())
         LaunchedEffect(state.shake) {
             toast.show(text, error = true)

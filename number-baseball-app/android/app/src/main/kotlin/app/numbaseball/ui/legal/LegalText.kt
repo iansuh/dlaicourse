@@ -1,5 +1,9 @@
 package app.numbaseball.ui.legal
 
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
 import app.numbaseball.ui.design.HSpacer
 import androidx.annotation.RawRes
 import androidx.compose.foundation.layout.Box
@@ -136,8 +140,8 @@ fun LegalTextScreen(title: String, page: LegalPage, onBack: () -> Unit, onWebVer
                     item {
                         if (page.meta != null) {
                             VSpacer(4.dp)
-                            // The version inside is `numTag` (20 dp line), so the meta line box is 20 dp (prototype `.meta`).
-                            Text(metaText(page.meta), style = NbType.caption.copy(lineHeight = NbType.numTag.lineHeight), color = NbColors.text3)
+                            // Mixed caption + `numTag` line: the prototype's line box is 22 dp (D2-50).
+                            Text(metaText(page.meta), style = NbType.caption.copy(lineHeight = 22.sp), color = NbColors.text3)
                         }
                         VSpacer(16.dp)
                     }
@@ -185,7 +189,12 @@ fun LegalTextScreen(title: String, page: LegalPage, onBack: () -> Unit, onWebVer
                                     modifier = Modifier.semantics { heading() },
                                 )
                                 is LegalBlock.Bullet -> Row(Modifier.padding(start = 4.dp)) {
-                                    Text("•", style = NbType.reading, color = NbColors.text3, modifier = Modifier.width(16.dp))
+                                    // 5 dp `text3` disc centred on the first line's x-height (prototype `list-style: disc`, D2-50).
+                                    androidx.compose.foundation.layout.Box(Modifier.width(16.dp).height(24.dp), contentAlignment = androidx.compose.ui.Alignment.CenterStart) {
+                                        androidx.compose.foundation.layout.Box(
+                                            Modifier.padding(start = 2.dp, top = 2.dp).size(5.dp).background(NbColors.text3, androidx.compose.foundation.shape.CircleShape),
+                                        )
+                                    }
                                     Text(LegalMarkdown.styled(block.text), style = NbType.reading, color = NbColors.chalk)
                                 }
                                 is LegalBlock.Paragraph -> Text(LegalMarkdown.styled(block.text), style = NbType.reading, color = NbColors.chalk)

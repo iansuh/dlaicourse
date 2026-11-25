@@ -15,11 +15,12 @@
     <string name="action_undo">元に戻す</string>
     <string name="action_edit">編集</string>
     <string name="action_start">はじめる</string>
-    <string name="age_title">生まれた年を入力してください</string>
-    <string name="age_lead">入力するのは年だけです。名前も誕生日も不要です。</string>
+    <string name="age_title">生まれた年と月を入力してください</string>
+    <string name="age_lead">入力するのは年と月だけです。名前や日にちは不要です。</string>
     <string name="age_year">生まれた年</string>
+    <string name="age_month">月</string>
     <string name="age_confirm">決定</string>
-    <string name="age_invalid">正しい年を入力してください</string>
+    <string name="age_invalid">正しい年と月を入力してください</string>
     <string name="na_title">現在はご利用いただけません</string>
     <string name="na_body">入力された情報では、このゲームをご利用いただけません。ご関心をお寄せいただきありがとうございます。</string>
     <string name="nick_eyebrow">ようこそ</string>
@@ -109,6 +110,12 @@
     <string name="col_guess">自分の予想</string>
     <string name="col_hint">ヒント</string>
     <string name="col_opp">相手</string>
+    <string name="opp_log_title">相手の記録</string>
+    <string name="menu_opp_log">相手の記録を見る</string>
+    <string name="opp_log_empty">まだ投球がありません</string>
+    <string name="col_opp_guess">相手の予想</string>
+    <string name="server_error_title">問題が発生しました</string>
+    <string name="server_error_body">しばらくしてからもう一度お試しください。</string>
     <string name="legend_title">ヒントの見方</string>
     <string name="legend_strike_name">ストライク</string>
     <string name="legend_strike">数字も位置も合っている</string>
@@ -255,6 +262,7 @@
     <string name="duel_round">R%1$d</string>
     <string name="status_playing">対戦中</string>
     <string name="status_reconnecting">再接続中 %1$s</string>
+    <string name="status_reconnecting_short">離脱 %1$s</string>
     <string name="status_draw">引き分け</string>
     <string name="status_forfeit">降参</string>
     <string name="status_decided">決着</string>
@@ -391,6 +399,7 @@
     <string name="blocked_empty">ブロックしている人はいません</string>
     <string name="unblocked_toast">ブロックを解除しました</string>
     <string name="transfer_left">残り %1$s</string>
+    <string name="transfer_expired">このコードは期限切れです</string>
     <string name="transfer_new">新しいコードを作る</string>
     <string name="licences">オープンソースライセンス</string>
     <string name="privacy_web">このポリシーの公開版</string>

@@ -123,8 +123,8 @@ class ProfileViewModel(private val accounts: AccountRepository, settings: Settin
 
 /**
  * Profile (10): identity with "change nickname", the record row at the larger size, the form row, the per-digit and
- * per-mode tables and the ad band. `/api/v1/me` returns only the totals and the app keeps no per-digit or per-mode
- * history, so the tables show the spec's empty state (`–`) until that data exists (documented in README).
+ * per-mode tables and the ad band. `/api/v1/me` returns only the totals, so the two tables are hidden until the server
+ * sends them (design decision on D2-15, README deviations).
  */
 @Composable
 fun ProfileScreen(state: ProfileUiState, onRename: (String) -> Unit, onRenameShown: () -> Unit, onBack: () -> Unit) {
@@ -151,8 +151,10 @@ fun ProfileScreen(state: ProfileUiState, onRename: (String) -> Unit, onRenameSho
             VSpacer(16.dp)
             FormRow(state)
             VSpacer(8.dp)
-            DigitTable(state.byDigits)
-            ModeRows(state.byMode)
+            // Design decision (round 2, D2-15): until `/api/v1/me` sends per-digit / per-mode records, both sections are
+            // hidden, header included; a table of dashes would read as "never played".
+            state.byDigits?.let { DigitTable(it) }
+            state.byMode?.let { ModeRows(it) }
             VSpacer(24.dp)
         }
     }
@@ -175,23 +177,26 @@ private fun RecordRow(stats: Stats?) {
     val total = stats?.let { it.wins + it.losses + it.draws } ?: 0
     val rate = stats?.takeIf { total > 0 }?.let { (it.wins * 100f / total).toInt() }
     val spoken = stats?.let { stringResource(R.string.record_value, it.wins, it.losses, it.draws) }.orEmpty()
+    // Narrow windows (320 dp, DEF-058): 12 dp gaps instead of 20, so "52%" stays on one line with its label.
+    val windowWidth = with(androidx.compose.ui.platform.LocalDensity.current) { androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp() }
+    val gap = if (windowWidth < 360.dp) 12.dp else 20.dp
     Row(Modifier.padding(horizontal = 16.dp).height(IntrinsicSize.Min).semantics(mergeDescendants = true) { contentDescription = spoken }) {
-        Stat(stats?.wins, stringResource(R.string.record_win), first = true)
+        Stat(stats?.wins, stringResource(R.string.record_win), first = true, gap = gap)
         Divider()
-        Stat(stats?.losses, stringResource(R.string.record_loss))
+        Stat(stats?.losses, stringResource(R.string.record_loss), gap = gap)
         Divider()
-        Stat(stats?.draws, stringResource(R.string.record_draw))
+        Stat(stats?.draws, stringResource(R.string.record_draw), gap = gap)
         Divider()
-        Column(Modifier.padding(start = 20.dp).align(Alignment.Bottom)) {
-            Text(if (rate == null) "–" else "$rate%", style = NbType.numStat, color = NbColors.text2)
-            Text(stringResource(R.string.record_rate), style = NbType.caption, color = NbColors.text3)
+        Column(Modifier.padding(start = gap).align(Alignment.Bottom)) {
+            Text(if (rate == null) "–" else "$rate%", style = NbType.numStat, color = NbColors.text2, maxLines = 1, softWrap = false)
+            Text(stringResource(R.string.record_rate), style = NbType.caption, color = NbColors.text3, maxLines = 1)
         }
     }
 }
 
 @Composable
-private fun Stat(value: Int?, label: String, first: Boolean = false) {
-    Column(Modifier.padding(start = if (first) 0.dp else 20.dp, end = 20.dp)) {
+private fun Stat(value: Int?, label: String, first: Boolean = false, gap: androidx.compose.ui.unit.Dp = 20.dp) {
+    Column(Modifier.padding(start = if (first) 0.dp else gap, end = gap)) {
         Text(value?.toString() ?: "–", style = NbType.numScore, color = if (value == null) NbColors.textDisabled else NbColors.chalk)
         Text(label, style = NbType.caption, color = NbColors.text3)
     }
@@ -225,7 +230,6 @@ private fun FormRow(state: ProfileUiState) {
 /** "자리수별 기록" (10 Layout): 자리수 · 승 · 패 · 무 · 최소 회; rows 3–6자리, 40 dp, 1 dp `line` between. */
 @Composable
 private fun DigitTable(records: Map<Int, ModeRecord>?) {
-    val large = isLargeFont()
     SectionHeader(stringResource(R.string.profile_by_digits), first = true)
     Column(Modifier.padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -233,8 +237,8 @@ private fun DigitTable(records: Map<Int, ModeRecord>?) {
             TableHeader(stringResource(R.string.record_win), Modifier.weight(1f))
             TableHeader(stringResource(R.string.record_loss), Modifier.weight(1f))
             TableHeader(stringResource(R.string.record_draw), Modifier.weight(1f))
-            // Large text drops the 최소 회 column (10 States).
-            if (!large) TableHeader(stringResource(R.string.profile_col_fewest), Modifier.weight(1.2f), TextAlign.End)
+            // Large text keeps every column; the headers wrap instead (D2-49).
+            TableHeader(stringResource(R.string.profile_col_fewest), Modifier.weight(1.2f), TextAlign.End)
         }
         (3..6).forEach { digits ->
             val record = records?.get(digits)
@@ -249,7 +253,7 @@ private fun DigitTable(records: Map<Int, ModeRecord>?) {
                 TableValue(record?.wins, Modifier.weight(1f))
                 TableValue(record?.losses, Modifier.weight(1f))
                 TableValue(record?.draws, Modifier.weight(1f))
-                if (!large) TableValue(record?.fewestRounds, Modifier.weight(1.2f), TextAlign.End, zeroDisabled = false)
+                TableValue(record?.fewestRounds, Modifier.weight(1.2f), TextAlign.End, zeroDisabled = false)
             }
         }
         Hairline()
@@ -258,7 +262,7 @@ private fun DigitTable(records: Map<Int, ModeRecord>?) {
 
 @Composable
 private fun TableHeader(text: String, modifier: Modifier, align: TextAlign = TextAlign.Center) {
-    Text(text, style = NbType.labelSmall, color = NbColors.text3, textAlign = align, maxLines = 1, softWrap = false, modifier = modifier)
+    Text(text, style = NbType.labelSmall, color = NbColors.text3, textAlign = align, maxLines = if (isLargeFont()) 2 else 1, softWrap = isLargeFont(), modifier = modifier)
 }
 
 /** `numLog` chalk; zero in `textDisabled`; `–` when there is no record. */

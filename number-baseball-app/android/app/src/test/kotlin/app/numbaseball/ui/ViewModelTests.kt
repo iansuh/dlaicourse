@@ -74,7 +74,7 @@ class ViewModelTests {
     private val api = FakeAccountApi()
 
     private fun accounts(store: FakeAccountStore = FakeAccountStore()) = AccountRepository(store, api, scope)
-    private fun ages(band: AgeBand? = AgeBand.ADULT) = AgeRepository(FakeAgeStore(band), { null }, 14, scope, currentYear = { 2026 })
+    private fun ages(band: AgeBand? = AgeBand.ADULT) = AgeRepository(FakeAgeStore(band), { null }, 14, scope, currentMonth = { java.time.YearMonth.of(2026, 11) })
 
     @Test fun firstRunValidatesLocallyThenRegisters() = runTest(main.dispatcher) {
         val vm = FirstRunViewModel(accounts())
@@ -286,13 +286,13 @@ class ViewModelTests {
 
     @Test fun ageScreenStoresOnlyTheBand() = runTest(main.dispatcher) {
         val store = FakeAgeStore()
-        val repo = AgeRepository(store, { null }, 14, backgroundScope, currentYear = { 2026 })
+        val repo = AgeRepository(store, { null }, 14, backgroundScope, currentMonth = { java.time.YearMonth.of(2026, 11) })
         val vm = AgeViewModel(repo)
         assertEquals("", vm.state.value.year)
         vm.onConfirm()
         assertNull(store.value.value)
-        // Out of range (01 §0: 1900 to the current year): error state, nothing stored, next key starts over.
-        "2030".forEach(vm::onDigit)
+        // Out of range (01 §0: 1900 to the current month): error state, nothing stored, next key starts over.
+        "203001".forEach(vm::onDigit)
         vm.onConfirm()
         assertTrue(vm.state.value.invalid)
         assertNull(store.value.value)
@@ -300,6 +300,13 @@ class ViewModelTests {
         assertEquals("2", vm.state.value.year)
         // Repeated digits are allowed here.
         "013".forEach(vm::onDigit)
+        assertEquals("2013", vm.state.value.year)
+        // A month that does not exist is refused like a year out of range.
+        "13".forEach(vm::onDigit)
+        vm.onConfirm()
+        assertTrue(vm.state.value.invalid)
+        "201301".forEach(vm::onDigit)
+        assertEquals("01", vm.state.value.month)
         vm.onConfirm()
         assertEquals(AgeBand.UNDER_MINIMUM, store.value.value)
     }

@@ -1,5 +1,6 @@
 package app.numbaseball.ui.results
 
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.unit.sp
 import app.numbaseball.audio.ScreenMusic
 import app.numbaseball.audio.MusicTrack
@@ -326,8 +327,8 @@ private fun LineScore(summary: MatchSummary, large: Boolean, modifier: Modifier 
     val row = if (large) 48.dp else ROW_HEIGHT
     Column(modifier.fillMaxWidth()) {
         Hairline()
-        // 10 dp: the header row is 20 dp tall (numTag), so the 16 dp timer icon and the label sit where the shot has them (D2-20).
-        Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        // 12 dp from the line (D2-20, round 2); the 6 dp gap below keeps the table where the shot has it.
+        Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.line_score), style = NbType.labelSmall, color = NbColors.text3, modifier = Modifier.weight(1f).semantics { heading() })
             summary.durationSeconds?.let {
                 NbIcon(R.drawable.ic_timer, null, NbColors.text3, 16.dp)
@@ -335,7 +336,7 @@ private fun LineScore(summary: MatchSummary, large: Boolean, modifier: Modifier 
                 Text(formatClock(it), style = NbType.numTag, color = NbColors.text3)
             }
         }
-        VSpacer(8.dp)
+        VSpacer(6.dp)
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val label = if (large) 96.dp else 80.dp
             val best = if (large) 72.dp else 56.dp
@@ -374,10 +375,11 @@ private fun LineScore(summary: MatchSummary, large: Boolean, modifier: Modifier 
                 }
             }
             // Row separators span the whole table.
+            // Measured against result-*-ko (D2-20): the lines sit 2 and 3 dp lower than the cell boxes.
             Column(Modifier.fillMaxWidth()) {
-                Box(Modifier.height(header))
+                Box(Modifier.height(header + 2.dp))
                 Hairline()
-                Box(Modifier.height(row))
+                Box(Modifier.height(row + 1.dp))
                 Hairline()
             }
         }
@@ -396,8 +398,10 @@ private val ROW_HEIGHT = 37.dp
 
 @Composable
 private fun LabelCell(text: String, row: Dp) {
+    // The label sits on the digits' baseline (prototype `td { vertical-align: baseline }`, D2-20): the Barlow digits'
+    // baseline is about 4 dp below the centred caption's.
     Box(Modifier.height(row + 1.dp).padding(top = 1.dp), contentAlignment = Alignment.CenterStart) {
-        Text(text, style = NbType.caption, color = NbColors.text2, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text, style = NbType.caption, color = NbColors.text2, maxLines = 1, overflow = TextOverflow.Ellipsis, fitMinScale = 0.5f, modifier = Modifier.offset { androidx.compose.ui.unit.IntOffset(0, 4.dp.roundToPx()) })
     }
 }
 

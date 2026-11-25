@@ -21,11 +21,12 @@
     <string name="action_start">시작</string>
 
     <!-- First run: age (neutral, never mention the required age) -->
-    <string name="age_title">태어난 해를 입력해 주세요</string>
-    <string name="age_lead">태어난 해만 확인해요. 이름이나 생일은 묻지 않아요.</string>
+    <string name="age_title">태어난 해와 달을 입력해 주세요</string>
+    <string name="age_lead">태어난 해와 달만 확인해요. 이름이나 생일 날짜는 묻지 않아요.</string>
     <string name="age_year">태어난 해</string>
+    <string name="age_month">달</string>
     <string name="age_confirm">확인</string>
-    <string name="age_invalid">올바른 연도를 입력해 주세요</string>
+    <string name="age_invalid">올바른 연도와 달을 입력해 주세요</string>
     <string name="na_title">지금은 이용할 수 없어요</string>
     <string name="na_body">입력한 정보로는 이 게임을 이용할 수 없어요. 관심 가져 주셔서 고마워요.</string>
 
@@ -125,6 +126,12 @@
     <string name="col_guess">내 추측</string>
     <string name="col_hint">판정</string>
     <string name="col_opp">상대</string>
+    <string name="opp_log_title">상대 기록</string>
+    <string name="menu_opp_log">상대 기록 보기</string>
+    <string name="opp_log_empty">아직 던진 공이 없어요</string>
+    <string name="col_opp_guess">상대 추측</string>
+    <string name="server_error_title">문제가 생겼어요</string>
+    <string name="server_error_body">잠시 후 다시 시도해 주세요.</string>
     <string name="legend_title">판정 읽는 법</string>
     <string name="legend_strike_name">스트라이크</string>
     <string name="legend_strike">숫자와 자리가 모두 맞음</string>
@@ -281,6 +288,7 @@
     <string name="duel_round">R%1$d</string>
     <string name="status_playing">진행 중</string>
     <string name="status_reconnecting">재접속 대기 %1$s</string>
+    <string name="status_reconnecting_short">재접속 %1$s</string>
     <string name="status_draw">무승부</string>
     <string name="status_forfeit">기권</string>
     <string name="status_decided">종료</string>
@@ -429,6 +437,7 @@
     <string name="blocked_empty">차단한 플레이어가 없어요</string>
     <string name="unblocked_toast">차단을 해제했어요</string>
     <string name="transfer_left">%1$s 남음</string>
+    <string name="transfer_expired">코드가 만료됐어요</string>
     <string name="transfer_new">새 코드 만들기</string>
     <string name="licences">오픈소스 라이선스</string>
     <string name="privacy_web">이 방침의 공개 페이지</string>
