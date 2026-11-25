@@ -131,4 +131,16 @@ class ScreenBehaviourTest {
         compose.onNodeWithText("Waiting for a connection").assertExists()
         compose.onNodeWithTag(AD_BANNER_TAG).assertDoesNotExist()
     }
+
+    /** DEF-063: the record block keeps its test tag although its semantics are cleared and replaced. */
+    @Test fun homeRecordBlockIsFoundByItsTag() {
+        var opened = 0
+        compose.setContent {
+            NumBaseballTheme {
+                HomeScreen(HomeUiState(nickname = "Mina", tag = "0420"), {}, {}, {}, {}, {}, {}, { opened++ }, {}, {})
+            }
+        }
+        compose.onNodeWithTag("profile").performClick()
+        assertEquals(1, opened)
+    }
 }

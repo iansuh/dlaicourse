@@ -32,6 +32,20 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admobAppId}" />
 
+        <!--
+            DEF-062: the Mobile Ads SDK must not start before the age answer, consent and the remove_ads entitlement
+            (README "Remove ads"). Its auto-init provider runs at process start, so it is removed from the merged manifest;
+            GoogleAdsController.startSdk calls MobileAds.initialize only when ads are allowed. App measurement is delayed
+            as well (Google's documented flag), so nothing is sent until the SDK is started.
+        -->
+        <provider
+            android:name="com.google.android.gms.ads.MobileAdsInitProvider"
+            android:authorities="${applicationId}.mobileadsinitprovider"
+            tools:node="remove" />
+        <meta-data
+            android:name="com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT"
+            android:value="true" />
+
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation"

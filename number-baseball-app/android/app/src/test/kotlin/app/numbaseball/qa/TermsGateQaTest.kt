@@ -161,10 +161,10 @@ class TermsGateQaTest {
     }
 
     /**
-     * DEF-053: first launch offline (nickname kept, no account yet), the server answers 5xx when the connection comes back;
-     * `HomeViewModel` retries registration only when connectivity flips, so Quick match -> Agree fails for good.
+     * DEF-053 (fixed): first launch offline (nickname kept, no account yet), the server answers 5xx when the connection
+     * comes back. The terms gate retries the registration itself (`loadTerms` / `acceptTerms` call `ensureRegistered`).
      */
-    @Test fun def053_anOfflineRegisteredPlayerWhoseFirstRegistrationFailedCanNeverAcceptTheTerms() {
+    @Test fun def053_anOfflineRegisteredPlayerWhoseFirstRegistrationFailedCanStillAcceptTheTerms() {
         val a = FakeAccountApi().apply {
             createResult = ApiResult.Failure(503, "unavailable")
             serverInfo = serverInfo.copy(termsVersion = "2026-11-v3")
@@ -183,12 +183,7 @@ class TermsGateQaTest {
         openQuickMatch()
         ui.waitText("Check the terms before playing online")
         compose.onNodeWithTag("termsAgree").performClick()
-        compose.waitForIdle()
-        knownDefect("DEF-053") {
-            // Expected: the gate registers the account first (ensureRegistered) and the player gets in.
-            assertTrue("registration was retried before the online feature", a.createdNicknames.size >= 2)
-            assertTrue(ui.shows("Looking for an opponent"))
-        }
-        assertEquals("characterisation: no second registration attempt happened", 1, a.createdNicknames.size)
+        ui.waitText("Looking for an opponent")
+        assertTrue("registration was retried before the online feature", a.createdNicknames.size >= 2)
     }
 }

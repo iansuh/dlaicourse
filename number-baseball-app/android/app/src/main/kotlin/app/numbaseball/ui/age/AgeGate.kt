@@ -64,14 +64,17 @@ class AgeViewModel(private val ages: AgeRepository) : ViewModel() {
 
     /** Repeated digits are allowed here; after an invalid year the slots clear on the next key (01 §0). */
     fun onDigit(digit: Char) = _state.update {
+        if (it.submitting) return@update it
         val base = if (it.invalid) "" else it.year
         if (base.length >= 4) it else it.copy(year = base + digit, invalid = false)
     }
 
-    fun onDelete() = _state.update { it.copy(year = if (it.invalid) "" else it.year.dropLast(1), invalid = false) }
-    fun onClear() = _state.update { it.copy(year = "", invalid = false) }
+    fun onDelete() = _state.update { if (it.submitting) it else it.copy(year = if (it.invalid) "" else it.year.dropLast(1), invalid = false) }
+    fun onClear() = _state.update { if (it.submitting) it else it.copy(year = "", invalid = false) }
 
+    /** One answer only: once submitted, the keypad and Confirm are locked until NbApp leaves the screen (DEF-052). */
     fun onConfirm() {
+        if (_state.value.submitting) return
         val year = _state.value.year.toIntOrNull() ?: return
         if (_state.value.year.length != 4 || year !in ages.validYears()) {
             _state.update { it.copy(invalid = true, shake = it.shake + 1) }

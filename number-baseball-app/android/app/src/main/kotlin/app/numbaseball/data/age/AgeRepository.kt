@@ -15,9 +15,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /** The declared band, on this device only: its own DataStore file, not part of Auto Backup. */
 interface AgeStore {
@@ -89,11 +92,24 @@ class AgeRepository(
     /** Valid birth years (01 §0): 1900 to the current year. */
     fun validYears(): IntRange = 1900..currentYear()
 
-    /** Stores the band once; an under-minimum answer is final on this device (no retry by re-answering). */
-    suspend fun submitBirthYear(year: Int): AgeBand {
+    private val submitLock = Mutex()
+
+    /** An under-minimum answer given in this process (the store may not have reported it back yet). */
+    private var refused = false
+
+    /**
+     * Stores the band. An under-minimum answer is final on this device (no retry by re-answering, DEF-052): once one is
+     * stored or being stored, a later answer is ignored and the stored band is returned.
+     */
+    suspend fun submitBirthYear(year: Int): AgeBand = submitLock.withLock {
+        if (refused || store.band.first() == AgeBand.UNDER_MINIMUM) {
+            refused = true
+            return@withLock AgeBand.UNDER_MINIMUM
+        }
         val band = AgeRules.bandForBirthYear(year, currentYear(), minimumAge)
+        if (band == AgeBand.UNDER_MINIMUM) refused = true
         store.save(band)
-        return band
+        band
     }
 
     /** Called on app open; refines the band when Play reports one. */

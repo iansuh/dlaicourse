@@ -269,14 +269,15 @@ private fun Hero(state: HomeUiState, showForm: Boolean, onProfile: () -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()
+            // Before clearAndSetSemantics, so tests can find the block by its tag (DEF-063).
+            .testTag("profile")
             .rowClick(onClick = onProfile)
             .clearAndSetSemantics {
                 contentDescription = spoken
                 onClick(openProfile) { onProfile(); true }
             }
             // Measured against home-ko (D2-18): the block sat 3 dp high (dividers, lamps, numerals), the label 1.5 dp.
-            .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 5.dp)
-            .testTag("profile"),
+            .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 5.dp),
     ) {
         Text(stringResource(R.string.record_label), style = NbType.caption, color = NbColors.text3)
         VSpacer(3.dp)

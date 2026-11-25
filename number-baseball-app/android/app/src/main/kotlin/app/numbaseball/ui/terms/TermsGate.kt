@@ -51,9 +51,10 @@ fun TermsGateScreen(
     onReadPrivacy: () -> Unit,
     onAgree: () -> Unit,
     onClose: () -> Unit,
+    @androidx.annotation.StringRes failureMessage: Int = R.string.error_network,
 ) {
     val toast = rememberToastState()
-    val failure = stringResource(R.string.error_network)
+    val failure = stringResource(failureMessage)
     androidx.compose.runtime.LaunchedEffect(failed) { if (failed > 0) toast.show(failure, error = true) }
     NbScreen(
         topBar = { TopBar(null, R.drawable.ic_close, stringResource(R.string.action_close), onClose) },

@@ -26,6 +26,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -182,10 +183,10 @@ class AgeGateQaTest {
     }
 
     /**
-     * DEF-052: `AgeRepository.submitBirthYear` documents "an under-minimum answer is final" but nothing enforces it below the
-     * UI; a second answer (the keypad stays live while the first write is pending) replaces UNDER_MINIMUM.
+     * DEF-052 (fixed): an under-minimum answer is final below the UI too. The keypad and Confirm are locked once an answer
+     * is submitted, and `AgeRepository.submitBirthYear` ignores any later answer, even while the first write is pending.
      */
-    @Test fun def052_anUnderMinimumAnswerIsNotFinalInTheRepository() = runBlocking {
+    @Test fun def052_anUnderMinimumAnswerIsFinal() = runBlocking {
         val saved = mutableListOf<AgeBand>()
         val gate = CompletableDeferred<Unit>()
         val store = object : AgeStore {
@@ -199,15 +200,15 @@ class AgeGateQaTest {
         val vm = AgeViewModel(repository)
         "2015".forEach(vm::onDigit)
         vm.onConfirm()
-        assertTrue("the keypad keeps accepting digits while the write is pending", run {
-            vm.onClear()
-            "1990".forEach(vm::onDigit)
-            vm.state.value.year == "1990"
-        })
+        vm.onClear()
+        "1990".forEach(vm::onDigit)
+        assertEquals("the keypad is locked while the answer is stored", "2015", vm.state.value.year)
         vm.onConfirm()
+        // Below the UI: a second answer through the repository itself is ignored as well.
+        val second = scope.async { repository.submitBirthYear(1990) }
         gate.complete(Unit)
+        assertEquals(AgeBand.UNDER_MINIMUM, second.await())
         kotlinx.coroutines.delay(50)
-        assertEquals("characterisation: both answers were stored", listOf(AgeBand.UNDER_MINIMUM, AgeBand.ADULT), saved)
-        knownDefect("DEF-052") { assertEquals(listOf(AgeBand.UNDER_MINIMUM), saved) }
+        assertEquals(listOf(AgeBand.UNDER_MINIMUM), saved)
     }
 }

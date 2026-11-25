@@ -10,7 +10,9 @@ import app.numbaseball.data.account.TermsState
 import app.numbaseball.data.age.AgeBand
 import app.numbaseball.data.age.AgeRepository
 import app.numbaseball.data.age.AgeState
+import app.numbaseball.ui.common.UiError
 import app.numbaseball.ui.common.containerViewModel
+import app.numbaseball.ui.common.message
 import app.numbaseball.ui.common.toUiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,6 +28,8 @@ data class TermsUiState(
     val submitting: Boolean = false,
     /** Bumped on each failed acceptance (toast). */
     val failed: Int = 0,
+    /** What the last failure was, so the toast names it (DEF-053: not "network" for every code). */
+    val error: UiError? = null,
 )
 
 /**
@@ -50,7 +54,7 @@ class TermsViewModel(private val accounts: AccountRepository, private val ages: 
         local.update { it.copy(submitting = true) }
         viewModelScope.launch {
             val error = accounts.acceptTerms(ageConfirmed = true).toUiError()
-            local.update { it.copy(submitting = false, failed = if (error != null) it.failed + 1 else it.failed) }
+            local.update { it.copy(submitting = false, failed = if (error != null) it.failed + 1 else it.failed, error = error ?: it.error) }
         }
     }
 
@@ -76,6 +80,7 @@ fun TermsGate(onClose: () -> Unit, onReadTerms: () -> Unit, onReadPrivacy: () ->
             onReadPrivacy = onReadPrivacy,
             onAgree = vm::onAgree,
             onClose = onClose,
+            failureMessage = state.error?.message() ?: app.numbaseball.R.string.error_network,
         )
     }
 }

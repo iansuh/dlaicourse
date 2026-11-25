@@ -220,4 +220,27 @@ class AdsIntegrationQaTest {
             break
         }
     }
+
+    // ---- DEF-062: no ad SDK auto-start ----
+
+    /**
+     * The Mobile Ads SDK starts only from `GoogleAdsController.startSdk` (after the age answer, consent and the
+     * entitlement). Its content provider would initialise it at process start, so it must be removed from the merged
+     * manifest, and app measurement must be delayed.
+     */
+    @Test fun def062_theMergedManifestHasNoMobileAdsInitProvider() {
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        @Suppress("DEPRECATION")
+        val info = context.packageManager.getPackageInfo(context.packageName, android.content.pm.PackageManager.GET_PROVIDERS or android.content.pm.PackageManager.GET_META_DATA)
+        val providers = info.providers.orEmpty().map { it.name }
+        assertFalse("MobileAdsInitProvider is merged in: $providers", providers.any { it.endsWith("MobileAdsInitProvider") })
+        val merged = java.io.File("build/intermediates/merged_manifest/debug/processDebugMainManifest/AndroidManifest.xml")
+        assertTrue("merged debug manifest not found at $merged", merged.exists())
+        val xml = merged.readText()
+        assertFalse("the merged app manifest still declares MobileAdsInitProvider", xml.contains("com.google.android.gms.ads.MobileAdsInitProvider"))
+        assertTrue("app measurement init is delayed", Regex("""DELAY_APP_MEASUREMENT_INIT"\s+android:value="true"""").containsMatchIn(xml))
+        // The only place that initialises the SDK.
+        val callers = java.io.File("src/main/kotlin").walkTopDown().filter { it.extension == "kt" && it.readText().contains("MobileAds.initialize") }.map { it.name }.toList()
+        assertEquals(listOf("GoogleAdsController.kt"), callers)
+    }
 }

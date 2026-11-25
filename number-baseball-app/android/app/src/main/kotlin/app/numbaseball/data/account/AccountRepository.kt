@@ -121,12 +121,24 @@ class AccountRepository(
             is ApiResult.Success -> _serverInfo.value = r.value
             else -> Unit
         }
+        // Retry a deferred registration whenever an online feature asks for the terms (DEF-053).
+        if (token() == null && store.account.first().nickname != null) ensureRegistered()
         refresh()
     }
 
     /** `PUT /me/terms` with the current version and the explicit minimum-age confirmation. */
     suspend fun acceptTerms(ageConfirmed: Boolean): ApiResult<Unit> {
         val version = _serverInfo.value?.termsVersion ?: return ApiResult.NetworkError
+        // A nickname chosen offline whose first registration failed (DEF-053): register now, before the acceptance.
+        if (token() == null) {
+            when (val r = ensureRegistered()) {
+                is RegistrationResult.Registered -> Unit
+                is RegistrationResult.Rejected -> return ApiResult.Failure(400, r.code)
+                RegistrationResult.Deferred -> return ApiResult.NetworkError
+            }
+            // The new account may have accepted this version already (it carries `termsVersion`).
+            if (acceptedTerms.value == version) return ApiResult.Success(Unit)
+        }
         val result = withToken { api.acceptTerms(it, AcceptTermsRequest(version, ageConfirmed)) }
         return when (result) {
             is ApiResult.Success -> {
