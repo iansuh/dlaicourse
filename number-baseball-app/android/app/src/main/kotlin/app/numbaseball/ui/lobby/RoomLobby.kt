@@ -37,6 +37,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import app.numbaseball.ui.design.targetOverflow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -245,6 +247,7 @@ fun RoomLobbyScreen(state: LobbyUiState, actions: LobbyActions) {
             actions.onErrorShown()
         }
     }
+    val compact = isCompactHeight()
     val menu = buildList {
         if (state.isHost && !state.full && room?.phase == RoomPhase.LOBBY) add(MenuItem(stringResource(R.string.room_settings)) { settingsSheet = true })
         add(MenuItem(stringResource(R.string.menu_how_to), onClick = actions.onHowToPlay))
@@ -260,7 +263,11 @@ fun RoomLobbyScreen(state: LobbyUiState, actions: LobbyActions) {
                 actions = { OverflowMenu(menu, stringResource(R.string.action_more)) },
             )
         },
-        bottomBar = { ChatPeek(state, actions.onChat) },
+        bottomBar = {
+            // Small window (D2-04): practice moves into the pinned chat bar so the scroll region shows a full seat.
+            val compactPractice = compact && room != null && state.isHost && room.phase == RoomPhase.LOBBY
+            ChatPeek(state, actions.onChat, onPractice = if (compactPractice) actions.onPractice else null)
+        },
         overlay = { ToastHost(toast, bottomOffset = 72.dp) },
     ) {
         OnlineConnectionBanner(state.connection, actions.onRetryConnection)
@@ -278,14 +285,19 @@ fun RoomLobbyScreen(state: LobbyUiState, actions: LobbyActions) {
                 toast.show(copied)
             }, onShare = actions.onShare)
             RulesBand(room.settings, editable = state.isHost && !state.full && room.phase == RoomPhase.LOBBY) { settingsSheet = true }
-            FillStatus(state)
+            if (!compact) FillStatus(state)
             Teams(state, greyed, actions)
             Spacer(Modifier.weight(1f).heightIn(min = 16.dp))
         }
         when {
             room.phase == RoomPhase.PLAYING && room.match?.myDuel != null ->
-                NbButton(stringResource(R.string.open_match), actions.onOpenMatch, modifier = Modifier.fillMaxWidth().padding(16.dp))
-            state.isHost && room.phase == RoomPhase.LOBBY -> NbButton(
+                NbButton(
+                    stringResource(R.string.open_match),
+                    actions.onOpenMatch,
+                    heightOverride = if (compact) 48.dp else null,
+                    modifier = Modifier.fillMaxWidth().padding(if (compact) 8.dp else 16.dp),
+                )
+            state.isHost && room.phase == RoomPhase.LOBBY && !compact -> NbButton(
                 stringResource(R.string.practice),
                 actions.onPractice,
                 kind = ButtonKind.TONAL,
@@ -382,7 +394,8 @@ private fun RulesBand(settings: RoomSettings, editable: Boolean, onEdit: () -> U
             NbIcon(R.drawable.ic_tune, null, NbColors.text2, 20.dp)
             HSpacer(8.dp)
             Text(roomRulesText(settings), style = NbType.bodyStrong, color = NbColors.chalk, modifier = Modifier.weight(1f).padding(vertical = 4.dp))
-            if (editable) NbButton(stringResource(R.string.action_edit), onEdit, kind = ButtonKind.TEXT)
+            // The 48 dp target overlaps the band's 1 dp lines instead of making the band 50 dp (D2-19 a).
+            if (editable) NbButton(stringResource(R.string.action_edit), onEdit, kind = ButtonKind.TEXT, modifier = Modifier.targetOverflow(46.dp))
         }
         Hairline()
     }
@@ -418,7 +431,7 @@ private fun Teams(state: LobbyUiState, greyed: Boolean, actions: LobbyActions) {
             }
         }
     }
-    if (LocalDensity.current.fontScale >= 1.5f) {
+    if (app.numbaseball.ui.design.isLargeFont()) {
         // Large text (ADAPTIVE.md §2): A above B instead of two columns.
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Team.entries.forEach { team(it, Modifier.fillMaxWidth()) }
@@ -463,12 +476,18 @@ private fun Seat(player: LobbyPlayer, team: Team, index: Int, greyed: Boolean, o
     }
     val spoken = "$teamName, ${index + 1}, ${player.nickname} ${player.tag}" + tags.joinToString("") { ", $it" }
     val cardLabel = stringResource(R.string.report_player)
+    val stripe = teamStripe(team)
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .clip(shape)
             .background(NbColors.surface1)
+            // The 3 dp stripe is drawn over my seat's outline, on the outer edge, full height (D2-19 b).
+            .drawWithContent {
+                drawContent()
+                drawRect(stripe, size = androidx.compose.ui.geometry.Size(3.dp.toPx(), size.height))
+            }
             .then(if (player.you) Modifier.border(1.dp, NbColors.outline, shape) else Modifier)
             .then(if (!player.you) Modifier.combinedClickable(onClick = {}, onLongClick = { onCard(player) }) else Modifier)
             .clearAndSetSemantics {
@@ -477,7 +496,7 @@ private fun Seat(player: LobbyPlayer, team: Team, index: Int, greyed: Boolean, o
             },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.width(3.dp).fillMaxHeight().heightIn(min = 56.dp).background(teamStripe(team)))
+        Spacer(Modifier.width(3.dp))
         Column(Modifier.weight(1f).padding(start = 10.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)) {
             val dim = greyed || !player.connected
             NameWithTag(player.nickname, player.tag, nameStyle = NbType.bodyStrong, nameColor = if (dim) NbColors.text3 else NbColors.chalk)
@@ -525,7 +544,7 @@ private fun EmptySeat(team: Team, index: Int, canMove: Boolean, onMove: () -> Un
 
 /** Chat bar: 56 dp `surface1`, 1 dp line top: `chat` · last message (sender + text, one line) · unread badge. */
 @Composable
-private fun ChatPeek(state: LobbyUiState, onChat: () -> Unit) {
+private fun ChatPeek(state: LobbyUiState, onChat: () -> Unit, onPractice: (() -> Unit)? = null) {
     val last = state.chat.lastOrNull()
     Column(Modifier.fillMaxWidth().background(NbColors.surface1)) {
         Hairline()
@@ -560,6 +579,18 @@ private fun ChatPeek(state: LobbyUiState, onChat: () -> Unit) {
                         color = NbColors.onChalk,
                     )
                 }
+            }
+            if (onPractice != null) {
+                HSpacer(8.dp)
+                NbButton(
+                    stringResource(R.string.practice_short),
+                    onPractice,
+                    kind = ButtonKind.TONAL,
+                    small = true,
+                    heightOverride = 48.dp,
+                    icon = R.drawable.ic_memory,
+                    modifier = Modifier.testTag("practice"),
+                )
             }
         }
     }

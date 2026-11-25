@@ -440,7 +440,7 @@ private fun ActionKey(
     }
     Box(
         modifier
-            .height(height)
+            .heightIn(min = height)
             .background(fill, RoundedCornerShape(NbRadius.m))
             .semantics(mergeDescendants = true) { role = Role.Button; if (!enabled) disabled() }
             .then(if (enabled) Modifier.combinedClickableCompat(onClick) else Modifier),

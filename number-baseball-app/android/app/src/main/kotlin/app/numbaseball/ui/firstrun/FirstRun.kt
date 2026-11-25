@@ -7,6 +7,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -171,7 +172,7 @@ fun FirstRunScreen(
                     style = NbType.caption,
                     color = if (state.error != null) NbColors.out else NbColors.text3,
                 )
-                NbButton(stringResource(R.string.nick_new_account), { onTransferModeChange(false) }, kind = ButtonKind.TEXT)
+                NbButton(stringResource(R.string.nick_new_account), { onTransferModeChange(false) }, kind = ButtonKind.TEXT, modifier = Modifier.offset(x = (-8).dp))
             } else {
                 Text(stringResource(R.string.nick_label), style = NbType.labelSmall, color = NbColors.text2)
                 VSpacer(8.dp)
@@ -202,7 +203,10 @@ fun FirstRunScreen(
                         color = if (nickError != null) NbColors.out else NbColors.text3,
                     )
                 }
-                VSpacer(24.dp)
+                // Directly under the nickname field so it stays visible above the IME (11 §Transfer, D2-17). The text
+                // aligns with the field; the 8 dp button padding reaches into the margin.
+                NbButton(stringResource(R.string.nick_transfer), { onTransferModeChange(true) }, kind = ButtonKind.TEXT, modifier = Modifier.offset(x = (-8).dp))
+                VSpacer(8.dp)
                 Hairline()
                 Column(Modifier.padding(top = 16.dp)) {
                     Text(stringResource(R.string.nick_preview), style = NbType.caption, color = NbColors.text3)
@@ -221,7 +225,6 @@ fun FirstRunScreen(
                     VSpacer(4.dp)
                     Text(stringResource(R.string.nick_tag_later), style = NbType.caption, color = NbColors.text3)
                 }
-                NbButton(stringResource(R.string.nick_transfer), { onTransferModeChange(true) }, kind = ButtonKind.TEXT)
             }
         }
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -251,7 +254,7 @@ fun FirstRunScreen(
 
 private fun NicknameProblem.message(): Int = when (this) {
     NicknameProblem.TOO_SHORT -> R.string.nick_error_short
-    NicknameProblem.TOO_LONG -> R.string.nick_error_short
+    NicknameProblem.TOO_LONG -> R.string.nick_error_long
     NicknameProblem.INVALID_CHARACTERS -> R.string.nick_error_rejected
     NicknameProblem.PROFANITY -> R.string.nick_error_rejected
 }

@@ -120,7 +120,8 @@ class OnlineMatchViewModel(private val session: OnlineSession) : ViewModel() {
         val opponentOnline = duel == null || room.players.firstOrNull { it.id == duel.opponentId }?.connected != false
         val meOnline = connection is ConnectionState.Connected
         val l = local.value
-        val opp = if (opponentOnline) null else l.opponentOfflineSince ?: now
+        // The session's first sighting (server time) is shared with the team board, so both count the same grace (D2-14).
+        val opp = if (opponentOnline) null else l.opponentOfflineSince ?: duel?.opponentId?.let { session.offlineSince.value[it] } ?: now
         val me = if (meOnline) null else l.myOfflineSince ?: now
         if (opp != l.opponentOfflineSince || me != l.myOfflineSince) local.update { it.copy(opponentOfflineSince = opp, myOfflineSince = me) }
     }

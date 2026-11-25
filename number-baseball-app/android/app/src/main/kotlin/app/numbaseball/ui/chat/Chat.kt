@@ -1,5 +1,9 @@
 package app.numbaseball.ui.chat
 
+import app.numbaseball.ui.design.isLargeFont
+
+import androidx.compose.foundation.verticalScroll
+
 import app.numbaseball.ui.design.SheetBottomSpace
 import app.numbaseball.audio.SoundCue
 import app.numbaseball.audio.LocalGameHaptics
@@ -58,6 +62,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.numbaseball.R
@@ -302,6 +307,7 @@ fun ChatSheet(state: ChatUiState, actions: ChatActions) {
             onDismiss = { held = null },
             onCopy = { actions.onCopy(text); held = null },
             onReport = { held = null; actions.onReportMessage(message) },
+            onPlayerCard = { held = null; actions.onPlayerCard(message) },
             onBlock = { held = null; actions.onBlock(message) },
         )
     }
@@ -361,20 +367,20 @@ private fun ChatLine(
     val name = message.senderNickname ?: stringResource(R.string.chat_deleted_player)
     val spoken = if (mine) "${stringResource(R.string.tag_me)}: $text" else "$name ${message.senderTag.orEmpty()}: $text"
     val optionsLabel = stringResource(R.string.msg_selected)
+    val cardLabel = stringResource(R.string.msg_player_card)
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val maxBubble = maxWidth * 0.8f
         Column(Modifier.fillMaxWidth(), horizontalAlignment = if (mine) Alignment.End else Alignment.Start) {
             if (!mine) {
-                Row(
-                    Modifier.padding(bottom = 4.dp).then(if (message.senderId != null) Modifier.rowClick { onName(message) } else Modifier),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+                // Not a tap target (it is 20 dp tall); the player card is in the long-press sheet and a TalkBack action (D2-10).
+                Row(Modifier.padding(bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (teamRoom && message.senderTeam != null) {
                         TeamBadge(message.senderTeam ?: Team.A, size = 16.dp)
                         HSpacer(6.dp)
                     }
-                    Text(name, style = NbType.micro.copy(fontSize = NbType.labelSmall.fontSize), color = NbColors.text2)
-                    message.senderTag?.let { Text("#$it", style = NbType.numLabel, color = NbColors.text3) }
+                    // Name `micro` 12 sp, tag `numTag` 13 / 16 sp (prototype `.m .who .ptag`, D2-11).
+                    Text(name, style = NbType.micro, color = NbColors.text2)
+                    message.senderTag?.let { Text("#$it", style = NbType.numTag.copy(fontSize = 13.sp, lineHeight = 16.sp), color = NbColors.text3) }
                 }
             }
             val shape = RoundedCornerShape(NbRadius.m)
@@ -387,7 +393,10 @@ private fun ChatLine(
                     .combinedClickable(onClick = {}, onLongClick = { onLongPress(message) })
                     .clearAndSetSemantics {
                         contentDescription = spoken
-                        customActions = listOf(CustomAccessibilityAction(optionsLabel) { onLongPress(message); true })
+                        customActions = listOfNotNull(
+                            CustomAccessibilityAction(optionsLabel) { onLongPress(message); true },
+                            if (!mine && message.senderId != null) CustomAccessibilityAction(cardLabel) { onName(message); true } else null,
+                        )
                     }
                     .padding(horizontal = 12.dp, vertical = 10.dp),
             ) {
@@ -414,7 +423,8 @@ private fun maskedText(text: String, mine: Boolean) = buildAnnotatedString {
         append(text.substring(i, start))
         var end = start
         while (end < text.length && text[end] == '*') end++
-        withStyle(SpanStyle(color = if (mine) NbColors.textDisabled else NbColors.text3)) { append(text.substring(start, end)) }
+        // Others' bubbles: `text2` on `surface4` (5.59 : 1); `text3` there is 4.39 : 1, under AA (DESIGN_SYSTEM 2.2, D2-12).
+        withStyle(SpanStyle(color = if (mine) NbColors.textDisabled else NbColors.text2)) { append(text.substring(start, end)) }
         i = end
     }
 }
@@ -425,22 +435,24 @@ private fun PhraseChips(state: ChatUiState, onPhrase: (String) -> Unit) {
     val enabled = state.cooldown == 0 && state.phraseCooldown == 0 && !state.offline && !state.restricted
     Column(Modifier.fillMaxWidth()) {
         Hairline()
+        // The row's 8 dp vertical padding is part of each chip's target: 48 dp tall targets around 32 dp chips (12.15, D2-10).
         Row(
-            Modifier.fillMaxWidth().fadingEnd().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
+            Modifier.fillMaxWidth().fadingEnd().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CHAT_CHIPS.forEach { id ->
                 val shape = RoundedCornerShape(NbRadius.s)
-                Box(
-                    Modifier
-                        .height(32.dp)
-                        .clip(shape)
-                        .border(1.dp, if (enabled) NbColors.outline else NbColors.line, shape)
-                        .rowClick(enabled = enabled) { onPhrase(id) }
-                        .padding(horizontal = 12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(phraseText(id).orEmpty(), style = NbType.labelSmall, color = if (enabled) NbColors.chalk else NbColors.textDisabled, maxLines = 1)
+                Box(Modifier.heightIn(min = 48.dp).rowClick(enabled = enabled) { onPhrase(id) }, contentAlignment = Alignment.Center) {
+                    Box(
+                        Modifier
+                            .heightIn(min = 32.dp)
+                            .clip(shape)
+                            .border(1.dp, if (enabled) NbColors.outline else NbColors.line, shape)
+                            .padding(horizontal = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(phraseText(id).orEmpty(), style = NbType.labelSmall, color = if (enabled) NbColors.chalk else NbColors.textDisabled, maxLines = 1)
+                    }
                 }
             }
         }
@@ -520,7 +532,15 @@ private fun Composer(state: ChatUiState, actions: ChatActions) {
 
 /** Long-press action sheet (09 §3): context line, copy, report message, block player (others only). */
 @Composable
-private fun MessageActions(message: ChatMessage, mine: Boolean, onDismiss: () -> Unit, onCopy: () -> Unit, onReport: () -> Unit, onBlock: () -> Unit) {
+private fun MessageActions(
+    message: ChatMessage,
+    mine: Boolean,
+    onDismiss: () -> Unit,
+    onCopy: () -> Unit,
+    onReport: () -> Unit,
+    onBlock: () -> Unit,
+    onPlayerCard: () -> Unit,
+) {
     NbModalSheet(onDismiss = onDismiss) {
         // Prototype `.menu .ctx`: 4 / 16 / 12, 2 dp before the bold line; `.menu` 24 dp bottom padding.
         Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)) {
@@ -532,6 +552,9 @@ private fun MessageActions(message: ChatMessage, mine: Boolean, onDismiss: () ->
         Hairline()
         ListRow(stringResource(R.string.msg_copy), icon = R.drawable.ic_content_copy, onClick = onCopy)
         if (!mine && message.senderId != null) {
+            // The player card opens from here, not from the 20 dp name line above the bubble (48 dp targets, D2-10).
+            InsetDivider(56.dp)
+            ListRow(stringResource(R.string.msg_player_card), icon = R.drawable.ic_person, onClick = onPlayerCard)
             InsetDivider(56.dp)
             ListRow(stringResource(R.string.msg_report), icon = R.drawable.ic_flag, onClick = onReport)
             InsetDivider(56.dp)
@@ -551,10 +574,11 @@ fun QuickPhraseSheet(enabled: Boolean, onPhrase: (String) -> Unit, onDismiss: ()
         SheetTitle(stringResource(R.string.phrases_title)) {
             IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), onDismiss, tint = NbColors.chalk)
         }
-        Column(Modifier.padding(start = 16.dp, end = 16.dp)) {
+        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp)) {
             Text(stringResource(R.string.phrases_note), style = NbType.caption, color = NbColors.text3)
             VSpacer(12.dp)
-            DESIGN_PHRASES.chunked(2).forEachIndexed { i, pair ->
+            // Large text: one phrase per row, so a word never has to break inside itself (D2-25).
+            DESIGN_PHRASES.chunked(if (isLargeFont()) 1 else 2).forEachIndexed { i, pair ->
                 if (i > 0) VSpacer(8.dp)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     pair.forEach { id ->

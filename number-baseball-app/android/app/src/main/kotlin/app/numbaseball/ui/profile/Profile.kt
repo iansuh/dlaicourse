@@ -13,6 +13,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.style.TextAlign
+import app.numbaseball.ui.design.Hairline
+import app.numbaseball.ui.design.InsetDivider
+import app.numbaseball.ui.design.SectionHeader
+import app.numbaseball.ui.design.isLargeFont
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -75,7 +83,16 @@ data class ProfileUiState(
     val renaming: Boolean = false,
     val renameError: UiError? = null,
     val renamed: Boolean = false,
+    /** Per digit count (3..6). Null: not available (the account endpoint sends only totals); the table shows `–`. */
+    val byDigits: Map<Int, ModeRecord>? = null,
+    /** Per mode. Null: not available; the rows show `–`. */
+    val byMode: Map<RecordMode, ModeRecord>? = null,
 )
+
+/** One row of the profile tables (10 Layout). [fewestRounds] is the fewest rounds to solve, null when never solved. */
+data class ModeRecord(val wins: Int, val losses: Int, val draws: Int, val fewestRounds: Int? = null)
+
+enum class RecordMode { QUICK, ROOM, TEAM, COMPUTER }
 
 class ProfileViewModel(private val accounts: AccountRepository, settings: SettingsRepository, network: NetworkMonitor) : ViewModel() {
     private val local = MutableStateFlow(ProfileUiState())
@@ -105,8 +122,9 @@ class ProfileViewModel(private val accounts: AccountRepository, settings: Settin
 }
 
 /**
- * Profile (10): identity with "change nickname", the record row at the larger size, the form row and the ad band. The
- * per-digit and per-mode tables need server data the protocol does not provide yet, so they are not shown.
+ * Profile (10): identity with "change nickname", the record row at the larger size, the form row, the per-digit and
+ * per-mode tables and the ad band. `/api/v1/me` returns only the totals and the app keeps no per-digit or per-mode
+ * history, so the tables show the spec's empty state (`–`) until that data exists (documented in README).
  */
 @Composable
 fun ProfileScreen(state: ProfileUiState, onRename: (String) -> Unit, onRenameShown: () -> Unit, onBack: () -> Unit) {
@@ -132,6 +150,9 @@ fun ProfileScreen(state: ProfileUiState, onRename: (String) -> Unit, onRenameSho
             RecordRow(state.stats)
             VSpacer(16.dp)
             FormRow(state)
+            VSpacer(8.dp)
+            DigitTable(state.byDigits)
+            ModeRows(state.byMode)
             VSpacer(24.dp)
         }
     }
@@ -197,6 +218,103 @@ private fun FormRow(state: ProfileUiState) {
                     else -> Lamp(LampColor.STRIKE, lit = false, size = 8.dp)
                 }
             }
+        }
+    }
+}
+
+/** "자리수별 기록" (10 Layout): 자리수 · 승 · 패 · 무 · 최소 회; rows 3–6자리, 40 dp, 1 dp `line` between. */
+@Composable
+private fun DigitTable(records: Map<Int, ModeRecord>?) {
+    val large = isLargeFont()
+    SectionHeader(stringResource(R.string.profile_by_digits), first = true)
+    Column(Modifier.padding(horizontal = 16.dp)) {
+        Row(Modifier.fillMaxWidth().heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
+            TableHeader(stringResource(R.string.profile_col_digits), Modifier.weight(1.4f), TextAlign.Start)
+            TableHeader(stringResource(R.string.record_win), Modifier.weight(1f))
+            TableHeader(stringResource(R.string.record_loss), Modifier.weight(1f))
+            TableHeader(stringResource(R.string.record_draw), Modifier.weight(1f))
+            // Large text drops the 최소 회 column (10 States).
+            if (!large) TableHeader(stringResource(R.string.profile_col_fewest), Modifier.weight(1.2f), TextAlign.End)
+        }
+        (3..6).forEach { digits ->
+            val record = records?.get(digits)
+            val label = pluralStringResource(R.plurals.digits_n, digits, digits)
+            val spoken = if (record == null) "$label, ${stringResource(R.string.profile_no_record)}" else "$label, " + stringResource(R.string.record_value, record.wins, record.losses, record.draws)
+            Hairline()
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 39.dp).clearAndSetSemantics { contentDescription = spoken },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(label, style = NbType.labelSmall, color = NbColors.text3, modifier = Modifier.weight(1.4f))
+                TableValue(record?.wins, Modifier.weight(1f))
+                TableValue(record?.losses, Modifier.weight(1f))
+                TableValue(record?.draws, Modifier.weight(1f))
+                if (!large) TableValue(record?.fewestRounds, Modifier.weight(1.2f), TextAlign.End, zeroDisabled = false)
+            }
+        }
+        Hairline()
+    }
+}
+
+@Composable
+private fun TableHeader(text: String, modifier: Modifier, align: TextAlign = TextAlign.Center) {
+    Text(text, style = NbType.labelSmall, color = NbColors.text3, textAlign = align, maxLines = 1, softWrap = false, modifier = modifier)
+}
+
+/** `numLog` chalk; zero in `textDisabled`; `–` when there is no record. */
+@Composable
+private fun TableValue(value: Int?, modifier: Modifier, align: TextAlign = TextAlign.Center, zeroDisabled: Boolean = true) {
+    Text(
+        value?.toString() ?: "–",
+        style = NbType.numLog.copy(letterSpacing = NbType.numHint.letterSpacing),
+        color = if (value == null || (zeroDisabled && value == 0)) NbColors.textDisabled else NbColors.chalk,
+        textAlign = align,
+        modifier = modifier,
+    )
+}
+
+/** "모드별" (10 Layout): 56 dp rows, "12승 8패 3무" right-aligned; computer games listed apart, not in the record. */
+@Composable
+private fun ModeRows(records: Map<RecordMode, ModeRecord>?) {
+    SectionHeader(stringResource(R.string.profile_by_mode))
+    listOf(
+        RecordMode.QUICK to R.string.mode_quick,
+        RecordMode.ROOM to R.string.mode_room,
+        RecordMode.TEAM to R.string.mode_team,
+        RecordMode.COMPUTER to R.string.profile_cpu_mode,
+    ).forEachIndexed { i, (mode, label) ->
+        if (i > 0) InsetDivider(16.dp)
+        val record = records?.get(mode)
+        val title = stringResource(label)
+        val value = record?.let { stringResource(R.string.record_value, it.wins, it.losses, it.draws) }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .padding(horizontal = 16.dp)
+                .clearAndSetSemantics { contentDescription = "$title, ${value ?: "–"}" },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(title, style = NbType.subtitle, color = NbColors.chalk, modifier = Modifier.weight(1f).padding(vertical = 8.dp))
+            HSpacer(12.dp)
+            if (record == null) {
+                Text("–", style = NbType.numTag, color = NbColors.textDisabled)
+            } else {
+                RecordValue(record)
+            }
+        }
+    }
+}
+
+/** "12승 8패 3무": numbers `numTag`, units `caption`. */
+@Composable
+private fun RecordValue(record: ModeRecord) {
+    val units = listOf(record.wins to R.string.record_win, record.losses to R.string.record_loss, record.draws to R.string.record_draw)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        units.forEachIndexed { i, (n, unit) ->
+            if (i > 0) HSpacer(6.dp)
+            Text(n.toString(), style = NbType.numTag, color = NbColors.text2, modifier = Modifier.alignByBaseline())
+            Text(stringResource(unit), style = NbType.caption, color = NbColors.text3, modifier = Modifier.alignByBaseline())
         }
     }
 }

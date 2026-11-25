@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import app.numbaseball.ui.design.Text
@@ -183,10 +184,12 @@ private fun OpponentHint(entry: RoundEntry) {
 fun HintLegend(compact: Boolean, modifier: Modifier = Modifier) {
     val pad = if (compact) 12.dp else 16.dp
     val rowHeight = if (compact) 40.dp else 44.dp
-    Column(modifier.fillMaxWidth()) {
+    // Scrolls when large text makes the rows taller than the region (D2-25).
+    val scroll = androidx.compose.foundation.rememberScrollState()
+    Column(modifier.fillMaxWidth().fadingEdges(bottom = 16.dp, enabled = scroll.canScrollForward).verticalScroll(scroll)) {
         if (!compact) {
             Hairline()
-            Box(Modifier.fillMaxWidth().height(NbSize.historyHeader).padding(horizontal = pad), contentAlignment = Alignment.CenterStart) {
+            Box(Modifier.fillMaxWidth().heightIn(min = NbSize.historyHeader).padding(horizontal = pad), contentAlignment = Alignment.CenterStart) {
                 Text(stringResource(R.string.legend_title), style = NbType.labelSmall, color = NbColors.text3)
             }
         }

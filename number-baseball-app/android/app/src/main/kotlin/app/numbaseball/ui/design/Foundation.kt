@@ -288,3 +288,19 @@ fun Modifier.underlined(color: Color = NbColors.outline): Modifier = drawBehind 
     val y = size.height / 2 + 4.5.dp.toPx() + 3.dp.toPx()
     drawLine(color, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), strokeWidth = 1.dp.toPx())
 }
+
+/**
+ * Lets a control keep its 48 dp touch target inside a row that is visually shorter ([visual], e.g. a 46 dp band between
+ * two 1 dp lines): the control is measured at least [target] tall but reports [visual] to the parent, centred, so the
+ * row keeps its design height and the target overlaps the lines, not the neighbours (D2-19).
+ */
+fun Modifier.targetOverflow(visual: Dp, target: Dp = NbLayout.touchMin): Modifier = layout { measurable, constraints ->
+    val t = target.roundToPx()
+    val v = visual.roundToPx()
+    val p = measurable.measure(constraints.copy(minHeight = maxOf(constraints.minHeight, t), maxHeight = maxOf(constraints.maxHeight, t)))
+    if (p.height <= v) {
+        layout(p.width, p.height) { p.place(0, 0) }
+    } else {
+        layout(p.width, v) { p.place(0, -(p.height - v) / 2) }
+    }
+}

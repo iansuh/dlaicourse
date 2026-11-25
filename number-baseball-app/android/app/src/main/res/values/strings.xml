@@ -447,4 +447,18 @@
     <string name="how_3">A strike is a right digit in the right place; a ball is a right digit in another place; out means none of the digits is in the number.</string>
     <string name="how_4">Use the memo board to rule digits out or pin them to a position.</string>
     <string name="how_5">Whoever gets all strikes first wins. If both do in the same round, it is a draw.</string>
+    <!-- Phase 2 review round 1 -->
+    <string name="lock_in_short">Lock in</string>
+    <string name="menu_random_fill">Fill at random</string>
+    <string name="nick_error_long">Up to 12 characters</string>
+    <string name="line_score_all">Show every round</string>
+    <string name="line_score_recent">Show recent rounds</string>
+    <string name="practice_short">Practise</string>
+    <string name="msg_player_card">View player</string>
+    <string name="profile_by_digits">By digit count</string>
+    <string name="profile_col_digits">Digits</string>
+    <string name="profile_col_fewest">Fewest</string>
+    <string name="profile_by_mode">By mode</string>
+    <string name="profile_cpu_mode">Computer (not in record)</string>
+    <string name="profile_no_record">no games</string>
 </resources>

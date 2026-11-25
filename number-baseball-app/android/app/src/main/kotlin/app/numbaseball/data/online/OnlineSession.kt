@@ -85,6 +85,15 @@ class OnlineSession(
         _chat.value.lastOrNull()?.let { last -> _chatReadUpTo.update { maxOf(it, last.id) } }
     }
 
+    private val _offlineSince = MutableStateFlow<Map<String, Long>>(emptyMap())
+
+    /**
+     * Server time at which each player of the current room was first seen offline in a snapshot (D2-14). Kept for the
+     * whole session, so a screen opened later (the team board) counts the 60 s grace from the same moment as the duel
+     * strip instead of from when it was opened.
+     */
+    val offlineSince: StateFlow<Map<String, Long>> = _offlineSince.asStateFlow()
+
     private val _queue = MutableStateFlow<QueueState>(QueueState.Idle)
     val queue: StateFlow<QueueState> = _queue.asStateFlow()
 
@@ -205,12 +214,15 @@ class OnlineSession(
             _chat.value = emptyList()
             _chatReadUpTo.value = -1L
         }
+        val known = if (current?.id == room.id) _offlineSince.value else emptyMap()
+        _offlineSince.value = room.players.filter { !it.connected && !it.left }.associate { it.id to (known[it.id] ?: room.serverTime) }
         _room.value = room
         if (room.kind == RoomKind.QUICK) _queue.value = QueueState.Idle
     }
 
     private fun clearRoom() {
         _room.value = null
+        _offlineSince.value = emptyMap()
         _chat.value = emptyList()
         _chatReadUpTo.value = -1L
         chatRoomId = null

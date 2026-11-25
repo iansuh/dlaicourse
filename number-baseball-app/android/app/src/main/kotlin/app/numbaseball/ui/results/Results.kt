@@ -64,6 +64,7 @@ import app.numbaseball.ui.design.fadingEdges
 import app.numbaseball.ui.design.fadingStart
 import app.numbaseball.ui.design.formatClock
 import app.numbaseball.ui.design.isCompactHeight
+import app.numbaseball.ui.design.isLargeFont
 import app.numbaseball.ui.match.MatchMode
 import app.numbaseball.ui.match.MatchSummary
 import app.numbaseball.ui.match.Outcome
@@ -134,14 +135,16 @@ fun ResultsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 val headline = NbType.display.copy(fontSize = 32.sp, lineHeight = 40.sp)
-                Box(Modifier.fillMaxWidth().height(56.dp), contentAlignment = Alignment.Center) {
-                    Text(stringResource(headlineRes(summary.outcome)), style = headline, color = NbColors.chalk, modifier = Modifier.semantics { heading() })
+                val headlineText = stringResource(headlineRes(summary.outcome))
+                val sub = resultSubline(summary)
+                // Only the headline row is drawn; TalkBack still reads the sub line (ADAPTIVE.md §1, D2-36).
+                Box(
+                    Modifier.fillMaxWidth().heightIn(min = 56.dp).semantics(mergeDescendants = true) { heading(); contentDescription = "$headlineText. $sub" },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(headlineText, style = headline, color = NbColors.chalk, textAlign = TextAlign.Center)
                 }
-                Text(resultSubline(summary), style = NbType.caption, color = NbColors.text2, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 12.dp))
-                VSpacer(12.dp)
                 val theirs = stringResource(R.string.opp_secret)
-                Text(theirs, style = NbType.caption, color = NbColors.text3)
-                VSpacer(8.dp)
                 DigitSlots(
                     digits = summary.digits,
                     value = summary.opponentSecret,
@@ -169,7 +172,7 @@ fun ResultsScreen(
             Hero(summary, compact)
             Reveal(summary, compact)
             VSpacer(28.dp)
-            LineScore(summary, Modifier.padding(horizontal = 16.dp))
+            LineScore(summary, isLargeFont(), Modifier.padding(horizontal = 16.dp))
             Spacer(Modifier.heightIn(min = 16.dp).weight(1f))
         }
         Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp)) {
@@ -271,10 +274,11 @@ private fun Reveal(summary: MatchSummary, compact: Boolean) {
 
 /**
  * Line score (06 §1): 1 dp line top, 12 dp padding, header (title + match duration), label column 80 dp, one column per
- * round with the strike count, "Best" 56 dp. More than 9 rounds scroll horizontally, starting at the end.
+ * round with the strike count, "Best" 56 dp. More than 9 rounds scroll horizontally, starting at the end. At large
+ * text (06 §5, D2-02) only the last 3 rounds and "Best" show; the full table is behind "회별 기록 보기".
  */
 @Composable
-private fun LineScore(summary: MatchSummary, modifier: Modifier = Modifier) {
+private fun LineScore(summary: MatchSummary, large: Boolean, modifier: Modifier = Modifier) {
     val rounds = maxOf(summary.myStrikes.size, summary.opponentStrikes.size)
     if (rounds == 0) return
     val opponentLabel = if (summary.mode == MatchMode.COMPUTER || summary.mode == MatchMode.PRACTICE) {
@@ -284,9 +288,15 @@ private fun LineScore(summary: MatchSummary, modifier: Modifier = Modifier) {
     }
     val myBest = summary.myStrikes.filterNotNull().maxOrNull() ?: 0
     val theirBest = summary.opponentStrikes.filterNotNull().maxOrNull() ?: 0
+    var showAll by remember { mutableStateOf(false) }
+    val first = if (large && !showAll) (rounds - 3).coerceAtLeast(0) else 0
+    val shown = rounds - first
+    val header = if (large) 44.dp else 32.dp
+    val row = if (large) 48.dp else ROW_HEIGHT
     Column(modifier.fillMaxWidth()) {
         Hairline()
-        Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        // 10 dp: the header row is 20 dp tall (numTag), so the 16 dp timer icon and the label sit where the shot has them (D2-20).
+        Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.line_score), style = NbType.labelSmall, color = NbColors.text3, modifier = Modifier.weight(1f).semantics { heading() })
             summary.durationSeconds?.let {
                 NbIcon(R.drawable.ic_timer, null, NbColors.text3, 16.dp)
@@ -296,18 +306,18 @@ private fun LineScore(summary: MatchSummary, modifier: Modifier = Modifier) {
         }
         VSpacer(8.dp)
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val label = 80.dp
-            val best = 56.dp
+            val label = if (large) 96.dp else 80.dp
+            val best = if (large) 72.dp else 56.dp
             val available = maxWidth - label - best
-            val scrolls = rounds > 9
-            val column = if (scrolls) 32.dp else minOf(32.dp, available / rounds)
+            val scrolls = shown > 9
+            val column = if (scrolls) 32.dp else if (large) minOf(48.dp, available / shown) else minOf(32.dp, available / shown)
             val scroll = rememberScrollState()
-            LaunchedEffect(rounds) { scroll.scrollTo(scroll.maxValue) }
+            LaunchedEffect(shown) { scroll.scrollTo(scroll.maxValue) }
             Row(Modifier.fillMaxWidth()) {
                 Column(Modifier.width(label)) {
-                    Box(Modifier.height(32.dp))
-                    LabelCell(stringResource(R.string.me_short))
-                    LabelCell(opponentLabel)
+                    Box(Modifier.height(header))
+                    LabelCell(stringResource(R.string.me_short), row)
+                    LabelCell(opponentLabel, row)
                 }
                 Box(
                     Modifier
@@ -315,30 +325,38 @@ private fun LineScore(summary: MatchSummary, modifier: Modifier = Modifier) {
                         .then(if (scrolls) Modifier.fadingStart() else Modifier),
                 ) {
                     Column(if (scrolls) Modifier.horizontalScroll(scroll) else Modifier) {
-                        Row(Modifier.height(32.dp), verticalAlignment = Alignment.CenterVertically) {
-                            repeat(rounds) { i ->
+                        Row(Modifier.height(header), verticalAlignment = Alignment.CenterVertically) {
+                            (first until rounds).forEach { i ->
                                 Text((i + 1).toString(), style = NbType.numLabel, color = NbColors.text3, textAlign = TextAlign.Center, modifier = Modifier.width(column))
                             }
                         }
-                        StrikeRow(summary.myStrikes, rounds, column, summary.digits, stringResource(R.string.me_short))
-                        StrikeRow(summary.opponentStrikes, rounds, column, summary.digits, opponentLabel)
+                        StrikeRow(summary.myStrikes, first, rounds, column, row, summary.digits, stringResource(R.string.me_short))
+                        StrikeRow(summary.opponentStrikes, first, rounds, column, row, summary.digits, opponentLabel)
                     }
                 }
                 Column(Modifier.width(best), horizontalAlignment = Alignment.End) {
-                    Box(Modifier.height(32.dp), contentAlignment = Alignment.CenterEnd) {
-                        Text(stringResource(R.string.best), style = NbType.labelSmall, color = NbColors.text3)
+                    Box(Modifier.height(header), contentAlignment = Alignment.CenterEnd) {
+                        Text(stringResource(R.string.best), style = NbType.labelSmall, color = NbColors.text3, maxLines = 1, softWrap = false)
                     }
-                    BestCell(myBest, summary.digits)
-                    BestCell(theirBest, summary.digits)
+                    BestCell(myBest, summary.digits, row)
+                    BestCell(theirBest, summary.digits, row)
                 }
             }
             // Row separators span the whole table.
             Column(Modifier.fillMaxWidth()) {
-                Box(Modifier.height(32.dp))
+                Box(Modifier.height(header))
                 Hairline()
-                Box(Modifier.height(ROW_HEIGHT))
+                Box(Modifier.height(row))
                 Hairline()
             }
+        }
+        if (large && rounds > 3) {
+            NbButton(
+                stringResource(if (showAll) R.string.line_score_recent else R.string.line_score_all),
+                { showAll = !showAll },
+                kind = ButtonKind.TEXT,
+                modifier = Modifier.align(Alignment.End),
+            )
         }
     }
 }
@@ -346,16 +364,16 @@ private fun LineScore(summary: MatchSummary, modifier: Modifier = Modifier) {
 private val ROW_HEIGHT = 37.dp
 
 @Composable
-private fun LabelCell(text: String) {
-    Box(Modifier.height(ROW_HEIGHT + 1.dp).padding(top = 1.dp), contentAlignment = Alignment.CenterStart) {
+private fun LabelCell(text: String, row: Dp) {
+    Box(Modifier.height(row + 1.dp).padding(top = 1.dp), contentAlignment = Alignment.CenterStart) {
         Text(text, style = NbType.caption, color = NbColors.text2, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
 @Composable
-private fun StrikeRow(strikes: List<Int?>, rounds: Int, column: Dp, digits: Int, who: String) {
-    Row(Modifier.height(ROW_HEIGHT + 1.dp).padding(top = 1.dp), verticalAlignment = Alignment.CenterVertically) {
-        repeat(rounds) { i ->
+private fun StrikeRow(strikes: List<Int?>, first: Int, rounds: Int, column: Dp, row: Dp, digits: Int, who: String) {
+    Row(Modifier.height(row + 1.dp).padding(top = 1.dp), verticalAlignment = Alignment.CenterVertically) {
+        (first until rounds).forEach { i ->
             val value = strikes.getOrNull(i)
             val spoken = stringResource(R.string.line_score_cell, i + 1, who, value ?: 0)
             Text(
@@ -374,8 +392,8 @@ private fun StrikeRow(strikes: List<Int?>, rounds: Int, column: Dp, digits: Int,
 }
 
 @Composable
-private fun BestCell(best: Int, digits: Int) {
-    Box(Modifier.height(ROW_HEIGHT + 1.dp).padding(top = 1.dp), contentAlignment = Alignment.CenterEnd) {
+private fun BestCell(best: Int, digits: Int, row: Dp) {
+    Box(Modifier.height(row + 1.dp).padding(top = 1.dp), contentAlignment = Alignment.CenterEnd) {
         Text("${best}S", style = NbType.numHint, color = if (best == digits) NbColors.strike else NbColors.chalk)
     }
 }

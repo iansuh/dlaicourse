@@ -395,9 +395,12 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
                     home()
                 }
             }
+            val offlineSince by container.onlineSession.offlineSince.collectAsStateWithLifecycle()
             TeamBoardScreen(
                 room = current,
                 mode = shown,
+                offlineSince = offlineSince,
+                serverNow = container.onlineSession::serverNow,
                 onBack = if (shown == BoardMode.OVERLAY) back else backToRoom,
                 onChat = { navController.navigate(ChatRoute) },
                 onBackToRoom = backToRoom,
