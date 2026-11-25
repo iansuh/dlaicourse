@@ -106,12 +106,11 @@ HEAD = """<!doctype html>
 
 TEMPLATE = r"""<title>Number Baseball Sound Audition</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap">
 <style>
 /* Layout: one scoreboard column (max 640px); sections are bands of the night-game board, rows are plates. */
 :root {
-  color-scheme: dark;
+  color-scheme: dark light;
+  --press: #D3D8CC;
   --bg: #0C1210; --surface1: #131A17; --surface2: #1A231F; --surface3: #222D28; --surface4: #2B3732;
   --line: #2A3530; --outline: #6C7C74;
   --chalk: #ECEFE6; --text2: #A5B1AA; --text3: #909D96;
@@ -119,6 +118,17 @@ TEMPLATE = r"""<title>Number Baseball Sound Audition</title>
   --strikeGlow: rgba(245,184,61,.45); --ballGlow: rgba(69,201,139,.45); --outGlow: rgba(255,99,89,.45); --chalkGlow: rgba(236,239,230,.35);
   --font-num: "Barlow Condensed", "Roboto Condensed", "Arial Narrow", sans-serif;
   --font-sans: system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", Roboto, sans-serif;
+}
+/* Light theme (the game itself is dark only; the page follows the phone setting so it is readable in daylight). */
+@media (prefers-color-scheme: light) {
+  :root {
+    --press: #2A3530;
+    --bg: #F4F6F0; --surface1: #FFFFFF; --surface2: #E9EDE5; --surface3: #DCE2D7; --surface4: #CDD5C8;
+    --line: #D3DACD; --outline: #6C7C74;
+    --chalk: #121A16; --text2: #3F4C45; --text3: #55635B;
+    --strike: #C98A00; --ball: #1E9B63; --out: #D93A30; --lampOff: #D3DACD; --lampRing: #B5BFB3;
+    --strikeGlow: rgba(201,138,0,.35); --ballGlow: rgba(30,155,99,.35); --outGlow: rgba(217,58,48,.35); --chalkGlow: rgba(18,26,22,.25);
+  }
 }
 * { box-sizing: border-box; }
 html, body { background: var(--bg); color: var(--chalk); }
@@ -197,7 +207,7 @@ button { font: inherit; color: inherit; }
   color: var(--chalk); cursor: pointer; touch-action: manipulation; }
 .key:active { background: var(--surface3); }
 .key.wide { grid-column: span 4; font: 700 16px/1 var(--font-sans); background: var(--chalk); color: var(--bg); }
-.key.wide:active { background: #D3D8CC; }
+.key.wide:active { background: var(--press); }
 .key.del { font: 600 15px/1 var(--font-num); letter-spacing: .06em; }
 .ladder { display: grid; gap: 8px; }
 .ladder .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
