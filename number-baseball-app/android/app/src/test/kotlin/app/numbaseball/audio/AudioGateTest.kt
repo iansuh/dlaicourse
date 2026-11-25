@@ -40,5 +40,9 @@ class AudioGateTest {
         assertTrue(AudioGate.musicAllowed(on, foreground = true, audioMode = AudioManager.MODE_NORMAL))
         assertFalse(AudioGate.musicAllowed(on, foreground = false, audioMode = AudioManager.MODE_NORMAL))
         assertFalse(AudioGate.musicAllowed(on, foreground = true, audioMode = AudioManager.MODE_IN_CALL))
+        assertFalse(AudioGate.musicAllowed(on, foreground = true, audioMode = AudioManager.MODE_NORMAL, ringerMode = AudioManager.RINGER_MODE_VIBRATE))
+        assertTrue(
+            AudioGate.musicAllowed(on.copy(followSilentMode = false), foreground = true, audioMode = AudioManager.MODE_NORMAL, ringerMode = AudioManager.RINGER_MODE_SILENT),
+        )
     }
 }

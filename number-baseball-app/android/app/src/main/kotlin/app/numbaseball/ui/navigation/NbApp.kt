@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -522,6 +523,7 @@ private fun HomeDestination(navController: NavHostController) {
 private fun LobbyDestination(route: RoomLobbyRoute, navController: NavHostController, home: () -> Unit, copy: (String, String) -> Unit) {
     val container = LocalAppContainer.current
     val context = LocalContext.current
+    val resources = LocalResources.current
     val create = route.takeIf { it.digits > 0 }?.let { RoomSettings(it.digits, it.teamSize, it.roundSeconds) }
     val vm = containerViewModel { RoomLobbyViewModel(create, route.joinCode, onlineSession, settingsRepository) }
     val state by vm.state.collectAsStateWithLifecycle()
@@ -539,7 +541,7 @@ private fun LobbyDestination(route: RoomLobbyRoute, navController: NavHostContro
             },
             onCopy = { copy("code", it) },
             onShare = { code ->
-                val text = context.getString(R.string.share_text, appName, code)
+                val text = resources.getString(R.string.share_text, appName, code)
                 val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
                 context.startActivity(Intent.createChooser(send, null))
             },

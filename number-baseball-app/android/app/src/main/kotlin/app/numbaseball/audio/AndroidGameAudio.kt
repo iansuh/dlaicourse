@@ -1,12 +1,16 @@
 package app.numbaseball.audio
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.SoundPool
 import android.os.SystemClock
+import androidx.core.content.ContextCompat
 import app.numbaseball.data.settings.AppSettings
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
@@ -24,8 +28,9 @@ object AudioGate {
             audioMode == AudioManager.MODE_NORMAL &&
             !(settings.followSilentMode && ringerMode != AudioManager.RINGER_MODE_NORMAL)
 
-    fun musicAllowed(settings: AppSettings, foreground: Boolean, audioMode: Int): Boolean =
-        settings.musicEnabled && settings.musicVolume > 0f && foreground && audioMode == AudioManager.MODE_NORMAL
+    fun musicAllowed(settings: AppSettings, foreground: Boolean, audioMode: Int, ringerMode: Int = AudioManager.RINGER_MODE_NORMAL): Boolean =
+        settings.musicEnabled && settings.musicVolume > 0f && foreground && audioMode == AudioManager.MODE_NORMAL &&
+            !(settings.followSilentMode && ringerMode != AudioManager.RINGER_MODE_NORMAL)
 }
 
 /**
@@ -56,6 +61,7 @@ class AndroidGameAudio(
     private val streams = HashMap<SoundCue, Int>()
     private val roundRobin = HashMap<SoundCue, Int>()
     private var lastChatSoundAt = Long.MIN_VALUE / 2
+    private val random = kotlin.random.Random(clock())
 
     private val focusRequest: AudioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
         .setAudioAttributes(musicAttributes)
@@ -70,7 +76,15 @@ class AndroidGameAudio(
     private var player: MediaPlayer? = null
     private var playerTrack: MusicTrack? = null
 
+    // Pause / resume a running music loop when the ringer switch flips (INTEGRATION.md section 7).
+    private val ringerReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) = updateMusic()
+    }
+
     init {
+        ContextCompat.registerReceiver(
+            appContext, ringerReceiver, IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION), ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
         preload()
         scope.launch(Dispatchers.Main) {
             settings.collect {
@@ -80,7 +94,7 @@ class AndroidGameAudio(
         }
     }
 
-    override fun play(cue: SoundCue, rate: Float) {
+    override fun play(cue: SoundCue, rate: Float, volume: Float) {
         val samples = loaded[cue] ?: return
         if (!AudioGate.effectsAllowed(current, audioManager.ringerMode, audioManager.mode, foreground, focusLost)) return
         val now = clock()
@@ -91,10 +105,13 @@ class AndroidGameAudio(
         }
         // Effects never stack, except the lamps of one reveal.
         if (!cue.stackable) streams.remove(cue)?.let { soundPool.stop(it) }
+        // Round-robin over the variants: never the same keypad sample twice in a row.
         val sample = samples[roundRobin.getOrDefault(cue, 0) % samples.size]
         roundRobin[cue] = roundRobin.getOrDefault(cue, 0) + 1
-        val volume = current.effectsVolume.coerceIn(0f, 1f)
-        val stream = soundPool.play(sample, volume, volume, cue.priority, 0, rate.coerceIn(0.5f, 2f))
+        val gain = current.effectsVolume.coerceIn(0f, 1f) * volume.coerceIn(0f, 1f) *
+            (1f - cue.volumeVariation * random.nextFloat())
+        val playRate = rate * (1f + cue.rateVariation * (random.nextFloat() * 2f - 1f))
+        val stream = soundPool.play(sample, gain, gain, cue.priority, 0, playRate.coerceIn(0.5f, 2f))
         if (stream != 0 && !cue.stackable) streams[cue] = stream
     }
 
@@ -126,7 +143,7 @@ class AndroidGameAudio(
     private fun updateMusic() {
         val track = wantedTrack
         val res = track?.file
-        if (res == null || !AudioGate.musicAllowed(current, foreground, audioManager.mode)) {
+        if (res == null || !AudioGate.musicAllowed(current, foreground, audioManager.mode, audioManager.ringerMode)) {
             stopMusic()
             return
         }
