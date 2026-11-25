@@ -52,7 +52,7 @@ class QaInstance(
     val adminToken: String?,
     val dataDir: File?,
     private val server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>?,
-) {
+) : AutoCloseable {
     val wsUri: URI get() = URI.create(baseUrl.replaceFirst("http", "ws") + "/ws/v1")
     val inProcess: Boolean get() = server != null
     val dbFile: File? get() = dataDir?.let { File(it, "numbaseball.db") }
@@ -61,6 +61,8 @@ class QaInstance(
     fun stop() {
         server?.stop(500, 3_000)
     }
+
+    override fun close() = stop()
 
     private val counter = AtomicLong(System.nanoTime() % 1000)
     private var termsVersion: String? = null
@@ -147,11 +149,12 @@ object QaServer {
         reviewRoomCode: String? = REVIEW_CODE,
         quickMatchFreeChat: Boolean = false,
         trustedProxyHops: Int = 0,
+        forceHttps: Boolean = false,
     ): QaInstance {
         logFile // attach the log capture before the server logs anything
         val config = Config(
             port = 0, dataDir = dataDir, adminToken = adminToken, appAdsTxt = appAdsTxt, reviewRoomCode = reviewRoomCode,
-            quickMatchFreeChat = quickMatchFreeChat, termsVersion = termsVersion, forceHttps = false, relaxedRateLimits = relaxed,
+            quickMatchFreeChat = quickMatchFreeChat, termsVersion = termsVersion, forceHttps = forceHttps, relaxedRateLimits = relaxed,
             testHooks = true, tickMillis = 50, trustedProxyHops = trustedProxyHops,
         )
         val server = embeddedServer(Netty, port = 0, host = "127.0.0.1") { module(config) }
