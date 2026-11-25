@@ -133,3 +133,21 @@ Done before the re-review, as promised in [`REVIEW_PHASE2.md`](REVIEW_PHASE2.md)
 | 9 | Protocol 1.1 | Chat system lines (09 §2.1, shot `chat-system-ko`); best hints on every team-board row incl. the null state (08 §2, 12.11); any player's record on the player card with loading / not available / failed states (12 §2, shot `report-card-norecord-ko`) | D2-13, D2-32 |
 
 Self-check on the new shots: no non-token colour, no banner on Settings, the purchase rows use no lamp colour (only `strike` for the error line, as the silent-mode warning does), the result link sits 0 dp from the `flag` button with 48 dp targets that do not overlap, and the result band keeps its 24 dp clear space.
+
+## 2026-11-25: Phase 2 re-review after fix round 1 (450 Roborazzi PNGs)
+
+Build `7d73fc4`. Same method as round 1: reference | render | diff for the 59 regenerated shots (tabular digits), every new state, `-small-*` and `-ko-font200` variant opened, positions measured with PIL at density 2, flat-colour audit over all 450 renders. Full report: [`REVIEW_PHASE2_ROUND2.md`](REVIEW_PHASE2_ROUND2.md).
+
+**Verdict: not signed off.** Round 1: 27 fixed, 1 closed as an accepted deviation (D2-14), 8 open (D2-03, D2-15, D2-30, D2-32, D2-34 major; D2-09, D2-20, D2-22 minor). New: 16 (D2-37 … D2-43 major, D2-44 … D2-52 minor). Open in total: 0 blocker, 12 major, 12 minor.
+
+| Top issues | Sev |
+| --- | --- |
+| D2-37 / D2-38 / D2-39 / D2-03 200 % still loses content: reconnect banner leaves 0 log rows; waiting label ellipsized; practice band clips "방으로" (and its target is 40 dp); team status "0:41" clipped | M |
+| D2-41 / D2-40 Small window: tutorial step 3 hides the row the coach explains; transfer mode scrolls its own field and error out of view | M |
+| D2-34 Large memo sheet: no pitch clock in its header, grid not centred, no row lines, position row not pinned; the inline memo at 200 % still shows the digit row | M |
+| D2-30 / D2-42 Not reviewable: no de / ru renders; language picker fixture has 2 of 10 languages; 구매 section off-screen in small / 200 % renders; active transfer code never rendered | M |
+| D2-43 Opponent-log sheet and server-error dialog still missing (deviation rejected) | M |
+
+Fixed and verified: the 1.3× numeral cap and the large-text match layout (all six digits kept), results / lobby / team result at 200 % and small windows, compact slots, memo labels, chat targets and name line, masked colour, team best hints, the interactive tutorial, the transfer-entry position, home hero, lobby band, slider, scrim, phrases, remove-ads rows and states, the result link. No non-token colour.
+
+Deviation decisions: player card from the long-press sheet accepted; reconnect countdown from the first sighting accepted as interim; empty profile tables rejected (hide the sections until the server sends the data); missing opponent sheet and server-error dialog rejected; tutorial team card, review-room bot id, interstitial hold timing, the delete-dialog purchase paragraph, the privacy-row behaviour, the live-board leave copy, the small-window team status and the deferred cross-fade accepted.
