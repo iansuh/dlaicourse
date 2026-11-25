@@ -187,7 +187,15 @@ data class DuelSummary(
     /** Current round (1-based) while guessing, rounds played when finished, 0 while choosing. */
     val round: Int,
     val result: DuelResult?,
+    /** Protocol 1.1: best hint team A's player got so far (against B's secret); null before the first resolved guess. */
+    val bestHintA: BestHint? = null,
+    /** Protocol 1.1: best hint team B's player got so far (against A's secret). */
+    val bestHintB: BestHint? = null,
 )
+
+/** Strikes and balls only (never digits). "Best" = most strikes, then most balls, over the resolved rounds of one player. */
+@Serializable
+data class BestHint(val strikes: Int, val balls: Int)
 
 @Serializable
 data class MatchView(
@@ -241,6 +249,14 @@ data class MyDuelView(
 enum class ChatKind {
     @SerialName("text") TEXT,
     @SerialName("phrase") PHRASE,
+    /** Protocol 1.1: server-generated line (a player joined or left); see [ChatMessage.systemCode]. */
+    @SerialName("system") SYSTEM,
+}
+
+/** Values of [ChatMessage.systemCode] (protocol 1.1). More may be added; show unknown codes generically. */
+object SystemChatCodes {
+    const val PLAYER_JOINED = "player_joined"
+    const val PLAYER_LEFT = "player_left"
 }
 
 @Serializable
@@ -258,4 +274,10 @@ data class ChatMessage(
     val text: String?,
     /** Quick-phrase id (kind = phrase); the client shows its localized text. */
     val phraseId: String?,
+    /** Protocol 1.1, kind = system: localizable code ([SystemChatCodes]); senderId/Nickname/Tag/Team are null for system lines. */
+    val systemCode: String? = null,
+    /** Protocol 1.1, kind = system: the player the line is about. Null after that account was deleted. */
+    val subjectId: String? = null,
+    val subjectNickname: String? = null,
+    val subjectTag: String? = null,
 )

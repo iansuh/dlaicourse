@@ -271,7 +271,10 @@ class QaWs private constructor() : AutoCloseable {
         return out
     }
 
-    fun awaitType(type: String, timeoutMs: Long = 5_000): JsonObject = await(timeoutMs, type) { it.type == type }
+    /** Waits for a frame of [type]. For "chat" system lines (protocol 1.1: joined / left) are skipped; use [await] to see them. */
+    fun awaitType(type: String, timeoutMs: Long = 5_000): JsonObject = await(timeoutMs, type) {
+        it.type == type && !(type == "chat" && it["message"]?.jsonObject?.str("kind") == "system")
+    }
 
     fun awaitError(code: String? = null, timeoutMs: Long = 5_000): JsonObject =
         await(timeoutMs, "error ${code ?: ""}") { it.type == "error" && (code == null || it.str("code") == code) }

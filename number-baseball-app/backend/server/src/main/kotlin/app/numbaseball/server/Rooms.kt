@@ -2,6 +2,7 @@ package app.numbaseball.server
 
 import app.numbaseball.core.ai.ComputerPlayer
 import app.numbaseball.core.match.TeamMatch
+import app.numbaseball.core.protocol.BestHint
 import app.numbaseball.core.protocol.ChatMessage
 import app.numbaseball.core.protocol.DuelPhase
 import app.numbaseball.core.protocol.DuelSummary
@@ -12,6 +13,7 @@ import app.numbaseball.core.protocol.RoomKind
 import app.numbaseball.core.protocol.RoomPhase
 import app.numbaseball.core.protocol.RoomSettings
 import app.numbaseball.core.protocol.RoomView
+import app.numbaseball.core.protocol.RoundEntry
 import app.numbaseball.core.protocol.ServerMessage
 import app.numbaseball.core.protocol.Team
 import kotlinx.coroutines.channels.Channel
@@ -117,9 +119,15 @@ class Room(
         serverTime = now,
     )
 
+    private fun bestHint(rounds: List<RoundEntry>): BestHint? =
+        rounds.filter { it.guess != null }.maxWithOrNull(compareBy<RoundEntry>({ it.strikes }, { it.balls }))?.let { BestHint(it.strikes, it.balls) }
+
     private fun matchView(m: TeamMatch, meId: String): MatchView {
         val duels = m.duels.mapIndexed { i, d ->
-            DuelSummary(i, m.playerAt(i, Team.A), m.playerAt(i, Team.B), d.phase, d.round, d.result)
+            DuelSummary(
+                i, m.playerAt(i, Team.A), m.playerAt(i, Team.B), d.phase, d.round, d.result,
+                bestHintA = bestHint(d.roundsOf(Team.A)), bestHintB = bestHint(d.roundsOf(Team.B)),
+            )
         }
         val mine = m.locate(meId)?.let { (i, team) ->
             val d = m.duels[i]

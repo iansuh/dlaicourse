@@ -152,10 +152,11 @@ class Player(val account: TestAccount, val ws: DefaultClientWebSocketSession, sc
     suspend fun sendRaw(text: String) = ws.send(Frame.Text(text))
 
     /** Next message of type [T] matching [predicate]; other messages are skipped. */
-    suspend inline fun <reified T : ServerMessage> expect(timeoutMs: Long = 5_000, crossinline predicate: (T) -> Boolean = { true }): T =
+    suspend inline fun <reified T : ServerMessage> expect(timeoutMs: Long = 5_000, includeSystemChat: Boolean = false, crossinline predicate: (T) -> Boolean = { true }): T =
         withTimeout(timeoutMs) {
             while (true) {
                 val m = inbox.receiveCatching().getOrNull() ?: fail("connection closed while waiting for ${T::class.simpleName}: $closeReason")
+                if (m is app.numbaseball.core.protocol.ChatEvent && !includeSystemChat && m.message.kind == app.numbaseball.core.protocol.ChatKind.SYSTEM) continue
                 if (m is T && predicate(m)) return@withTimeout m
             }
             @Suppress("UNREACHABLE_CODE") error("unreachable")

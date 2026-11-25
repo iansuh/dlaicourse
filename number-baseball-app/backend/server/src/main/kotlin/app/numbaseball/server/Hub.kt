@@ -40,6 +40,7 @@ import app.numbaseball.core.protocol.RoomSettings
 import app.numbaseball.core.protocol.RoomSettingsUpdate
 import app.numbaseball.core.protocol.RoomState
 import app.numbaseball.core.protocol.SetSecret
+import app.numbaseball.core.protocol.SystemChatCodes
 import app.numbaseball.core.protocol.Team
 import app.numbaseball.core.protocol.TeamSet
 import app.numbaseball.core.protocol.Welcome
@@ -82,6 +83,8 @@ class Hub(
         const val CHAT_BURST = 5
         const val CHAT_WINDOW_MS = 10_000L
         const val RECENT_FOR_REPORT = 20
+        const val JOIN_FAILURES = 20
+        const val JOIN_WINDOW_MS = 600_000L
         const val BOT_ID = "reviewbot0001"
         const val BOT_NICKNAME = "ReviewBot"
         const val BOT_SECRET_DELAY_MS = 3_000L
@@ -285,15 +288,27 @@ class Hub(
             startReviewRoom(me, now)
             return
         }
-        val room = roomsByCode[code] ?: reject(ErrorCodes.ROOM_NOT_FOUND)
-        if (room.phase != RoomPhase.LOBBY) reject(ErrorCodes.MATCH_IN_PROGRESS)
-        if (room.isFull) reject(ErrorCodes.ROOM_FULL)
+        // Wrong-code attempts are limited per account (DEF-018): 20 failures per 10 minutes.
+        val failCap = if (config.relaxedRateLimits) JOIN_FAILURES * 1000 else JOIN_FAILURES
+        if (limiter.isExhausted("join:$me", failCap, JOIN_WINDOW_MS)) {
+            reject(ErrorCodes.TOO_MANY_ATTEMPTS, "too many wrong room codes", limiter.acquire("join:$me", failCap, JOIN_WINDOW_MS))
+        }
+        fun failed(code: String): Nothing {
+            limiter.acquire("join:$me", failCap, JOIN_WINDOW_MS)
+            reject(code)
+        }
+        val room = roomsByCode[code] ?: failed(ErrorCodes.ROOM_NOT_FOUND)
+        // A room with a player who blocked me (or whom I blocked) looks like a wrong code (DEF-015).
+        if (room.humans().any { accounts.isBlockedEitherWay(me, it.id) }) failed(ErrorCodes.ROOM_NOT_FOUND)
+        if (room.phase != RoomPhase.LOBBY) failed(ErrorCodes.MATCH_IN_PROGRESS)
+        if (room.isFull) failed(ErrorCodes.ROOM_FULL)
         requireTerms(me)
         val a = room.active(Team.A).size
         val b = room.active(Team.B).size
         val team = if (a <= b && a < room.settings.teamSize) Team.A else Team.B
         room.lobbyActivityAt = now
         val seat = addSeat(room, me, team)
+        systemLine(room, SystemChatCodes.PLAYER_JOINED, seat, now)
         maybeStart(room, now)
         broadcast(room, now)
         sendHistory(room, seat)
@@ -383,7 +398,7 @@ class Hub(
                     }
                 }
             }
-            accounts.recordResults(results)
+            if (room.bot == null) accounts.recordResults(results) // review-room bot games never count (DEF-048)
         }
         room.lastActiveAt = maxOf(room.lastActiveAt, now)
     }
@@ -408,6 +423,7 @@ class Hub(
             closeRoom(room, LeaveReason.CLOSED)
             return
         }
+        if (reason != LeaveReason.ACCOUNT_DELETED && reason != LeaveReason.BANNED) systemLine(room, SystemChatCodes.PLAYER_LEFT, seat, now)
         if (room.hostId == seat.id) room.hostId = room.humans().minByOrNull { it.order }?.id
         broadcast(room, now)
     }
@@ -429,10 +445,12 @@ class Hub(
         val room = seatOf[me] ?: reject(ErrorCodes.NOT_IN_ROOM)
         val m = room.match
         if (m == null || room.phase == RoomPhase.LOBBY) reject(ErrorCodes.WRONG_PHASE, "there is no match yet")
+        // Timers that are due fire first; only that (or an accepted action) changes the room and is broadcast.
+        val fired = room.phase == RoomPhase.PLAYING && m.advance(now)
         val result = action(m)
         afterMatchChange(room, now)
         if (result is ActionResult.Rejected) {
-            broadcast(room, now) // timers may have fired on the way
+            if (fired) broadcast(room, now)
             reject(result.code)
         }
         broadcast(room, now)
@@ -480,9 +498,28 @@ class Hub(
         }
     }
 
+    /** "X joined / left" line for private rooms (protocol 1.1): a code plus the player, localized by the client. */
+    private fun systemLine(room: Room, code: String, subject: Seat, now: Long) {
+        if (room.kind != RoomKind.PRIVATE || room.bot != null) return
+        val msg = ChatMessage(
+            ++room.chatSeq, now, null, null, null, null, ChatKind.SYSTEM, null, null,
+            systemCode = code, subjectId = subject.id, subjectNickname = subject.nickname, subjectTag = subject.tag,
+        )
+        room.chat.addLast(msg)
+        while (room.chat.size > Limits.CHAT_HISTORY) room.chat.removeFirst()
+        for (s in room.seats.values) {
+            val session = s.session ?: continue
+            if (s.left || s.id == subject.id || accounts.isBlockedEitherWay(s.id, subject.id)) continue
+            session.send(ChatEvent(room.id, msg))
+        }
+    }
+
     private fun sendHistory(room: Room, seat: Seat) {
         val session = seat.session ?: return
-        val visible = room.chat.filter { m -> m.senderId == null || m.senderId == seat.id || !accounts.isBlockedEitherWay(seat.id, m.senderId!!) }
+        val visible = room.chat.filter { m ->
+            val who = m.senderId ?: m.subjectId
+            who == null || who == seat.id || !accounts.isBlockedEitherWay(seat.id, who)
+        }
         session.send(ChatHistory(room.id, visible))
     }
 
@@ -597,8 +634,14 @@ class Hub(
         if (deleted) {
             for (room in rooms.values.toList()) {
                 var touched = false
-                if (room.chat.any { it.senderId == id }) {
-                    val rewritten = room.chat.map { if (it.senderId == id) it.copy(senderId = null, senderNickname = null, senderTag = null) else it }
+                if (room.chat.any { it.senderId == id || it.subjectId == id }) {
+                    val rewritten = room.chat.map {
+                        when {
+                            it.senderId == id -> it.copy(senderId = null, senderNickname = null, senderTag = null)
+                            it.subjectId == id -> it.copy(subjectId = null, subjectNickname = null, subjectTag = null)
+                            else -> it
+                        }
+                    }
                     room.chat.clear()
                     room.chat.addAll(rewritten)
                     for (s in room.seats.values) if (!s.left) s.session?.send(ChatSenderDeleted(room.id, id))
@@ -632,7 +675,7 @@ class Hub(
         if (message != null && message.senderId != targetId) {
             throw ApiException(HttpStatusCode.BadRequest, ErrorCodes.BAD_REQUEST, "that message was not sent by targetId")
         }
-        ReportSnapshot(message, room.chat.toList().takeLast(RECENT_FOR_REPORT))
+        ReportSnapshot(message, room.chat.filter { it.kind != ChatKind.SYSTEM }.takeLast(RECENT_FOR_REPORT))
     }
 
     /**

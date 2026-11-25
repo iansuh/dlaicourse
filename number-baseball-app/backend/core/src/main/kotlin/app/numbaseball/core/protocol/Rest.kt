@@ -34,6 +34,10 @@ data class AccountDto(
     val chatRestrictedUntil: Long? = null,
 )
 
+/** Protocol 1.1: another player's public record (`GET /api/v1/players/{idOrHandle}`). */
+@Serializable
+data class PlayerCard(val id: String, val nickname: String, val tag: String, val stats: Stats)
+
 @Serializable
 data class CreateAccountRequest(val nickname: String)
 

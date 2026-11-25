@@ -2,6 +2,8 @@ package app.numbaseball.server
 
 import app.numbaseball.core.protocol.AcceptTermsRequest
 import app.numbaseball.core.protocol.AdminReportList
+import app.numbaseball.core.protocol.PlayerCard
+import app.numbaseball.core.protocol.Stats
 import app.numbaseball.core.protocol.AuthResponse
 import app.numbaseball.core.protocol.BanRequest
 import app.numbaseball.core.protocol.BlockListResponse
@@ -31,7 +33,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.ApplicationStopped
-import io.ktor.server.application.ApplicationStopping
+import io.ktor.server.application.ApplicationStopPreparing
 import io.ktor.server.application.Hook
 import io.ktor.server.application.call
 import io.ktor.server.application.createApplicationPlugin
@@ -212,8 +214,8 @@ fun Application.module(config: Config = Config.fromEnv(), baseClock: Clock = Clo
             delay(config.maintenanceMillis)
         }
     }
-    // Rooms live in memory: on a graceful stop players get room_left{closed} and close 1001; unfinished matches record nothing.
-    monitor.subscribe(ApplicationStopping) { runBlocking { hub.shutdown() } }
+    // StopPreparing fires before the engine closes sockets (Stopping is too late). Rooms live in memory: on a graceful stop players get room_left{closed} and close 1001; unfinished matches record nothing.
+    monitor.subscribe(ApplicationStopPreparing) { runBlocking { hub.shutdown() } }
     monitor.subscribe(ApplicationStopped) { db.close() }
 }
 
@@ -443,6 +445,20 @@ private fun io.ktor.server.routing.Route.apiRoutes(services: Services) {
             services.hub.closeSession(result.second.id)
             call.respondJson(HttpStatusCode.OK, AuthResponse(result.first, accounts.toDto(result.second)), AuthResponse.serializer())
         }
+        // Protocol 1.1: public record of another player by id or by `Nickname#1234` (the `#` must be sent as %23).
+        get("/players/{key}") {
+            val a = me(services)
+            limited(services, "card:${a.id}", 30, 60_000)
+            val key = call.parameters["key"].orEmpty().take(64)
+            val target = (if ('#' in key) accounts.findByHandle(key) else accounts.get(key))
+                ?.takeIf { !it.isBot && !it.banned && (it.id == a.id || !accounts.isBlockedEitherWay(a.id, it.id)) }
+                ?: throw ApiException(HttpStatusCode.NotFound, ErrorCodes.NOT_FOUND, "no such player")
+            call.respondJson(
+                HttpStatusCode.OK,
+                PlayerCard(target.id, target.nickname, target.tagText, Stats(target.wins, target.losses, target.draws)),
+                PlayerCard.serializer(),
+            )
+        }
         get("/me/blocks") {
             val a = me(services, allowBanned = true)
             call.respondJson(HttpStatusCode.OK, BlockListResponse(accounts.listBlocks(a.id)), BlockListResponse.serializer())
@@ -479,7 +495,13 @@ private fun io.ktor.server.routing.Route.adminRoutes(services: Services) {
     fun RoutingContext.requireAdmin() {
         val expected = services.config.adminToken ?: throw ApiException(HttpStatusCode.NotFound, ErrorCodes.NOT_FOUND, "not found")
         val given = bearer(call) ?: ""
+        val ip = clientIp(call, services.config.trustedProxyHops)
+        // Failed attempts are limited per client address (DEF-042): 10 per 10 minutes, then 429 whatever the token.
+        if (services.limiter.isExhausted("admin:$ip", cap(services, 10), 600_000)) {
+            throw ApiException(HttpStatusCode.TooManyRequests, ErrorCodes.TOO_MANY_ATTEMPTS, "too many failed attempts", 600)
+        }
         if (!MessageDigest.isEqual(given.toByteArray(), expected.toByteArray())) {
+            services.limiter.acquire("admin:$ip", cap(services, 10), 600_000)
             throw ApiException(HttpStatusCode.Unauthorized, ErrorCodes.UNAUTHORIZED, "admin token required")
         }
     }

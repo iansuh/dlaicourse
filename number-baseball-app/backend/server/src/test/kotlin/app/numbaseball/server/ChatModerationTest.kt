@@ -109,7 +109,7 @@ class ChatModerationTest {
         // History after a reconnect is filtered too.
         a.close()
         val a2 = connect(a.account)
-        val history = a2.expect<ChatHistory>().messages.map { it.text }
+        val history = a2.expect<ChatHistory>().messages.filter { it.kind != ChatKind.SYSTEM }.map { it.text }
         assertEquals(listOf("before", "from a", "from c"), history)
         // Block list round trip.
         val list = http(HttpMethod.Get, "/api/v1/me/blocks", a.account.token).bodyAsText()

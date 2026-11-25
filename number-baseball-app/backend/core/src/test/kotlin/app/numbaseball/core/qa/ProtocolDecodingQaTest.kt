@@ -153,7 +153,7 @@ class ProtocolDecodingQaTest {
         val my = match["myDuel"]!!.jsonObject
         assertEquals(setOf("index", "myTeam", "opponentId", "phase", "round", "deadline", "mySecret", "opponentHasSecret", "myPendingGuess",
             "opponentGuessed", "myRounds", "opponentRounds", "myMisses", "opponentMisses", "result", "opponentSecret"), my.keys)
-        assertEquals(setOf("index", "playerA", "playerB", "phase", "round", "result"), (match["duels"]!! as kotlinx.serialization.json.JsonArray)[0].jsonObject.keys)
+        assertEquals(setOf("index", "playerA", "playerB", "phase", "round", "result", "bestHintA", "bestHintB"), (match["duels"]!! as kotlinx.serialization.json.JsonArray)[0].jsonObject.keys)
         // explicitNulls: an unrevealed secret is sent as null, never omitted and never filled.
         assertEquals("null", my["opponentSecret"].toString())
     }

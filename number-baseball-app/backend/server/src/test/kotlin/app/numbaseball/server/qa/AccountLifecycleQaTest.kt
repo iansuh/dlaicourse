@@ -41,7 +41,7 @@ class AccountLifecycleQaTest {
         assertTrue("token must be dead for the WebSocket too", runCatching { QaWs.connect(host.auth.token) }.isFailure)
         guest.ws.send(app.numbaseball.core.protocol.Resync())
         val history = guest.ws.awaitType("chat_history")["messages"]!!.jsonArray
-        assertEquals("deleted player's line stays, anonymised", JsonNull, history.single().jsonObject["senderId"])
+        assertEquals("deleted player's line stays, anonymised", JsonNull, history.filter { it.jsonObject.str("kind") != "system" }.single().jsonObject["senderId"])
         guest.close()
     }
 

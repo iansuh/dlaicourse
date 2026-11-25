@@ -31,6 +31,9 @@ Contents: 1 Conventions · 2 Versioning · 3 REST API · 4 WebSocket connection 
 
 - The major version is in the paths: REST under `/api/v1`, WebSocket at `/ws/v1`. `PROTOCOL_VERSION = 1` is also in `welcome` and `GET /api/v1/config`.
 - Additive changes (new optional fields, new message types, new error codes, new quick-phrase ids) keep the version.
+- Additive revisions are numbered for the app team (`PROTOCOL_VERSION` stays 1): **1.1** (2026-11-25) adds `DuelSummary.bestHintA/B` (§7),
+  `GET /api/v1/players/{key}` (§3.4), system chat lines (§9.3), and hardening of `room_join` and the admin API (§3.2, §12, §14.2).
+  Old clients keep working: the new fields are optional and ignored; a client that decodes `ChatKind` strictly must accept `"system"`.
 - A breaking change gets `/api/v2` and `/ws/v2`; the server keeps v1 until old app versions are retired. `/api/v2/...` is `404` today.
 - The app sends `X-Client-Version: <versionName>` on REST and WebSocket requests (informational; not logged with personal data).
 
@@ -50,6 +53,7 @@ Authenticated endpoints need `Authorization: Bearer <token>` (scheme case-insens
 | `PUT /api/v1/me/terms` | yes | `AcceptTermsRequest {version, ageConfirmed}` | `200 AccountDto` | 400 `age_confirmation_required`, 409 `terms_outdated`, 403 |
 | `POST /api/v1/me/transfer-code` | yes | – | `200 CodeResponse {code, expiresAt}` | 429, 403 |
 | `POST /api/v1/transfer` | – | `RedeemTransferRequest {code}` | `200 AuthResponse` | 400 `invalid_code`, 429 `too_many_attempts` |
+| `GET /api/v1/players/{idOrHandle}` | yes | – | `200 PlayerCard {id, nickname, tag, stats}` (1.1, §3.4) | 404 `not_found`, 429 `rate_limited` |
 | `GET /api/v1/me/blocks` | yes (banned ok) | – | `200 BlockListResponse {blocked: [BlockedPlayer]}` | 401 |
 | `PUT /api/v1/me/blocks/{playerId}` | yes (banned ok) | – | `204` (idempotent) | 404 `not_found`, 400 `bad_request` (yourself) |
 | `DELETE /api/v1/me/blocks/{playerId}` | yes (banned ok) | – | `204` (idempotent) | – |
@@ -59,6 +63,7 @@ Authenticated endpoints need `Authorization: Bearer <token>` (scheme case-insens
 AccountDto      { id, nickname, tag, stats: Stats, createdAt,
                   termsVersion: String?, termsAcceptedAt: Long?, ageConfirmedAt: Long?, chatRestrictedUntil: Long? }
 Stats           { wins: Int, losses: Int, draws: Int }
+PlayerCard      { id, nickname, tag, stats: Stats }                                  (1.1)
 AuthResponse    { token: String, account: AccountDto }
 AcceptTermsRequest { version: String, ageConfirmed: Boolean }
 CodeResponse    { code: String, expiresAt: Long }
@@ -81,8 +86,9 @@ ServerInfo      { protocol, serverTime, digits: [3,4,5,6], teamSizes: [1,2,3,4,5
   the terms and an "I am at least `ServerInfo.minimumAge` years old" confirmation (no birth date is collected), then sends
   `PUT /me/terms {version: ServerInfo.termsVersion, ageConfirmed: true}`. Without `ageConfirmed: true` → `age_confirmation_required`;
   an old version → `terms_outdated` (reload `/config`). The server stores the version and both times. When `ServerInfo.termsVersion`
-  differs from `AccountDto.termsVersion` (the terms changed), the app asks again. Until then `queue_join`, `room_create`, `room_join`,
-  `chat` and `phrase` answer `terms_required`. vs-computer play needs no account or terms.
+  differs from `AccountDto.termsVersion` (the terms changed), the app asks again. Until then `queue_join`, `room_create` and `room_join`
+  answer `terms_required`. (`chat` and `phrase` need a seat; a player without a seat, which includes everyone who has not accepted the
+  terms, gets `not_in_room` from them, §5.) vs-computer play needs no account or terms.
 - **Stats**: one result per **match** for every player of that match: the team result (win / loss / team draw → wins / losses / draws + 1),
   except that a player who **left** the room during the match always gets a **loss**. A disconnect forfeit is not "leaving": that player
   gets the team result. Matches that never finished (server restart, §10.3) record nothing. vs-computer games, waiting-room practice
@@ -108,6 +114,15 @@ ServerInfo      { protocol, serverTime, digits: [3,4,5,6], teamSizes: [1,2,3,4,5
 Blocking is stored on the server and takes effect immediately, also in a room you are in: the blocked player's chat is not delivered to
 you **and yours is not delivered to them**, live and in `chat_history`, and quick match never pairs you. It does not stop a match already
 running. The app should also hide lines it already shows from that player.
+A block also keeps the two players out of each other's private rooms: `room_join` with the code of a room that holds a player who blocked
+you, or whom you blocked, answers `room_not_found` (indistinguishable from a wrong code). Hosts have no kick.
+
+### 3.4 Player card (1.1)
+
+`GET /api/v1/players/{idOrHandle}` returns another player's public record: `{id, nickname, tag, stats: {wins, losses, draws}}`. The key is a
+player id (`PlayerView.id`, `ChatMessage.senderId`) or a handle `Nickname#1234` (send `#` as `%23`). Nothing else is exposed (no
+created time, terms, restriction or ban state). `404 not_found` for an unknown, deleted, banned or bot account **and for any player who
+blocked you or whom you blocked** (so a block also hides the record). You can fetch your own card. Limit: 30 lookups per account per minute.
 
 ### 3.3 Report
 
@@ -157,7 +172,7 @@ An error never changes state.
 | `queue_join` | `digits` (3–6) | not seated, not queued | `queued {digits, since}`. `invalid_settings`, `already_in_room`, `already_queued`, `terms_required` |
 | `queue_leave` | – | queued | `not_queued` |
 | `room_create` | `settings` | not seated, not queued | creates a private room, you are host on team A. `invalid_settings`, `already_in_room` (also when queued), `terms_required` |
-| `room_join` | `code` | not seated (or seated in that room: state is re-sent) | seats you on the smaller team (A on a tie). `already_in_room` (also when queued), `room_not_found`, `match_in_progress` (playing or finished), `room_full`, `terms_required` |
+| `room_join` | `code` | not seated (or seated in that room: state is re-sent) | seats you on the smaller team (A on a tie). `already_in_room` (also when queued), `room_not_found` (also when a player in that room blocked you or you blocked them, §3.2), `match_in_progress` (playing or finished), `room_full`, `terms_required`, `too_many_attempts` (20 failed codes per account per 10 minutes; `retryAfterMs`) |
 | `room_leave` | – | seated | lobby/finished: seat freed. Playing: your running duel is forfeited (`forfeit`) and you are marked `left`. You get `room_left {reason:"left"}` |
 | `room_settings` | `settings` | host, private, lobby | replaces settings; may start the match. `not_host` (also in quick rooms), `wrong_phase`, `invalid_settings` (also when a team is already larger than the new `teamSize`) |
 | `team_set` | `team`, `playerId?` | private, lobby | moves you (or, host only, `playerId`). `not_host` (quick rooms, or moving someone else), `wrong_phase`, `not_found`, `team_full` |
@@ -197,8 +212,11 @@ RoomView {
   players: [PlayerView { id, nickname, tag, team, connected, left, deleted }]   (join order; deleted → nickname/tag "")
   match: MatchView? (null in lobby), version: Long, serverTime: Long
 }
-MatchView { number (1, 2, ...), duels: [DuelSummary { index, playerA, playerB, phase, round, result? }],
+MatchView { number (1, 2, ...), duels: [DuelSummary { index, playerA, playerB, phase, round, result?,
+                                                      bestHintA?: BestHint, bestHintB?: BestHint }],
             score: { a, b } (duel wins), result: { winner: "A"|"B"|null, decidedEarly }?, myDuel: MyDuelView? }
+BestHint   { strikes, balls }   (1.1) best hint so far of the player on team A / B in that duel, over resolved rounds with a guess:
+           most strikes, then most balls. null until that player has a resolved guess. Never contains digits.
 DuelResult { winner: "A"|"B"|null (draw or cancelled), reason }
 EndReason  "solved" | "both_solved" | "timeout" | "both_timeout" | "disconnect" | "forfeit" | "cancelled"
 MyDuelView {
@@ -212,7 +230,7 @@ MyDuelView {
 RoundEntry { round, guess: String? (null = missed), strikes, balls }
 ```
 
-"Out" is `strikes == 0 && balls == 0` with a non-null guess. Other duels of a team match are visible only as `DuelSummary`.
+"Out" is `strikes == 0 && balls == 0` with a non-null guess. Other duels of a team match are visible only as `DuelSummary` (with `bestHintA/B` for the team board, 1.1).
 Every member gets a new `room_state` after every change; `version` strictly increases per room.
 
 ## 8. State machines
@@ -313,10 +331,20 @@ case-sensitive; new ids may be added (ignore unknown ones).
 ### 9.3 Chat message
 
 ```text
-ChatMessage { id, at, senderId?, senderNickname?, senderTag?, senderTeam?, kind: "text"|"phrase", text?, phraseId? }
+ChatMessage { id, at, senderId?, senderNickname?, senderTag?, senderTeam?, kind: "text"|"phrase"|"system", text?, phraseId?,
+              systemCode?, subjectId?, subjectNickname?, subjectTag? }
 ```
 
-`senderId == null` means the sender deleted their account: show "deleted player".
+`senderId == null` and `kind != "system"` means the sender deleted their account: show "deleted player".
+
+**System lines (1.1).** `kind: "system"` is generated by the server in **private rooms** (not quick or review rooms): `systemCode` is
+`"player_joined"` or `"player_left"` (more codes may be added; show an unknown code generically) and `subjectId/subjectNickname/subjectTag`
+name the player. The client renders its own localized sentence ("{nickname}#{tag} joined"); `text`, `phraseId` and all `sender*` fields are
+null. They arrive as ordinary `chat` events and inside `chat_history` (they count toward the 50 lines), are not rate-limited, are not
+sent to the player they are about, are hidden from you when you and that player blocked each other, are not part of report snapshots,
+and when the subject deletes their account `subject*` become null (`chat_sender_deleted` is sent as for text lines). A join line is posted
+when a player takes a seat (the host's own creation is not announced); a leave line when a player leaves, is removed for inactivity, or
+(running match) leaves their seat; not for bans, deletions or a closing room.
 
 ### 9.4 Nicknames
 
@@ -358,7 +386,7 @@ profanity anywhere in the name, also glued inside it → `nickname_profanity`. R
 | `terms_outdated` | 409 | `PUT /me/terms` with an old version |
 | `age_confirmation_required` | 400 | `PUT /me/terms` without `ageConfirmed: true` |
 | `invalid_code` | 400 | transfer code wrong, used or expired |
-| `too_many_attempts` | 429 | too many wrong codes from this IP |
+| `too_many_attempts` | 429 / – | too many wrong transfer codes from this IP, wrong room codes from this account, or failed admin logins from this IP |
 | `session_replaced` | – | a newer connection took over (then close 4000) |
 | `room_not_found` / `room_full` / `team_full` | – | join / team problems |
 | `already_in_room` / `not_in_room` | – | seat state mismatch (queued counts as "in a room" for create/join) |
@@ -385,6 +413,9 @@ profanity anywhere in the name, also glued inside it → `nickname_profanity`. R
 | Account creation | 10 per IP per hour, 300 per hour in total |
 | Rename / transfer codes | 5 per account per day / 5 codes per account per hour |
 | Transfer code | 10 min, single use, 5 wrong secrets per code, 10 failures per IP per 10 min |
+| Wrong room codes | 20 failed `room_join` per account per 10 minutes (`too_many_attempts`, also for a right code while limited) |
+| Player card lookups | 30 per account per minute |
+| Failed admin authentication | 10 per client address per 10 minutes, then `429 too_many_attempts` (even with the right token) until the window passes |
 | Reports | 10 per account per hour, note ≤ 500 characters; 3 reporters in 24 h → 24 h chat restriction |
 
 ## 13. Examples
@@ -449,7 +480,8 @@ Behind the host's proxy, plain HTTP (`X-Forwarded-Proto: http`) is redirected (3
 
 ### 14.2 Admin API
 
-`Authorization: Bearer <ADMIN_TOKEN>`; every path is 404 when `ADMIN_TOKEN` is unset, 401 with another token.
+`Authorization: Bearer <ADMIN_TOKEN>`; every path is 404 when `ADMIN_TOKEN` is unset, 401 with another token. After 10 failed attempts from one client address within 10 minutes the
+address gets `429 too_many_attempts` (`Retry-After: 600`); the token is compared in constant time, must be ≥ 16 characters and is never logged.
 
 | Method & path | What |
 | --- | --- |

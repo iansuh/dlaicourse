@@ -14,9 +14,6 @@ import org.junit.Assert.fail
 object KnownServerDefects {
     /** Defect id -> scenario keys (test method names) that fail because of it. Keep in sync with DEFECTS.md. */
     val OPEN: Map<String, Set<String>> = mapOf(
-        "DEF-012" to setOf("acSrv01_gracefulRestartTellsPlayersWithRoomLeftClosedAndClose1001"),
-        "DEF-048" to setOf("acRev03_botGamesRecordNoStatsForAnyone"),
-        "DEF-049" to setOf("acProto15_aRejectedDuelActionChangesNothing"),
     )
 
     private fun defectOf(key: String): String? = OPEN.entries.firstOrNull { key in it.value }?.key

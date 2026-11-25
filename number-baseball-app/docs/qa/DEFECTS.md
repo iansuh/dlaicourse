@@ -24,9 +24,9 @@ document resolved it, **Rejected** with a reason. A confirmed code defect that a
 | Severity | Open | Fixed / verified | Closed (spec) |
 | --- | --- | --- | --- |
 | Blocker | 0 | 0 | 0 |
-| Major | 1 | 7 | 2 |
-| Minor | 16 | 16 | 1 |
-| Trivial | 5 | 1 | 1 |
+| Major | 0 | 8 | 2 |
+| Minor | 11 | 21 | 1 |
+| Trivial | 4 | 2 | 1 |
 
 | ID | Sev | Area | Status | Title | Owner |
 | --- | --- | --- | --- | --- | --- |
@@ -41,13 +41,13 @@ document resolved it, **Rejected** with a reason. A confirmed code defect that a
 | DEF-009 | Major | Deletion | Fixed | Web deletion without the app is in README but not in protocol.md; open design questions | backend |
 | DEF-010 | Major | Transfer | Fixed | Transfer code: entropy, per-code attempt counting, old socket, replacing an existing account | backend, android |
 | DEF-011 | Major | Protocol/Policy | Fixed | protocol.md lacks the policy-review requirements (terms_required, chat_not_allowed, restriction, retention, review room, pages) | backend |
-| DEF-012 | Major | Server | Open | Server restart: in-flight matches, client message and "result is in stats" claim undefined/false | backend |
+| DEF-012 | Major | Server | Fixed | Server restart: in-flight matches, client message and "result is in stats" claim undefined/false | backend |
 | DEF-013 | Trivial | Rooms | Closed (spec) | README "Private rooms only for team play" ambiguous | tech lead |
 | DEF-014 | Minor | Quick match | Fixed | Queue entry dropped on reconnect contradicts "short reconnects survive an app switch" | backend, android |
-| DEF-015 | Minor | Safety | Open | A blocked player can still join my private room by code; no host kick | product, backend |
+| DEF-015 | Minor | Safety | Fixed | A blocked player can still join my private room by code; no host kick | product, backend |
 | DEF-016 | Minor | Computer | Open | Computer levels not in README; Easy may be too strong for beginners | product |
 | DEF-017 | Minor | Chat | Fixed | Chat cleaning details missing from protocol 9.1 (mask unit, mark cap, newline handling, bidi list) | backend |
-| DEF-018 | Minor | Rooms | Open | No limit on wrong room-code join attempts (private room discovery) | backend |
+| DEF-018 | Minor | Rooms | Fixed | No limit on wrong room-code join attempts (private room discovery) | backend |
 | DEF-019 | Minor | L10N | Open | Locale fallback (zh-TW/HK, pt-PT, ...) unspecified | android, design |
 | DEF-020 | Minor | Ads | Open | Ads details left open: cap persistence, practice/forfeit counting, small-window threshold | android, design |
 | DEF-021 | Minor | Protocol | Fixed | `Resync` KDoc says `room_left` when not in a room; protocol 10 says `ack` only | backend |
@@ -71,16 +71,16 @@ document resolved it, **Rejected** with a reason. A confirmed code defect that a
 | DEF-039 | Minor | Accounts | Verified | Half-width "ﾊﾞｶﾔﾛｳ" nickname passed the profanity check | backend |
 | DEF-040 | Minor | Safety | Fixed | Message reports: "you are (or were) in it" undefined; message-id existence oracle | backend |
 | DEF-041 | Major | Policy | Fixed | Audience 13+ vs minimum age 14 not confirmed by the owner; minors in free-text rooms need child-safety measures in force | owner, release lead |
-| DEF-042 | Minor | Security | Open | Admin token requirements (length, constant-time compare, rate limit, no logging) unspecified | backend |
+| DEF-042 | Minor | Security | Fixed | Admin token requirements (length, constant-time compare, rate limit, no logging) unspecified | backend |
 | DEF-043 | Minor | Safety | Open | Auto chat restriction can be triggered by 3 free throwaway accounts | backend, product |
 | DEF-044 | Minor | Ads/Sound | Open | Ads mute: README "always muted" vs POLICY_REVIEW R11 "follow the sound setting" | tech lead |
 | DEF-045 | Minor | Sound | Open | Haptics default unspecified; `design/sound/REPORT.md` (file rules) missing | design, sound |
 | DEF-046 | Minor | Age | Open | Age band "on the device only" vs Auto Backup/device transfer; reinstall resets an under-age result | release lead, android |
 | DEF-047 | Minor | Age/Ads | Open | Exact SDK settings per age band (child/teen treatment, birth-year rounding at the boundary) not documented | android, release lead |
 
-| DEF-048 | Minor | Stats | Open | A forfeit against the review-room bot is recorded as a human loss (protocol 3.1/8.5: bot games never touch stats) | backend |
-| DEF-049 | Minor | Protocol | Open | A rejected duel action bumps `room.version` and re-broadcasts `room_state` ("an error never changes state") | backend |
-| DEF-050 | Trivial | Protocol | Open (spec) | Protocol 3.1 says `chat`/`phrase` answer `terms_required`; protocol 5 says `not_in_room` without a seat, which is always the case before terms | backend |
+| DEF-048 | Minor | Stats | Fixed | A forfeit against the review-room bot is recorded as a human loss (protocol 3.1/8.5: bot games never touch stats) | backend |
+| DEF-049 | Minor | Protocol | Fixed | A rejected duel action bumps `room.version` and re-broadcasts `room_state` ("an error never changes state") | backend |
+| DEF-050 | Trivial | Protocol | Fixed | Protocol 3.1 says `chat`/`phrase` answer `terms_required`; protocol 5 says `not_in_room` without a seat, which is always the case before terms | backend |
 
 ---
 
@@ -152,11 +152,12 @@ player); report retention (180 days) and snapshot anonymisation; review room; `/
 `@Ignore("waiting for protocol.md ...")`.
 Re-verified 2026-11-25: **Fixed**. Protocol now defines terms, age confirmation, `chat_not_allowed`, restriction, retention, review room, pages. Tests: `acTerms01/02`, `acChat13/14`, `acSafe05/06`, `acDel04`, `acRev01..04`, `acPages01`. Residual spec nit: DEF-050.
 
-### DEF-012 — Major — Server — Open
+### DEF-012 — Major — Server — Fixed
 Rooms live in memory. Protocol 10.3 tells the app "the result is in the account stats" when `roomId` is null, which is false for a
 match interrupted by a restart or crash. Expected: define restart behaviour (close 1001 / `room_left{closed}`, no result recorded,
 a dedicated client message), and whether matches are drained before deploys. AC-SRV-01, AC-STAT-03.
 Re-verified 2026-11-25: **Open**. Server part still wrong: a graceful stop does NOT send `room_left{closed}` and closes sockets abnormally (1006, not 1001), contradicting protocol 10.5. Known defect: `acSrv01_gracefulRestartTellsPlayersWithRoomLeftClosedAndClose1001`. Verified OK: after a restart `welcome.roomId` is null, interrupted matches record nothing, accounts survive (`acSrv02`).
+Fixed 2026-11-25: `Application.kt` hooks `ApplicationStopPreparing` (before Ktor closes the sockets) instead of `ApplicationStopping`; `Hub.shutdown` then sends `room_left{closed}` and closes every socket with 1001. Test: `acSrv01_gracefulRestartTellsPlayersWithRoomLeftClosedAndClose1001` (now a normal test).
 
 ### DEF-013 — Trivial — Rooms — Closed (spec)
 Protocol clarifies: quick match is 1v1; private rooms support team sizes 1–5.
@@ -167,10 +168,11 @@ queue position on every app switch. Expected: keep the entry for a short grace (
 re-queue automatically (AC-QM-04).
 Re-verified 2026-11-25: **Fixed**. Trade-off documented in protocol 8.1 (queue entry dropped with the connection; the app re-sends `queue_join`). Behaviour verified by `acQm04`, `acQm06`.
 
-### DEF-015 — Minor — Safety — Open
+### DEF-015 — Minor — Safety — Fixed
 Block affects chat and quick match only (3.2). A blocked player who knows my room code can join and play against me; hosts cannot
 remove players. Expected: refuse `room_join` across a block (either direction) or give hosts a kick in the lobby.
 Re-verified 2026-11-25: **Open**. `Hub.roomJoin` has no block check and there is no host kick; protocol 3.2 only covers chat and quick match. No test (the spec does not require it); needs a product decision.
+Fixed 2026-11-25 (no host kick; the block rule decided as the "Expected" option): `room_join` into a room that holds a player who blocked the joiner, or whom the joiner blocked, answers `room_not_found` (no oracle). Protocol 3.2. Test: `ProtocolV11Test.def015_aBlockedPlayerCannotJoinMyPrivateRoomAndTheCodeLooksWrong`.
 
 ### DEF-016 — Minor — Computer — Open
 README names "vs Computer" but not levels. Measured (seeded): Easy needs 7.1–8.0 guesses on 3 digits, Hard 5.0 — Easy may beat most
@@ -183,10 +185,11 @@ and blank fillers are removed; "one `*` per character" means per code point (cur
 mask units until decided.
 Re-verified 2026-11-25: **Fixed**. Protocol 9.1 now lists the cleaning steps and the mask unit (one `*` per character). `ChatSafetyQaTest.acChat11` (corpora through a real room == core `ChatFilter.clean`), `acChat15`.
 
-### DEF-018 — Minor — Rooms — Open
+### DEF-018 — Minor — Rooms — Fixed
 5 characters of a 32-symbol alphabet = 33.5 M codes. With 1 000 live rooms an attacker at the WS rate limit (10 msg/s) finds a room
 about every 55 minutes. Expected: limit failed `room_join` per account/IP (e.g. 20 per 10 minutes) (AC-ROOM-10).
 Re-verified 2026-11-25: **Open**. Confirmed in code: failed `room_join` is limited only by the generic WebSocket rate (10 msg/s); no per-account/IP limit. Protocol 12 lists none.
+Fixed 2026-11-25: 20 failed `room_join` (wrong code, blocked, full, in progress) per account per 10 minutes, then `too_many_attempts` with `retryAfterMs`, also for a right code while limited. Per account only (the hub has no IP). Protocol 5 and 12. Test: `ProtocolV11Test.def018_wrongRoomCodesAreLimitedPerAccount`.
 
 ### DEF-019 — Minor — L10N — Open
 Only zh-CN is supported; zh-TW/zh-HK, pt-PT, es-419, fr-CA, de-CH and unsupported locales need a defined fallback (AC-L10N-04).
@@ -304,10 +307,11 @@ prohibiting CSAE, in-app reporting, contact — AC-TERMS-04, POL-03). R20/R21 (a
 Age Signals) are now covered by AC-ADS-14 and AC-AGE-01..09. Earlier QA text that said "max ad rating T" is superseded.
 Re-verified 2026-11-25: **Fixed**. README records the owner decision: minimum age 14, age confirmation enforced by the server (`acTerms01`, `acTerms02`), `/terms#child-safety` present (`acPages01`). The Android age screen is not covered here.
 
-### DEF-042 — Minor — Security — Open
+### DEF-042 — Minor — Security — Fixed
 Admin API (protocol 14) does not require a minimum `ADMIN_TOKEN` length, constant-time comparison, rate limiting, or keeping it
 out of logs and URLs.
 Re-verified 2026-11-25: **Open**. Reduced scope. Verified: token >= 16 characters (config), constant-time compare, wrong/real admin token never in logs (`acSec11`), 404 without a token (`acSec09`). Still missing: rate limiting of failed admin attempts.
+Fixed 2026-11-25: failed admin authentication is limited to 10 per client address per 10 minutes, then `429 too_many_attempts` (even for the right token until the window passes). Protocol 14.2. Test: `ProtocolV11Test.def042_failedAdminAuthIsRateLimited`.
 
 ### DEF-043 — Minor — Safety — Open
 "3 different players within 24 h" can be met by one person with three free device accounts. Expected: count only reporters who
@@ -337,21 +341,24 @@ flags per band, nor how a birth year maps to an age at the minimum-age boundary 
 under 14). QA needs both to check outgoing ad requests (AC-AGE-02/05).
 Re-verified 2026-11-25: **Open**. Exact SDK flags per age band and boundary-year rule still undocumented.
 
-### DEF-048 — Minor — Stats — Open
+### DEF-048 — Minor — Stats — Fixed
 Found by: `AccountLifecycleQaTest.acRev03_botGamesRecordNoStatsForAnyone` (known defect).
 Steps: new account with terms, `room_join` with the review code, `secret`, `forfeit`; `GET /api/v1/me`.
 Expected: stats `0/0/0` (protocol 3.1 and 8.5: "Bot games record no stats for anyone").
 Actual: `losses = 1`. `Hub.afterMatchChange` only skips the bot's own seat, not the human's result when the room has a bot (`room.bot != null`). Same would give wins/draws.
 Owner: backend (skip `recordResults` when `room.bot != null`).
+Fixed 2026-11-25: `Hub.afterMatchChange` skips `recordResults` when `room.bot != null`. Test: `acRev03_botGamesRecordNoStatsForAnyone` (now a normal test); `acRev04` keeps real matches counted.
 
-### DEF-049 — Minor — Protocol — Open
+### DEF-049 — Minor — Protocol — Fixed
 Found by: `ProtocolSecurityQaTest.acProto15_aRejectedDuelActionChangesNothing` (known defect), corpus rows V-301..V-318, V-401..V-408.
 Steps: seated in a running duel, send `secret` "12" (or `guess` with a stale round), compare `room.version` from `resync` before and after.
 Expected: version unchanged and no `room_state` (protocol 5: "An error never changes state"; corpus note "a following resync shows the same room version").
 Actual: version +1 and a `room_state` is broadcast to everyone in the room (`Hub.duelAction` calls `broadcast` before rejecting, "timers may have fired on the way"). Harmless for correctness, but it lets a client spam all room members with snapshots and breaks the stated rule.
 Owner: backend (broadcast only if the engine state or timers actually changed).
+Fixed 2026-11-25: `Hub.duelAction` first fires due timers (`TeamMatch.advance`); a rejected action then changes nothing and broadcasts only if a timer fired. Test: `acProto15_aRejectedDuelActionChangesNothing` (now a normal test; its per-row pause was raised to 320 ms because the old 150 ms exceeded the 10 msg/s connection limit, which the known-defect wrapper had been hiding).
 
-### DEF-050 — Trivial — Protocol — Open (spec)
+### DEF-050 — Trivial — Protocol — Fixed
 Found by: `ChatSafetyQaTest.acTerms01` (asserts `not_in_room`).
 Protocol 3.1: "Until then `queue_join`, `room_create`, `room_join`, `chat` and `phrase` answer `terms_required`." Protocol 5: every seat-bound message, `chat` and `phrase` included, answers `not_in_room` without a seat. An account without accepted terms can never get a seat, so `terms_required` for `chat`/`phrase` is unreachable (only after a terms-version change while seated, which needs a restart that drops rooms). The server follows protocol 5. Expected: say so in 3.1.
 Owner: backend (doc).
+Fixed 2026-11-25: protocol 3.1 now says that `chat`/`phrase` without a seat answer `not_in_room`.

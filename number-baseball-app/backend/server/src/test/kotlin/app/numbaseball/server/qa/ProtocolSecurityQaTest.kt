@@ -138,7 +138,7 @@ class ProtocolSecurityQaTest {
                 a.ws.sendRaw(QaServerCorpus.decode(r.getValue("frame")))
                 a.ws.awaitType("error")
                 if (a.snapshot().version != before) changed += r.getValue("id")
-                Thread.sleep(150)
+                Thread.sleep(320) // 3 frames per row must stay under the per-connection limit (10 msg/s sustained)
             }
             a.close(); b.close()
         }
