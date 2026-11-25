@@ -173,9 +173,9 @@ class OnlineSession(
             is Queued -> _queue.update { if (it is QueueState.Searching) it.copy(since = message.since) else it }
             is ChatHistory -> if (message.roomId == _room.value?.id) {
                 chatRoomId = message.roomId
-                _chat.value = message.messages.filterNot { it.senderId in hiddenSenders }
+                _chat.value = message.messages.filterNot { it.hidden() }
             }
-            is ChatEvent -> if (message.roomId == _room.value?.id && message.message.senderId !in hiddenSenders) {
+            is ChatEvent -> if (message.roomId == _room.value?.id && !message.message.hidden()) {
                 if (chatRoomId != message.roomId) {
                     chatRoomId = message.roomId
                     _chat.value = emptyList()
@@ -219,6 +219,12 @@ class OnlineSession(
         _room.value = room
         if (room.kind == RoomKind.QUICK) _queue.value = QueueState.Idle
     }
+
+    /**
+     * Lines of blocked senders are hidden. Null-safe: `ConcurrentHashMap` sets throw on `contains(null)`, and system lines
+     * (protocol 1.1) and deleted players' lines have no sender id.
+     */
+    private fun ChatMessage.hidden(): Boolean = senderId?.let { it in hiddenSenders } ?: false
 
     private fun clearRoom() {
         _room.value = null

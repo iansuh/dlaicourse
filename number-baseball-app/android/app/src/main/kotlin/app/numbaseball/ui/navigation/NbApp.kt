@@ -187,7 +187,7 @@ private fun Blank() = Box(Modifier.fillMaxSize().background(NbColors.bg))
 
 /** ADAPTIVE.md: below 320 × 320 dp a calm notice covers the app; the game keeps its state underneath. */
 @Composable
-private fun WindowTooSmall() {
+internal fun WindowTooSmall() {
     Box(Modifier.fillMaxSize().background(NbColors.bg).padding(16.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(stringResource(R.string.window_too_small_title), style = NbType.subtitle, color = NbColors.chalk, textAlign = TextAlign.Center)

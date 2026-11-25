@@ -27,6 +27,8 @@ import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.text.TextStyle
@@ -41,6 +43,8 @@ import app.numbaseball.ads.LocalAdPreview
 import app.numbaseball.core.ai.ComputerLevel
 import app.numbaseball.core.protocol.BlockedPlayer
 import app.numbaseball.core.protocol.ChatKind
+import app.numbaseball.core.protocol.BestHint
+import app.numbaseball.core.protocol.SystemChatCodes
 import app.numbaseball.core.protocol.ChatMessage
 import app.numbaseball.core.protocol.DuelPhase
 import app.numbaseball.core.protocol.DuelResult
@@ -72,6 +76,7 @@ import app.numbaseball.ui.computer.ComputerSetupSheet
 import app.numbaseball.ui.design.LocalReduceMotion
 import app.numbaseball.ui.design.MemoMark
 import app.numbaseball.ui.design.SheetFrame
+import app.numbaseball.ui.design.ToastHost
 import app.numbaseball.ui.firstrun.FirstRunScreen
 import app.numbaseball.ui.firstrun.FirstRunUiState
 import app.numbaseball.ui.home.HomeScreen
@@ -118,6 +123,10 @@ import app.numbaseball.ui.settings.SettingsUiState
 import app.numbaseball.ui.team.BoardMode
 import app.numbaseball.ui.team.TeamBoardScreen
 import app.numbaseball.ui.terms.TermsGateScreen
+import app.numbaseball.ui.tutorial.Tutorial
+import app.numbaseball.ui.tutorial.TutorialScreen
+import app.numbaseball.ui.tutorial.TutorialState
+import app.numbaseball.ui.tutorial.TutorialStep
 import app.numbaseball.ui.theme.NbColors
 import app.numbaseball.ui.theme.NumBaseballTheme
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
@@ -178,9 +187,18 @@ private object Design {
         match = MatchView(
             number = 1,
             duels = listOf(
-                DuelSummary(0, ME, mint.id, DuelPhase.FINISHED, 7, DuelResult(Team.A, EndReason.SOLVED)),
-                if (final) DuelSummary(1, kestrel.id, gross.id, DuelPhase.FINISHED, 9, DuelResult(Team.B, EndReason.SOLVED)) else DuelSummary(1, kestrel.id, gross.id, DuelPhase.GUESSING, 5, null),
-                if (final) DuelSummary(2, night.id, volna.id, DuelPhase.FINISHED, 6, DuelResult(Team.A, EndReason.SOLVED)) else DuelSummary(2, night.id, volna.id, DuelPhase.GUESSING, 4, null),
+                // Protocol 1.1 best hints for every duel (shot team-board-ko).
+                DuelSummary(0, ME, mint.id, DuelPhase.FINISHED, 7, DuelResult(Team.A, EndReason.SOLVED), bestHintA = BestHint(4, 0), bestHintB = BestHint(2, 1)),
+                if (final) {
+                    DuelSummary(1, kestrel.id, gross.id, DuelPhase.FINISHED, 9, DuelResult(Team.B, EndReason.SOLVED), bestHintA = BestHint(2, 2), bestHintB = BestHint(4, 0))
+                } else {
+                    DuelSummary(1, kestrel.id, gross.id, DuelPhase.GUESSING, 5, null, bestHintA = BestHint(2, 1), bestHintB = BestHint(1, 2))
+                },
+                if (final) {
+                    DuelSummary(2, night.id, volna.id, DuelPhase.FINISHED, 6, DuelResult(Team.A, EndReason.SOLVED), bestHintA = BestHint(4, 0), bestHintB = BestHint(0, 0))
+                } else {
+                    DuelSummary(2, night.id, volna.id, DuelPhase.GUESSING, 4, null, bestHintA = BestHint(1, 1), bestHintB = BestHint(0, 0))
+                },
             ),
             score = if (final) Score(2, 1) else Score(1, 0),
             result = if (final) MatchResult(Team.A, decidedEarly = false) else null,
@@ -190,6 +208,8 @@ private object Design {
     )
 
     val chat = listOf(
+        // Protocol 1.1 system line (shot chat-ko: "민트초코#0912 님이 들어왔어요").
+        ChatMessage(0, AT, null, null, null, null, ChatKind.SYSTEM, null, null, systemCode = SystemChatCodes.PLAYER_JOINED, subjectId = mint.id, subjectNickname = mint.nickname, subjectTag = mint.tag),
         ChatMessage(1, AT, mint.id, mint.nickname, mint.tag, Team.B, ChatKind.TEXT, "잘 부탁해요!", null),
         ChatMessage(2, AT, kestrel.id, kestrel.nickname, kestrel.tag, Team.A, ChatKind.TEXT, "몇 자리로 할까요?", null),
         ChatMessage(3, AT, gross.id, gross.nickname, gross.tag, Team.B, ChatKind.TEXT, "그건 좀 *** 아닌가", null),
@@ -306,7 +326,7 @@ private fun SampleBannerCreative() {
  * (DESIGN_SYSTEM 8.4: final states). Audio and haptics are the silent defaults.
  */
 @OptIn(ExperimentalRoborazziApi::class)
-abstract class ScreenshotSuite(private val lang: String, private val small: Boolean = false, private val suffix: String = "") {
+abstract class ScreenshotSuite(protected val lang: String, private val small: Boolean = false, private val suffix: String = "") {
     @get:Rule val compose = createComposeRule()
 
     @Before fun utc() = TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
@@ -345,7 +365,8 @@ abstract class ScreenshotSuite(private val lang: String, private val small: Bool
     }
 
     // 01 First run
-    @Test fun age() = capture("age-{lang}") { AgeScreen(AgeUiState(year = "199"), {}, {}, {}, {}) }
+    // age-en shot: 1998 entered, Confirm enabled; age-ko: 199.
+    @Test fun age() = capture("age-{lang}") { AgeScreen(AgeUiState(year = if (lang == "en") "1998" else "199"), {}, {}, {}, {}) }
 
     @Test fun ageError() = capture("age-error-{lang}") { AgeScreen(AgeUiState(year = "2091", invalid = true), {}, {}, {}, {}) }
 
@@ -401,7 +422,7 @@ abstract class ScreenshotSuite(private val lang: String, private val small: Bool
     @Test fun matchGuess() = capture("match-guess-{lang}", smallShot = "match-small-{lang}") { MatchScreen(Design.guessState(), matchActions().withChat()) }
 
     @Test fun matchWaiting() = capture("match-waiting-{lang}") {
-        MatchScreen(Design.guessState().copy(phase = MatchPhase.WAITING_FOR_OPPONENT_GUESS, input = "3916", opponentStatus = OpponentStatus.Thinking), matchActions().withChat())
+        MatchScreen(Design.guessState().copy(phase = MatchPhase.WAITING_FOR_OPPONENT_GUESS, input = "3961", opponentStatus = OpponentStatus.Thinking), matchActions().withChat())
     }
 
     @Test fun matchLate() = capture("match-late-{lang}") { MatchScreen(Design.lateState(), matchActions().withChat()) }
@@ -432,7 +453,7 @@ abstract class ScreenshotSuite(private val lang: String, private val small: Bool
                 opponent = Opponent.Computer(ComputerLevel.NORMAL), mode = MatchMode.PRACTICE, secondsLeft = 600, roundSeconds = 600,
                 opponentStatus = OpponentStatus.Thinking, practice = PracticeInfo("K7Q2M", 3, 6),
             ),
-            matchActions(),
+            matchActions().withToRoom(),
         )
     }
 
@@ -494,7 +515,15 @@ abstract class ScreenshotSuite(private val lang: String, private val small: Bool
     }
 
     // 08 Team board
-    @Test fun teamBoard() = capture("team-board-{lang}") { TeamBoardScreen(Design.teamRoom(final = false), BoardMode.LIVE, {}, {}) }
+    // Volna went offline 19 s ago (server time): the reconnect countdown reads 0:41 like the shot (D2-14).
+    @Test fun teamBoard() = capture("team-board-{lang}") {
+        TeamBoardScreen(Design.teamRoom(final = false), BoardMode.LIVE, {}, {}, offlineSince = mapOf(Design.volna.id to 0L), serverNow = { 19_000L })
+    }
+
+    // My duel still running: `arrow_back` (08 §Layout).
+    @Test fun teamBoardOverlay() = capture("team-board-overlay-{lang}") {
+        TeamBoardScreen(Design.teamRoom(final = false), BoardMode.OVERLAY, {}, {}, offlineSince = mapOf(Design.volna.id to 0L), serverNow = { 19_000L })
+    }
 
     @Test fun teamFinal() = capture("team-final-{lang}", ads = true) { TeamBoardScreen(Design.teamRoom(final = true), BoardMode.FINAL, {}, {}) }
 
@@ -636,10 +665,114 @@ abstract class ScreenshotSuite(private val lang: String, private val small: Bool
         )
     }
 
+    // ---- D2-32: spec states without a render ----
+
+    @Test fun nicknameTransfer() = capture("nickname-transfer-{lang}", ime = 230.dp) {
+        FirstRunScreen(FirstRunUiState(transferMode = true, transferCode = "7KQ2-M9XA"), {}, {}, {}, {}, {})
+    }
+
+    @Test fun nicknameTransferError() = capture("nickname-transfer-error-{lang}", ime = 230.dp) {
+        FirstRunScreen(FirstRunUiState(transferMode = true, transferCode = "7KQ2-M9XB", error = app.numbaseball.ui.common.UiError.Code(app.numbaseball.core.protocol.ErrorCodes.INVALID_CODE)), {}, {}, {}, {}, {})
+    }
+
+    @Test fun nicknameTooLong() = capture("nickname-too-long-{lang}", ime = 230.dp) {
+        FirstRunScreen(FirstRunUiState(nickname = "새벽투수새벽투수새벽투수", nicknameProblem = app.numbaseball.data.account.NicknameProblem.TOO_LONG), {}, {}, {}, {}, {})
+    }
+
+    @Test fun tutorialIntro() = capture("tutorial-1-{lang}") { TutorialScreen(onFinish = {}) }
+
+    @Test fun tutorialFirstGuess() = capture("tutorial-2-{lang}") {
+        TutorialScreen(onFinish = {}, initial = TutorialState(step = TutorialStep.FIRST_GUESS, input = "07"))
+    }
+
+    @Test fun tutorialExplain() = capture("tutorial-3-{lang}") {
+        TutorialScreen(onFinish = {}, initial = Tutorial.pitch(Tutorial.next(TutorialState()).copy(input = Tutorial.FIRST_GUESS)))
+    }
+
+    @Test fun tutorialSolve() = capture("tutorial-4-{lang}") {
+        val explain = Tutorial.pitch(Tutorial.next(TutorialState()).copy(input = Tutorial.FIRST_GUESS))
+        TutorialScreen(onFinish = {}, initial = Tutorial.next(Tutorial.next(explain)).copy(input = "04"))
+    }
+
+    @Test fun tutorialDone() = capture("tutorial-done-{lang}") {
+        val explain = Tutorial.pitch(Tutorial.next(TutorialState()).copy(input = Tutorial.FIRST_GUESS))
+        TutorialScreen(onFinish = {}, initial = Tutorial.pitch(Tutorial.next(Tutorial.next(explain)).copy(input = Tutorial.SECRET)))
+    }
+
+    @Test fun matchLeaveDialog() = capture("match-leave-dialog-{lang}", before = { onNodeWithContentDescription(string(app.numbaseball.R.string.leave)).performClick() }) {
+        MatchScreen(Design.guessState(), matchActions().withChat())
+    }
+
+    @Test fun matchMenu() = capture("match-menu-{lang}", before = { onNodeWithContentDescription(string(app.numbaseball.R.string.action_more)).performClick() }) {
+        MatchScreen(Design.guessState(), matchActions().withChat())
+    }
+
+    @Test fun matchForfeitDialog() = capture(
+        "match-forfeit-dialog-{lang}",
+        before = {
+            onNodeWithContentDescription(string(app.numbaseball.R.string.action_more)).performClick()
+            waitForIdle()
+            onNodeWithText(string(app.numbaseball.R.string.menu_forfeit)).performClick()
+        },
+    ) {
+        MatchScreen(Design.guessState(), matchActions().withChat())
+    }
+
+    @Test fun matchMemoSheet() = capture("match-memo-sheet-{lang}") { MatchScreen(Design.lateState(), matchActions().withChat(), initialLargeMemo = true) }
+
+    @Test fun matchToast() = capture("match-toast-{lang}", before = { mainClock.autoAdvance = false; mainClock.advanceTimeBy(1_000) }) {
+        val toast = app.numbaseball.ui.design.rememberToastState()
+        val text = androidx.compose.ui.res.stringResource(app.numbaseball.R.string.timer_expired)
+        LaunchedEffect(Unit) { toast.show(text) }
+        Box(Modifier.fillMaxSize()) {
+            MatchScreen(Design.guessState(), matchActions().withChat())
+            ToastHost(toast, bottomOffset = 16.dp + 172.dp + 24.dp + 24.dp)
+        }
+    }
+
+    @Test fun profileOffline() = capture("profile-offline-{lang}") {
+        ProfileScreen(ProfileUiState(nickname = "새벽투수", tag = "4821", registered = true, stats = Stats(12, 8, 3), recentForm = "WWLWDLWWLW", online = false), {}, {}, {})
+    }
+
+    @Test fun settingsTransferSheet() = capture("settings-transfer-{lang}") {
+        SettingsScreen(Design.settingsState.copy(transferCode = app.numbaseball.ui.settings.TransferCode("7KQ2-M9XA", Design.AT + 10 * 60_000)), true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions())
+    }
+
+    @Test fun settingsLanguage() = capture("settings-language-{lang}", before = { onNodeWithText(string(app.numbaseball.R.string.language)).performClick() }) {
+        SettingsScreen(Design.settingsState, true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions())
+    }
+
+    @Test fun settingsDeleteDialog() = capture(
+        "settings-delete-dialog-{lang}",
+        before = {
+            onNode(hasScrollAction()).performScrollToNode(hasText(string(app.numbaseball.R.string.delete_account)))
+            onNodeWithText(string(app.numbaseball.R.string.delete_account)).performClick()
+        },
+    ) {
+        SettingsScreen(Design.settingsState, true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions())
+    }
+
+    // The 320 × 320 notice is drawn over the app below the smallest supported window (ADAPTIVE.md).
+    @Test fun windowTooSmall() = capture("window-too-small-{lang}") { app.numbaseball.ui.navigation.WindowTooSmall() }
+
+    @Test fun chatSystemOnly() = capture("chat-system-{lang}") {
+        Box(Modifier.fillMaxSize()) {
+            RoomLobbyScreen(Design.lobbyState(), lobbyActions())
+            SheetFrame(onDismiss = {}, top = 136.dp) { ChatSheet(Design.chatState(messages = Design.chat.take(2)), chatActions()) }
+        }
+    }
+
     private fun MatchActions.withChat() = MatchActions(
         onDigit, onDelete, onClear, onTapSlot, onSubmit, onRandomSecret, onForfeit, onLeave, onMemoDigit, onMemoCell, onMemoClear, onMemoCollapse,
         onChat = {},
     )
+
+    private fun MatchActions.withToRoom() = MatchActions(
+        onDigit, onDelete, onClear, onTapSlot, onSubmit, onRandomSecret, onForfeit, onLeave, onMemoDigit, onMemoCell, onMemoClear, onMemoCollapse,
+        onToRoom = {},
+    )
+
+    private fun string(id: Int): String = org.robolectric.RuntimeEnvironment.getApplication().getString(id)
 
     private fun lobbyActions() = LobbyActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
 
