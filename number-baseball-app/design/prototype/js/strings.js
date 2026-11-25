@@ -8,7 +8,7 @@ window.STR = {
     imeNote: '시스템 키보드 (IME)', cpuShort: '컴퓨터',
     reconnecting: '연결이 끊겼어요 · 다시 연결하는 중', reconnectSub: '시간 안에 돌아오지 못하면 이 대결은 기권 처리돼요',
     terms: '이용약관', contact: '문의하기', contactSub: '[연락처 이메일]', copied: '이메일 주소를 복사했어요',
-    phrases: '빠른 문구', phrasesNote: '빠른 대전에서는 정해진 문구만 보낼 수 있어요', ph1: '잘 부탁해요', ph2: '좋은 게임!', ph3: '잠깐만요', ph4: '어렵네요', ph5: '한 판 더?', ph6: '수고했어요',
+    phrases: '빠른 문구', phrasesNote: '빠른 대전에서는 정해진 문구만 보낼 수 있어요', ph1: '잘 부탁해요', ph2: '좋은 게임!', ph3: '잠깐만요', ph4: '아까워요', ph5: '한 판 더?', ph6: '수고했어요',
     appName: '숫자야구', appSub: '조용한 한판', appTitle: '숫자야구: 조용한 한판', // resources: app_name_main / app_name_sub / app_name (owner decision, localized)
     ageTitle: '태어난 해를 입력해 주세요', ageLead: '태어난 해만 확인해요. 이름이나 생일은 묻지 않아요.', ageConfirm: '확인', ageInvalid: '올바른 연도를 입력해 주세요', ageYear: '태어난 해',
     naTitle: '지금은 이용할 수 없어요', naBody: '입력한 정보로는 이 게임을 이용할 수 없어요. 관심 가져 주셔서 고마워요.',
@@ -57,7 +57,11 @@ window.STR = {
     muteChat: '전체 채팅 끄기', muteChatSub: '모든 채팅과 빠른 문구를 숨겨요', blocked: '차단한 플레이어', blockedVal: '2명',
     nickname: '닉네임', transfer: '다른 기기로 계정 옮기기', transferSub: '10분 동안 쓸 수 있는 코드를 만들어요', deleteAcc: '계정 삭제', deleteSub: '기록과 닉네임이 영구히 지워져요',
     privacyOptions: '개인정보 보호 옵션', privacyOptionsSub: '광고 맞춤 설정 동의를 바꿔요', privacyPolicy: '개인정보 처리방침', licences: '오픈소스 라이선스', version: '버전',
-    on: '켜짐', off: '꺼짐'
+    on: '켜짐', off: '꺼짐',
+    // remove ads (README, owner decision 2026-11-25); price strings stand in for ProductDetails.formattedPrice
+    secPurchase: '구매', removeAds: '광고 제거', removeAdsSub: '모든 광고가 사라져요 · 한 번만 결제해요', price: '₩6,500',
+    removeAdsDone: '구매함 · 광고가 나오지 않아요', removeAdsPending: '결제 대기 중 · 결제가 끝나면 광고가 사라져요',
+    removeAdsError: '지금은 구매할 수 없어요. 잠시 후 다시 시도해 주세요', restore: '구매 복원', restoreSub: '이 Google 계정으로 산 구매를 다시 확인해요', retry: '다시 시도'
   },
   en: {
     legendTitle: 'Reading the hints', legS: '<b>Strike</b> · right digit, right place', legB: '<b>Ball</b> · right digit, wrong place', legO: '<b>Out</b> · no digit matches',
@@ -65,7 +69,7 @@ window.STR = {
     bestLabel: 'Best', moveHereSeat: 'Move here', imeNote: 'System keyboard (IME)', cpuShort: 'Computer',
     reconnecting: 'Connection lost · reconnecting', reconnectSub: 'If you are not back in time, this duel is forfeited',
     terms: 'Terms of Use', contact: 'Contact', contactSub: '[contact email]', copied: 'Email address copied',
-    phrases: 'Quick phrases', phrasesNote: 'Quick match allows preset phrases only', ph1: 'Good luck', ph2: 'Good game!', ph3: 'One sec', ph4: 'Tough one', ph5: 'Again?', ph6: 'Well played',
+    phrases: 'Quick phrases', phrasesNote: 'Quick match allows preset phrases only', ph1: 'Good luck', ph2: 'Good game!', ph3: 'One sec', ph4: 'So close', ph5: 'Again?', ph6: 'Well played',
     appName: 'Number Baseball', appSub: 'Quiet Duel', appTitle: 'Number Baseball: Quiet Duel',
     ageTitle: 'Enter the year you were born', ageLead: 'We only ask for the year. No name, no birthday.', ageConfirm: 'Confirm', ageInvalid: 'Enter a valid year', ageYear: 'Birth year',
     naTitle: 'Not available right now', naBody: 'Based on the information entered, this game is not available. Thank you for your interest.',
@@ -107,7 +111,10 @@ window.STR = {
     muteChat: 'Mute all chat', muteChatSub: 'Hide all chat and quick phrases', blocked: 'Blocked players', blockedVal: '2',
     nickname: 'Nickname', transfer: 'Move account to another device', transferSub: 'Creates a code that works for 10 minutes', deleteAcc: 'Delete account', deleteSub: 'Your record and nickname are erased for good',
     privacyOptions: 'Privacy options', privacyOptionsSub: 'Change your ad personalisation consent', privacyPolicy: 'Privacy policy', licences: 'Open-source licences', version: 'Version',
-    on: 'On', off: 'Off'
+    on: 'On', off: 'Off',
+    secPurchase: 'Purchase', removeAds: 'Remove ads', removeAdsSub: 'Removes all ads · one-time purchase', price: '$4.99',
+    removeAdsDone: 'Purchased · no ads', removeAdsPending: 'Payment pending · ads go away once it clears',
+    removeAdsError: 'Can’t buy right now. Try again later', restore: 'Restore purchase', restoreSub: 'Checks purchases on this Google account', retry: 'Try again'
   },
   de: {
     legendTitle: 'So liest du die Hinweise', legS: '<b>Strike</b> · richtige Ziffer, richtige Stelle', legB: '<b>Ball</b> · richtige Ziffer, falsche Stelle', legO: '<b>Out</b> · keine Ziffer stimmt',
