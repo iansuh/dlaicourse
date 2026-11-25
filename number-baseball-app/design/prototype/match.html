@@ -118,7 +118,7 @@ window.build = function (qs) {
     <section class="log${n >= 5 ? ' wide' : ''}">${P.logHtml(m)}</section>
     <section class="memo">${P.memoHtml(m)}</section>
     <section class="entry">
-      ${P.slotsHtml(n, m.entry, { locked: waiting })}
+      ${P.slotsHtml(n, m.entry, { locked: waiting, noActive: state === 'reconnect' })}
       ${P.keypadHtml(m, { waiting, offline: state === 'reconnect' })}
     </section>
     <div class="gesture"></div>${phraseSheet}`;

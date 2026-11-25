@@ -61,7 +61,7 @@
     let s = '';
     for (let i = 0; i < n; i++) {
       const d = entry[i];
-      const cls = opts.locked ? 'locked' : d != null ? 'filled' : (i === entry.length ? 'active' : '');
+      const cls = opts.locked ? 'locked' : d != null ? 'filled' : (i === entry.length && !opts.noActive ? 'active' : '');
       s += `<div class="slot ${cls}${opts.cls ? ' ' + opts.cls : ''}">${d != null ? d : ''}</div>`;
     }
     return `<div class="slots">${s}</div>`;
@@ -129,7 +129,14 @@
     if (lang === 'ru' && n >= 5) s = s.replace('цифры', 'цифр');
     return s.replace('#', `<b>${n}</b>`);
   };
-  window.P = { mark, fit, digitsLabel, qs, lang, t, icon, judge, logHtml, memoHtml, slotsHtml, keypadHtml, apply };
-  document.addEventListener('DOMContentLoaded', () => { document.title = t('appTitle') + ' · ' + document.title; if (window.build) window.build(qs); apply(); sysbar(); fit(); });
+  // Tabular digits (DESIGN_SYSTEM 3.1, tokens "tnum": true). The CSS `font` shorthand resets font-variant-numeric and
+  // font-feature-settings, so a class rule cannot hold it: every element set in the display face gets it inline.
+  function tnum(root) {
+    (root || document).querySelectorAll('*').forEach((el) => {
+      if (/Barlow/.test(getComputedStyle(el).fontFamily)) el.style.fontVariantNumeric = 'tabular-nums';
+    });
+  }
+  window.P = { mark, fit, digitsLabel, qs, lang, t, icon, judge, logHtml, memoHtml, slotsHtml, keypadHtml, apply, tnum };
+  document.addEventListener('DOMContentLoaded', () => { document.title = t('appTitle') + ' · ' + document.title; if (window.build) window.build(qs); apply(); sysbar(); tnum(); fit(); });
   window.addEventListener('resize', fit);
 })();
