@@ -48,7 +48,8 @@ class ChatSafetyQaTest {
             var sent = 0
             for (row in rows) {
                 val input = QaServerCorpus.decode(row.getValue("input"))
-                if (input.toByteArray().size > 1500) continue // stays below the 2048-byte frame cap with JSON escaping
+                if (input.toByteArray().size > 1500) continue
+                if (input.toByteArray().decodeToString() != input) continue // lone surrogates cannot be sent by a real client // stays below the 2048-byte frame cap with JSON escaping
                 if (sent > 0 && sent % 5 == 0) inst.advance(10_000)
                 sent++
                 Thread.sleep(120) // stays under the WebSocket flood limit (10 messages/s)

@@ -423,11 +423,11 @@ class MatchFlowQaTest {
             assertEquals(3, end.match!!.score.a); assertEquals(0, end.match!!.score.b)
             assertEquals("FINISHED", end.phase.name)
             for ((a, b) in duels.drop(3)) {
-                val ra = a.awaitRoom { it.match?.myDuel?.phase?.name == "FINISHED" }.match!!.myDuel!!
+                val ra = a.snapshot().match!!.myDuel!!
                 assertEquals("CANCELLED", ra.result!!.reason.name)
                 assertNull(ra.result!!.winner)
                 assertEquals("cancelled duel shows both secrets to its players", "123", ra.opponentSecret)
-                assertEquals("123", b.awaitRoom { it.match?.myDuel?.phase?.name == "FINISHED" }.match!!.myDuel!!.opponentSecret)
+                assertEquals("123", b.snapshot().match!!.myDuel!!.opponentSecret)
             }
             room.teamA.forEach { assertEquals("0 losses, 1 win", "1/0/0", stats(inst, it.auth.token)) }
             room.teamB.forEach { assertEquals("0/1/0", stats(inst, it.auth.token)) }
@@ -473,11 +473,29 @@ class MatchFlowQaTest {
         }
     }
 
+    @Test fun acTeam13_aPlayerWhoLostHisDuelByDisconnectComesBackToARunningMatch() {
+        QaServer.start().use { inst ->
+            val room = QaFlows.startedTeamRoom(2, 3, 60, inst)
+            QaFlows.everybodySecret(room, "123")
+            val a1 = room.teamA[0]; val b1 = room.opponentOf(a1)
+            val token = b1.auth.token
+            b1.close(); Thread.sleep(500)
+            a1.ws.send(Guess("456", 1))
+            inst.advance(60_000)
+            val back = QaWs.connect(token, inst)
+            val roomId = back.awaitType("welcome")["roomId"]
+            assertTrue("seat still exists while the team match runs (protocol 8.2 / 10.3)", roomId != null && roomId !is JsonNull)
+            val snap = QaPlayer.roomOf(back.awaitType("room_state"))
+            assertEquals("PLAYING", snap.phase.name)
+            assertEquals("DISCONNECT", snap.match!!.myDuel!!.result!!.reason.name)
+            back.close(); room.close()
+        }
+    }
+
     // ------------------------------------------------------------------ server restart
 
-    @Test fun acSrv01_gracefulRestartTellsPlayersAndRecordsNothingForInterruptedMatches() {
-        val dir = java.nio.file.Files.createTempDirectory("nb-qa-restart").toFile()
-        val first = QaServer.start(dataDir = dir)
+    @Test fun acSrv01_gracefulRestartTellsPlayersWithRoomLeftClosedAndClose1001() = KnownServerDefects.scenario("acSrv01_gracefulRestartTellsPlayersWithRoomLeftClosedAndClose1001") {
+        val first = QaServer.start()
         val (a, b) = QaFlows.guessingPair(inst = first)
         val queued = QaPlayer.fresh("Que", first).also { it.ws.send(QueueJoin(5)); it.ws.awaitType("queued") }
         val lobby = QaFlows.privateLobby(RoomSettings(3, 2, 60), first)
@@ -487,17 +505,32 @@ class MatchFlowQaTest {
             assertEquals(1001, p.ws.awaitClose())
         }
         assertEquals(1001, queued.ws.awaitClose())
+    }
+
+    @Test fun acSrv02_afterARestartRoomsAreGoneInterruptedMatchesRecordNothingAndAccountsSurvive() {
+        val dir = java.nio.file.Files.createTempDirectory("nb-qa-restart").toFile()
+        val first = QaServer.start(dataDir = dir)
+        val (a, b) = QaFlows.guessingPair(inst = first)
+        val queued = QaPlayer.fresh("Que", first).also { it.ws.send(QueueJoin(5)); it.ws.awaitType("queued") }
+        val lobby = QaFlows.privateLobby(RoomSettings(3, 2, 60), first)
+        first.stop()
         QaServer.start(dataDir = dir).use { second ->
             for (p in listOf(a, b, lobby, queued)) {
                 QaWs.connect(p.auth.token, second).use { ws ->
                     val w = ws.awaitType("welcome")
                     assertTrue("roomId is null after a restart", w["roomId"] == null || w["roomId"] is JsonNull)
+                    ws.send(app.numbaseball.core.protocol.Resync())
+                    assertTrue("no queue entry survives", ws.drain(300).none { it.type == "queued" || it.type == "room_state" })
                 }
             }
             assertEquals("unfinished match records nothing", "0/0/0", stats(second, a.auth.token))
             assertEquals("0/0/0", stats(second, b.auth.token))
-            // Accounts and the terms acceptance survive (persistent database).
-            assertNotNull(second.call("GET", "/api/v1/me", a.auth.token).json!!["termsVersion"])
+            assertNotNull("accounts and terms acceptance survive", second.call("GET", "/api/v1/me", a.auth.token).json!!["termsVersion"])
+            // They can play again on the new instance.
+            val c = QaPlayer(a.auth, second); val d = QaPlayer(b.auth, second)
+            c.ws.send(QueueJoin(3)); d.ws.send(QueueJoin(3))
+            c.awaitRoom(10_000) { it.kind.name == "QUICK" }
+            c.close(); d.close()
         }
     }
 

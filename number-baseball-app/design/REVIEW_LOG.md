@@ -97,3 +97,21 @@ Known limitations, on purpose and documented:
 - Not prototyped (specified only): vs Computer setup sheet, profile, create-room and join screens, tutorial, transfer-code sheet, blocked list, offline band. They reuse prototyped components.
 - Prototype text faces are Roboto / Noto Sans KR stand-ins; Samsung and other OEM faces will differ slightly in width. Specs allow for this (no fixed-width text containers except plates).
 - The split-screen store shot uses a neutral grey placeholder for the other app.
+
+## 2026-11-25: Phase 2 review of the Android renders (290 Roborazzi PNGs)
+
+Method: every reference shot paired with its render (reference | render | diff), plus all extra states, the `-small-*` (360 × 320) and `-ko-font200` variants; positions measured with PIL at density 2; every flat colour checked against `tokens.json` (alpha tokens composited). Full report: [`REVIEW_PHASE2.md`](REVIEW_PHASE2.md).
+
+**Verdict: not signed off.** 36 defects: 1 blocker, 18 major, 17 minor.
+
+| Top issues | Sev |
+| --- | --- |
+| D2-01 200 % font breaks the match screen: no 1.3× numeral cap and no large-text layout; guess `319620` renders `31962`, name ellipsizes to "…", `OUT`, header, mini plates and memo clipped | B |
+| D2-04 / D2-26 / D2-02 / D2-03 Small window and 200 % collapse regions: lobby teams (~20 dp), team result without score or rows, line score, team rows cut to one letter | M |
+| D2-13 / D2-15 / D2-16 / D2-34 Undocumented missing features: team best hints, profile tables, interactive tutorial, large-memo sheet | M |
+| D2-09 / D2-10 Touch targets 32 dp: memo toolbar (clamped by the 32 dp row), chat chips and the sender name line | M |
+| D2-05 / D2-08 Compact slots 56 instead of 48 dp; memo row labels 9 dp left (not centred) | M |
+
+Deviation decisions: font-fallback offset accepted for `sans` glyphs only; tabular digits accepted (shots to be regenerated); team board `close` accepted (my duel finished); disabled send / chips accepted; transfer-code entry accepted but must sit under the field (D2-17); line-score scroll accepted at 1.0, rejected at 200 %; no active slot ring while reconnecting accepted.
+
+Design follow-ups (mine): regenerate the shots with tabular digits; re-shoot `team-board-ko` and `match-reconnect-ko`; update 05 / 09 phrase lists to the protocol IDs, 12.15 masked colour (`text2` on `surface4`), ADAPTIVE §1 (compact secret row, compact team result) and 06 / 11 / 13 for remove ads and the online interstitial.

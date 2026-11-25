@@ -34,8 +34,14 @@ class QaPlayer(val auth: AuthResponse, val inst: QaInstance = QaServer.main) : A
 
     /** Asks for a snapshot (resync) and returns it. */
     fun snapshot(): RoomView {
-        ws.send(app.numbaseball.core.protocol.Resync())
-        return awaitRoom()
+        val rid = ws.nextRid()
+        ws.sendRaw("{\"type\":\"resync\",\"rid\":$rid}")
+        var last: JsonObject? = null
+        ws.await(5_000, "ack of resync $rid") {
+            if (it.type == "room_state") last = it
+            it.type == "ack" && it.str("rid") == rid.toString()
+        }
+        return roomOf(last ?: throw AssertionError("resync answered no room_state")).also { room = it }
     }
 
     /** The player's duel phase name in the latest snapshot ("CHOOSING", "GUESSING", "FINISHED") or null. */

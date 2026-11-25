@@ -57,7 +57,7 @@ class ProtocolSecurityQaTest {
                 val frames = p.ws.all.toList()
                 for (s in forbidden(p)) assertFalse("a secret of another duel leaked to ${p.id}", QaFlows.leaks(frames, s))
                 if (!finalCheck && p.duelPhase != "FINISHED") {
-                    assertFalse("opponent secret leaked before the end", QaFlows.leaks(frames, secretOf.getValue(room.opponentOf(p).id)))
+                    assertFalse("opponent secret leaked before the end to ${p.id} (phase ${p.duelPhase}): " + frames.filter { it.contains("\"" + secretOf.getValue(room.opponentOf(p).id) + "\"") }.map { it.take(1500) }, QaFlows.leaks(frames, secretOf.getValue(room.opponentOf(p).id)))
                 }
             }
         }
