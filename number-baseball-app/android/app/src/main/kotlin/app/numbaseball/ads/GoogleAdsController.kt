@@ -3,6 +3,7 @@ package app.numbaseball.ads
 import android.app.Activity
 import android.content.Context
 import android.os.SystemClock
+import app.numbaseball.core.protocol.EndReason
 import app.numbaseball.data.age.AdAgeTreatment
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
@@ -37,8 +38,11 @@ class GoogleAdsController(
     private val scope: CoroutineScope,
     /** "G", "PG", "T" or "MA" from build config; must not exceed the app's IARC rating (policy review R20). */
     private val maxAdContentRating: String,
+    /** False while `remove_ads` is owned (or not known yet): no interstitial is loaded or shown. */
+    private val adsAllowed: () -> Boolean,
 ) : AdsController {
-    private val consentInformation: ConsentInformation = UserMessagingPlatform.getConsentInformation(appContext)
+    // Lazy: a `remove_ads` owner never touches UMP at all.
+    private val consentInformation: ConsentInformation by lazy { UserMessagingPlatform.getConsentInformation(appContext) }
     private val consentRequested = AtomicBoolean(false)
     private val sdkStarted = AtomicBoolean(false)
 
@@ -52,10 +56,12 @@ class GoogleAdsController(
         appContext = appContext,
         adUnitId = interstitialAdUnitId,
         policy = InterstitialPolicy(now = SystemClock::elapsedRealtime),
-        canRequestAds = { _canRequestAds.value },
+        canRequestAds = { _canRequestAds.value && adsAllowed() },
     )
 
     override fun gatherConsent(activity: Activity, treatment: AdAgeTreatment) {
+        // Never for a `remove_ads` owner: no UMP form, no Mobile Ads init (POLICY_REVIEW Android item 13).
+        if (!adsAllowed()) return
         // Once per process; activity recreation (rotation, language change) must not show the form again.
         if (!consentRequested.compareAndSet(false, true)) return
         applyRequestConfiguration(treatment)
@@ -85,7 +91,10 @@ class GoogleAdsController(
         if (consentInformation.canRequestAds()) startSdk()
     }
 
-    override fun updateAgeTreatment(treatment: AdAgeTreatment) = applyRequestConfiguration(treatment)
+    override fun updateAgeTreatment(treatment: AdAgeTreatment) {
+        // Owners: nothing ad-related runs; gatherConsent applies the treatment if the purchase ever disappears.
+        if (adsAllowed()) applyRequestConfiguration(treatment)
+    }
 
     /** Age treatment and content cap, set before the SDK starts and before every later change (R20). */
     private fun applyRequestConfiguration(treatment: AdAgeTreatment) {
@@ -103,6 +112,7 @@ class GoogleAdsController(
     }
 
     private fun startSdk() {
+        if (!adsAllowed()) return
         if (!sdkStarted.compareAndSet(false, true)) return
         scope.launch(Dispatchers.IO) {
             MobileAds.initialize(appContext) { _ ->
@@ -114,7 +124,7 @@ class GoogleAdsController(
     }
 }
 
-/** Main-thread only. Loads one interstitial ahead and shows it when the [policy] allows. */
+/** Main-thread only. Loads one interstitial ahead; [InterstitialRules] decides when it may show. */
 private class GoogleInterstitialController(
     private val appContext: Context,
     private val adUnitId: String,
@@ -124,25 +134,22 @@ private class GoogleInterstitialController(
     private var ad: InterstitialAd? = null
     private var loading = false
 
-    override fun onComputerMatchFinished() {
-        policy.onComputerMatchFinished()
+    override val finishedSinceLastAd: Int get() = policy.finishedSinceLastAd
+    override val sinceLastAdMillis: Long get() = policy.sinceLastAdMillis
+    override val isLoaded: Boolean get() = ad != null
+
+    override fun onMatchFinished(kind: FinishedMatchKind, endReason: EndReason?, serverRestart: Boolean) {
+        policy.onMatchFinished(kind, endReason, serverRestart)
         if (policy.shouldPreload()) preload()
     }
 
-    override fun isDue(): Boolean = ad != null && policy.isDue()
-
-    override fun showIfDue(activity: Activity, resultVisibleMillis: Long, onContinue: () -> Unit) {
-        val ready = ad
-        if (ready == null || !policy.shouldShow(resultVisibleMillis)) {
-            if (policy.shouldPreload()) preload()
-            onContinue()
-            return
-        }
+    override fun show(activity: Activity, onClosed: () -> Unit) {
+        val ready = ad?.takeIf { canRequestAds() } ?: return onClosed()
         ad = null
         policy.onShown()
         ready.fullScreenContentCallback = object : FullScreenContentCallback() {
-            override fun onAdDismissedFullScreenContent() = onContinue()
-            override fun onAdFailedToShowFullScreenContent(error: AdError) = onContinue()
+            override fun onAdDismissedFullScreenContent() = onClosed()
+            override fun onAdFailedToShowFullScreenContent(error: AdError) = onClosed()
         }
         ready.show(activity)
     }

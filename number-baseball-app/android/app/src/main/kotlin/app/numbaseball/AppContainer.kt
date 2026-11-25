@@ -6,6 +6,11 @@ import app.numbaseball.ads.AdsController
 import app.numbaseball.ads.DisabledAdsController
 import app.numbaseball.ads.GoogleAdsController
 import app.numbaseball.audio.AndroidGameAudio
+import app.numbaseball.billing.BillingRepository
+import app.numbaseball.billing.DataStoreEntitlementStore
+import app.numbaseball.billing.DefaultBillingRepository
+import app.numbaseball.billing.PlayBillingGateway
+import app.numbaseball.billing.adsAllowed
 import app.numbaseball.audio.GameAudio
 import app.numbaseball.audio.SilentGameAudio
 import app.numbaseball.data.account.AccountRepository
@@ -78,6 +83,8 @@ interface AppContainer {
     val safety: SafetyRepository
     val offlineGame: OfflineGame
     val ads: AdsController
+    /** Play Billing "Remove ads" (README, owner decision 2026-11-25). */
+    val billing: BillingRepository
     val audio: GameAudio
     val network: NetworkMonitor
 }
@@ -145,10 +152,15 @@ class DefaultAppContainer(context: Context, override val config: AppConfig) : Ap
                 interstitialAdUnitId = config.interstitialAdUnitId,
                 scope = appScope,
                 maxAdContentRating = config.maxAdContentRating,
+                adsAllowed = { billing.entitlement.value.adsAllowed },
             )
         } else {
             DisabledAdsController
         }
+    }
+
+    override val billing: BillingRepository by lazy {
+        DefaultBillingRepository(PlayBillingGateway(appContext), DataStoreEntitlementStore(appContext), appScope)
     }
 
     override val network: NetworkMonitor by lazy { AndroidNetworkMonitor(appContext) }

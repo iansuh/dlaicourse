@@ -4,6 +4,8 @@ import app.numbaseball.ads.AdsController
 import app.numbaseball.ads.DisabledAdsController
 import app.numbaseball.audio.GameAudio
 import app.numbaseball.audio.SilentGameAudio
+import app.numbaseball.billing.BillingRepository
+import app.numbaseball.testing.FakeBillingRepository
 import app.numbaseball.data.account.AccountRepository
 import app.numbaseball.data.age.AgeRepository
 import app.numbaseball.data.online.AlwaysOnlineNetworkMonitor
@@ -54,6 +56,7 @@ class TestAppContainer(
     override val safety = SafetyRepository(FakeSafetyApi(), accountRepository, onlineSession)
     override val offlineGame = OfflineGame()
     override val ads: AdsController = DisabledAdsController
+    override val billing: BillingRepository = FakeBillingRepository()
     override val audio: GameAudio = SilentGameAudio
     override val network: NetworkMonitor = AlwaysOnlineNetworkMonitor()
 }

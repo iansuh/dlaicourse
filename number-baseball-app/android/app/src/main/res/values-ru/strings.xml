@@ -453,4 +453,30 @@
     <string name="chat_system_generic">Новости комнаты</string>
     <string name="card_record_error">Не удалось загрузить итоги</string>
     <string name="card_record_none">Нет итогов для показа</string>
+    <!-- Remove ads, chat system lines, player card and team board (Android, 2026-11-25) -->
+    <string name="sec_purchase">Покупка</string>
+    <string name="remove_ads">Убрать рекламу</string>
+    <string name="remove_ads_sub">Убирает всю рекламу · разовая покупка</string>
+    <string name="remove_ads_done">Куплено · без рекламы</string>
+    <string name="remove_ads_pending">Ожидание оплаты · реклама исчезнет после оплаты</string>
+    <string name="remove_ads_error">Сейчас купить нельзя. Попробуйте позже</string>
+    <string name="remove_ads_a11y_price">Убрать рекламу, %1$s, купить</string>
+    <string name="remove_ads_a11y_done">Убрать рекламу, куплено</string>
+    <string name="remove_ads_a11y_pending">Убрать рекламу, ожидание оплаты</string>
+    <string name="remove_ads_link_a11y">Убрать рекламу, купить</string>
+    <string name="restore_purchase">Восстановить покупку</string>
+    <string name="restore_purchase_sub">Проверяет покупки этого аккаунта Google</string>
+    <string name="ads_removed_toast">Реклама убрана</string>
+    <string name="purchase_failed_toast">Не удалось завершить покупку. Попробуйте ещё раз</string>
+    <string name="purchase_pending_toast">Реклама исчезнет после завершения оплаты</string>
+    <string name="restore_done_toast">Покупка «Убрать рекламу» восстановлена</string>
+    <string name="restore_none_toast">В этом аккаунте Google нет покупок для восстановления</string>
+    <string name="restore_failed_toast">Не удаётся подключиться к Google Play</string>
+    <string name="delete_body_purchase">Покупка «Убрать рекламу» остаётся в вашем аккаунте Google. Её можно вернуть через «Восстановить покупку».</string>
+    <string name="board_leave_body">Ваша дуэль окончена. Если выйти сейчас, вы не увидите итог команды.</string>
+    <string name="chat_system_deleted_joined">В комнату вошёл удалённый игрок</string>
+    <string name="chat_system_deleted_left">Удалённый игрок вышел из комнаты</string>
+    <string name="card_context_online">Онлайн-итоги</string>
+    <string name="best_none_a11y">лучшего результата пока нет</string>
+    <string name="best_hint_a11y">лучший: страйков %1$d, боллов %2$d</string>
 </resources>

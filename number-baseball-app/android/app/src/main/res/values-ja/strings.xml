@@ -429,4 +429,30 @@
     <string name="chat_system_generic">ルームのお知らせ</string>
     <string name="card_record_error">戦績を読み込めませんでした</string>
     <string name="card_record_none">表示できる戦績がありません</string>
+    <!-- Remove ads, chat system lines, player card and team board (Android, 2026-11-25) -->
+    <string name="sec_purchase">購入</string>
+    <string name="remove_ads">広告を削除</string>
+    <string name="remove_ads_sub">すべての広告が消えます · 1回だけの購入</string>
+    <string name="remove_ads_done">購入済み · 広告は表示されません</string>
+    <string name="remove_ads_pending">支払い待ち · 支払いが完了すると広告が消えます</string>
+    <string name="remove_ads_error">現在は購入できません。しばらくしてからもう一度お試しください</string>
+    <string name="remove_ads_a11y_price">広告を削除、%1$s、購入</string>
+    <string name="remove_ads_a11y_done">広告を削除、購入済み</string>
+    <string name="remove_ads_a11y_pending">広告を削除、支払い待ち</string>
+    <string name="remove_ads_link_a11y">広告を削除、購入</string>
+    <string name="restore_purchase">購入を復元</string>
+    <string name="restore_purchase_sub">このGoogleアカウントの購入を確認し直します</string>
+    <string name="ads_removed_toast">広告を削除しました</string>
+    <string name="purchase_failed_toast">購入を完了できませんでした。もう一度お試しください</string>
+    <string name="purchase_pending_toast">支払いが完了すると広告が消えます</string>
+    <string name="restore_done_toast">広告の削除を復元しました</string>
+    <string name="restore_none_toast">このGoogleアカウントに復元できる購入はありません</string>
+    <string name="restore_failed_toast">Google Playに接続できません</string>
+    <string name="delete_body_purchase">「広告を削除」の購入はGoogleアカウントに残るため、「購入を復元」でまた受け取れます。</string>
+    <string name="board_leave_body">自分の対戦は終わりました。いま退出するとチームの結果を見られません。</string>
+    <string name="chat_system_deleted_joined">削除されたプレイヤーが参加しました</string>
+    <string name="chat_system_deleted_left">削除されたプレイヤーが退出しました</string>
+    <string name="card_context_online">オンライン戦績</string>
+    <string name="best_none_a11y">最高記録なし</string>
+    <string name="best_hint_a11y">最高 %1$dストライク %2$dボール</string>
 </resources>

@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.numbaseball.billing.LocalBilling
+import app.numbaseball.billing.adsAllowed
 import app.numbaseball.ui.common.rememberWindowHeightDp
 import app.numbaseball.ui.theme.NbColors
 import app.numbaseball.ui.theme.NbLayout
@@ -52,10 +54,14 @@ val LocalAdPreview = staticCompositionLocalOf<(@Composable () -> Unit)?> { null 
 
 /**
  * Anchored adaptive banner for calm screens only (home, results, profile; never during a match, in a filling lobby or in
- * chat). Takes no space until an ad has loaded, and is hidden in windows lower than the design's 480dp threshold.
+ * chat). Takes no space until an ad has loaded, is hidden in windows lower than the design's 480dp threshold, and is never
+ * requested while `remove_ads` is owned.
  */
 @Composable
 fun AdBanner(modifier: Modifier = Modifier) {
+    // Remove ads owned (or not known yet): no banner is requested, the band stays at 0 dp (DESIGN_SYSTEM 13).
+    val entitlement by LocalBilling.current.entitlement.collectAsStateWithLifecycle()
+    if (!entitlement.adsAllowed) return
     val preview = LocalAdPreview.current
     if (preview != null) {
         if (rememberWindowHeightDp() < NbLayout.bannerHideWindowHeightBelow) return

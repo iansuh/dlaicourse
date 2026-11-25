@@ -437,4 +437,30 @@
     <string name="chat_system_generic">Raum-Update</string>
     <string name="card_record_error">Bilanz konnte nicht geladen werden</string>
     <string name="card_record_none">Keine Bilanz vorhanden</string>
+    <!-- Remove ads, chat system lines, player card and team board (Android, 2026-11-25) -->
+    <string name="sec_purchase">Kauf</string>
+    <string name="remove_ads">Werbung entfernen</string>
+    <string name="remove_ads_sub">Entfernt alle Werbung · einmaliger Kauf</string>
+    <string name="remove_ads_done">Gekauft · keine Werbung</string>
+    <string name="remove_ads_pending">Zahlung ausstehend · Werbung verschwindet, sobald sie abgeschlossen ist</string>
+    <string name="remove_ads_error">Kauf gerade nicht möglich. Versuch es später noch einmal</string>
+    <string name="remove_ads_a11y_price">Werbung entfernen, %1$s, kaufen</string>
+    <string name="remove_ads_a11y_done">Werbung entfernen, gekauft</string>
+    <string name="remove_ads_a11y_pending">Werbung entfernen, Zahlung ausstehend</string>
+    <string name="remove_ads_link_a11y">Werbung entfernen, kaufen</string>
+    <string name="restore_purchase">Kauf wiederherstellen</string>
+    <string name="restore_purchase_sub">Prüft die Käufe dieses Google-Kontos</string>
+    <string name="ads_removed_toast">Werbung entfernt</string>
+    <string name="purchase_failed_toast">Der Kauf ist nicht abgeschlossen. Bitte versuch es noch einmal</string>
+    <string name="purchase_pending_toast">Werbung verschwindet, sobald die Zahlung abgeschlossen ist</string>
+    <string name="restore_done_toast">„Werbung entfernen“ wiederhergestellt</string>
+    <string name="restore_none_toast">Auf diesem Google-Konto gibt es keinen Kauf zum Wiederherstellen</string>
+    <string name="restore_failed_toast">Keine Verbindung zu Google Play</string>
+    <string name="delete_body_purchase">Der Kauf „Werbung entfernen“ bleibt bei deinem Google-Konto. Mit „Kauf wiederherstellen“ bekommst du ihn zurück.</string>
+    <string name="board_leave_body">Dein Duell ist vorbei. Wenn du jetzt gehst, siehst du das Teamergebnis nicht.</string>
+    <string name="chat_system_deleted_joined">Ein gelöschter Spieler ist dem Raum beigetreten</string>
+    <string name="chat_system_deleted_left">Ein gelöschter Spieler hat den Raum verlassen</string>
+    <string name="card_context_online">Online-Bilanz</string>
+    <string name="best_none_a11y">noch kein Bestwert</string>
+    <string name="best_hint_a11y">Bestwert %1$d Strikes %2$d Balls</string>
 </resources>

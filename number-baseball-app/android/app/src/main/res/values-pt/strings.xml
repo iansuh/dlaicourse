@@ -445,4 +445,30 @@
     <string name="chat_system_generic">Novidade da sala</string>
     <string name="card_record_error">Não foi possível carregar o histórico</string>
     <string name="card_record_none">Sem histórico para mostrar</string>
+    <!-- Remove ads, chat system lines, player card and team board (Android, 2026-11-25) -->
+    <string name="sec_purchase">Compra</string>
+    <string name="remove_ads">Remover anúncios</string>
+    <string name="remove_ads_sub">Remove todos os anúncios · compra única</string>
+    <string name="remove_ads_done">Comprado · sem anúncios</string>
+    <string name="remove_ads_pending">Pagamento pendente · os anúncios somem quando ele for concluído</string>
+    <string name="remove_ads_error">Não é possível comprar agora. Tente mais tarde</string>
+    <string name="remove_ads_a11y_price">Remover anúncios, %1$s, comprar</string>
+    <string name="remove_ads_a11y_done">Remover anúncios, comprado</string>
+    <string name="remove_ads_a11y_pending">Remover anúncios, pagamento pendente</string>
+    <string name="remove_ads_link_a11y">Remover anúncios, comprar</string>
+    <string name="restore_purchase">Restaurar compra</string>
+    <string name="restore_purchase_sub">Verifica as compras desta Conta do Google</string>
+    <string name="ads_removed_toast">Anúncios removidos</string>
+    <string name="purchase_failed_toast">Não foi possível concluir a compra. Tente de novo</string>
+    <string name="purchase_pending_toast">Os anúncios somem quando o pagamento for concluído</string>
+    <string name="restore_done_toast">Remover anúncios foi restaurado</string>
+    <string name="restore_none_toast">Não há compra para restaurar nesta Conta do Google</string>
+    <string name="restore_failed_toast">Não foi possível conectar ao Google Play</string>
+    <string name="delete_body_purchase">A compra de Remover anúncios fica na sua Conta do Google. Você pode recuperá-la com Restaurar compra.</string>
+    <string name="board_leave_body">Seu duelo terminou. Se você sair agora, não verá o resultado do time.</string>
+    <string name="chat_system_deleted_joined">Um jogador excluído entrou na sala</string>
+    <string name="chat_system_deleted_left">Um jogador excluído saiu da sala</string>
+    <string name="card_context_online">Histórico online</string>
+    <string name="best_none_a11y">ainda sem melhor</string>
+    <string name="best_hint_a11y">melhor: %1$d strikes, %2$d bolas</string>
 </resources>

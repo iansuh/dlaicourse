@@ -445,4 +445,30 @@
     <string name="chat_system_generic">Info du salon</string>
     <string name="card_record_error">Impossible de charger le bilan</string>
     <string name="card_record_none">Aucun bilan à afficher</string>
+    <!-- Remove ads, chat system lines, player card and team board (Android, 2026-11-25) -->
+    <string name="sec_purchase">Achat</string>
+    <string name="remove_ads">Supprimer les pubs</string>
+    <string name="remove_ads_sub">Supprime toutes les pubs · achat unique</string>
+    <string name="remove_ads_done">Acheté · aucune pub</string>
+    <string name="remove_ads_pending">Paiement en attente · les pubs disparaissent une fois le paiement validé</string>
+    <string name="remove_ads_error">Achat impossible pour le moment. Réessayez plus tard</string>
+    <string name="remove_ads_a11y_price">Supprimer les pubs, %1$s, acheter</string>
+    <string name="remove_ads_a11y_done">Supprimer les pubs, acheté</string>
+    <string name="remove_ads_a11y_pending">Supprimer les pubs, paiement en attente</string>
+    <string name="remove_ads_link_a11y">Supprimer les pubs, acheter</string>
+    <string name="restore_purchase">Restaurer l’achat</string>
+    <string name="restore_purchase_sub">Vérifie les achats de ce compte Google</string>
+    <string name="ads_removed_toast">Pubs supprimées</string>
+    <string name="purchase_failed_toast">L’achat n’a pas abouti. Réessayez</string>
+    <string name="purchase_pending_toast">Les pubs disparaissent une fois le paiement validé</string>
+    <string name="restore_done_toast">Supprimer les pubs restauré</string>
+    <string name="restore_none_toast">Aucun achat à restaurer sur ce compte Google</string>
+    <string name="restore_failed_toast">Connexion à Google Play impossible</string>
+    <string name="delete_body_purchase">L’achat Supprimer les pubs reste lié à votre compte Google. Vous pouvez le récupérer avec Restaurer l’achat.</string>
+    <string name="board_leave_body">Votre duel est terminé. Si vous quittez maintenant, vous ne verrez pas le résultat de l’équipe.</string>
+    <string name="chat_system_deleted_joined">Un joueur supprimé a rejoint le salon</string>
+    <string name="chat_system_deleted_left">Un joueur supprimé a quitté le salon</string>
+    <string name="card_context_online">Bilan en ligne</string>
+    <string name="best_none_a11y">pas encore de meilleur coup</string>
+    <string name="best_hint_a11y">meilleur : %1$d strikes, %2$d balles</string>
 </resources>

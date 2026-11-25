@@ -429,4 +429,30 @@
     <string name="chat_system_generic">Cập nhật phòng</string>
     <string name="card_record_error">Không tải được thành tích</string>
     <string name="card_record_none">Không có thành tích để hiển thị</string>
+    <!-- Remove ads, chat system lines, player card and team board (Android, 2026-11-25) -->
+    <string name="sec_purchase">Mua</string>
+    <string name="remove_ads">Xóa quảng cáo</string>
+    <string name="remove_ads_sub">Xóa mọi quảng cáo · mua một lần</string>
+    <string name="remove_ads_done">Đã mua · không có quảng cáo</string>
+    <string name="remove_ads_pending">Đang chờ thanh toán · quảng cáo sẽ biến mất khi thanh toán xong</string>
+    <string name="remove_ads_error">Hiện không thể mua. Vui lòng thử lại sau</string>
+    <string name="remove_ads_a11y_price">Xóa quảng cáo, %1$s, mua</string>
+    <string name="remove_ads_a11y_done">Xóa quảng cáo, đã mua</string>
+    <string name="remove_ads_a11y_pending">Xóa quảng cáo, đang chờ thanh toán</string>
+    <string name="remove_ads_link_a11y">Xóa quảng cáo, mua</string>
+    <string name="restore_purchase">Khôi phục giao dịch mua</string>
+    <string name="restore_purchase_sub">Kiểm tra lại giao dịch mua của tài khoản Google này</string>
+    <string name="ads_removed_toast">Đã xóa quảng cáo</string>
+    <string name="purchase_failed_toast">Không thể hoàn tất giao dịch mua. Vui lòng thử lại</string>
+    <string name="purchase_pending_toast">Quảng cáo sẽ biến mất khi thanh toán xong</string>
+    <string name="restore_done_toast">Đã khôi phục Xóa quảng cáo</string>
+    <string name="restore_none_toast">Tài khoản Google này không có giao dịch mua nào để khôi phục</string>
+    <string name="restore_failed_toast">Không thể kết nối với Google Play</string>
+    <string name="delete_body_purchase">Giao dịch mua Xóa quảng cáo vẫn thuộc tài khoản Google của bạn. Bạn có thể lấy lại bằng Khôi phục giao dịch mua.</string>
+    <string name="board_leave_body">Trận của bạn đã kết thúc. Nếu rời đi bây giờ, bạn sẽ không thấy kết quả của đội.</string>
+    <string name="chat_system_deleted_joined">Một người chơi đã xóa vào phòng</string>
+    <string name="chat_system_deleted_left">Một người chơi đã xóa rời phòng</string>
+    <string name="card_context_online">Thành tích trực tuyến</string>
+    <string name="best_none_a11y">chưa có tốt nhất</string>
+    <string name="best_hint_a11y">tốt nhất %1$d strike %2$d ball</string>
 </resources>

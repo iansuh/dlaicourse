@@ -2,7 +2,6 @@ package app.numbaseball.ui.match
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.numbaseball.ads.ComputerMatchFinishedListener
 import app.numbaseball.core.ai.ComputerLevel
 import app.numbaseball.core.protocol.DuelResult
 import app.numbaseball.core.protocol.EndReason
@@ -29,7 +28,6 @@ class ComputerMatchViewModel(
     level: ComputerLevel,
     private val practice: Boolean,
     private val game: OfflineGame,
-    private val finishedListener: ComputerMatchFinishedListener,
     private val roundSeconds: Int? = RELAXED_SECONDS,
     private val clock: () -> Long = { System.nanoTime() / 1_000_000 },
     private val pitchDelayMillis: (ComputerLevel) -> Long = { lvl ->
@@ -148,7 +146,6 @@ class ComputerMatchViewModel(
         }
         if (result != null) {
             ticker?.cancel()
-            if (!practice) finishedListener.onComputerMatchFinished()
         }
     }
 

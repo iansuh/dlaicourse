@@ -40,6 +40,8 @@ import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import app.numbaseball.ads.LocalAdPreview
+import app.numbaseball.billing.PurchaseUiState
+import app.numbaseball.billing.RemoveAdsState
 import app.numbaseball.core.ai.ComputerLevel
 import app.numbaseball.core.protocol.BlockedPlayer
 import app.numbaseball.core.protocol.ChatKind
@@ -109,6 +111,7 @@ import app.numbaseball.ui.quickmatch.FoundOpponent
 import app.numbaseball.ui.quickmatch.QuickMatchScreen
 import app.numbaseball.ui.quickmatch.QuickMatchUiState
 import app.numbaseball.ui.report.BlockDialog
+import app.numbaseball.ui.report.CardRecord
 import app.numbaseball.ui.report.PlayerCard
 import app.numbaseball.ui.report.ReportChoice
 import app.numbaseball.ui.report.ReportSheet
@@ -195,7 +198,7 @@ private object Design {
                     DuelSummary(1, kestrel.id, gross.id, DuelPhase.GUESSING, 5, null, bestHintA = BestHint(2, 1), bestHintB = BestHint(1, 2))
                 },
                 if (final) {
-                    DuelSummary(2, night.id, volna.id, DuelPhase.FINISHED, 6, DuelResult(Team.A, EndReason.SOLVED), bestHintA = BestHint(4, 0), bestHintB = BestHint(0, 0))
+                    DuelSummary(2, night.id, volna.id, DuelPhase.FINISHED, 6, DuelResult(Team.A, EndReason.SOLVED), bestHintA = BestHint(4, 0), bestHintB = BestHint(1, 2))
                 } else {
                     DuelSummary(2, night.id, volna.id, DuelPhase.GUESSING, 4, null, bestHintA = BestHint(1, 1), bestHintB = BestHint(0, 0))
                 },
@@ -214,6 +217,17 @@ private object Design {
         ChatMessage(2, AT, kestrel.id, kestrel.nickname, kestrel.tag, Team.A, ChatKind.TEXT, "몇 자리로 할까요?", null),
         ChatMessage(3, AT, gross.id, gross.nickname, gross.tag, Team.B, ChatKind.TEXT, "그건 좀 *** 아닌가", null),
         ChatMessage(4, AT, ME, me.nickname, me.tag, Team.A, ChatKind.TEXT, "4자리 좋아요", null),
+    )
+
+    /** chat-system-ko: join / leave / deleted-player lines and a masked word in my bubble (09 §2.1). */
+    val systemChat = listOf(
+        ChatMessage(10, AT, volna.id, volna.nickname, volna.tag, Team.B, ChatKind.TEXT, "다들 수고했어요", null),
+        ChatMessage(11, AT, null, null, null, null, ChatKind.SYSTEM, null, null, systemCode = SystemChatCodes.PLAYER_LEFT, subjectId = volna.id, subjectNickname = volna.nickname, subjectTag = volna.tag),
+        ChatMessage(12, AT, ME, me.nickname, me.tag, Team.A, ChatKind.TEXT, "아 *** 졌다", null),
+        ChatMessage(13, AT, null, null, null, null, ChatKind.SYSTEM, null, null, systemCode = SystemChatCodes.PLAYER_LEFT),
+        ChatMessage(14, AT, null, null, null, null, ChatKind.SYSTEM, null, null, systemCode = SystemChatCodes.PLAYER_JOINED, subjectId = mint.id, subjectNickname = mint.nickname, subjectTag = mint.tag),
+        ChatMessage(15, AT, mint.id, mint.nickname, mint.tag, Team.B, ChatKind.TEXT, "잘 부탁해요!", null),
+        ChatMessage(16, AT, ME, me.nickname, me.tag, Team.A, ChatKind.TEXT, "다음 판도 같이 해요", null),
     )
 
     fun chatState(muted: Boolean = false, cooldown: Int = 0, messages: List<ChatMessage> = chat, input: String = "") =
@@ -466,30 +480,41 @@ abstract class ScreenshotSuite(protected val lang: String, private val small: Bo
 
     // 06 Results
     @Test fun resultWin() = capture("result-win-{lang}", ads = true) {
-        ResultsScreen(Design.resultSummary(), adDue = false, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {})
+        ResultsScreen(Design.resultSummary(), showBanner = true, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {})
     }
 
     @Test fun resultLose() = capture("result-lose-{lang}", ads = true) {
-        ResultsScreen(Design.resultSummary(Outcome.LOSE), adDue = false, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {})
+        ResultsScreen(Design.resultSummary(Outcome.LOSE), showBanner = true, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {})
     }
 
     @Test fun resultDraw() = capture("result-draw-{lang}", ads = true) {
         ResultsScreen(
             Design.resultSummary(Outcome.DRAW).copy(reason = EndReason.BOTH_SOLVED, myStrikes = listOf(0, 0, 2, 1, 2, 4)),
-            adDue = false, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {},
+            showBanner = true, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {},
         )
     }
 
     @Test fun resultForfeit() = capture("result-forfeit-{lang}", ads = true) {
-        ResultsScreen(Design.resultSummary(Outcome.LOSE).copy(reason = EndReason.TIMEOUT, iEnded = true), adDue = false, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {})
+        ResultsScreen(Design.resultSummary(Outcome.LOSE).copy(reason = EndReason.TIMEOUT, iEnded = true), showBanner = true, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {})
     }
 
     @Test fun resultComputerLose() = capture("result-cpu-lose-{lang}") {
-        ResultsScreen(Design.resultSummary(Outcome.LOSE, MatchMode.COMPUTER), adDue = true, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = null)
+        // Reached through an interstitial (06 §3): no banner, the "광고 제거" link stays.
+        ResultsScreen(Design.resultSummary(Outcome.LOSE, MatchMode.COMPUTER), showBanner = false, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = null)
+    }
+
+    // Online result after an interstitial: link, flag, no banner (result-link-ko/en).
+    @Test fun resultLink() = capture("result-link-{lang}", ads = true) {
+        ResultsScreen(Design.resultSummary(), showBanner = false, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {})
+    }
+
+    // remove_ads owned: no link, no banner.
+    @Test fun resultAdsRemoved() = capture("result-ads-removed-{lang}") {
+        ResultsScreen(Design.resultSummary(), showBanner = true, onRemoveAds = null, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {})
     }
 
     @Test fun resultComputerWin() = capture("result-cpu-win-{lang}", ads = true) {
-        ResultsScreen(Design.resultSummary(Outcome.WIN, MatchMode.COMPUTER), adDue = false, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = null)
+        ResultsScreen(Design.resultSummary(Outcome.WIN, MatchMode.COMPUTER), showBanner = true, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = null)
     }
 
     // 07 Room
@@ -525,7 +550,15 @@ abstract class ScreenshotSuite(protected val lang: String, private val small: Bo
         TeamBoardScreen(Design.teamRoom(final = false), BoardMode.OVERLAY, {}, {}, offlineSince = mapOf(Design.volna.id to 0L), serverNow = { 19_000L })
     }
 
-    @Test fun teamFinal() = capture("team-final-{lang}", ads = true) { TeamBoardScreen(Design.teamRoom(final = true), BoardMode.FINAL, {}, {}) }
+    // 08 §2: a duel without a resolved guess yet shows "최고 –" on both sides.
+    @Test fun teamBoardNoBest() = capture("team-board-nobest-{lang}") {
+        val room = Design.teamRoom(final = false)
+        val match = room.match!!
+        val duels = match.duels.mapIndexed { i, d -> if (i == 1) d.copy(round = 1, bestHintA = null, bestHintB = null) else d }
+        TeamBoardScreen(room.copy(match = match.copy(duels = duels)), BoardMode.LIVE, {}, {}, offlineSince = mapOf(Design.volna.id to 0L), serverNow = { 19_000L })
+    }
+
+    @Test fun teamFinal() = capture("team-final-{lang}", ads = true) { TeamBoardScreen(Design.teamRoom(final = true), BoardMode.FINAL, {}, {}, onRemoveAds = {}) }
 
     // 09 Chat
     @Test fun chat() = capture("chat-{lang}") {
@@ -585,8 +618,30 @@ abstract class ScreenshotSuite(protected val lang: String, private val small: Bo
         smallShot = "settings-small-{lang}-end",
         before = { onNode(hasScrollAction()).performScrollToNode(hasText("1.0.0 (1)")) },
     ) {
-        SettingsScreen(Design.settingsState, true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions())
+        SettingsScreen(Design.settingsState, true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions(), purchase = PurchaseUiState(RemoveAdsState.Available(price)))
     }
+
+    // 11 §1.1 구매 section, scrolled to the end like the shots.
+    private fun settingsAds(shot: String, purchase: PurchaseUiState) = capture(
+        shot,
+        before = { onNode(hasScrollAction()).performScrollToNode(hasText("1.0.0 (1)")) },
+    ) {
+        SettingsScreen(Design.settingsState, true, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions(), purchase = purchase)
+    }
+
+    private val price get() = if (lang == "en") "$4.99" else "₩6,500"
+
+    @Test fun settingsAds() = settingsAds("settings-ads-{lang}", PurchaseUiState(RemoveAdsState.Available(price)))
+
+    @Test fun settingsAdsDone() = settingsAds("settings-ads-done-{lang}", PurchaseUiState(RemoveAdsState.Owned))
+
+    @Test fun settingsAdsPending() = settingsAds("settings-ads-pending-{lang}", PurchaseUiState(RemoveAdsState.Pending))
+
+    @Test fun settingsAdsError() = settingsAds("settings-ads-error-{lang}", PurchaseUiState(RemoveAdsState.Unavailable))
+
+    @Test fun settingsAdsLoading() = settingsAds("settings-ads-loading-{lang}", PurchaseUiState(RemoveAdsState.Loading))
+
+    @Test fun settingsAdsRestoring() = settingsAds("settings-ads-restoring-{lang}", PurchaseUiState(RemoveAdsState.Available(price), restoring = true))
 
     @Test fun settingsMusicOn() = capture("settings-music-{lang}") {
         SettingsScreen(Design.settingsState.copy(settings = AppSettings(musicEnabled = true, effectsEnabled = false)), false, "1.0.0 (1)", "support@example.com", listOf("ko", "en"), settingsActions())
@@ -603,10 +658,26 @@ abstract class ScreenshotSuite(protected val lang: String, private val small: Bo
         Box(Modifier.fillMaxSize()) {
             TeamBoardScreen(Design.teamRoom(final = false), BoardMode.LIVE, {}, {})
             SheetFrame(onDismiss = {}) {
-                PlayerCard(ReportTarget(Design.gross.id, "Größenwahn", "7731", team = Team.B), androidx.compose.ui.res.stringResource(app.numbaseball.R.string.team_b) + " · " + androidx.compose.ui.res.stringResource(app.numbaseball.R.string.card_context_quick), self = false, blocked = false, {}, {}, {}, record = Stats(31, 27, 4))
+                PlayerCard(ReportTarget(Design.gross.id, "Größenwahn", "7731", team = Team.B), self = false, blocked = false, {}, {}, {}, record = CardRecord.Loaded(Stats(31, 27, 4)))
             }
         }
     }
+
+    // 12 §2 record states: not available (404, also a block either way), loading, failed.
+    private fun reportCardRecord(shot: String, record: CardRecord) = capture(shot) {
+        Box(Modifier.fillMaxSize()) {
+            TeamBoardScreen(Design.teamRoom(final = false), BoardMode.LIVE, {}, {})
+            SheetFrame(onDismiss = {}) {
+                PlayerCard(ReportTarget(Design.gross.id, "Größenwahn", "7731", team = Team.B), self = false, blocked = false, {}, {}, {}, record = record)
+            }
+        }
+    }
+
+    @Test fun reportCardNoRecord() = reportCardRecord("report-card-norecord-{lang}", CardRecord.NotAvailable)
+
+    @Test fun reportCardLoading() = reportCardRecord("report-card-loading-{lang}", CardRecord.Loading)
+
+    @Test fun reportCardFailed() = reportCardRecord("report-card-failed-{lang}", CardRecord.Failed)
 
     @Test fun reportReasons() = capture("report-reasons-{lang}") {
         Box(Modifier.fillMaxSize()) {
@@ -758,7 +829,7 @@ abstract class ScreenshotSuite(protected val lang: String, private val small: Bo
     @Test fun chatSystemOnly() = capture("chat-system-{lang}") {
         Box(Modifier.fillMaxSize()) {
             RoomLobbyScreen(Design.lobbyState(), lobbyActions())
-            SheetFrame(onDismiss = {}, top = 136.dp) { ChatSheet(Design.chatState(messages = Design.chat.take(2)), chatActions()) }
+            SheetFrame(onDismiss = {}, top = 136.dp) { ChatSheet(Design.chatState(messages = Design.systemChat), chatActions()) }
         }
     }
 

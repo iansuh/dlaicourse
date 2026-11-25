@@ -1,6 +1,5 @@
 package app.numbaseball.ui
 
-import app.numbaseball.ads.ComputerMatchFinishedListener
 import app.numbaseball.core.ai.ComputerLevel
 import app.numbaseball.core.protocol.ChatKind
 import app.numbaseball.core.protocol.Chat
@@ -100,8 +99,7 @@ class ViewModelTests {
     }
 
     @Test fun computerMatchKeypadRulesAndForfeit() = runBlocking {
-        var finished = 0
-        val vm = ComputerMatchViewModel(3, ComputerLevel.NORMAL, practice = false, OfflineGame(Dispatchers.Unconfined), ComputerMatchFinishedListener { finished++ })
+        val vm = ComputerMatchViewModel(3, ComputerLevel.NORMAL, practice = false, OfflineGame(Dispatchers.Unconfined))
         "1123".forEach(vm::onDigit)
         assertEquals("123", vm.state.value.input)
         vm.onDelete()
@@ -118,18 +116,6 @@ class ViewModelTests {
         assertEquals(Outcome.LOSE, summary.outcome)
         assertEquals(EndReason.FORFEIT, summary.reason)
         assertEquals(MatchMode.COMPUTER, summary.mode)
-        assertEquals(1, finished)
-    }
-
-    @Test fun practiceMatchesDoNotCountForInterstitials() = runBlocking {
-        var finished = 0
-        val vm = ComputerMatchViewModel(3, ComputerLevel.EASY, practice = true, OfflineGame(Dispatchers.Unconfined), ComputerMatchFinishedListener { finished++ })
-        vm.onRandomSecret()
-        vm.onSubmit()
-        vm.state.first { it.phase == MatchPhase.GUESSING }
-        vm.onForfeit()
-        vm.state.first { it.summary != null }
-        assertEquals(0, finished)
     }
 
     @Test fun onlineSnapshotMapsToTheMatchScreen() {

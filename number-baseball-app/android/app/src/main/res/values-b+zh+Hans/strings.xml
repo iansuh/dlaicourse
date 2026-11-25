@@ -429,4 +429,30 @@
     <string name="chat_system_generic">房间动态</string>
     <string name="card_record_error">无法加载战绩</string>
     <string name="card_record_none">暂无战绩可显示</string>
+    <!-- Remove ads, chat system lines, player card and team board (Android, 2026-11-25) -->
+    <string name="sec_purchase">购买</string>
+    <string name="remove_ads">移除广告</string>
+    <string name="remove_ads_sub">移除所有广告 · 一次性购买</string>
+    <string name="remove_ads_done">已购买 · 不再显示广告</string>
+    <string name="remove_ads_pending">等待付款 · 付款完成后广告即会消失</string>
+    <string name="remove_ads_error">暂时无法购买，请稍后再试</string>
+    <string name="remove_ads_a11y_price">移除广告，%1$s，购买</string>
+    <string name="remove_ads_a11y_done">移除广告，已购买</string>
+    <string name="remove_ads_a11y_pending">移除广告，等待付款</string>
+    <string name="remove_ads_link_a11y">移除广告，购买</string>
+    <string name="restore_purchase">恢复购买</string>
+    <string name="restore_purchase_sub">重新检查此 Google 账号的购买记录</string>
+    <string name="ads_removed_toast">已移除广告</string>
+    <string name="purchase_failed_toast">未能完成购买，请重试</string>
+    <string name="purchase_pending_toast">付款完成后广告即会消失</string>
+    <string name="restore_done_toast">已恢复“移除广告”</string>
+    <string name="restore_none_toast">此 Google 账号没有可恢复的购买</string>
+    <string name="restore_failed_toast">无法连接 Google Play</string>
+    <string name="delete_body_purchase">“移除广告”的购买会保留在你的 Google 账号中，可通过“恢复购买”重新获得。</string>
+    <string name="board_leave_body">你的对局已经结束。现在离开将看不到团队结果。</string>
+    <string name="chat_system_deleted_joined">一名已删除的玩家加入了房间</string>
+    <string name="chat_system_deleted_left">一名已删除的玩家离开了房间</string>
+    <string name="card_context_online">在线战绩</string>
+    <string name="best_none_a11y">暂无最佳</string>
+    <string name="best_hint_a11y">最佳 %1$d 好球 %2$d 坏球</string>
 </resources>

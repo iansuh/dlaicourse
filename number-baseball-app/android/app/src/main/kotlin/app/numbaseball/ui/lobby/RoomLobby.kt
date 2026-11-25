@@ -134,7 +134,8 @@ data class LobbyUiState(
     val me: LobbyPlayer? get() = players.firstOrNull { it.you }
     val seats: Int get() = (room?.settings?.teamSize ?: 1) * 2
     val full: Boolean get() = players.size >= seats
-    val unread: Int get() = chat.count { it.id > chatReadUpTo && it.senderId != room?.youId }
+    /** System lines never raise the badge (09 §2.1). */
+    val unread: Int get() = chat.count { it.id > chatReadUpTo && it.kind != ChatKind.SYSTEM && it.senderId != room?.youId }
 }
 
 /** Private room lobby (07 §3–5). The match starts by itself when both teams are full. */

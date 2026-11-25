@@ -445,4 +445,30 @@
     <string name="chat_system_generic">Novedad de la sala</string>
     <string name="card_record_error">No se pudo cargar el historial</string>
     <string name="card_record_none">No hay historial para mostrar</string>
+    <!-- Remove ads, chat system lines, player card and team board (Android, 2026-11-25) -->
+    <string name="sec_purchase">Compra</string>
+    <string name="remove_ads">Quitar anuncios</string>
+    <string name="remove_ads_sub">Quita todos los anuncios · pago único</string>
+    <string name="remove_ads_done">Comprado · sin anuncios</string>
+    <string name="remove_ads_pending">Pago pendiente · los anuncios desaparecen cuando se complete</string>
+    <string name="remove_ads_error">Ahora no se puede comprar. Inténtalo más tarde</string>
+    <string name="remove_ads_a11y_price">Quitar anuncios, %1$s, comprar</string>
+    <string name="remove_ads_a11y_done">Quitar anuncios, comprado</string>
+    <string name="remove_ads_a11y_pending">Quitar anuncios, pago pendiente</string>
+    <string name="remove_ads_link_a11y">Quitar anuncios, comprar</string>
+    <string name="restore_purchase">Restaurar compra</string>
+    <string name="restore_purchase_sub">Revisa las compras de esta cuenta de Google</string>
+    <string name="ads_removed_toast">Anuncios quitados</string>
+    <string name="purchase_failed_toast">No se pudo completar la compra. Inténtalo de nuevo</string>
+    <string name="purchase_pending_toast">Los anuncios desaparecen cuando se complete el pago</string>
+    <string name="restore_done_toast">Se restauró Quitar anuncios</string>
+    <string name="restore_none_toast">No hay compras que restaurar en esta cuenta de Google</string>
+    <string name="restore_failed_toast">No se puede conectar con Google Play</string>
+    <string name="delete_body_purchase">La compra de Quitar anuncios queda en tu cuenta de Google. Puedes recuperarla con Restaurar compra.</string>
+    <string name="board_leave_body">Tu duelo terminó. Si sales ahora, no verás el resultado del equipo.</string>
+    <string name="chat_system_deleted_joined">Un jugador eliminado entró en la sala</string>
+    <string name="chat_system_deleted_left">Un jugador eliminado salió de la sala</string>
+    <string name="card_context_online">Historial en línea</string>
+    <string name="best_none_a11y">sin mejor jugada aún</string>
+    <string name="best_hint_a11y">mejor: %1$d strikes, %2$d bolas</string>
 </resources>

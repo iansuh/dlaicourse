@@ -8,11 +8,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import app.numbaseball.ads.LocalAdsController
 import app.numbaseball.audio.LocalGameAudio
+import app.numbaseball.billing.LocalBilling
 import app.numbaseball.audio.LocalGameHaptics
 import app.numbaseball.audio.ViewGameHaptics
 import app.numbaseball.ui.design.LocalReduceMotion
@@ -29,6 +32,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val container = (application as NumBaseballApp).container
         // Ad consent and SDK start wait for the age screen (NbApp), so nothing ad-related happens before it.
+        // Remove ads: entitlement from Play at start and on every resume (refunds, pending payments, other devices).
+        container.billing.start()
+        lifecycle.addObserver(
+            object : DefaultLifecycleObserver {
+                override fun onResume(owner: LifecycleOwner) = container.billing.refresh()
+            },
+        )
         val vibrator = if (android.os.Build.VERSION.SDK_INT >= 31) {
             getSystemService(VibratorManager::class.java)?.defaultVibrator
         } else {
@@ -48,6 +58,7 @@ class MainActivity : AppCompatActivity() {
                 CompositionLocalProvider(
                     LocalAppContainer provides container,
                     LocalAdsController provides container.ads,
+                    LocalBilling provides container.billing,
                     LocalGameAudio provides container.audio,
                     LocalGameHaptics provides haptics,
                     LocalReduceMotion provides reduceMotion,

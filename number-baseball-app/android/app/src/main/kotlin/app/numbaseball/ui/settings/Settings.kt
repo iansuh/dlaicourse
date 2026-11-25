@@ -5,6 +5,7 @@ import app.numbaseball.audio.MusicTrack
 import android.media.AudioManager
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +47,8 @@ import app.numbaseball.audio.HapticCue
 import app.numbaseball.audio.LocalGameAudio
 import app.numbaseball.audio.LocalGameHaptics
 import app.numbaseball.audio.SoundCue
+import app.numbaseball.billing.PurchaseUiState
+import app.numbaseball.billing.RemoveAdsState
 import app.numbaseball.core.protocol.BlockedPlayer
 import app.numbaseball.core.protocol.ErrorCodes
 import app.numbaseball.data.account.AccountRepository
@@ -81,6 +84,7 @@ import app.numbaseball.ui.design.TopBar
 import app.numbaseball.ui.design.VSpacer
 import app.numbaseball.ui.design.VolumeSliderRow
 import app.numbaseball.ui.design.formatClock
+import app.numbaseball.ui.design.isLargeFont
 import app.numbaseball.ui.design.rememberToastState
 import app.numbaseball.ui.theme.NbColors
 import app.numbaseball.ui.theme.NbType
@@ -210,6 +214,10 @@ class SettingsActions(
     val onTerms: () -> Unit,
     val onLicences: () -> Unit,
     val onErrorShown: () -> Unit,
+    /** 구매 section (11 §1.1): start Play's purchase sheet, reconnect after an error, re-query Play. */
+    val onRemoveAds: () -> Unit = {},
+    val onRetryBilling: () -> Unit = {},
+    val onRestorePurchase: () -> Unit = {},
 )
 
 /** Settings (11): sound and vibration, chat safety, account and legal items. Every switch applies at once. */
@@ -221,6 +229,7 @@ fun SettingsScreen(
     contactEmail: String,
     languageTags: List<String>,
     actions: SettingsActions,
+    purchase: PurchaseUiState = PurchaseUiState(),
 ) {
     val audio = LocalGameAudio.current
     val haptics = LocalGameHaptics.current
@@ -329,6 +338,9 @@ fun SettingsScreen(
                 onClick = { deleteDialog = true },
                 modifier = Modifier.testTag("deleteAccount"),
             )
+            // Between 계정 and 정보 및 지원, always present (also for reviewers), 11 §1.1.
+            SectionHeader(stringResource(R.string.sec_purchase))
+            PurchaseRows(purchase, actions)
             SectionHeader(stringResource(R.string.sec_about))
             if (showPrivacyOptions) {
                 ListRow(stringResource(R.string.privacy_options), icon = R.drawable.ic_shield, subtitle = stringResource(R.string.privacy_options_sub), chevron = true, onClick = actions.onPrivacyOptions)
@@ -401,6 +413,112 @@ private fun languageName(tag: String): String = when (tag) {
     "ru" -> "Русский"
     "vi" -> "Tiếng Việt"
     else -> tag
+}
+
+/**
+ * "광고 제거" and "구매 복원" (11 §1.1): loading, not purchased with Play's price, purchased, pending, error. No lamp
+ * colours, badges or sale wording; the price is the only number and always comes from Play.
+ */
+@Composable
+private fun PurchaseRows(purchase: PurchaseUiState, actions: SettingsActions) {
+    val title = stringResource(R.string.remove_ads)
+    val sub = stringResource(R.string.remove_ads_sub)
+    when (val ads = purchase.removeAds) {
+        RemoveAdsState.Loading -> PurchaseRow(title, sub)
+        // The whole row starts the purchase; no chevron (it does not navigate).
+        is RemoveAdsState.Available -> PurchaseRow(
+            title, sub,
+            spoken = stringResource(R.string.remove_ads_a11y_price, ads.price),
+            onClick = actions.onRemoveAds,
+            modifier = Modifier.testTag("removeAdsRow"),
+        ) { Text(ads.price, style = NbType.body, color = NbColors.text2, maxLines = 1) }
+        RemoveAdsState.Owned -> PurchaseRow(title, stringResource(R.string.remove_ads_done), spoken = stringResource(R.string.remove_ads_a11y_done)) {
+            NbIcon(R.drawable.ic_check_circle, null, NbColors.text2)
+        }
+        RemoveAdsState.Pending -> PurchaseRow(title, stringResource(R.string.remove_ads_pending), spoken = stringResource(R.string.remove_ads_a11y_pending)) {
+            NbIcon(R.drawable.ic_hourglass_empty, null, NbColors.text2)
+        }
+        // Same warning colour as the silent-mode subtitle; "다시 시도" is the icon button and the whole row.
+        RemoveAdsState.Unavailable -> PurchaseRow(
+            title, stringResource(R.string.remove_ads_error),
+            subtitleColor = NbColors.strike,
+            onClick = actions.onRetryBilling,
+            iconButton = true,
+        ) { IconButton48(R.drawable.ic_refresh, stringResource(R.string.action_retry), actions.onRetryBilling, tint = NbColors.text2) }
+    }
+    if (purchase.removeAds == RemoveAdsState.Owned) return
+    InsetDivider()
+    RestoreRow(purchase.restoring, actions.onRestorePurchase)
+}
+
+/**
+ * A 구매 row (12.14: 64 dp, grows when the subtitle wraps). At large text (ADAPTIVE §2.5) the price or icon moves below
+ * the subtitle so the title and subtitle keep the full width.
+ */
+@Composable
+private fun PurchaseRow(
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
+    subtitleColor: androidx.compose.ui.graphics.Color = NbColors.text3,
+    spoken: String? = null,
+    onClick: (() -> Unit)? = null,
+    /** The trailing slot is a 48 dp icon button: the row ends 4 dp from the edge so its glyph aligns with the margin. */
+    iconButton: Boolean = false,
+    trailing: (@Composable () -> Unit)? = null,
+) {
+    val large = isLargeFont()
+    Row(
+        modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp)
+            .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
+            .then(if (spoken != null) Modifier.semantics(mergeDescendants = true) { contentDescription = spoken } else Modifier)
+            .padding(start = 16.dp, end = if (iconButton && !large) 4.dp else 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        NbIcon(R.drawable.ic_ad_off, null, NbColors.text2)
+        HSpacer(16.dp)
+        Column(Modifier.weight(1f).padding(vertical = 10.dp)) {
+            Text(title, style = NbType.subtitle, color = NbColors.chalk)
+            VSpacer(2.dp)
+            Text(subtitle, style = NbType.caption, color = subtitleColor)
+            if (large && trailing != null) {
+                VSpacer(4.dp)
+                trailing()
+            }
+        }
+        if (!large && trailing != null) {
+            HSpacer(16.dp)
+            trailing()
+        }
+    }
+}
+
+/** "구매 복원": while Play is queried the subtitle becomes a 3-lamp chase (chalk). */
+@Composable
+private fun RestoreRow(restoring: Boolean, onRestore: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp)
+            .clickable(enabled = !restoring, role = Role.Button, onClick = onRestore)
+            .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 10.dp)
+            .testTag("restorePurchase"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        NbIcon(R.drawable.ic_history, null, NbColors.text2)
+        HSpacer(16.dp)
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.restore_purchase), style = NbType.subtitle, color = NbColors.chalk)
+            VSpacer(2.dp)
+            if (restoring) {
+                Box(Modifier.heightIn(min = 18.dp), contentAlignment = Alignment.CenterStart) { ChaseLamps() }
+            } else {
+                Text(stringResource(R.string.restore_purchase_sub), style = NbType.caption, color = NbColors.text3)
+            }
+        }
+    }
 }
 
 /** Switch row (DESIGN_SYSTEM 12.14): one element with role switch; the whole row toggles. */
@@ -550,7 +668,8 @@ private fun DeleteDialog(deleting: Boolean, onCancel: () -> Unit, onConfirm: () 
     }
     DialogSurface(
         title = stringResource(R.string.delete_title),
-        body = stringResource(R.string.delete_body),
+        // POLICY_REVIEW Android item 13: the remove-ads purchase stays with the Google account and can be restored.
+        body = stringResource(R.string.delete_body) + "\n\n" + stringResource(R.string.delete_body_purchase),
         confirmLabel = stringResource(R.string.delete_confirm),
         onConfirm = onConfirm,
         dismissLabel = stringResource(R.string.action_cancel),

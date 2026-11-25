@@ -58,6 +58,11 @@ import app.numbaseball.ui.design.Lamp
 import app.numbaseball.ui.design.LampColor
 import app.numbaseball.ui.design.NameWithTag
 import app.numbaseball.ui.design.NbButton
+import app.numbaseball.ui.design.NbDialog
+import app.numbaseball.ui.results.RemoveAdsLink
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import app.numbaseball.ui.design.NbIcon
 import app.numbaseball.ui.design.NbScreen
 import app.numbaseball.ui.design.OutTag
@@ -91,8 +96,16 @@ fun TeamBoardScreen(
     /** Server time each offline player was first seen offline ([app.numbaseball.data.online.OnlineSession.offlineSince]). */
     offlineSince: Map<String, Long> = emptyMap(),
     serverNow: () -> Long = System::currentTimeMillis,
+    /** Live board after my duel: `close` / back asks first, then leaves the match (08 §1–2). */
+    onLeave: () -> Unit = {},
+    /** Final board only: false when it was reached through an interstitial (06 §4). */
+    showBanner: Boolean = true,
+    /** Final board only: the quiet "광고 제거" link (06 §1 rules), null = hidden. */
+    onRemoveAds: (() -> Unit)? = null,
 ) {
     val match = room.match ?: return
+    var confirmLeave by rememberSaveable { mutableStateOf(false) }
+    if (mode == BoardMode.LIVE) BackHandler { confirmLeave = true }
     val compact = isCompactHeight()
     val me = room.players.firstOrNull { it.id == room.youId }
     val myTeam = me?.team ?: Team.A
@@ -101,12 +114,27 @@ fun TeamBoardScreen(
     NbScreen(
         wash = if (won) NbColors.strikeTint else null,
         topBar = {
+            // 08 §2: my duel running → `arrow_back` (back to it); finished, others playing → `close` = leave dialog;
+            // all finished → team result, `close` = Home. The remove-ads link only on the final result (06 §4).
             TopBar(
                 title = stringResource(R.string.team_match),
                 navIcon = if (mode == BoardMode.OVERLAY) R.drawable.ic_arrow_back else R.drawable.ic_close,
-                navDescription = stringResource(if (mode == BoardMode.OVERLAY) R.string.back_to_duel else R.string.action_close),
-                onNav = onBack,
-                actions = { IconButton48(R.drawable.ic_chat, stringResource(R.string.chat_title), onChat, tint = NbColors.chalk) },
+                navDescription = stringResource(
+                    when (mode) {
+                        BoardMode.OVERLAY -> R.string.back_to_duel
+                        BoardMode.LIVE -> R.string.leave
+                        BoardMode.FINAL -> R.string.home
+                    },
+                ),
+                onNav = when (mode) {
+                    BoardMode.OVERLAY -> onBack
+                    BoardMode.LIVE -> ({ confirmLeave = true })
+                    BoardMode.FINAL -> onHome
+                },
+                actions = {
+                    if (mode == BoardMode.FINAL && onRemoveAds != null && !compact) RemoveAdsLink(onRemoveAds)
+                    IconButton48(R.drawable.ic_chat, stringResource(R.string.chat_title), onChat, tint = NbColors.chalk)
+                },
             )
         },
         bottomBar = {
@@ -122,13 +150,16 @@ fun TeamBoardScreen(
                     VSpacer(8.dp)
                     NbButton(stringResource(R.string.home), onHome, kind = ButtonKind.SECONDARY, modifier = Modifier.fillMaxWidth())
                 }
-                AdBanner()
+                if (showBanner) AdBanner()
             }
         },
     ) {
         if (mode == BoardMode.FINAL && compact) {
-            // Small window (D2-26): one 56 dp headline row with the score inline; the duel rows scroll below.
-            CompactFinalHeadline(match.result?.winner, myTeam, match.score.a, match.score.b)
+            // Small window (ADAPTIVE §1, D2-26): one 56 dp headline row with the score inline; the duel rows scroll below.
+            CompactFinalHeadline(match.result?.winner, myTeam, match.score.a, match.score.b, myWins, room.settings.teamSize)
+        } else if (compact) {
+            // Small window, live board: a 56 dp score block, no rule line (ADAPTIVE §1).
+            CompactScoreBlock(match.score.a, match.score.b)
         } else {
             if (mode == BoardMode.FINAL) {
                 FinalHero(match.result?.winner, myTeam, myWins, room.settings.teamSize)
@@ -142,6 +173,17 @@ fun TeamBoardScreen(
             val players = room.players.associateBy { it.id }
             match.duels.forEachIndexed { i, duel ->
                 if (i > 0) Hairline()
+                if (compact) {
+                    CompactDuelRow(
+                        duel = duel,
+                        a = players[duel.playerA],
+                        b = players[duel.playerB],
+                        mine = duel.index == match.myDuel?.index,
+                        offlineSince = offlineSince,
+                        serverNow = serverNow,
+                    )
+                    return@forEachIndexed
+                }
                 DuelRow(
                     duel = duel,
                     a = players[duel.playerA],
@@ -159,16 +201,31 @@ fun TeamBoardScreen(
                 Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                     NbIcon(R.drawable.ic_visibility, null, NbColors.text3, 20.dp)
                     HSpacer(8.dp)
-                    Text(stringResource(R.string.watching), style = NbType.caption, color = NbColors.text3, textAlign = TextAlign.Center)
+                    Text(stringResource(R.string.watching), style = NbType.caption, color = NbColors.text3, textAlign = TextAlign.Center, maxLines = if (compact) 1 else Int.MAX_VALUE, overflow = TextOverflow.Ellipsis)
                 }
             }
             Spacer(Modifier.heightIn(min = 16.dp))
         }
     }
+    if (confirmLeave) {
+        NbDialog(
+            title = stringResource(R.string.leave_room_title),
+            body = stringResource(R.string.board_leave_body),
+            confirmLabel = stringResource(R.string.leave),
+            onConfirm = {
+                confirmLeave = false
+                onLeave()
+            },
+            onDismiss = { confirmLeave = false },
+            dismissLabel = stringResource(R.string.action_cancel),
+            destructive = true,
+        )
+    }
 }
 
+/** Small-window team result headline (ADAPTIVE §1): lamps · "승리" (`title`) · "A 2 : 1 B" (letters `numLabel`, score Barlow 700 28 sp). */
 @Composable
-private fun CompactFinalHeadline(winner: Team?, myTeam: Team, scoreA: Int, scoreB: Int) {
+private fun CompactFinalHeadline(winner: Team?, myTeam: Team, scoreA: Int, scoreB: Int, myWins: Int, teamSize: Int) {
     val headline = stringResource(
         when (winner) {
             null -> R.string.res_team_draw
@@ -187,19 +244,130 @@ private fun CompactFinalHeadline(winner: Team?, myTeam: Team, scoreA: Int, score
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(headline, style = NbType.headline, color = NbColors.chalk, maxLines = 1)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            repeat(winsNeeded(teamSize)) { Lamp(LampColor.STRIKE, lit = it < myWins, size = 12.dp) }
+        }
         HSpacer(12.dp)
-        Text("·", style = NbType.headline, color = NbColors.text3)
-        HSpacer(12.dp)
+        Text(headline, style = NbType.title, color = NbColors.chalk, maxLines = 1)
+        HSpacer(16.dp)
+        InlineScore(scoreA, scoreB)
+    }
+}
+
+/** "A 2 : 1 B": team letters `numLabel`, score Barlow 700 28 sp (capped like every `num` style). */
+@Composable
+private fun InlineScore(scoreA: Int, scoreB: Int) {
+    val score = NbType.numStat.copy(fontSize = 28.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text("A", style = NbType.numLabel, color = NbColors.teamA)
+        HSpacer(8.dp)
+        Text(scoreA.toString(), style = score, color = if (scoreA >= scoreB) NbColors.chalk else NbColors.text3)
+        HSpacer(8.dp)
+        Text(":", style = score, color = NbColors.text3)
+        HSpacer(8.dp)
+        Text(scoreB.toString(), style = score, color = if (scoreB >= scoreA) NbColors.chalk else NbColors.text3)
+        HSpacer(8.dp)
+        Text("B", style = NbType.numLabel, color = NbColors.teamB)
+    }
+}
+
+/** Small-window live board score block (ADAPTIVE §1): 56 dp, badges · score · badges, no rule line. */
+@Composable
+private fun CompactScoreBlock(scoreA: Int, scoreB: Int) {
+    val teamA = stringResource(R.string.team_a)
+    val teamB = stringResource(R.string.team_b)
+    val score = NbType.numStat.copy(fontSize = 28.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold)
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 12.dp).semantics(mergeDescendants = true) { contentDescription = "$teamA $scoreA, $teamB $scoreB" },
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         TeamBadge(Team.A)
+        HSpacer(12.dp)
+        Text(scoreA.toString(), style = score, color = if (scoreA >= scoreB) NbColors.chalk else NbColors.text3)
         HSpacer(8.dp)
-        Text(scoreA.toString(), style = NbType.numStat, color = if (scoreA >= scoreB) NbColors.chalk else NbColors.text3)
+        Text(":", style = score, color = NbColors.text3)
         HSpacer(8.dp)
-        Text(":", style = NbType.numStat, color = NbColors.text3)
-        HSpacer(8.dp)
-        Text(scoreB.toString(), style = NbType.numStat, color = if (scoreB >= scoreA) NbColors.chalk else NbColors.text3)
-        HSpacer(8.dp)
+        Text(scoreB.toString(), style = score, color = if (scoreB >= scoreA) NbColors.chalk else NbColors.text3)
+        HSpacer(12.dp)
         TeamBadge(Team.B)
+    }
+}
+
+/**
+ * Small-window duel row (ADAPTIVE §1): 56 dp, one name line each side, a 72 dp status column holding the round and either
+ * the winner ("승 A"), a status word (reconnecting, draw, forfeit, decided) or both best hints ("2S 1B · 1S 2B").
+ */
+@Composable
+private fun CompactDuelRow(
+    duel: DuelSummary,
+    a: PlayerView?,
+    b: PlayerView?,
+    mine: Boolean,
+    offlineSince: Map<String, Long>,
+    serverNow: () -> Long,
+) {
+    val finished = duel.phase == DuelPhase.FINISHED
+    val result = duel.result
+    val cancelled = result?.reason == EndReason.CANCELLED
+    val winner = result?.winner?.takeIf { !cancelled }
+    val disconnected = !finished && listOfNotNull(a, b).any { !it.connected }
+    fun hint(best: app.numbaseball.core.protocol.BestHint?) = best?.let { "${it.strikes}S ${it.balls}B" } ?: "–"
+    val wonLabel = stringResource(R.string.tag_won)
+    val spoken = buildString {
+        append(duel.index + 1).append(", ")
+        append(a?.let { "${it.nickname} ${it.tag}" }.orEmpty()).append(", ")
+        append(b?.let { "${it.nickname} ${it.tag}" }.orEmpty())
+        if (duel.round > 0) append(", R").append(duel.round)
+        if (winner != null) append(", ").append(wonLabel).append(" ").append(winner.name) else append(", ").append(hint(duel.bestHintA)).append(" · ").append(hint(duel.bestHintB))
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .heightIn(min = 55.dp)
+            .background(if (mine) NbColors.surface1 else NbColors.bg)
+            .clearAndSetSemantics { contentDescription = spoken },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.width(3.dp).fillMaxHeight().padding(vertical = 10.dp).background(NbColors.teamA, RoundedCornerShape(topEnd = 2.dp, bottomEnd = 2.dp)))
+        CompactName(a, finished && winner != null && winner != Team.A, Modifier.weight(1f).padding(start = 9.dp))
+        Column(Modifier.width(72.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            if (duel.round > 0) Text(stringResource(R.string.duel_round, duel.round), style = NbType.numLabel, color = NbColors.text3)
+            when {
+                winner != null -> Row(verticalAlignment = Alignment.CenterVertically) {
+                    Lamp(LampColor.STRIKE, lit = true, size = 6.dp)
+                    HSpacer(4.dp)
+                    Text("$wonLabel ${winner.name}", style = NbType.micro, color = NbColors.strike, maxLines = 1)
+                }
+                cancelled -> Text(stringResource(R.string.status_decided), style = NbType.caption, color = NbColors.text2, maxLines = 1)
+                finished && result?.winner == null -> Text(stringResource(R.string.status_draw), style = NbType.caption, color = NbColors.text2, maxLines = 1)
+                disconnected -> ReconnectStatus(listOfNotNull(a, b).filter { !it.connected }.mapNotNull { offlineSince[it.id] }.minOrNull(), serverNow)
+                // 72 dp column: numLabel without tracking fits "2S 1B · 1S 2B".
+                else -> Text(
+                    "${hint(duel.bestHintA)} · ${hint(duel.bestHintB)}",
+                    style = NbType.numLabel.copy(fontSize = 13.sp, letterSpacing = 0.sp),
+                    color = NbColors.text2,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    softWrap = false,
+                )
+            }
+        }
+        CompactName(b, finished && winner != null && winner != Team.B, Modifier.weight(1f).padding(end = 9.dp), end = true)
+        Box(Modifier.width(3.dp).fillMaxHeight().padding(vertical = 10.dp).background(NbColors.teamB, RoundedCornerShape(topStart = 2.dp, bottomStart = 2.dp)))
+    }
+}
+
+@Composable
+private fun CompactName(player: PlayerView?, loser: Boolean, modifier: Modifier, end: Boolean = false) {
+    val name = when {
+        player == null -> ""
+        player.deleted -> stringResource(R.string.chat_deleted_player)
+        else -> player.nickname
+    }
+    Box(modifier, contentAlignment = if (end) Alignment.CenterEnd else Alignment.CenterStart) {
+        NameWithTag(name, player?.takeIf { !it.deleted }?.tag, nameStyle = NbType.bodyStrong, nameColor = if (loser) NbColors.text3 else NbColors.chalk)
     }
 }
 
@@ -300,13 +468,19 @@ private fun DuelRow(
     val bestA = duel.bestHintA?.let { it.strikes to it.balls } ?: hintA?.let(::bestHint)
     val bestB = duel.bestHintB?.let { it.strikes to it.balls } ?: hintB?.let(::bestHint)
     val disconnected = !finished && listOfNotNull(a, b).any { !it.connected }
+    val wonLabel = stringResource(R.string.tag_won)
+    val noBest = stringResource(R.string.best_none_a11y)
+    val bestSpoken: @Composable (Pair<Int, Int>?) -> String = { best ->
+        best?.let { stringResource(R.string.best_hint_a11y, it.first, it.second) } ?: noBest
+    }
+    val spokenA = if (winner == Team.A) wonLabel else bestSpoken(bestA)
+    val spokenB = if (winner == Team.B) wonLabel else bestSpoken(bestB)
+    // "1, 새벽투수 4821 승, 민트초코 0912 최고 2스트라이크 1볼, R7"; null best: "최고 기록 없음" (08 §5).
     val spoken = buildString {
         append(duel.index + 1).append(", ")
-        append(a?.let { "${it.nickname} ${it.tag}" }.orEmpty())
-        bestA?.let { append(" ").append(it.first).append("S ").append(it.second).append("B") }
+        append(a?.let { "${it.nickname} ${it.tag}" }.orEmpty()).append(" ").append(spokenA)
         append(", ")
-        append(b?.let { "${it.nickname} ${it.tag}" }.orEmpty())
-        bestB?.let { append(" ").append(it.first).append("S ").append(it.second).append("B") }
+        append(b?.let { "${it.nickname} ${it.tag}" }.orEmpty()).append(" ").append(spokenB)
         if (duel.round > 0) append(", R").append(duel.round)
     }
     // 72 dp minimum including the 1 dp hairline above: the row grows with large text instead of clipping (D2-03).
@@ -397,6 +571,12 @@ private fun PlayerCell(player: PlayerView?, winner: Boolean, loser: Boolean, bes
                 } else {
                     Text("${best.first}S ${best.second}B", style = NbType.numTag, color = if (loser) NbColors.text3 else NbColors.text2)
                 }
+            }
+            // No resolved guess yet (or a 1.0 server without best hints): "최고 –", so every row keeps its two lines (08 §2).
+            player != null -> {
+                Text(stringResource(R.string.best), style = NbType.caption, color = NbColors.text3)
+                HSpacer(6.dp)
+                Text("–", style = NbType.numTag, color = NbColors.text3)
             }
         }
     }

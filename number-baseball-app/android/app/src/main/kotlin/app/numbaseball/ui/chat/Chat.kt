@@ -68,7 +68,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.numbaseball.R
+import app.numbaseball.core.protocol.BlockedPlayer
 import app.numbaseball.core.protocol.ChatKind
+import app.numbaseball.core.text.QuickPhrases
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import androidx.compose.ui.unit.em
 import app.numbaseball.core.protocol.ChatMessage
 import app.numbaseball.core.protocol.ErrorCodes
 import app.numbaseball.core.protocol.RoomKind
@@ -114,11 +119,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** The six presets of 09 §4 / 05 §2.8, as protocol phrase ids (the design's "Tough one" has no id; `close_one` stands in). */
+/** The quick-match sheet (05 §2.8, 09 §4): exactly these 6 protocol ids in this order (2 × 3 grid). */
 val DESIGN_PHRASES = listOf("good_luck", "good_game", "thinking", "close_one", "rematch", "well_played")
 
-/** Chips in the room chat (shot chat-ko): the presets with a protocol id that matches their meaning. */
-private val CHAT_CHIPS = listOf("good_luck", "good_game", "thinking", "rematch", "well_played")
+/** Room chat chips (09 §4, DESIGN_SYSTEM 12.15): all 12 protocol ids in protocol order. */
+private val CHAT_CHIPS = QuickPhrases.ALL
 
 /** One phrase per 3 s (09 §4); the text limit comes from the server. */
 const val PHRASE_COOLDOWN_MS = 3_000L
@@ -154,11 +159,13 @@ class ChatViewModel(
     private val settings: SettingsRepository,
     accounts: AccountRepository,
     serverInfo: StateFlow<ServerInfo?>,
+    /** My block list: system lines about a blocked player are dropped here too (09 §2.1; the server already hides them). */
+    blocked: Flow<List<BlockedPlayer>> = flowOf(emptyList()),
 ) : ViewModel() {
     private val local = MutableStateFlow(ChatUiState())
 
     val state: StateFlow<ChatUiState> = combine(
-        combine(local, session.room, session.chat, ::Triple),
+        combine(local, session.room, session.chat.withoutBlockedSystemLines(blocked), ::Triple),
         settings.settings,
         serverInfo,
         accounts.state,
@@ -333,27 +340,41 @@ private fun messageText(message: ChatMessage): String = when (message.kind) {
 }
 
 /**
- * A system line (protocol 1.1 §9.3): "민트초코#0912 님이 들어왔어요" / "… 님이 나갔어요"; a deleted subject reads "삭제된 플레이어";
- * unknown codes get a generic line.
+ * A system line (protocol 1.1 §9.3, 09 §2.1): "민트초코#0912 님이 들어왔어요" / "… 님이 나갔어요"; a deleted subject
+ * (`subject*` null) reads "탈퇴한 플레이어가 들어왔어요 / 나갔어요"; unknown codes "방에 변화가 있어요". Host changes are not
+ * chat lines.
  */
 @Composable
 fun systemText(message: ChatMessage): String {
-    val subject = message.subjectNickname?.let { name -> message.subjectTag?.let { "$name#$it" } ?: name } ?: stringResource(R.string.chat_deleted_player)
+    val subject = message.subjectNickname?.let { name -> message.subjectTag?.let { "$name#$it" } ?: name }
     return when (message.systemCode) {
-        SystemChatCodes.PLAYER_JOINED -> stringResource(R.string.chat_system_joined, subject)
-        SystemChatCodes.PLAYER_LEFT -> stringResource(R.string.chat_system_left, subject)
+        SystemChatCodes.PLAYER_JOINED -> subject?.let { stringResource(R.string.chat_system_joined, it) } ?: stringResource(R.string.chat_system_deleted_joined)
+        SystemChatCodes.PLAYER_LEFT -> subject?.let { stringResource(R.string.chat_system_left, it) } ?: stringResource(R.string.chat_system_deleted_left)
         else -> stringResource(R.string.chat_system_generic)
     }
 }
 
+/** Drops system lines whose subject I blocked (or who blocked me, as far as the list knows). */
+fun Flow<List<ChatMessage>>.withoutBlockedSystemLines(blocked: Flow<List<BlockedPlayer>>): Flow<List<ChatMessage>> =
+    combine(this, blocked) { lines, list ->
+        if (list.isEmpty()) {
+            lines
+        } else {
+            val ids = list.mapTo(HashSet()) { it.id }
+            lines.filterNot { it.kind == ChatKind.SYSTEM && it.subjectId in ids }
+        }
+    }
+
 /** System line: centred `caption` `text3`, no bubble, no actions (09 Message anatomy). */
 @Composable
 private fun SystemLine(message: ChatMessage) {
+    // Max 2 lines; nicknames are at most 12 characters, so the name never ellipsizes inside the sentence.
     Text(
         systemText(message),
         style = NbType.caption,
         color = NbColors.text3,
         textAlign = TextAlign.Center,
+        maxLines = if (isLargeFont()) 3 else 2,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
     )
 }
@@ -380,6 +401,8 @@ private fun Messages(state: ChatUiState, modifier: Modifier, held: Long?, onLong
                 SystemLine(message)
                 return@items
             }
+            // Unknown phrase ids (a newer server) are ignored, not rendered as empty bubbles (09 §4).
+            if (message.kind == ChatKind.PHRASE && message.phraseId?.let { phraseText(it) } == null) return@items
             val mine = message.senderId != null && message.senderId == state.myId
             val showTime = mine && message == state.messages.lastOrNull { it.senderId == state.myId }
             ChatLine(message, mine, state.teamRoom, held == message.id, showTime, onLongPress, onName)
@@ -445,7 +468,10 @@ private fun ChatLine(
     }
 }
 
-/** Masked words (`***`) in `text3` (09 §3). */
+/**
+ * Masked words (`***`, tracking 0.1 em, TalkBack reads the text as is): `text2` on `surface4` in others' bubbles
+ * (5.59 : 1), `textDisabled` on chalk in mine (5.48 : 1); never `text3` on `surface4` (DESIGN_SYSTEM 2.2 / 12.15).
+ */
 @Composable
 private fun maskedText(text: String, mine: Boolean) = buildAnnotatedString {
     var i = 0
@@ -459,7 +485,7 @@ private fun maskedText(text: String, mine: Boolean) = buildAnnotatedString {
         var end = start
         while (end < text.length && text[end] == '*') end++
         // Others' bubbles: `text2` on `surface4` (5.59 : 1); `text3` there is 4.39 : 1, under AA (DESIGN_SYSTEM 2.2, D2-12).
-        withStyle(SpanStyle(color = if (mine) NbColors.textDisabled else NbColors.text2)) { append(text.substring(start, end)) }
+        withStyle(SpanStyle(color = if (mine) NbColors.textDisabled else NbColors.text2, letterSpacing = 0.1.em)) { append(text.substring(start, end)) }
         i = end
     }
 }
@@ -478,11 +504,12 @@ private fun PhraseChips(state: ChatUiState, onPhrase: (String) -> Unit) {
             CHAT_CHIPS.forEach { id ->
                 val shape = RoundedCornerShape(NbRadius.s)
                 Box(Modifier.heightIn(min = 48.dp).rowClick(enabled = enabled) { onPhrase(id) }, contentAlignment = Alignment.Center) {
+                    // Disabled (rate limited): `surface2` fill, no outline, `textDisabled` (09 §3, shot chat-limit-en).
                     Box(
                         Modifier
                             .heightIn(min = 32.dp)
                             .clip(shape)
-                            .border(1.dp, if (enabled) NbColors.outline else NbColors.line, shape)
+                            .then(if (enabled) Modifier.border(1.dp, NbColors.outline, shape) else Modifier.background(NbColors.surface2))
                             .padding(horizontal = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {

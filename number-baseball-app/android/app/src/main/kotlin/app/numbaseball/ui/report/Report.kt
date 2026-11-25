@@ -133,21 +133,36 @@ class ReportViewModel(target: ReportTarget, private val safety: SafetyRepository
  * Player card (12 §2): identity (badge in team rooms, name + tag, context line), actions: report (chevron) and block
  * (destructive, with subtitle) or unblock. The other player's record is not part of the protocol, so it is not shown.
  */
+/** Record area of the player card (12 §2): any player's overall online record from `GET /api/v1/players/{id}`. */
+sealed interface CardRecord {
+    data object Loading : CardRecord
+    data class Loaded(val stats: Stats) : CardRecord
+    /** 404 (deleted, banned, bot, or a block either way): the same words for every cause, so a block is never revealed. */
+    data object NotAvailable : CardRecord
+    /** Network error or 429. */
+    data object Failed : CardRecord
+}
+
+/**
+ * Player card (12 §2): identity, record states that keep the sheet height within 2 dp, report and block rows (they
+ * work in every record state). The context line is "B팀 · 온라인 대전 기록", or just "B팀" / nothing when no record is shown.
+ */
 @Composable
 fun PlayerCard(
     target: ReportTarget,
-    context: String?,
     self: Boolean,
     blocked: Boolean,
     onReport: () -> Unit,
     onBlock: () -> Unit,
     onUnblock: () -> Unit,
-    /** The player's record (12 §2; protocol 1.1 `GET /api/v1/players/{id}`). */
-    record: Stats? = null,
-    /** While the record loads (chase lamps), or why it is missing (`caption` `text3`); both null: nothing shown. */
-    recordLoading: Boolean = false,
-    recordMessage: String? = null,
+    record: CardRecord = CardRecord.Loading,
+    onRetryRecord: () -> Unit = {},
 ) {
+    // Already blocked: the record shows the Not available line.
+    val shown = if (blocked) CardRecord.NotAvailable else record
+    val teamName = target.team?.let { stringResource(if (it == Team.A) R.string.team_a else R.string.team_b) }
+    val withRecord = shown is CardRecord.Loading || shown is CardRecord.Loaded
+    val context = listOfNotNull(teamName, if (withRecord) stringResource(R.string.card_context_online) else null).joinToString(" · ").ifEmpty { null }
     // Prototype `.card-h`: 8 / 16 / 16, 12 dp gap.
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
         if (target.team != null) {
@@ -159,17 +174,27 @@ fun PlayerCard(
             if (context != null) Text(context, style = NbType.caption, color = NbColors.text3)
         }
     }
-    if (record != null && !blocked) {
-        // `.card-rec`: 20 dp gaps, 0 / 16 / 16; values Barlow 600 24 / 28 over `caption` labels.
-        Row(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            RecordValue(record.wins, stringResource(R.string.record_win))
-            RecordValue(record.losses, stringResource(R.string.record_loss))
-            RecordValue(record.draws, stringResource(R.string.record_draw))
+    // `.card-rec`: 20 dp gaps, 0 / 16 / 16; values Barlow 600 24 / 28 over `caption` labels (46 dp); the message
+    // states use one 48 dp line, so the sheet moves by at most 2 dp between states.
+    when (shown) {
+        is CardRecord.Loaded, CardRecord.Loading -> {
+            val stats = (shown as? CardRecord.Loaded)?.stats
+            Row(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                RecordValue(stats?.wins, stringResource(R.string.record_win))
+                RecordValue(stats?.losses, stringResource(R.string.record_loss))
+                RecordValue(stats?.draws, stringResource(R.string.record_draw))
+            }
         }
-    } else if (recordLoading && !blocked) {
-        Box(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp).heightIn(min = 48.dp), contentAlignment = Alignment.CenterStart) { ChaseLamps() }
-    } else if (recordMessage != null && !blocked) {
-        Text(recordMessage, style = NbType.caption, color = NbColors.text3, modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp))
+        CardRecord.NotAvailable -> Box(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp).padding(bottom = 14.dp), contentAlignment = Alignment.CenterStart) {
+            Text(stringResource(R.string.card_record_none), style = NbType.caption, color = NbColors.text3)
+        }
+        CardRecord.Failed -> Row(
+            Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = 16.dp, end = 8.dp).padding(bottom = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.card_record_error), style = NbType.caption, color = NbColors.text3, modifier = Modifier.weight(1f))
+            NbButton(stringResource(R.string.action_retry), onRetryRecord, kind = ButtonKind.TEXT)
+        }
     }
     if (!self) {
         Hairline()
@@ -192,10 +217,11 @@ fun PlayerCard(
     VSpacer(8.dp)
 }
 
+/** A value, or "–" in `textDisabled` while loading (labels as normal, no spinner). */
 @Composable
-private fun RecordValue(value: Int, label: String) {
+private fun RecordValue(value: Int?, label: String) {
     Column {
-        Text(value.toString(), style = NbType.numStat.copy(fontSize = 24.sp, lineHeight = 28.sp), color = NbColors.chalk)
+        Text(value?.toString() ?: "–", style = NbType.numStat.copy(fontSize = 24.sp, lineHeight = 28.sp), color = if (value == null) NbColors.textDisabled else NbColors.chalk)
         Text(label, style = NbType.caption, color = NbColors.text3)
     }
 }

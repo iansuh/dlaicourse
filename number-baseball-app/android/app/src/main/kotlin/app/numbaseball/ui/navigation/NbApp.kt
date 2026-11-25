@@ -45,6 +45,17 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import app.numbaseball.LocalAppContainer
 import app.numbaseball.R
+import app.numbaseball.ads.FinishedMatchKind
+import app.numbaseball.ads.LocalTouchTracker
+import app.numbaseball.ads.TouchTracker
+import app.numbaseball.ads.rememberInterstitialGate
+import app.numbaseball.ads.trackTouches
+import app.numbaseball.billing.AdEntitlement
+import app.numbaseball.billing.BillingEvent
+import app.numbaseball.billing.LocalBilling
+import app.numbaseball.billing.PurchaseUiState
+import app.numbaseball.billing.RemoveAdsState
+import app.numbaseball.data.online.isReviewRoom
 import app.numbaseball.audio.HapticCue
 import app.numbaseball.audio.LocalGameAudio
 import app.numbaseball.audio.LocalGameHaptics
@@ -109,6 +120,7 @@ import app.numbaseball.ui.profile.ProfileViewModel
 import app.numbaseball.ui.quickmatch.QuickMatchScreen
 import app.numbaseball.ui.quickmatch.QuickMatchViewModel
 import app.numbaseball.ui.report.BlockDialog
+import app.numbaseball.ui.report.CardRecord
 import app.numbaseball.ui.report.PlayerCard
 import app.numbaseball.ui.report.ReportSheet
 import app.numbaseball.ui.report.ReportTarget
@@ -143,8 +155,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun NbApp(ageRepository: AgeRepository, accountRepository: AccountRepository) {
     val toast = remember { ToastState() }
-    CompositionLocalProvider(LocalAppToast provides toast) {
-        BoxWithConstraints(Modifier.fillMaxSize().background(NbColors.bg)) {
+    val touches = remember { TouchTracker() }
+    CompositionLocalProvider(LocalAppToast provides toast, LocalTouchTracker provides touches) {
+        BillingToasts()
+        BoxWithConstraints(Modifier.fillMaxSize().background(NbColors.bg).trackTouches(touches)) {
             AppContent(ageRepository, accountRepository)
             ToastHost(toast)
             if (maxWidth < NbLayout.minWindowDp.dp || maxHeight < NbLayout.minWindowDp.dp) WindowTooSmall()
@@ -197,16 +211,42 @@ internal fun WindowTooSmall() {
     }
 }
 
-/** Starts UMP + Mobile Ads only now that the age treatment is known, and refines it with Play Age Signals. */
+/**
+ * Starts UMP + Mobile Ads only now that the age treatment is known, and refines it with Play Age Signals. Waits for the
+ * remove-ads entitlement (cache or Play, at most a few seconds): an owner never gets the UMP form or a Mobile Ads init
+ * (POLICY_REVIEW Android item 13). If the purchase disappears later (refund), consent starts then.
+ */
 @Composable
 private fun AdsAfterAgeCheck(age: AgeState.Known) {
     val container = LocalAppContainer.current
     val activity = LocalContext.current.findActivity()
-    LaunchedEffect(Unit) {
-        activity?.let { container.ads.gatherConsent(it, age.adTreatment) }
-        container.ageRepository.refreshSignals()
+    val entitlement by container.billing.entitlement.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { container.ageRepository.refreshSignals() }
+    LaunchedEffect(entitlement) {
+        if (entitlement == AdEntitlement.ADS_ALLOWED) activity?.let { container.ads.gatherConsent(it, age.adTreatment) }
     }
     LaunchedEffect(age.adTreatment) { container.ads.updateAgeTreatment(age.adTreatment) }
+}
+
+/** Toasts for purchase and restore results (11 §1.1, 06 §1), wherever the player started them. */
+@Composable
+private fun BillingToasts() {
+    val billing = LocalBilling.current
+    val toast = LocalAppToast.current
+    val resources = LocalResources.current
+    LaunchedEffect(billing) {
+        billing.events.collect { event ->
+            val (text, error) = when (event) {
+                BillingEvent.PURCHASED -> R.string.ads_removed_toast to false
+                BillingEvent.PENDING -> R.string.purchase_pending_toast to false
+                BillingEvent.PURCHASE_FAILED -> R.string.purchase_failed_toast to true
+                BillingEvent.RESTORED -> R.string.restore_done_toast to false
+                BillingEvent.NOTHING_TO_RESTORE -> R.string.restore_none_toast to false
+                BillingEvent.RESTORE_FAILED -> R.string.restore_failed_toast to true
+            }
+            toast.show(resources.getString(text), error = error)
+        }
+    }
 }
 
 /** Sheets hosted by dialog destinations draw their own scrim and reach behind the system bars. */
@@ -287,10 +327,11 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
         composable<ComputerMatchRoute> { entry ->
             val route = entry.toRoute<ComputerMatchRoute>()
             val vm = containerViewModel {
-                ComputerMatchViewModel(route.digits, ComputerLevel.valueOf(route.level), route.practice, offlineGame, ads.interstitials, roundSeconds = route.roundSeconds)
+                ComputerMatchViewModel(route.digits, ComputerLevel.valueOf(route.level), route.practice, offlineGame, roundSeconds = route.roundSeconds)
             }
             val state by vm.state.collectAsStateWithLifecycle()
             val room by container.onlineSession.room.collectAsStateWithLifecycle()
+            val gate = rememberInterstitialGate()
             if (route.practice) SwitchToRealMatchWhenStarted(navController)
             val practice = if (route.practice) {
                 room?.let { r -> PracticeInfo(r.code.orEmpty(), r.players.count { !it.left }, r.settings.teamSize * 2) }
@@ -315,7 +356,10 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
                     onHowToPlay = { navController.navigate(HowToPlayRoute) },
                     onToRoom = if (route.practice) back else null,
                     onFinished = { summary ->
-                        navController.navigate(summary.toRoute()) { popUpTo<ComputerMatchRoute> { inclusive = true } }
+                        // 06 §3: the interstitial (if due) sits between the match end and the results; never for practice.
+                        gate.run(if (route.practice) FinishedMatchKind.PRACTICE else FinishedMatchKind.COMPUTER, summary.reason) { adShown ->
+                            navController.navigate(summary.toRoute(afterAd = adShown)) { popUpTo<ComputerMatchRoute> { inclusive = true } }
+                        }
                     },
                 ),
             )
@@ -386,16 +430,35 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
         composable<OnlineMatchRoute> { OnlineMatchDestination(navController, home, recordResult) }
 
         composable<TeamBoardRoute> { entry ->
-            val mode = BoardMode.valueOf(entry.toRoute<TeamBoardRoute>().mode)
+            val route = entry.toRoute<TeamBoardRoute>()
+            val mode = BoardMode.valueOf(route.mode)
             val room by container.onlineSession.room.collectAsStateWithLifecycle()
             val current = room
+            val gate = rememberInterstitialGate()
+            val billingState by container.billing.state.collectAsStateWithLifecycle()
+            // On the live board the team result appears when the last duel ends (06 §4), after the interstitial if one
+            // is due (06 §3: one per team match, at its very end, never on the live board).
+            var finalReached by rememberSaveable { mutableStateOf(false) }
+            var afterAd by rememberSaveable { mutableStateOf(route.afterAd) }
+            val matchResult = current?.match?.result
+            LaunchedEffect(matchResult != null) {
+                if (mode == BoardMode.LIVE && matchResult != null && !finalReached) {
+                    val review = current.isReviewRoom
+                    gate.run(
+                        if (review) FinishedMatchKind.REVIEW_ROOM else FinishedMatchKind.TEAM_MATCH,
+                        null,
+                        chatOpen = { navController.currentDestination?.hasRoute<ChatRoute>() == true },
+                    ) { adShown ->
+                        afterAd = adShown
+                        finalReached = true
+                    }
+                }
+            }
             if (current?.match == null) {
                 LaunchedEffect(Unit) { home() }
                 return@composable
             }
-            val finished = current.match?.result != null
-            // The live board turns into the team result when the last duel ends (06 §4).
-            val shown = if (mode == BoardMode.LIVE && finished) BoardMode.FINAL else mode
+            val shown = if (mode == BoardMode.LIVE && finalReached) BoardMode.FINAL else mode
             val backToRoom: () -> Unit = {
                 val code = current.code
                 if (code != null) {
@@ -410,19 +473,25 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
                 mode = shown,
                 offlineSince = offlineSince,
                 serverNow = container.onlineSession::serverNow,
-                onBack = if (shown == BoardMode.OVERLAY) back else backToRoom,
+                onBack = back,
+                onLeave = {
+                    container.onlineSession.leaveRoom()
+                    home()
+                },
                 onChat = { navController.navigate(ChatRoute) },
                 onBackToRoom = backToRoom,
                 onHome = {
                     container.onlineSession.leaveRoom()
                     home()
                 },
+                showBanner = !afterAd,
+                onRemoveAds = removeAdsAction(billingState, review = current.isReviewRoom),
             )
         }
 
         composable<ResultsRoute> { entry ->
-            val summary = entry.toRoute<ResultsRoute>().toSummary()
-            ResultsDestination(summary, navController, home)
+            val route = entry.toRoute<ResultsRoute>()
+            ResultsDestination(route.toSummary(), afterAd = route.afterAd, reviewRoom = route.reviewRoom, navController, home)
         }
 
         dialog<ChatRoute>(dialogProperties = SheetDialog) {
@@ -625,6 +694,8 @@ private fun OnlineMatchDestination(navController: NavHostController, home: () ->
     var phraseSheet by rememberSaveable { mutableStateOf(false) }
     var lastPhraseAt by remember { mutableStateOf(0L) }
     var bubble by remember { mutableStateOf<PhraseBubble?>(null) }
+    val gate = rememberInterstitialGate()
+    val chatOpen = { phraseSheet || navController.currentDestination?.hasRoute<ChatRoute>() == true }
     val current = state
     if (current == null) {
         LaunchedEffect(Unit) { home() }
@@ -683,10 +754,27 @@ private fun OnlineMatchDestination(navController: NavHostController, home: () ->
             onTeamBoard = if (current.mode == MatchMode.TEAM) ({ navController.navigate(TeamBoardRoute(BoardMode.OVERLAY.name)) }) else null,
             onFinished = { summary ->
                 recordResult(summary)
-                if (summary.teamMatch) {
-                    navController.navigate(TeamBoardRoute(BoardMode.FINAL.name)) { popUpTo<OnlineMatchRoute> { inclusive = true } }
-                } else {
-                    navController.navigate(summary.toRoute()) { popUpTo<OnlineMatchRoute> { inclusive = true } }
+                val finishedRoom = room
+                val review = finishedRoom?.isReviewRoom == true
+                val number = finishedRoom?.match?.number
+                val kind = when {
+                    review -> FinishedMatchKind.REVIEW_ROOM
+                    summary.teamMatch -> FinishedMatchKind.TEAM_MATCH
+                    else -> FinishedMatchKind.ONLINE_DUEL
+                }
+                // 06 §3: after the whole match only (a team match reaches this when my duel was the last one), never when
+                // a rematch already started, with chat or keyboard open, or after the player left this screen.
+                gate.run(
+                    kind,
+                    summary.reason,
+                    chatOpen = chatOpen,
+                    nextMatchStarting = { session.room.value?.match.let { it != null && it.number != number && it.result == null } },
+                ) { adShown ->
+                    if (summary.teamMatch) {
+                        navController.navigate(TeamBoardRoute(BoardMode.FINAL.name, afterAd = adShown)) { popUpTo<OnlineMatchRoute> { inclusive = true } }
+                    } else {
+                        navController.navigate(summary.toRoute(afterAd = adShown, reviewRoom = review)) { popUpTo<OnlineMatchRoute> { inclusive = true } }
+                    }
                 }
             },
         ),
@@ -716,7 +804,8 @@ private fun ChatCue(muted: Boolean) {
     val last = chat.lastOrNull()
     LaunchedEffect(last?.id) {
         if (last == null) return@LaunchedEffect
-        if (last.id > seen && !muted && last.senderId != room?.youId) container.audio.play(SoundCue.CHAT_MESSAGE)
+        // System lines never play `chat_message` (09 §2.1).
+        if (last.id > seen && !muted && last.kind != ChatKind.SYSTEM && last.senderId != room?.youId) container.audio.play(SoundCue.CHAT_MESSAGE)
         seen = maxOf(seen, last.id)
     }
 }
@@ -726,7 +815,7 @@ private fun ChatDestination(navController: NavHostController, copy: (String, Str
     val container = LocalAppContainer.current
     val scope = rememberCoroutineScope()
     val toast = LocalAppToast.current
-    val vm = containerViewModel { ChatViewModel(onlineSession, settingsRepository, accountRepository, accountRepository.serverInfo) }
+    val vm = containerViewModel { ChatViewModel(onlineSession, settingsRepository, accountRepository, accountRepository.serverInfo, safety.blocked) }
     val state by vm.state.collectAsStateWithLifecycle()
     var blockTarget by remember { mutableStateOf<ChatMessage?>(null) }
     val blocked = stringResource(R.string.blocked_toast)
@@ -801,26 +890,26 @@ private fun PlayerCardDestination(route: PlayerCardRoute, navController: NavHost
     val blockedList by container.safety.blocked.collectAsStateWithLifecycle()
     var confirmBlock by remember { mutableStateOf(false) }
     val target = ReportTarget(route.playerId, route.nickname, route.tag, team = route.team.takeIf { it.isNotEmpty() }?.let { Team.valueOf(it) }, roomId = route.roomId.ifEmpty { null })
-    val teamName = target.team?.let { stringResource(if (it == Team.A) R.string.team_a else R.string.team_b) }
-    val context = listOfNotNull(teamName, if (route.quick) stringResource(R.string.card_context_quick) else null).joinToString(" · ").ifEmpty { null }
     val blockedText = stringResource(R.string.blocked_toast)
     val undo = stringResource(R.string.action_undo)
     val close: () -> Unit = { navController.popBackStack() }
-    // The record comes from `GET /api/v1/players/{id}` (protocol 1.1); 404 = unknown, deleted or blocked.
-    var record by remember { mutableStateOf<ApiResult<Stats>?>(null) }
-    LaunchedEffect(route.playerId) { record = container.safety.playerRecord(route.playerId) }
-    val recordMessage = when (val r = record) {
-        is ApiResult.Failure -> stringResource(if (r.code == ErrorCodes.NOT_FOUND) R.string.card_record_none else R.string.card_record_error)
-        ApiResult.NetworkError -> stringResource(R.string.card_record_error)
-        else -> null
+    // The record comes from `GET /api/v1/players/{id}` (protocol 1.1), fetched when the card opens and kept for its
+    // lifetime; 404 = unknown, deleted, banned, bot or blocked (12 §2).
+    var record by remember { mutableStateOf<CardRecord>(CardRecord.Loading) }
+    var attempt by remember { mutableStateOf(0) }
+    LaunchedEffect(route.playerId, attempt) {
+        record = CardRecord.Loading
+        record = when (val r = container.safety.playerRecord(route.playerId)) {
+            is ApiResult.Success -> CardRecord.Loaded(r.value)
+            is ApiResult.Failure -> if (r.code == ErrorCodes.NOT_FOUND) CardRecord.NotAvailable else CardRecord.Failed
+            ApiResult.NetworkError -> CardRecord.Failed
+        }
     }
     SheetFrame(onDismiss = close) {
         PlayerCard(
-            record = (record as? ApiResult.Success)?.value,
-            recordLoading = record == null,
-            recordMessage = recordMessage,
+            record = record,
+            onRetryRecord = { attempt++ },
             target = target,
-            context = context,
             self = route.self,
             blocked = blockedList.any { it.id == route.playerId },
             onReport = {
@@ -863,40 +952,38 @@ private fun SwitchToRealMatchWhenStarted(navController: NavHostController) {
     }
 }
 
+/**
+ * "광고 제거" on the result screens (06 §1): only while Play offers the product (not owned, not pending, billing
+ * answered), never in the review room. Tapping opens Play's purchase sheet directly; the result stays underneath.
+ */
 @Composable
-private fun ResultsDestination(summary: MatchSummary, navController: NavHostController, home: () -> Unit) {
-    val container = LocalAppContainer.current
+private fun removeAdsAction(state: PurchaseUiState, review: Boolean): (() -> Unit)? {
+    val billing = LocalBilling.current
     val activity = LocalContext.current.findActivity()
-    val shownAt = remember { SystemClock.elapsedRealtime() }
+    if (review || state.removeAds !is RemoveAdsState.Available || activity == null) return null
+    return { billing.purchase(activity) }
+}
+
+@Composable
+private fun ResultsDestination(summary: MatchSummary, afterAd: Boolean, reviewRoom: Boolean, navController: NavHostController, home: () -> Unit) {
+    val container = LocalAppContainer.current
     val session = container.onlineSession
-    val adDue = remember { summary.mode == MatchMode.COMPUTER && container.ads.interstitials.isDue() }
-    // Interstitials only when leaving a vs-computer result (never after online matches or practice, never on start/exit).
-    val leave: (() -> Unit) -> Unit = { next ->
-        if (summary.mode == MatchMode.COMPUTER && activity != null) {
-            // Music pauses while an interstitial is open (DESIGN_SYSTEM 13); the next screen asks for its own loop.
-            if (adDue) container.audio.setMusic(null)
-            container.ads.interstitials.showIfDue(activity, SystemClock.elapsedRealtime() - shownAt, next)
-        } else {
-            next()
-        }
-    }
+    val billingState by container.billing.state.collectAsStateWithLifecycle()
+    // The interstitial, if any, came before this screen (06 §3); its buttons ("다시 하기", "홈으로", "방으로 돌아가기")
+    // never trigger one, so a rematch or the next duel never waits behind an ad.
     if (summary.mode == MatchMode.PRACTICE) SwitchToRealMatchWhenStarted(navController)
     val room by session.room.collectAsStateWithLifecycle()
     val goHome: () -> Unit = {
-        leave {
-            if (summary.mode.online) session.leaveRoom()
-            home()
-        }
+        if (summary.mode.online) session.leaveRoom()
+        home()
     }
     BackHandler(onBack = goHome)
     val rematch: (() -> Unit)? = when (summary.mode) {
         MatchMode.COMPUTER, MatchMode.PRACTICE -> {
             {
-                leave {
-                    val level = (summary.level ?: ComputerLevel.NORMAL).name
-                    navController.navigate(ComputerMatchRoute(summary.digits, level, practice = summary.mode == MatchMode.PRACTICE, roundSeconds = summary.roundSeconds ?: 600)) {
-                        popUpTo<ResultsRoute> { inclusive = true }
-                    }
+                val level = (summary.level ?: ComputerLevel.NORMAL).name
+                navController.navigate(ComputerMatchRoute(summary.digits, level, practice = summary.mode == MatchMode.PRACTICE, roundSeconds = summary.roundSeconds ?: 600)) {
+                    popUpTo<ResultsRoute> { inclusive = true }
                 }
             }
         }
@@ -928,7 +1015,8 @@ private fun ResultsDestination(summary: MatchSummary, navController: NavHostCont
     }
     ResultsScreen(
         summary = summary,
-        adDue = adDue,
+        showBanner = !afterAd,
+        onRemoveAds = removeAdsAction(billingState, review = reviewRoom || summary.mode == MatchMode.PRACTICE),
         onRematch = rematch,
         onHome = goHome,
         onBackToRoom = backToRoom,
@@ -943,6 +1031,7 @@ private fun SettingsDestination(navController: NavHostController, back: () -> Un
     val vm = containerViewModel { SettingsViewModel(settingsRepository, accountRepository, languageSettings, safety) }
     val state by vm.state.collectAsStateWithLifecycle()
     val privacyOptionsRequired by container.ads.privacyOptionsRequired.collectAsStateWithLifecycle()
+    val purchase by container.billing.state.collectAsStateWithLifecycle()
     val activity = LocalContext.current.findActivity()
     val deletedText = stringResource(R.string.account_deleted)
     LaunchedEffect(state.deleted) {
@@ -953,7 +1042,10 @@ private fun SettingsDestination(navController: NavHostController, back: () -> Un
     }
     SettingsScreen(
         state = state,
+        // UMP's REQUIRED status (11 §1.1). A `remove_ads` owner never runs UMP, so the row stays hidden for them unless
+        // consent was gathered earlier in this process (then they can still change it).
         showPrivacyOptions = privacyOptionsRequired,
+        purchase = purchase,
         versionName = container.config.versionName,
         contactEmail = container.config.contactEmail,
         languageTags = SupportedLanguages.TAGS,
@@ -973,6 +1065,9 @@ private fun SettingsDestination(navController: NavHostController, back: () -> Un
             onTerms = { navController.navigate(LegalRoute(LegalDocument.TERMS.name)) },
             onLicences = { navController.navigate(LicencesRoute) },
             onErrorShown = vm::onErrorShown,
+            onRemoveAds = { activity?.let { container.billing.purchase(it) } },
+            onRetryBilling = container.billing::retry,
+            onRestorePurchase = container.billing::restore,
         ),
     )
 }
@@ -986,7 +1081,7 @@ private fun strikesText(strikes: List<Int?>) = strikes.joinToString(",") { it?.t
 
 private fun strikesOf(text: String): List<Int?> = if (text.isEmpty()) emptyList() else text.split(",").map { it.toIntOrNull() }
 
-private fun MatchSummary.toRoute() = ResultsRoute(
+private fun MatchSummary.toRoute(afterAd: Boolean = false, reviewRoom: Boolean = false) = ResultsRoute(
     mode = mode.name,
     outcome = outcome.name,
     reason = reason.name,
@@ -1000,6 +1095,8 @@ private fun MatchSummary.toRoute() = ResultsRoute(
     opponentStrikes = strikesText(opponentStrikes),
     durationSeconds = durationSeconds ?: 0,
     roundSeconds = roundSeconds ?: 0,
+    afterAd = afterAd,
+    reviewRoom = reviewRoom,
 )
 
 private fun ResultsRoute.toSummary() = MatchSummary(

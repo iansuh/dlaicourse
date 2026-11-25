@@ -25,8 +25,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object OnlineMatchRoute
 
-/** [mode] is a BoardMode name. */
-@Serializable data class TeamBoardRoute(val mode: String)
+/** [mode] is a BoardMode name. [afterAd]: the final board was reached through an interstitial (no banner, 06 §4). */
+@Serializable data class TeamBoardRoute(val mode: String, val afterAd: Boolean = false)
 
 /** A finished duel (06). Strikes per round are comma separated, `-` for a missed round. */
 @Serializable data class ResultsRoute(
@@ -43,6 +43,10 @@ import kotlinx.serialization.Serializable
     val opponentStrikes: String = "",
     val durationSeconds: Int = 0,
     val roundSeconds: Int = 0,
+    /** Reached through an interstitial: no banner on this screen (DESIGN_SYSTEM 13 "one ad per moment"). */
+    val afterAd: Boolean = false,
+    /** Review-room duel (Play review path): no "광고 제거" link and no interstitial. */
+    val reviewRoom: Boolean = false,
 )
 
 @Serializable data object ChatRoute

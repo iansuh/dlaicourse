@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generated from scratchpad strings table; ko is the source language (design/screens). -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- App name (owner decision): full name, and main/sub for the UI -->
     <string name="app_name">Number Baseball: Quiet Duel</string>
@@ -250,7 +250,8 @@
     <string name="rematch">Play again</string>
     <string name="home">Home</string>
     <string name="back_to_room">Back to room</string>
-    <string name="ad_notice">A short ad plays before the next screen</string>
+    <!-- Unused since 2026-11-25 (interstitial moved before the result, 06 §3); kept so the translated files stay in sync. -->
+    <string name="ad_notice" tools:ignore="UnusedResources">A short ad plays before the next screen</string>
     <string name="report_player">Report</string>
 
     <!-- Room: create, join, lobby -->
@@ -343,7 +344,8 @@
     <string name="version">Version</string>
 
     <!-- Player card, report, block -->
-    <string name="card_context_quick">Quick match record</string>
+    <!-- Unused since protocol 1.1 (card_context_online); kept so the translated files stay in sync. -->
+    <string name="card_context_quick" tools:ignore="UnusedResources">Quick match record</string>
     <string name="report_action">Report</string>
     <string name="block_action">Block</string>
     <string name="unblock_action">Unblock</string>
@@ -471,9 +473,35 @@
     <string name="tut_out">When no digit matches, it’s an **out**.</string>
     <string name="tut_4">The hidden number is **0 4 7**. Guess it yourself.</string>
     <string name="tut_done">All strikes wins! If both of you solve it in the same round, it’s a draw.</string>
-    <string name="chat_system_joined">%1$s joined</string>
-    <string name="chat_system_left">%1$s left</string>
-    <string name="chat_system_generic">Room update</string>
+    <string name="chat_system_joined">%1$s joined the room</string>
+    <string name="chat_system_left">%1$s left the room</string>
+    <string name="chat_system_generic">Something changed in the room</string>
     <string name="card_record_error">Couldn’t load the record</string>
-    <string name="card_record_none">No record to show</string>
+    <string name="card_record_none">Record not available</string>
+    <!-- Remove ads (owner decision 2026-11-25) -->
+    <string name="sec_purchase">Purchase</string>
+    <string name="remove_ads">Remove ads</string>
+    <string name="remove_ads_sub">Removes all ads · one-time purchase</string>
+    <string name="remove_ads_done">Purchased · no ads</string>
+    <string name="remove_ads_pending">Payment pending · ads go away once it clears</string>
+    <string name="remove_ads_error">Can’t buy right now. Try again later</string>
+    <string name="remove_ads_a11y_price">Remove ads, %1$s, buy</string>
+    <string name="remove_ads_a11y_done">Remove ads, purchased</string>
+    <string name="remove_ads_a11y_pending">Remove ads, payment pending</string>
+    <string name="remove_ads_link_a11y">Remove ads, buy</string>
+    <string name="restore_purchase">Restore purchase</string>
+    <string name="restore_purchase_sub">Checks purchases on this Google account</string>
+    <string name="ads_removed_toast">Ads removed</string>
+    <string name="purchase_failed_toast">The purchase didn’t go through. Please try again</string>
+    <string name="purchase_pending_toast">Ads go away once the payment clears</string>
+    <string name="restore_done_toast">Remove ads restored</string>
+    <string name="restore_none_toast">No purchase to restore on this Google account</string>
+    <string name="restore_failed_toast">Can’t connect to Google Play</string>
+    <string name="delete_body_purchase">A Remove ads purchase stays with your Google account. You can get it back with Restore purchase.</string>
+    <string name="board_leave_body">Your duel is over. If you leave now, you won’t see the team result.</string>
+    <string name="chat_system_deleted_joined">A deleted player joined the room</string>
+    <string name="chat_system_deleted_left">A deleted player left the room</string>
+    <string name="card_context_online">Online record</string>
+    <string name="best_none_a11y">no best yet</string>
+    <string name="best_hint_a11y">best %1$d strikes %2$d balls</string>
 </resources>

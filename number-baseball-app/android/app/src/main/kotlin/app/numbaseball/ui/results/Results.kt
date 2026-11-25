@@ -4,6 +4,8 @@ import androidx.compose.ui.unit.sp
 import app.numbaseball.audio.ScreenMusic
 import app.numbaseball.audio.MusicTrack
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,7 +54,6 @@ import app.numbaseball.ui.design.DigitSlots
 import app.numbaseball.ui.design.HSpacer
 import app.numbaseball.ui.design.Hairline
 import app.numbaseball.ui.design.IconButton48
-import app.numbaseball.ui.design.IconNote
 import app.numbaseball.ui.design.Lamp
 import app.numbaseball.ui.design.LampColor
 import app.numbaseball.ui.design.NbButton
@@ -76,12 +77,14 @@ import kotlinx.coroutines.delay
 
 /**
  * Duel result (06 §1–3): verdict hero, the revealed numbers, the per-round strike line score, then the next game. The
- * banner shows only when no interstitial is due ([adDue] shows the notice instead) and never after practice.
+ * banner shows unless this screen was reached through an interstitial ([showBanner] false) and never after practice.
+ * [onRemoveAds] non-null shows the quiet "광고 제거" text button in the top bar (06 §1; hidden in small windows).
  */
 @Composable
 fun ResultsScreen(
     summary: MatchSummary,
-    adDue: Boolean,
+    showBanner: Boolean,
+    onRemoveAds: (() -> Unit)?,
     onRematch: (() -> Unit)?,
     onHome: () -> Unit,
     onBackToRoom: (() -> Unit)?,
@@ -103,7 +106,7 @@ fun ResultsScreen(
     }
     val guard: (() -> Unit) -> () -> Unit = { action -> { if (ready) action() } }
     val compact = isCompactHeight()
-    val showBanner = !adDue && summary.mode != MatchMode.PRACTICE
+    val banner = showBanner && summary.mode != MatchMode.PRACTICE
     NbScreen(
         wash = if (summary.outcome == Outcome.WIN) NbColors.strikeTint else null,
         statusBarPadding = false,
@@ -114,11 +117,12 @@ fun ResultsScreen(
                 navDescription = stringResource(R.string.home),
                 onNav = guard(onHome),
                 actions = {
+                    if (onRemoveAds != null && !compact) RemoveAdsLink(onRemoveAds)
                     if (onReport != null) IconButton48(R.drawable.ic_flag, stringResource(R.string.report_player), onReport, tint = NbColors.text2)
                 },
             )
         },
-        bottomBar = { if (showBanner) AdBanner() },
+        bottomBar = { if (banner) AdBanner() },
     ) {
         val scroll = rememberScrollState()
         val (primaryLabel, primary, secondaryLabel, secondary) = when {
@@ -134,7 +138,6 @@ fun ResultsScreen(
                 Modifier.weight(1f).fillMaxWidth().fadingEdges(bottom = 16.dp, enabled = scroll.canScrollForward).verticalScroll(scroll),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                val headline = NbType.display.copy(fontSize = 32.sp, lineHeight = 40.sp)
                 val headlineText = stringResource(headlineRes(summary.outcome))
                 val sub = resultSubline(summary)
                 // Only the headline row is drawn; TalkBack still reads the sub line (ADAPTIVE.md §1, D2-36).
@@ -142,7 +145,12 @@ fun ResultsScreen(
                     Modifier.fillMaxWidth().heightIn(min = 56.dp).semantics(mergeDescendants = true) { heading(); contentDescription = "$headlineText. $sub" },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(headlineText, style = headline, color = NbColors.chalk, textAlign = TextAlign.Center)
+                    // ADAPTIVE §1: 12 dp lamps + headline `title`, one line.
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { HeroLamps(summary) }
+                        HSpacer(12.dp)
+                        Text(headlineText, style = NbType.title, color = NbColors.chalk, maxLines = 1)
+                    }
                 }
                 val theirs = stringResource(R.string.opp_secret)
                 DigitSlots(
@@ -176,11 +184,6 @@ fun ResultsScreen(
             Spacer(Modifier.heightIn(min = 16.dp).weight(1f))
         }
         Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp)) {
-            if (adDue) {
-                Box(Modifier.fillMaxWidth().padding(bottom = 16.dp), contentAlignment = Alignment.Center) {
-                    IconNote(R.drawable.ic_info, stringResource(R.string.ad_notice))
-                }
-            }
             NbButton(stringResource(primaryLabel), guard(primary), modifier = Modifier.fillMaxWidth().testTag("resultPrimary"))
             if (secondaryLabel != null && secondary != null) {
                 VSpacer(8.dp)
@@ -189,6 +192,30 @@ fun ResultsScreen(
         }
     }
 }
+
+/**
+ * The quiet "광고 제거" / "Remove ads" text button of the result top bars (06 §1, DESIGN_SYSTEM 12.13 Text): `labelSmall`
+ * `text2`, 36 dp visual, 48 dp target, 8 dp side padding. It never moves, blinks or carries a badge.
+ */
+@Composable
+fun RemoveAdsLink(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val label = stringResource(R.string.remove_ads)
+    val spoken = stringResource(R.string.remove_ads_link_a11y)
+    Box(
+        modifier
+            .heightIn(min = 48.dp)
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics(mergeDescendants = true) { contentDescription = spoken }
+            .padding(horizontal = 8.dp)
+            .testTag(REMOVE_ADS_LINK_TAG),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, style = NbType.labelSmall, color = NbColors.text2, maxLines = 1, softWrap = false)
+    }
+}
+
+/** Test tag of the result top-bar link (QA hook: never on match, waiting, lobby or chat screens). */
+const val REMOVE_ADS_LINK_TAG = "removeAdsLink"
 
 private data class Actions(val primaryLabel: Int, val primary: () -> Unit, val secondaryLabel: Int?, val secondary: (() -> Unit)?)
 
@@ -208,13 +235,7 @@ private fun Hero(summary: MatchSummary, compact: Boolean) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (!compact) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                when (summary.outcome) {
-                    Outcome.WIN -> repeat(summary.digits) { Lamp(LampColor.STRIKE, lit = true, size = 12.dp) }
-                    Outcome.LOSE -> repeat(summary.digits) { Lamp(LampColor.STRIKE, lit = false, size = 12.dp) }
-                    Outcome.DRAW -> Lamp(LampColor.CHALK, lit = true, size = 12.dp)
-                }
-            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { HeroLamps(summary) }
         }
         Text(
             headline,
@@ -224,6 +245,16 @@ private fun Hero(summary: MatchSummary, compact: Boolean) {
             modifier = Modifier.exactLineHeight(if (compact) NbType.headline else NbType.display).semantics { heading() },
         )
         Text(sub, style = NbType.body, color = NbColors.text2, textAlign = TextAlign.Center)
+    }
+}
+
+/** n lamps 12 dp (win: all lit strike; lose: all unlit; draw: one chalk lamp). */
+@Composable
+private fun HeroLamps(summary: MatchSummary) {
+    when (summary.outcome) {
+        Outcome.WIN -> repeat(summary.digits) { Lamp(LampColor.STRIKE, lit = true, size = 12.dp) }
+        Outcome.LOSE -> repeat(summary.digits) { Lamp(LampColor.STRIKE, lit = false, size = 12.dp) }
+        Outcome.DRAW -> Lamp(LampColor.CHALK, lit = true, size = 12.dp)
     }
 }
 
