@@ -224,3 +224,18 @@ fun QaAppContent(container: QaContainer, banner: Boolean = true) {
 }
 
 
+
+/**
+ * A confirmed, still open Android defect (docs/qa/DEFECTS.md). [block] asserts the CORRECT behaviour and must fail today;
+ * when the defect is fixed it passes, this fails and says to remove the wrapper (same convention as KnownDefects.kt in the
+ * backend QA suites).
+ */
+fun knownDefect(id: String, block: () -> Unit) {
+    val failure = try {
+        block()
+        null
+    } catch (e: AssertionError) {
+        e
+    }
+    if (failure == null) throw AssertionError("$id is fixed: remove the knownDefect wrapper and mark it Verified in DEFECTS.md")
+}

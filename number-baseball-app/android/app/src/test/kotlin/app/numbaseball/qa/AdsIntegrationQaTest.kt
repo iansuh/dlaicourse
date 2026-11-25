@@ -70,7 +70,7 @@ class AdsIntegrationQaTest {
         assertFalse("no banner on the secret entry", ui.hasBanner())
         ui.type("012")
         compose.onNodeWithText("Lock in").performClick()
-        ui.waitTag("key_0")
+        ui.waitText("Pitch")
         assertFalse("no banner while guessing", ui.hasBanner())
         ui.type("345")
         compose.onNodeWithText("Pitch").performClick()

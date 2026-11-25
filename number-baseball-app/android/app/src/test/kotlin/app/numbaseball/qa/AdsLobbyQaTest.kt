@@ -53,9 +53,9 @@ class AdsLobbyQaTest {
         compose.onNodeWithTag("practice").performClick()
         ui.waitText("Pick your secret number")
         assertFalse("no banner in the practice secret entry", ui.hasBanner())
-        ui.type("012")
+        ui.type("0123")
         compose.onNodeWithText("Lock in").performClick()
-        ui.waitTag("key_0")
+        ui.waitText("Pitch")
         assertFalse("no banner in the practice game", ui.hasBanner())
         val before = c.ads.interstitial.finishedSinceLastAd
         ui.forfeit()

@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import app.numbaseball.ads.AD_BANNER_TAG
 import app.numbaseball.data.age.AgeBand
@@ -51,12 +52,14 @@ class QaDriver(val compose: ComposeContentTestRule) {
     /** Home → vs Computer → Start → secret 012 → Lock in. Leaves the match on its guessing phase. */
     fun startComputerMatch() {
         waitTag("quickMatch")
-        compose.onNodeWithText("vs Computer").performClick()
-        compose.onNodeWithTag("cpuStart").performClick()
-        waitText("Pick your secret number")
+        compose.onNodeWithText("vs Computer", substring = true).performScrollTo().performClick()
+        waitTag("cpuStart")
+        compose.onNodeWithTag("cpuStart").performScrollTo().performClick()
+        waitTag("key_0") // the secret entry (its title is "Secret number" in compact windows)
         type("012")
         compose.onNodeWithText("Lock in").performClick()
-        waitTag("key_0")
+        // The secret is set on Dispatchers.Default (a real thread): wait for the guessing phase's "Pitch" key.
+        waitText("Pitch")
         compose.waitForIdle()
     }
 
@@ -101,6 +104,9 @@ class QaDriver(val compose: ComposeContentTestRule) {
         while (spent <= maxMillis) {
             if (done()) return true
             tick(100)
+            // The offline game works on Dispatchers.Default (real threads): give them real time to answer.
+            Thread.sleep(8)
+            compose.waitForIdle()
             spent += 100
         }
         return done()
