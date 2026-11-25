@@ -28,6 +28,9 @@ sealed interface Outgoing {
 class ClientSession(val accountId: String, capacity: Int = 512) {
     val outgoing = Channel<Outgoing>(capacity)
 
+    /** Completed by the socket writer once it has sent everything queued (including the close frame) or stopped. */
+    val flushed = kotlinx.coroutines.CompletableDeferred<Unit>()
+
     @Volatile
     var open = true
         private set

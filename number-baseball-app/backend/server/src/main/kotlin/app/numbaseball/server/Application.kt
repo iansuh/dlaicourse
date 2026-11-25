@@ -84,7 +84,7 @@ import kotlin.time.Duration.Companion.seconds
 
 private val log = LoggerFactory.getLogger("app.numbaseball.server")
 
-const val DEFAULT_TERMS_VERSION = "2026-11-v1"
+const val DEFAULT_TERMS_VERSION = "2026-11-v3"
 const val MAX_BODY_BYTES = 4096
 
 /** Everything the routes need; also reachable from tests through [ServicesKey]. */
@@ -215,7 +215,13 @@ fun Application.module(config: Config = Config.fromEnv(), baseClock: Clock = Clo
         }
     }
     // StopPreparing fires before the engine closes sockets (Stopping is too late). Rooms live in memory: on a graceful stop players get room_left{closed} and close 1001; unfinished matches record nothing.
-    monitor.subscribe(ApplicationStopPreparing) { runBlocking { hub.shutdown() } }
+    monitor.subscribe(ApplicationStopPreparing) {
+        runBlocking {
+            val closing = hub.shutdown()
+            // Wait (bounded) until every writer has sent room_left and the 1001 close frame before the engine stops.
+            kotlinx.coroutines.withTimeoutOrNull(2_000) { closing.forEach { it.flushed.await() } }
+        }
+    }
     monitor.subscribe(ApplicationStopped) { db.close() }
 }
 
@@ -224,11 +230,15 @@ fun Application.module(config: Config = Config.fromEnv(), baseClock: Clock = Clo
 private suspend fun io.ktor.server.websocket.DefaultWebSocketServerSession.gameSocket(services: Services, account: Account) {
     val session = ClientSession(account.id)
     val writer = launch {
-        for (out in session.outgoing) {
-            when (out) {
-                is Outgoing.Msg -> send(Frame.Text(ProtocolJson.encodeToString(ServerMessage.serializer(), out.message)))
-                is Outgoing.Close -> { close(CloseReason(out.code, out.reason)); break }
+        try {
+            for (out in session.outgoing) {
+                when (out) {
+                    is Outgoing.Msg -> send(Frame.Text(ProtocolJson.encodeToString(ServerMessage.serializer(), out.message)))
+                    is Outgoing.Close -> { close(CloseReason(out.code, out.reason)); break }
+                }
             }
+        } finally {
+            session.flushed.complete(Unit)
         }
     }
     services.hub.connect(account, session)

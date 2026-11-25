@@ -56,3 +56,9 @@ The numbered Korean list with where each value goes is in `docs/play/RELEASE_REA
 
 ## Usage limits
 When agents stop with a usage-limit error, note the reset time and resume work after it. An hourly scheduled task bound to this session does the commit + resume check; delete it when the project is finished.
+
+## Next steps (2026-11-26, end of the development pass)
+- All development workstreams are done; see `docs/play/RELEASE_READINESS.md` (status, test numbers, open Minor/Trivial defects, manual device checklist, owner list).
+- Fixed after the readiness pass: graceful-stop flake (writer flush wait before engine stop, `acSrv01` 6/6) and stale `DEFAULT_TERMS_VERSION`.
+- Before the production release: (1) a final design sign-off review (opus) on the round-2 renders (`design/REVIEW_PHASE2_ROUND2.md` still says not signed off; fix round 2 addressed all its items); (2) make the release build fail when `docs/play/*.md` still contain `[대괄호]` placeholders (check in `generateLegalTexts`); (3) the manual on-device checklist once the owner has AdMob, Play Console and license testers.
+- The hourly scheduled task was deleted because nothing runs while we wait on the owner. Create a new one when work resumes.
