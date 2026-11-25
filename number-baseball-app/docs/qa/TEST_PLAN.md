@@ -50,13 +50,13 @@ Effort follows risk: R1–R4 get exhaustive automated tests; R5–R9 get device 
 | Level | What | Where | Run |
 | --- | --- | --- | --- |
 | Unit / differential (core) | rules, AI, Duel, TeamMatch, filters, protocol JSON vs QA oracle and corpora | `backend/core/src/test/kotlin/app/numbaseball/core/qa/` | `cd backend && ./gradlew test` |
-| Server black-box | REST + WebSocket scenarios written against `protocol.md` with JDK clients | `backend/server/src/test/kotlin/app/numbaseball/server/qa/` | start the server, then `NB_QA_BASE_URL=http://localhost:8080 ./gradlew :server:test` (tests are `@Ignore`d until the server lands; see 3.4) |
+| Server black-box | REST + WebSocket scenarios written against `protocol.md` with JDK clients; they start the real server module in-process on a free port (`QaServer.start`, relaxed limits + `TEST_HOOKS` clock) | `backend/server/src/test/kotlin/app/numbaseball/server/qa/` | `cd backend && ./gradlew :server:test` (all green; open server defects are listed in `KnownServerDefects.OPEN`). Against an external test server: `NB_QA_BASE_URL=http://localhost:8080 NB_QA_ADMIN_TOKEN=... ./gradlew :server:test` (tests needing extra instances are skipped) |
 | Android unit / Robolectric / Roborazzi | view models, ads gating logic, sound settings, screenshots per size/font/locale | `android/app/src/test/` (QA cases to be added next to the Android engineer's tests) | locally: `cd android && ./gradlew :app:testDebugUnitTest` (SDK at `/opt/android-sdk`) |
 | Instrumented / device | TalkBack, split-screen, audio focus, backup restore, UMP | `android/app/src/androidTest/` + manual | emulator/device; Firebase Test Lab optional |
 | Exploratory | charters (section 10) | session notes in `docs/qa/sessions/` | timeboxed |
 | Policy / traffic | Data safety vs traffic capture, pre-launch report | manual + checklist | before each release |
 
-3.4 Server black-box tests need a server with: rate limits relaxed for the QA IP (`QA_DISABLE_RATE_LIMITS` or equivalent, to be agreed), `ADMIN_TOKEN` unset (admin invisible test) and a second run with it set, optionally `APP_ADS_TXT`, `REVIEW_ROOM_CODE`, log file (`NB_QA_SERVER_LOG`) and DB path (`NB_QA_DB_PATH`) for the privacy scan, and a test clock hook for 30-day / 180-day time travel (requested in DEF-009).
+3.4 Server black-box tests use `RELAXED_RATE_LIMITS=true` and `TEST_HOOKS=true` (in-process by default). Time-dependent scenarios (round timers 30/60/120/600 s, 60 s reconnect window, 30-minute lobby clean-up, 24 h chat restriction, 10-minute transfer codes, hourly limits) run on their own instance and move the server clock with `POST /admin/v1/test/clock?advanceMs=N` instead of waiting. Strict-limit scenarios start an instance with `relaxed = false`; the privacy scan reads the captured server log and the instance's SQLite file.
 
 ## 4. Conventions
 
@@ -505,6 +505,6 @@ gap), **Trivial** (cosmetic, wording).
 | ACC nickname (core) | `NicknameCorpusQaTest` (4) | pass (DEF-007 marks, DEF-035, DEF-039 fixed during phase 1) |
 | PROTO (core) | `ProtocolDecodingQaTest` (7) | pass |
 | Oracle / corpora | `QaOracleSelfTest` (8), `QaCorporaWellFormedTest` (9) | pass |
-| Server: SEC, PROTO, QM, ROOM, TIME, RECON, CHAT, SAFE, TERMS, DEL, ACC, PRIV, REV, ADS-24, STAT | `ProtocolSecurityQaTest` (12), `MatchFlowQaTest` (13), `ChatSafetyQaTest` (8), `AccountLifecycleQaTest` (7) | ignored: server not implemented yet; policy items also wait for protocol.md (DEF-011) |
+| Server: SEC, PROTO, QM, ROOM, TIME, RECON, TEAM, CHAT, SAFE, TERMS, DEL, ACC, PRIV, REV, ADS-24, STAT, SRV | `ProtocolSecurityQaTest` (26), `MatchFlowQaTest` (31), `ChatSafetyQaTest` (15), `AccountLifecycleQaTest` (12) | pass; known server defects (DEF-012, DEF-048, DEF-049) are strict expected failures |
 | Server corpus loader | `ServerCorpusSmokeQaTest` (3) | pass |
 | Android (AGE, OFF, PRAC, ADS, SND, L10N, A11Y, WIN, FONT, NET, BAK) | to be written in `android/app/src/test` and `androidTest` | pending: next phase; `:app:testDebugUnitTest` currently cannot resolve Robolectric's runtime jar (host `gcp.mirrors.maven.org` blocked by the network allowlist) |
