@@ -23,7 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,7 +51,10 @@ import app.numbaseball.audio.LocalGameHaptics
 import app.numbaseball.audio.MusicTrack
 import app.numbaseball.audio.ScreenMusic
 import app.numbaseball.audio.SoundCue
-import app.numbaseball.audio.lampRate
+import app.numbaseball.audio.TimerCues
+import app.numbaseball.audio.ballLampRate
+import app.numbaseball.audio.lampVolume
+import app.numbaseball.audio.strikeLampRate
 import app.numbaseball.core.protocol.RoundEntry
 import app.numbaseball.ui.computer.levelLabel
 import app.numbaseball.ui.design.ActionState
@@ -166,6 +169,17 @@ fun MatchScreen(state: MatchUiState, actions: MatchActions, bubble: PhraseBubble
             actions.onSubmit()
         }
     }
+    // memo_cycle (DESIGN_SYSTEM 8.3 E): mark cross-fades, `sfx_memo_mark` + CLOCK_TICK.
+    val onMemoDigit: (Int) -> Unit = { d ->
+        audio.play(SoundCue.MEMO_MARK)
+        haptics.perform(HapticCue.MEMO)
+        actions.onMemoDigit(d)
+    }
+    val onMemoCell: (Int, Int) -> Unit = { p, d ->
+        audio.play(SoundCue.MEMO_MARK)
+        haptics.perform(HapticCue.MEMO)
+        actions.onMemoCell(p, d)
+    }
     val onLeave: () -> Unit = {
         if (!state.mode.online && state.myRounds.isEmpty()) actions.onLeave() else confirmLeave = true
     }
@@ -210,7 +224,7 @@ fun MatchScreen(state: MatchUiState, actions: MatchActions, bubble: PhraseBubble
                         Spacer(Modifier.weight(1f))
                     }
                     compact && memoInCompact -> {
-                        MemoBoard(state.memo, collapsed = false, actions.onMemoDigit, actions.onMemoCell, actions.onMemoClear, onCollapse = null, margin = 12.dp)
+                        MemoBoard(state.memo, collapsed = false, onMemoDigit, onMemoCell, actions.onMemoClear, onCollapse = null, margin = 12.dp)
                         Spacer(Modifier.weight(1f))
                     }
                     else -> {
@@ -221,7 +235,7 @@ fun MatchScreen(state: MatchUiState, actions: MatchActions, bubble: PhraseBubble
                         if (!compact) PitchLogHeader(state.digits)
                         PitchLog(state.digits, state.myRounds, state.opponentRounds, reveal.progress, compact, Modifier.weight(1f))
                         if (!compact) {
-                            MemoBoard(state.memo, collapsed, actions.onMemoDigit, actions.onMemoCell, actions.onMemoClear, actions.onMemoCollapse)
+                            MemoBoard(state.memo, collapsed, onMemoDigit, onMemoCell, actions.onMemoClear, actions.onMemoCollapse)
                         }
                     }
                 }
@@ -344,6 +358,7 @@ private fun MatchTopBar(
             },
             titleGap = 8.dp,
             height = 54.dp,
+            compactHeight = 46.dp,
         )
     }
 }
@@ -408,7 +423,7 @@ private fun DuelStrip(state: MatchUiState, onChat: (() -> Unit)?, bubble: Phrase
     val secretPhase = state.phase == MatchPhase.CHOOSING_SECRET || state.phase == MatchPhase.WAITING_FOR_OPPONENT_SECRET
     Box {
         Row(
-            Modifier.fillMaxWidth().height(NbLayout.duelStrip).padding(start = 16.dp, end = if (onChat != null && secretPhase) 4.dp else 16.dp),
+            Modifier.fillMaxWidth().height(NbLayout.duelStrip).padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             when (val o = state.opponent) {
@@ -424,11 +439,12 @@ private fun DuelStrip(state: MatchUiState, onChat: (() -> Unit)?, bubble: Phrase
                         color = NbColors.chalk,
                         maxLines = 1,
                     )
-                    is Opponent.Player -> NameWithTag(o.nickname, o.tag, tagStyle = NbType.numTag.copy(fontSize = NbType.subtitle.fontSize))
+                    is Opponent.Player -> NameWithTag(o.nickname, o.tag)
                 }
                 StatusLine(state.opponentStatus)
             }
             if (onChat != null) {
+                HSpacer(12.dp)
                 IconButton48(R.drawable.ic_chat, stringResource(R.string.chat_title), onChat, tint = NbColors.text2)
             }
             val secret = state.mySecret
@@ -501,6 +517,7 @@ private fun EntryBlock(
         if (secretPhase && !compact) {
             VSpacer(24.dp)
             Text(stringResource(R.string.secret_title), style = NbType.title, color = NbColors.chalk, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            VSpacer(4.dp)
             Text(
                 pluralStringResource(R.plurals.secret_rule, state.digits, state.digits),
                 style = NbType.caption,
@@ -508,6 +525,7 @@ private fun EntryBlock(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
+            VSpacer(4.dp)
         }
         VSpacer(gap)
         DigitSlots(
@@ -578,8 +596,8 @@ private fun rememberReveal(state: MatchUiState, audio: GameAudio, haptics: GameH
         val step = if (reduce) 60f else NbMotion.lampStagger.toFloat()
         val hooks = buildList {
             if (s == 0 && b == 0) add(lead to { audio.play(SoundCue.LAMP_OUT); haptics.perform(HapticCue.LAMP_OUT) })
-            repeat(s) { i -> add(lead + step * i to { audio.play(SoundCue.LAMP_STRIKE, lampRate(i)); haptics.perform(HapticCue.LAMP_STRIKE) }) }
-            repeat(b) { j -> add(lead + step * (s + j) to { audio.play(SoundCue.LAMP_BALL, lampRate(s + j)); haptics.perform(HapticCue.LAMP_BALL) }) }
+            repeat(s) { i -> add(lead + step * i to { audio.play(SoundCue.LAMP_STRIKE, strikeLampRate(i), lampVolume(reduce)); haptics.perform(HapticCue.LAMP_STRIKE) }) }
+            repeat(b) { j -> add(lead + step * (s + j) to { audio.play(SoundCue.LAMP_BALL, ballLampRate(j), lampVolume(reduce)); haptics.perform(HapticCue.LAMP_BALL) }) }
         }.sortedBy { it.first }
         val end = (hooks.lastOrNull()?.first ?: lead) + NbMotion.lampIgnite
         coroutineScope {
@@ -635,13 +653,15 @@ private fun rememberReveal(state: MatchUiState, audio: GameAudio, haptics: GameH
 private fun MatchHooks(state: MatchUiState, revealing: Boolean, audio: GameAudio, haptics: GameHaptics, toast: (String) -> Unit) {
     val expired = stringResource(R.string.timer_expired)
     val active = state.phase == MatchPhase.GUESSING || state.phase == MatchPhase.CHOOSING_SECRET
+    val timerCues = remember { TimerCues() }
     LaunchedEffect(state.secondsLeft, active) {
         val s = state.secondsLeft ?: return@LaunchedEffect
         if (!active || state.reconnectSeconds != null) return@LaunchedEffect
-        when (s) {
-            10 -> { audio.play(SoundCue.TIMER_WARN); haptics.perform(HapticCue.TIMER_WARN) }
-            in 1..5 -> { audio.play(SoundCue.TIMER_TICK); haptics.perform(HapticCue.TIMER_TICK) }
-            0 -> { audio.play(SoundCue.TIMER_EXPIRED); toast(expired) }
+        when (timerCues.onSecond(state.phase to state.round, s)) {
+            TimerCues.Cue.WARN -> { audio.play(SoundCue.TIMER_WARN); haptics.perform(HapticCue.TIMER_WARN) }
+            TimerCues.Cue.TICK -> { audio.play(SoundCue.TIMER_TICK); haptics.perform(HapticCue.TIMER_TICK) }
+            TimerCues.Cue.EXPIRED -> { audio.play(SoundCue.TIMER_EXPIRED); toast(expired) }
+            null -> Unit
         }
     }
     LaunchedEffect(state.opponentStatus) {

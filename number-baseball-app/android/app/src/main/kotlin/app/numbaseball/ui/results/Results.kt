@@ -1,5 +1,7 @@
 package app.numbaseball.ui.results
 
+import app.numbaseball.audio.ScreenMusic
+import app.numbaseball.audio.MusicTrack
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -85,6 +87,7 @@ fun ResultsScreen(
 ) {
     val audio = LocalGameAudio.current
     val haptics = LocalGameHaptics.current
+    ScreenMusic(MusicTrack.MENU, audio)
     // Buttons accept input no earlier than 1000 ms after the result appears (06 §3).
     var ready by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -199,7 +202,7 @@ private fun Reveal(summary: MatchSummary, compact: Boolean) {
     val theirs = stringResource(R.string.opp_secret)
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Text(theirs, style = NbType.caption, color = NbColors.text3)
-        VSpacer(16.dp)
+        VSpacer(8.dp)
         DigitSlots(
             digits = summary.digits,
             value = summary.opponentSecret,
@@ -212,7 +215,7 @@ private fun Reveal(summary: MatchSummary, compact: Boolean) {
         if (summary.mySecret.isNotEmpty()) {
             VSpacer(16.dp)
             Text(stringResource(R.string.my_secret), style = NbType.caption, color = NbColors.text3)
-            VSpacer(16.dp)
+            VSpacer(8.dp)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.semantics(mergeDescendants = true) {

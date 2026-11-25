@@ -1,5 +1,10 @@
 package app.numbaseball.ui.chat
 
+import app.numbaseball.ui.design.SheetBottomSpace
+import app.numbaseball.audio.SoundCue
+import app.numbaseball.audio.LocalGameHaptics
+import app.numbaseball.audio.LocalGameAudio
+import app.numbaseball.audio.HapticCue
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,7 +29,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,7 +64,6 @@ import app.numbaseball.R
 import app.numbaseball.core.protocol.ChatKind
 import app.numbaseball.core.protocol.ChatMessage
 import app.numbaseball.core.protocol.ErrorCodes
-import app.numbaseball.core.protocol.Limits
 import app.numbaseball.core.protocol.RoomKind
 import app.numbaseball.core.protocol.ServerInfo
 import app.numbaseball.core.protocol.Team
@@ -91,8 +95,9 @@ import app.numbaseball.ui.design.rowClick
 import app.numbaseball.ui.theme.NbColors
 import app.numbaseball.ui.theme.NbRadius
 import app.numbaseball.ui.theme.NbType
-import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -110,6 +115,9 @@ private val CHAT_CHIPS = listOf("good_luck", "good_game", "thinking", "rematch",
 
 /** One phrase per 3 s (09 §4); the text limit comes from the server. */
 const val PHRASE_COOLDOWN_MS = 3_000L
+
+/** The composer stops at 80 characters (09 §3, DESIGN_SYSTEM 12.15); the server accepts up to Limits.CHAT_MAX_LENGTH. */
+const val CHAT_INPUT_MAX = 80
 
 data class ChatUiState(
     val roomId: String? = null,
@@ -171,8 +179,8 @@ class ChatViewModel(
     /** Text only: emoji are dropped while typing (the server masks again), length capped by the protocol limit. */
     fun onInputChange(value: String) {
         val clean = EmojiFilter.strip(value)
-        val capped = if (clean.codePointCount(0, clean.length) > Limits.CHAT_MAX_LENGTH) {
-            clean.substring(0, clean.offsetByCodePoints(0, Limits.CHAT_MAX_LENGTH))
+        val capped = if (clean.codePointCount(0, clean.length) > CHAT_INPUT_MAX) {
+            clean.substring(0, clean.offsetByCodePoints(0, CHAT_INPUT_MAX))
         } else {
             clean
         }
@@ -250,15 +258,24 @@ fun ChatSheet(state: ChatUiState, actions: ChatActions) {
     Column(Modifier.fillMaxSize()) {
         SheetTitle(stringResource(R.string.chat_title)) {
             val muteLabel = stringResource(R.string.chat_mute)
+            val on = stringResource(R.string.state_on)
+            val off = stringResource(R.string.state_off)
+            val audio = LocalGameAudio.current
+            val haptics = LocalGameHaptics.current
             Row(
                 Modifier
                     .heightIn(min = 48.dp)
                     .clip(RoundedCornerShape(NbRadius.m))
-                    .rowClick { actions.onMuteChange(!state.muted) }
+                    .rowClick {
+                        val next = !state.muted
+                        haptics.perform(if (next) HapticCue.TOGGLE_ON else HapticCue.TOGGLE_OFF)
+                        audio.play(if (next) SoundCue.TOGGLE_ON else SoundCue.TOGGLE_OFF)
+                        actions.onMuteChange(next)
+                    }
                     .semantics(mergeDescendants = true) {
                         role = Role.Switch
                         contentDescription = muteLabel
-                        stateDescription = if (state.muted) "on" else "off"
+                        stateDescription = if (state.muted) on else off
                     }
                     .padding(start = 4.dp, end = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -378,7 +395,7 @@ private fun ChatLine(
             }
             if (showTime) {
                 VSpacer(4.dp)
-                Text(DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(message.at)), style = NbType.caption.copy(fontSize = NbType.micro.fontSize), color = NbColors.text3)
+                Text(SimpleDateFormat("H:mm", Locale.ROOT).format(Date(message.at)), style = NbType.caption.copy(fontSize = NbType.micro.fontSize), color = NbColors.text3)
             }
         }
     }
@@ -450,7 +467,8 @@ private fun Composer(state: ChatUiState, actions: ChatActions) {
         }
         else -> Column(Modifier.fillMaxWidth()) {
             if (state.cooldown > 0) {
-                Row(Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                // Prototype `.limit`: 0 / 16 / 4, `timer` 16 dp, 6 dp gap.
+                Row(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     NbIcon(R.drawable.ic_timer, null, NbColors.strike, 16.dp)
                     HSpacer(6.dp)
                     Text(pluralStringResource(R.plurals.chat_rate_limited, state.cooldown, state.cooldown), style = NbType.caption, color = NbColors.strike)
@@ -462,17 +480,18 @@ private fun Composer(state: ChatUiState, actions: ChatActions) {
                 NbTextField(
                     value = state.input,
                     onValueChange = actions.onInputChange,
-                    placeholder = pluralStringResource(R.plurals.chat_hint, Limits.CHAT_MAX_LENGTH, Limits.CHAT_MAX_LENGTH),
+                    placeholder = pluralStringResource(R.plurals.chat_hint, CHAT_INPUT_MAX, CHAT_INPUT_MAX),
                     height = 48.dp,
+                    horizontalPadding = 12.dp,
                     textStyle = NbType.body.copy(color = NbColors.chalk),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { actions.onSend() }),
-                    trailing = if (length >= Limits.CHAT_MAX_LENGTH - 10) {
+                    trailing = if (length >= CHAT_INPUT_MAX - 10) {
                         {
                             Text(
-                                stringResource(R.string.chat_counter, length, Limits.CHAT_MAX_LENGTH),
+                                stringResource(R.string.chat_counter, length, CHAT_INPUT_MAX),
                                 style = NbType.numTag,
-                                color = if (length >= Limits.CHAT_MAX_LENGTH) NbColors.strike else NbColors.text3,
+                                color = if (length >= CHAT_INPUT_MAX) NbColors.strike else NbColors.text3,
                                 modifier = Modifier.padding(end = 12.dp),
                             )
                         }
@@ -503,8 +522,10 @@ private fun Composer(state: ChatUiState, actions: ChatActions) {
 @Composable
 private fun MessageActions(message: ChatMessage, mine: Boolean, onDismiss: () -> Unit, onCopy: () -> Unit, onReport: () -> Unit, onBlock: () -> Unit) {
     NbModalSheet(onDismiss = onDismiss) {
-        Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp)) {
+        // Prototype `.menu .ctx`: 4 / 16 / 12, 2 dp before the bold line; `.menu` 24 dp bottom padding.
+        Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)) {
             Text(stringResource(R.string.msg_selected), style = NbType.caption, color = NbColors.text3)
+            VSpacer(2.dp)
             val name = message.senderNickname?.let { "$it#${message.senderTag.orEmpty()}" } ?: stringResource(R.string.chat_deleted_player)
             Text("$name · ${messageText(message)}", style = NbType.bodyStrong, color = NbColors.chalk, maxLines = 2)
         }
@@ -516,7 +537,7 @@ private fun MessageActions(message: ChatMessage, mine: Boolean, onDismiss: () ->
             InsetDivider(56.dp)
             ListRow(stringResource(R.string.msg_block), icon = R.drawable.ic_block, subtitle = stringResource(R.string.block_sub), destructive = true, onClick = onBlock)
         }
-        VSpacer(16.dp)
+        SheetBottomSpace()
     }
 }
 
@@ -524,20 +545,25 @@ private fun MessageActions(message: ChatMessage, mine: Boolean, onDismiss: () ->
 @Composable
 fun QuickPhraseSheet(enabled: Boolean, onPhrase: (String) -> Unit, onDismiss: () -> Unit) {
     NbModalSheet(onDismiss = onDismiss) {
+        // Prototype (match.html?state=phrases): title row 4 dp below the grab, note 0 / 16 / 12, 2 × 3 grid with 8 dp
+        // gaps, 24 dp sheet bottom.
+        VSpacer(4.dp)
         SheetTitle(stringResource(R.string.phrases_title)) {
             IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), onDismiss, tint = NbColors.chalk)
         }
-        Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
+        Column(Modifier.padding(start = 16.dp, end = 16.dp)) {
             Text(stringResource(R.string.phrases_note), style = NbType.caption, color = NbColors.text3)
-            VSpacer(16.dp)
-            DESIGN_PHRASES.chunked(2).forEach { pair ->
-                Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            VSpacer(12.dp)
+            DESIGN_PHRASES.chunked(2).forEachIndexed { i, pair ->
+                if (i > 0) VSpacer(8.dp)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     pair.forEach { id ->
                         NbButton(phraseText(id).orEmpty(), { onPhrase(id) }, kind = ButtonKind.TONAL, enabled = enabled, modifier = Modifier.weight(1f).testTag("phrase_$id"))
                     }
                 }
             }
         }
+        SheetBottomSpace()
     }
 }
 

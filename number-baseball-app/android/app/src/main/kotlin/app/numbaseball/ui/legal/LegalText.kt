@@ -1,5 +1,6 @@
 package app.numbaseball.ui.legal
 
+import app.numbaseball.ui.design.HSpacer
 import androidx.annotation.RawRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -135,7 +136,8 @@ fun LegalTextScreen(title: String, page: LegalPage, onBack: () -> Unit, onWebVer
                     item {
                         if (page.meta != null) {
                             VSpacer(4.dp)
-                            Text(page.meta, style = NbType.caption, color = NbColors.text3)
+                            // The version inside is `numTag` (20 dp line), so the meta line box is 20 dp (prototype `.meta`).
+                            Text(page.meta, style = NbType.caption.copy(lineHeight = NbType.numTag.lineHeight), color = NbColors.text3)
                         }
                         VSpacer(16.dp)
                     }
@@ -143,7 +145,7 @@ fun LegalTextScreen(title: String, page: LegalPage, onBack: () -> Unit, onWebVer
                         if (page.contents.isNotEmpty()) {
                             Hairline()
                             Column(Modifier.padding(vertical = 8.dp)) {
-                                Text(stringResource(R.string.legal_contents), style = NbType.labelSmall, color = NbColors.text3, modifier = Modifier.padding(vertical = 8.dp))
+                                Text(stringResource(R.string.legal_contents), style = NbType.labelSmall, color = NbColors.text3, modifier = Modifier.padding(vertical = 4.dp))
                                 page.contents.forEachIndexed { i, (number, heading) ->
                                     Row(
                                         Modifier.fillMaxWidth().heightIn(min = 48.dp).rowClick {
@@ -151,33 +153,43 @@ fun LegalTextScreen(title: String, page: LegalPage, onBack: () -> Unit, onWebVer
                                         },
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        Text(number, style = NbType.numLabel, color = NbColors.text3, modifier = Modifier.width(28.dp))
+                                        Text(number, style = NbType.numLabel, color = NbColors.text3, modifier = Modifier.width(16.dp))
+                                        HSpacer(12.dp)
                                         Text(heading, style = NbType.body, color = NbColors.text2)
                                     }
                                 }
                             }
                             Hairline()
                         }
-                        VSpacer(16.dp)
+                        VSpacer(8.dp)
                     }
-                    itemsIndexed(page.body) { _, block ->
-                        when (block) {
-                            is LegalBlock.Heading -> Text(
-                                block.text,
-                                style = if (block.level == top) NbType.subtitle else NbType.bodyStrong,
-                                color = NbColors.chalk,
-                                modifier = Modifier.padding(top = 28.dp, bottom = 8.dp).semantics { heading() },
-                            )
-                            is LegalBlock.Bullet -> Row(Modifier.padding(start = 4.dp, bottom = 6.dp)) {
-                                Text("•", style = NbType.reading, color = NbColors.text3, modifier = Modifier.width(16.dp))
-                                Text(LegalMarkdown.styled(block.text), style = NbType.reading, color = NbColors.chalk)
+                    // Spacing follows the prototype's collapsed CSS margins: heading 28 above / 8 below, paragraphs 12
+                    // apart, list items 6 apart.
+                    itemsIndexed(page.body) { i, block ->
+                        val previous = page.body.getOrNull(i - 1)
+                        val gap = when (block) {
+                            is LegalBlock.Heading -> 28.dp
+                            is LegalBlock.Bullet -> if (previous is LegalBlock.Bullet) 6.dp else 8.dp
+                            is LegalBlock.Paragraph -> when (previous) {
+                                null -> 0.dp
+                                is LegalBlock.Paragraph -> 12.dp
+                                else -> 8.dp
                             }
-                            is LegalBlock.Paragraph -> Text(
-                                LegalMarkdown.styled(block.text),
-                                style = NbType.reading,
-                                color = NbColors.chalk,
-                                modifier = Modifier.padding(bottom = 12.dp),
-                            )
+                        }
+                        Column(Modifier.padding(top = gap)) {
+                            when (block) {
+                                is LegalBlock.Heading -> Text(
+                                    block.text,
+                                    style = if (block.level == top) NbType.subtitle else NbType.bodyStrong,
+                                    color = NbColors.chalk,
+                                    modifier = Modifier.semantics { heading() },
+                                )
+                                is LegalBlock.Bullet -> Row(Modifier.padding(start = 4.dp)) {
+                                    Text("•", style = NbType.reading, color = NbColors.text3, modifier = Modifier.width(16.dp))
+                                    Text(LegalMarkdown.styled(block.text), style = NbType.reading, color = NbColors.chalk)
+                                }
+                                is LegalBlock.Paragraph -> Text(LegalMarkdown.styled(block.text), style = NbType.reading, color = NbColors.chalk)
+                            }
                         }
                     }
                     if (onWebVersion != null) {

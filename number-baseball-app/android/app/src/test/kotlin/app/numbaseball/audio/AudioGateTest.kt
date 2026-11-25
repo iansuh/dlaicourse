@@ -2,7 +2,9 @@ package app.numbaseball.audio
 
 import android.media.AudioManager
 import app.numbaseball.data.settings.AppSettings
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -44,5 +46,25 @@ class AudioGateTest {
         assertTrue(
             AudioGate.musicAllowed(on.copy(followSilentMode = false), foreground = true, audioMode = AudioManager.MODE_NORMAL, ringerMode = AudioManager.RINGER_MODE_SILENT),
         )
+    }
+
+    @Test fun lampRatesClimbThePentatonicTables() {
+        assertEquals(listOf(1.0f, 1.1225f, 1.3348f, 1.4983f, 1.6818f, 2.0f), List(6) { strikeLampRate(it) })
+        assertEquals(listOf(1.0f, 1.1225f, 1.2599f, 1.4983f, 1.6818f, 2.0f), List(6) { ballLampRate(it) })
+        assertEquals(0.7f, lampVolume(reducedMotion = true))
+        assertEquals(1f, lampVolume(reducedMotion = false))
+    }
+
+    @Test fun timerPlaysOneWarningFiveTicksAndTimeOutPerRound() {
+        val cues = TimerCues()
+        val played = (60 downTo 0).mapNotNull { s -> cues.onSecond(1, s)?.let { s to it } }
+        assertEquals(listOf(10 to TimerCues.Cue.WARN) + (5 downTo 1).map { it to TimerCues.Cue.TICK } + (0 to TimerCues.Cue.EXPIRED), played)
+        // Recomposition or a repeated frame never plays twice; a new round starts over.
+        assertNull(cues.onSecond(1, 3))
+        assertEquals(TimerCues.Cue.TICK, cues.onSecond(2, 3))
+        // Resuming below a threshold plays only the current second.
+        val resumed = TimerCues()
+        assertEquals(TimerCues.Cue.TICK, resumed.onSecond(7, 4))
+        assertNull(resumed.onSecond(7, 9))
     }
 }

@@ -68,12 +68,19 @@ Profanity masking, rate limit, report a message or a player, block a player (hid
 The owner asked for Google ads. On Android that is **AdMob** (AdSense is for websites).
 - **Never during a match.** No ad may cover, interrupt or appear next to the board while a duel or the secret entry is on screen, including the online waiting practice game.
 - **Banner** (adaptive, anchored) only on calm screens: home, results, profile/stats. Not in the room lobby while players are joining, not in chat.
-- **Interstitial** at most after a finished vs-computer match, never after an online match, with a frequency cap (at most one every 3 finished matches and 4 minutes apart), never on app start or exit.
+- **Interstitial** (owner decision 2026-11-25): after a finished match, **vs computer and online**, shown on the way to the results screen, with a frequency cap (at most one every 3 finished matches and 4 minutes apart). Never during a match, the secret entry or the waiting practice game, never on app start or exit, never while a rematch or the next team duel is about to start.
 - **Silent.** Ads are always muted app-wide, whatever the game sound setting (fits "quiet quick match"); no rewarded ads that give an advantage online.
 - **Consent.** Google UMP consent form where required (EEA/UK/Switzerland and US states), a "Privacy options" entry in Settings, ads still work (non-personalized) when consent is refused.
 - **Store and policy.** "Contains ads" declared, Data safety updated (advertising ID / device identifiers collected and shared with Google for ads), privacy policy updated, `app-ads.txt` served by our server on the developer website domain.
 - Test ad unit IDs in debug builds; real IDs only from build configuration, never committed.
 - No external donation links (Play payments policy).
+
+### Remove ads (owner decision 2026-11-25)
+- One-time in-app purchase **"Remove ads"**, **US$4.99** (Play sets local prices; roughly ₩6,500 in Korea). Non-consumable product through **Google Play Billing**; no subscription.
+- It removes **all** ads (banners and interstitials) and skips the UMP consent form afterwards. Gameplay is identical; no online advantage.
+- Entitlement comes from Play (`queryPurchasesAsync` at start and on resume), so it follows the Google account to a new phone; purchases are acknowledged within 3 days; pending purchases handled; "Restore purchase" in Settings. No server check in v1.
+- Entry points: Settings and a small, quiet link on the results screen. No pop-up sales pitches, never during a match.
+- Store/policy: listing shows "In-app purchases"; Data safety (purchase history via Google Play) and privacy policy updated.
 
 ## Layout
 

@@ -1,5 +1,8 @@
 package app.numbaseball.ui.lobby
 
+import app.numbaseball.audio.ScreenMusic
+import app.numbaseball.audio.MusicTrack
+import app.numbaseball.audio.LocalGameAudio
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,7 +24,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -87,7 +90,6 @@ import app.numbaseball.ui.design.fadingEdges
 import app.numbaseball.ui.design.rememberToastState
 import app.numbaseball.ui.design.rowClick
 import app.numbaseball.ui.theme.NbColors
-import app.numbaseball.ui.theme.NbFonts
 import app.numbaseball.ui.theme.NbRadius
 import app.numbaseball.ui.theme.NbType
 import kotlinx.coroutines.channels.Channel
@@ -227,6 +229,7 @@ class LobbyActions(
 
 @Composable
 fun RoomLobbyScreen(state: LobbyUiState, actions: LobbyActions) {
+    ScreenMusic(MusicTrack.MENU, LocalGameAudio.current)
     var leaveDialog by rememberSaveable { mutableStateOf(false) }
     var settingsSheet by rememberSaveable { mutableStateOf(false) }
     val toast = rememberToastState()
@@ -235,7 +238,7 @@ fun RoomLobbyScreen(state: LobbyUiState, actions: LobbyActions) {
     state.error?.let { error ->
         val text = stringResource(error.message())
         LaunchedEffect(error) {
-            toast.show(text)
+            toast.show(text, error = true)
             actions.onErrorShown()
         }
     }
@@ -361,10 +364,11 @@ fun roomRulesText(settings: RoomSettings): String {
 private fun RulesBand(settings: RoomSettings, editable: Boolean, onEdit: () -> Unit) {
     Column(Modifier.fillMaxWidth().background(NbColors.surface1)) {
         Hairline()
-        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        // 48 dp including both 1 dp lines (prototype `.rules`, border-box).
+        Row(Modifier.fillMaxWidth().heightIn(min = 46.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             NbIcon(R.drawable.ic_tune, null, NbColors.text2, 20.dp)
             HSpacer(8.dp)
-            Text(roomRulesText(settings), style = NbType.bodyStrong, color = NbColors.chalk, modifier = Modifier.weight(1f).padding(vertical = 8.dp))
+            Text(roomRulesText(settings), style = NbType.bodyStrong, color = NbColors.chalk, modifier = Modifier.weight(1f).padding(vertical = 4.dp))
             if (editable) NbButton(stringResource(R.string.action_edit), onEdit, kind = ButtonKind.TEXT)
         }
         Hairline()
@@ -382,6 +386,7 @@ private fun FillStatus(state: LobbyUiState) {
             HSpacer(12.dp)
             Text(stringResource(R.string.room_filled, present, state.seats), style = NbType.bodyStrong, color = NbColors.chalk)
         }
+        VSpacer(2.dp)
         Text(stringResource(R.string.auto_start), style = NbType.caption, color = NbColors.text3)
     }
 }
@@ -454,7 +459,7 @@ private fun Seat(player: LobbyPlayer, team: Team, index: Int, greyed: Boolean, o
         Box(Modifier.width(3.dp).fillMaxHeight().heightIn(min = 56.dp).background(teamStripe(team)))
         Column(Modifier.weight(1f).padding(start = 10.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)) {
             val dim = greyed || !player.connected
-            NameWithTag(player.nickname, player.tag, nameColor = if (dim) NbColors.text3 else NbColors.chalk)
+            NameWithTag(player.nickname, player.tag, nameStyle = NbType.bodyStrong, nameColor = if (dim) NbColors.text3 else NbColors.chalk)
             if (tags.isNotEmpty()) {
                 VSpacer(2.dp)
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -484,13 +489,15 @@ private fun EmptySeat(team: Team, index: Int, canMove: Boolean, onMove: () -> Un
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (canMove) {
+            // Prototype `.seat.move`: `swap_horiz` 20 dp, 6 dp gap, `labelSmall` chalk.
             NbIcon(R.drawable.ic_swap_horiz, null, NbColors.chalk, 20.dp)
-            HSpacer(8.dp)
-            Text(label, style = NbType.labelSmall.copy(fontSize = 14.sp), color = NbColors.chalk, maxLines = 1)
+            HSpacer(6.dp)
+            Text(label, style = NbType.labelSmall, color = NbColors.chalk, maxLines = 1)
         } else {
+            // `.seat.empty`: unlit 6 dp lamp, 6 dp gap, `caption` `text3`.
             Lamp(LampColor.CHALK, lit = false, size = 6.dp)
-            HSpacer(8.dp)
-            Text(label, style = NbType.body, color = NbColors.text3, maxLines = 1)
+            HSpacer(6.dp)
+            Text(label, style = NbType.caption, color = NbColors.text3, maxLines = 1)
         }
     }
 }
@@ -502,7 +509,8 @@ private fun ChatPeek(state: LobbyUiState, onChat: () -> Unit) {
     Column(Modifier.fillMaxWidth().background(NbColors.surface1)) {
         Hairline()
         Row(
-            Modifier.fillMaxWidth().height(56.dp).rowClick(onClick = onChat).padding(horizontal = 16.dp).testTag("chatPeek"),
+            // 56 dp including the 1 dp top line (prototype `.chatbar`, border-box).
+            Modifier.fillMaxWidth().height(55.dp).rowClick(onClick = onChat).padding(horizontal = 16.dp).testTag("chatPeek"),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             NbIcon(R.drawable.ic_chat, stringResource(R.string.chat_title), NbColors.text2)
@@ -514,20 +522,20 @@ private fun ChatPeek(state: LobbyUiState, onChat: () -> Unit) {
                 val body = if (last.kind == ChatKind.PHRASE) last.phraseId?.let { phraseText(it) }.orEmpty() else last.text.orEmpty()
                 buildAnnotatedString {
                     withStyle(SpanStyle(fontWeight = NbType.bodyStrong.fontWeight, color = NbColors.chalk)) { append(sender) }
-                    append("  ")
+                    append(" ")
                     append(body)
                 }
             }
             Text(text, style = NbType.body, color = NbColors.text2, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (state.unread > 0) {
-                HSpacer(8.dp)
+                HSpacer(12.dp)
                 Box(
-                    Modifier.heightIn(min = 20.dp).widthIn(min = 20.dp).background(NbColors.chalk, CircleShape).padding(horizontal = 5.dp),
+                    Modifier.heightIn(min = 20.dp).widthIn(min = 20.dp).background(NbColors.chalk, CircleShape).padding(horizontal = 6.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         state.unread.coerceAtMost(99).toString(),
-                        style = NbType.numLabel.copy(fontFamily = NbFonts.num, fontSize = 13.sp),
+                        style = NbType.numLabel.copy(fontSize = 13.sp, lineHeight = 20.sp, letterSpacing = 0.sp),
                         color = NbColors.onChalk,
                     )
                 }

@@ -1,5 +1,12 @@
 package app.numbaseball.ui.design
 
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.union
+import app.numbaseball.audio.LocalGameAudio
+import app.numbaseball.audio.SoundCue
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.imePadding
@@ -37,7 +44,6 @@ import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -86,13 +92,15 @@ fun TopBar(
     titleGap: Dp = 12.dp,
     /** Row height; the match bar is 54 dp + its 2 dp clock line (05 §1). */
     height: Dp = 56.dp,
+    /** Row height in height-compact windows (the match bar is 46 dp + its 2 dp clock line, ADAPTIVE.md §1). */
+    compactHeight: Dp = 48.dp,
 ) {
     val compact = isCompactHeight()
     val bg = if (scrolled) NbColors.surface1 else Color.Transparent
     Column(modifier.fillMaxWidth().background(bg)) {
         Spacer(Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
         Row(
-            Modifier.fillMaxWidth().heightIn(min = if (compact) 48.dp else height).padding(start = 4.dp, end = 4.dp),
+            Modifier.fillMaxWidth().then(if (compact) Modifier.height(compactHeight) else Modifier.heightIn(min = height)).padding(start = 4.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (navIcon != null) {
@@ -126,6 +134,8 @@ fun NbScreen(
     statusBarPadding: Boolean = topBar == null,
     overlay: (@Composable BoxScope.() -> Unit)? = null,
     wash: Color? = null,
+    /** The IME pushes the content (text-field screens); its inset replaces the navigation-bar inset, never adds to it. */
+    imeAware: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Box(
@@ -146,7 +156,7 @@ fun NbScreen(
             topBar?.invoke()
             Column(Modifier.weight(1f).fillMaxWidth(), content = content)
             bottomBar?.invoke()
-            Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+            Spacer(Modifier.windowInsetsBottomHeight(if (imeAware) WindowInsets.navigationBars.union(WindowInsets.ime) else WindowInsets.navigationBars))
         }
         overlay?.invoke(this)
     }
@@ -193,7 +203,8 @@ fun SheetSurface(modifier: Modifier = Modifier, content: @Composable ColumnScope
             .background(NbColors.surface3, RoundedCornerShape(topStart = NbRadius.l, topEnd = NbRadius.l)),
     ) {
         SheetHandle()
-        content()
+        // Content may fill the sheet (chat); the navigation inset always stays below it.
+        Column(Modifier.weight(1f, fill = false), content = content)
         Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
     }
 }
@@ -212,6 +223,16 @@ fun SheetTitle(title: String, trailing: @Composable RowScope.() -> Unit = {}) {
         Text(title, style = NbType.title, color = NbColors.chalk, modifier = Modifier.weight(1f).semantics { heading() })
         trailing()
     }
+}
+
+/**
+ * Bottom space of a modal sheet whose total bottom (space + the navigation inset the sheet window adds) is [total]:
+ * the reference shots draw the sheet's last 24 dp over the gesture area, so the inset counts towards it.
+ */
+@Composable
+fun SheetBottomSpace(total: Dp = 24.dp) {
+    val nav = with(LocalDensity.current) { WindowInsets.navigationBars.getBottom(this).toDp() }
+    Spacer(Modifier.height((total - nav).coerceAtLeast(0.dp)))
 }
 
 /** Modal bottom sheet with the scrim, `sheet` spring and the design's surface. */
@@ -280,11 +301,26 @@ fun DialogSurface(
                 Text(body, style = NbType.body, color = NbColors.text2)
             }
             VSpacer(24.dp)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                if (dismissLabel != null) NbButton(dismissLabel, onDismiss, kind = ButtonKind.TEXT)
-                NbButton(confirmLabel, onConfirm, kind = if (destructive) ButtonKind.DESTRUCTIVE_TEXT else ButtonKind.TEXT)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                if (dismissLabel != null) DialogAction(dismissLabel, NbColors.text2, onDismiss)
+                DialogAction(confirmLabel, if (destructive) NbColors.out else NbColors.chalk, onConfirm)
             }
         }
+    }
+}
+
+/** Dialog action (prototype `.dialog .acts .btn`): text button 48 dp tall, 16 dp side padding, `label`. */
+@Composable
+private fun DialogAction(label: String, color: Color, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .heightIn(min = 48.dp)
+            .clip(RoundedCornerShape(NbRadius.m))
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, style = NbType.label, color = color, maxLines = 2, textAlign = TextAlign.Center)
     }
 }
 
@@ -295,11 +331,15 @@ class ToastState {
         private set
     var actionLabel by mutableStateOf<String?>(null)
         private set
+    /** An error toast fires the `error_shown` hook (DESIGN_SYSTEM 8.3 E: `sfx_error`). */
+    var error by mutableStateOf(false)
+        private set
     private var action: (() -> Unit)? = null
     private var serial by mutableStateOf(0)
 
-    fun show(text: String, actionLabel: String? = null, action: (() -> Unit)? = null) {
+    fun show(text: String, actionLabel: String? = null, error: Boolean = false, action: (() -> Unit)? = null) {
         message = text
+        this.error = error
         this.actionLabel = actionLabel
         this.action = action
         serial++
@@ -323,8 +363,10 @@ fun rememberToastState() = remember { ToastState() }
 @Composable
 fun BoxScope.ToastHost(state: ToastState, bottomOffset: Dp = 16.dp) {
     val message = state.message
+    val audio = LocalGameAudio.current
     LaunchedEffect(state.key()) {
         if (message != null) {
+            if (state.error) audio.play(SoundCue.ERROR)
             delay(NbMotion.toastVisible)
             state.hide()
         }

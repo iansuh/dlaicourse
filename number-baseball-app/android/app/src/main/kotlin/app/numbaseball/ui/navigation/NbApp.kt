@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -33,7 +33,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.DialogNavigator
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
@@ -211,6 +215,28 @@ private fun NoWindowDim() {
     LaunchedEffect(view) { (view.parent as? DialogWindowProvider)?.window?.setDimAmount(0f) }
 }
 
+/**
+ * `nav_forward` / `nav_back` (DESIGN_SYSTEM 8.3 E, 10): `sfx_ui_navigate` on a screen push, `sfx_ui_back` on a pop. Not
+ * for sheets (dialog destinations) and not into or out of a match, where the music crossfade covers the change.
+ */
+@Composable
+private fun NavSounds(navController: NavHostController) {
+    val audio = LocalGameAudio.current
+    LaunchedEffect(navController) {
+        var previous: NavBackStackEntry? = null
+        navController.currentBackStackEntryFlow.collect { entry ->
+            val before = previous
+            previous = entry
+            if (before == null || before.id == entry.id) return@collect
+            val sheet = entry.destination is DialogNavigator.Destination || before.destination is DialogNavigator.Destination
+            fun NavDestination.isMatch() = hasRoute<ComputerMatchRoute>() || hasRoute<OnlineMatchRoute>()
+            if (sheet || entry.destination.isMatch() || before.destination.isMatch()) return@collect
+            val forward = navController.previousBackStackEntry?.id == before.id
+            audio.play(if (forward) SoundCue.NAV_FORWARD else SoundCue.NAV_BACK)
+        }
+    }
+}
+
 @Composable
 fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = rememberNavController()) {
     val container = LocalAppContainer.current
@@ -236,6 +262,7 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
         }
     }
 
+    NavSounds(navController)
     NavHost(navController, startDestination = if (startOnFirstRun) FirstRunRoute else HomeRoute) {
         composable<FirstRunRoute> {
             val vm = containerViewModel { FirstRunViewModel(accountRepository) }
@@ -302,7 +329,7 @@ fun NbNavHost(startOnFirstRun: Boolean, navController: NavHostController = remem
                 }
                 LaunchedEffect(state.stopped) {
                     if (state.stopped) {
-                        toast.show(stopped)
+                        toast.show(stopped, error = true)
                         vm.onCancel()
                         home()
                     }
@@ -822,6 +849,8 @@ private fun ResultsDestination(summary: MatchSummary, navController: NavHostCont
     // Interstitials only when leaving a vs-computer result (never after online matches or practice, never on start/exit).
     val leave: (() -> Unit) -> Unit = { next ->
         if (summary.mode == MatchMode.COMPUTER && activity != null) {
+            // Music pauses while an interstitial is open (DESIGN_SYSTEM 13); the next screen asks for its own loop.
+            if (adDue) container.audio.setMusic(null)
             container.ads.interstitials.showIfDue(activity, SystemClock.elapsedRealtime() - shownAt, next)
         } else {
             next()

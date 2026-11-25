@@ -1,5 +1,6 @@
 package app.numbaseball.ui.team
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import android.os.SystemClock
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
@@ -17,7 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -119,9 +120,11 @@ fun TeamBoardScreen(
         ScoreBlock(match.score.a, match.score.b, room.settings.teamSize)
         val scroll = rememberScrollState()
         Column(Modifier.weight(1f).fillMaxWidth().fadingEdges(bottom = 16.dp, enabled = scroll.canScrollForward).verticalScroll(scroll)) {
+            // Prototype `.duels`: 1 dp top border + each row's own 1 dp top border inside its 72 dp.
             Hairline(Modifier.height(2.dp))
             val players = room.players.associateBy { it.id }
-            match.duels.forEach { duel ->
+            match.duels.forEachIndexed { i, duel ->
+                if (i > 0) Hairline()
                 DuelRow(
                     duel = duel,
                     a = players[duel.playerA],
@@ -131,8 +134,8 @@ fun TeamBoardScreen(
                     opponentRounds = match.myDuel?.takeIf { it.index == duel.index }?.opponentRounds,
                     myTeam = match.myDuel?.myTeam,
                 )
-                Hairline()
             }
+            Hairline()
             if (mode == BoardMode.LIVE) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                     NbIcon(R.drawable.ic_visibility, null, NbColors.text3, 20.dp)
@@ -147,10 +150,10 @@ fun TeamBoardScreen(
 
 @Composable
 private fun FinalHero(winner: Team?, myTeam: Team, myWins: Int, teamSize: Int) {
-    val needed = winsNeeded(teamSize)
-    Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    // One lamp per duel, lit for each duel my team won (06 §4: "2 of 3 lit"); prototype `.final`: 20 / 16 / 8.
+    Column(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            repeat(needed) { Lamp(LampColor.STRIKE, lit = it < myWins, size = 12.dp) }
+            repeat(teamSize) { Lamp(LampColor.STRIKE, lit = it < myWins, size = 12.dp) }
         }
         Text(
             stringResource(
@@ -174,14 +177,14 @@ private fun ScoreBlock(scoreA: Int, scoreB: Int, teamSize: Int) {
     val b by animateIntAsState(scoreB, tween(NbMotion.short), label = "b")
     val teamA = stringResource(R.string.team_a)
     val teamB = stringResource(R.string.team_b)
-    Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 20.dp)) {
+    Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)) {
         Row(
             Modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = "$teamA $scoreA, $teamB $scoreB" },
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 TeamBadge(Team.A)
-                HSpacer(12.dp)
+                HSpacer(10.dp)
                 Text(teamA, style = NbType.subtitle, color = NbColors.chalk, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             HSpacer(12.dp)
@@ -193,12 +196,12 @@ private fun ScoreBlock(scoreA: Int, scoreB: Int, teamSize: Int) {
             HSpacer(12.dp)
             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                 Text(teamB, style = NbType.subtitle, color = NbColors.chalk, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                HSpacer(12.dp)
+                HSpacer(10.dp)
                 TeamBadge(Team.B)
             }
         }
-        // Spec: 16 dp; the reference render sits 7 dp under the 60 dp score line box.
-        VSpacer(7.dp)
+        // Prototype: `.score` 20 dp bottom padding, `.score-sub` −12 dp margin and 16 dp bottom padding.
+        VSpacer(8.dp)
         val needed = winsNeeded(teamSize)
         Text(
             if (teamSize % 2 == 0) stringResource(R.string.team_rule_even, teamSize, needed, teamSize / 2) else stringResource(R.string.team_rule, teamSize, needed),
@@ -246,17 +249,18 @@ private fun DuelRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .height(72.dp)
+            .height(71.dp)
             .background(if (mine) NbColors.surface1 else NbColors.bg)
             .clearAndSetSemantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.width(3.dp).height(48.dp).background(NbColors.teamA))
+        Box(Modifier.width(3.dp).height(47.dp).background(NbColors.teamA, RoundedCornerShape(topEnd = 2.dp, bottomEnd = 2.dp)))
         Column(Modifier.weight(1f).padding(start = 13.dp)) {
             PlayerCell(a, winner == Team.A, finished && winner != null && winner != Team.A, hintA?.let(::bestHint), hintA, end = false)
         }
         Column(Modifier.width(88.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             if (duel.round > 0) Text(stringResource(R.string.duel_round, duel.round), style = NbType.numLabel, color = NbColors.text3)
+            if (duel.round > 0 && !(finished && !cancelled && result?.winner != null && result.reason != EndReason.FORFEIT && result.reason != EndReason.DISCONNECT)) VSpacer(2.dp)
             when {
                 cancelled -> Text(stringResource(R.string.status_decided), style = NbType.caption, color = NbColors.text2)
                 finished && result?.winner == null -> Text(stringResource(R.string.status_draw), style = NbType.caption, color = NbColors.text2)
@@ -274,7 +278,7 @@ private fun DuelRow(
         Column(Modifier.weight(1f).padding(end = 13.dp), horizontalAlignment = Alignment.End) {
             PlayerCell(b, winner == Team.B, finished && winner != null && winner != Team.B, hintB?.let(::bestHint), hintB, end = true)
         }
-        Box(Modifier.width(3.dp).height(48.dp).background(NbColors.teamB))
+        Box(Modifier.width(3.dp).height(47.dp).background(NbColors.teamB, RoundedCornerShape(topStart = 2.dp, bottomStart = 2.dp)))
     }
 }
 
@@ -304,6 +308,7 @@ private fun PlayerCell(player: PlayerView?, winner: Boolean, loser: Boolean, bes
     NameWithTag(
         name,
         player?.takeIf { !it.deleted }?.tag,
+        nameStyle = NbType.bodyStrong,
         nameColor = if (loser) NbColors.text3 else NbColors.chalk,
     )
     VSpacer(4.dp)
@@ -311,14 +316,14 @@ private fun PlayerCell(player: PlayerView?, winner: Boolean, loser: Boolean, bes
         when {
             winner -> {
                 Lamp(LampColor.STRIKE, lit = true, size = 6.dp)
-                HSpacer(6.dp)
-                Text(stringResource(R.string.tag_won), style = NbType.micro.copy(fontSize = 13.sp), color = NbColors.strike)
+                HSpacer(4.dp)
+                Text(stringResource(R.string.tag_won), style = NbType.micro, color = NbColors.strike)
             }
             rounds != null && rounds.any { it.guess != null } -> {
                 Text(stringResource(R.string.best), style = NbType.caption, color = NbColors.text3)
-                HSpacer(8.dp)
+                HSpacer(6.dp)
                 if (best == null || (best.first == 0 && best.second == 0)) {
-                    OutTag(height = 18.dp)
+                    OutTag(height = 18.dp, fontSize = 11.sp, padding = 4.dp)
                 } else {
                     Text("${best.first}S ${best.second}B", style = NbType.numTag, color = if (loser) NbColors.text3 else NbColors.text2)
                 }

@@ -1,5 +1,7 @@
 package app.numbaseball.ui.design
 
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -29,7 +31,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +38,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -159,11 +162,12 @@ fun <T> Segmented(
 @Composable
 fun NumberUnitLabel(number: String, unit: String?, selected: Boolean) {
     val color = if (selected) NbColors.onChalk else NbColors.text2
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(number, style = NbType.numHint.copy(fontSize = 20.sp, letterSpacing = 0.sp), color = color)
+    // Number and unit share a baseline (prototype `.seg button`: align-items baseline, number 600 20 / 40).
+    Row {
+        Text(number, style = NbType.numHint.copy(fontSize = 20.sp, lineHeight = 40.sp, letterSpacing = 0.sp), color = color, modifier = Modifier.alignByBaseline())
         if (unit != null) {
             HSpacer(2.dp)
-            Text(unit, style = NbType.labelSmall, color = color, maxLines = 1)
+            Text(unit, style = NbType.labelSmall, color = color, maxLines = 1, modifier = Modifier.alignByBaseline())
         }
     }
 }
@@ -312,6 +316,8 @@ fun ListRow(
     value: String? = null,
     chevron: Boolean = false,
     destructive: Boolean = false,
+    /** Settings' "Delete account" has only its title in `out` (shot settings-ko-end); the block rows colour the icon too. */
+    destructiveIcon: Boolean = destructive,
     enabled: Boolean = true,
     titleStyle: TextStyle = NbType.subtitle,
     onClick: (() -> Unit)? = null,
@@ -323,11 +329,12 @@ fun ListRow(
             .fillMaxWidth()
             .heightIn(min = if (subtitle != null) 64.dp else 56.dp)
             .then(if (onClick != null) Modifier.clickable(enabled = enabled, role = role, onClick = onClick) else Modifier)
-            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+            // Prototype `.row`: 10 / 16 dp padding, 16 dp gaps, 2 dp between title and subtitle.
+            .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
-            NbIcon(icon, null, if (destructive) NbColors.out else if (enabled) NbColors.text2 else NbColors.textDisabled)
+            NbIcon(icon, null, if (destructiveIcon) NbColors.out else if (enabled) NbColors.text2 else NbColors.textDisabled)
             HSpacer(16.dp)
         } else {
             HSpacer(40.dp)
@@ -338,14 +345,17 @@ fun ListRow(
                 destructive -> NbColors.out
                 else -> NbColors.chalk
             })
-            if (subtitle != null) Text(subtitle, style = NbType.caption, color = if (enabled) subtitleColor else NbColors.textDisabled)
+            if (subtitle != null) {
+                VSpacer(2.dp)
+                Text(subtitle, style = NbType.caption, color = if (enabled) subtitleColor else NbColors.textDisabled)
+            }
         }
         if (value != null) {
-            HSpacer(12.dp)
+            HSpacer(16.dp)
             Text(value, style = NbType.body, color = NbColors.text2, maxLines = 1)
         }
         if (trailing != null) {
-            HSpacer(12.dp)
+            HSpacer(16.dp)
             trailing()
         }
         if (chevron) {
@@ -358,7 +368,20 @@ fun ListRow(
 /** Divider inset to x = [inset] (56 dp for icon rows, 72 dp on Home rows with a 40 dp plate). */
 @Composable
 fun InsetDivider(inset: Dp = 56.dp) {
-    Box(Modifier.fillMaxWidth().padding(start = inset).height(1.dp).background(NbColors.line))
+    // Takes no height: like the prototype's `.row + .row::before`, the line is drawn over the top 1 dp of the next row,
+    // so a list of 64 dp rows stays exactly 64 dp per row.
+    Box(
+        Modifier
+            .zIndex(1f)
+            .fillMaxWidth()
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                layout(placeable.width, 0) { placeable.place(0, 0) }
+            }
+            .padding(start = inset)
+            .height(1.dp)
+            .background(NbColors.line),
+    )
 }
 
 /** Text field (DESIGN_SYSTEM 12.14): 56 dp `surface2`, radius 8, 16 dp padding, text 18 sp; focus 2 dp chalk, error 2 dp `out`. */
@@ -370,7 +393,8 @@ fun NbTextField(
     placeholder: String? = null,
     isError: Boolean = false,
     height: Dp = NbSize.textField,
-    textStyle: TextStyle = TextStyle(fontFamily = NbFonts.sans, fontSize = 18.sp, fontWeight = FontWeight.Normal, color = NbColors.chalk),
+    textStyle: TextStyle = TextStyle(fontFamily = NbFonts.sans, fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Normal, color = NbColors.chalk),
+    horizontalPadding: Dp = 16.dp,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = true,
@@ -378,9 +402,15 @@ fun NbTextField(
 ) {
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(NbRadius.m)
+    // The caret sits after the text when the value is set from outside (restored state, filtered input).
+    var field by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+    if (field.text != value) field = TextFieldValue(value, TextRange(value.length))
     BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
+        value = field,
+        onValueChange = {
+            field = it
+            if (it.text != value) onValueChange(it.text)
+        },
         modifier = modifier.onFocusChanged { focused = it.isFocused },
         textStyle = textStyle,
         singleLine = singleLine,
@@ -400,7 +430,7 @@ fun NbTextField(
                             else -> Modifier
                         },
                     )
-                    .padding(start = 16.dp, end = if (trailing != null) 0.dp else 16.dp),
+                    .padding(start = horizontalPadding, end = if (trailing != null) 4.dp else horizontalPadding),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(Modifier.weight(1f)) {

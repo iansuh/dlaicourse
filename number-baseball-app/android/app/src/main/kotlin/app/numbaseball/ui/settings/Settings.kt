@@ -1,5 +1,7 @@
 package app.numbaseball.ui.settings
 
+import app.numbaseball.audio.ScreenMusic
+import app.numbaseball.audio.MusicTrack
 import android.media.AudioManager
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -14,7 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -222,6 +224,7 @@ fun SettingsScreen(
 ) {
     val audio = LocalGameAudio.current
     val haptics = LocalGameHaptics.current
+    ScreenMusic(MusicTrack.MENU, audio)
     val toast = rememberToastState()
     val scroll = rememberScrollState()
     var languageSheet by rememberSaveable { mutableStateOf(false) }
@@ -235,7 +238,7 @@ fun SettingsScreen(
     state.error?.let { error ->
         val text = stringResource(error.message())
         LaunchedEffect(error) {
-            toast.show(text)
+            toast.show(text, error = true)
             actions.onErrorShown()
         }
     }
@@ -320,6 +323,7 @@ fun SettingsScreen(
                 icon = R.drawable.ic_delete,
                 subtitle = stringResource(R.string.delete_sub),
                 destructive = true,
+                destructiveIcon = false,
                 chevron = true,
                 enabled = state.registered,
                 onClick = { deleteDialog = true },
@@ -427,10 +431,13 @@ private fun ContactRow(email: String, onCopy: () -> Unit) {
     ) {
         NbIcon(R.drawable.ic_send, null, NbColors.text2)
         HSpacer(16.dp)
-        Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
+        // Prototype `.row`: 10 dp vertical padding, 2 dp between the lines, 16 dp before the copy button.
+        Column(Modifier.weight(1f).padding(vertical = 10.dp)) {
             Text(stringResource(R.string.contact), style = NbType.subtitle, color = NbColors.chalk)
+            VSpacer(2.dp)
             SelectionContainer { Text(email, style = NbType.body, color = NbColors.text2) }
         }
+        HSpacer(16.dp)
         IconButton48(R.drawable.ic_content_copy, stringResource(R.string.action_copy), onCopy, tint = NbColors.text2)
     }
 }

@@ -1,5 +1,7 @@
 package app.numbaseball.ui.terms
 
+import app.numbaseball.ui.design.underlined
+import app.numbaseball.ui.design.HSpacer
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,7 +54,7 @@ fun TermsGateScreen(
 ) {
     val toast = rememberToastState()
     val failure = stringResource(R.string.error_network)
-    androidx.compose.runtime.LaunchedEffect(failed) { if (failed > 0) toast.show(failure) }
+    androidx.compose.runtime.LaunchedEffect(failed) { if (failed > 0) toast.show(failure, error = true) }
     NbScreen(
         topBar = { TopBar(null, R.drawable.ic_close, stringResource(R.string.action_close), onClose) },
         bottomBar = {
@@ -98,7 +100,6 @@ fun TermsGateScreen(
             LinkRow(stringResource(R.string.terms_full), onReadTerms)
             LinkRow(stringResource(R.string.privacy_policy), onReadPrivacy)
             if (version != null) {
-                VSpacer(8.dp)
                 Text(stringResource(R.string.terms_version, version), style = NbType.numTag, color = NbColors.text3)
             }
             VSpacer(16.dp)
@@ -108,20 +109,25 @@ fun TermsGateScreen(
 
 @Composable
 private fun Point(@DrawableRes icon: Int, title: Int, line: Int) {
+    // Prototype `.pt`: 40 dp icon column + 12 dp gap, 14 dp vertical padding. The line is an inline span in a body-text
+    // block, so each of its lines takes the 22 dp body line box.
     Row(Modifier.fillMaxWidth().padding(vertical = 14.dp).semantics(mergeDescendants = true) {}, verticalAlignment = Alignment.Top) {
-        Box(Modifier.width(40.dp)) { NbIcon(icon, null, NbColors.text2) }
+        Box(Modifier.width(40.dp).padding(top = 1.dp)) { NbIcon(icon, null, NbColors.text2) }
+        HSpacer(12.dp)
         Column {
             Text(stringResource(title), style = NbType.bodyStrong, color = NbColors.chalk)
-            Text(stringResource(line), style = NbType.caption, color = NbColors.text3)
+            Text(stringResource(line), style = NbType.caption.copy(lineHeight = NbType.body.lineHeight), color = NbColors.text3)
         }
     }
 }
 
 @Composable
 private fun LinkRow(text: String, onClick: () -> Unit) {
+    // Prototype `.links a`: `labelSmall` chalk, underlined in `outline` 3 dp under the baseline, chevron 18 dp `text3`, 8 dp gap.
     Row(Modifier.heightIn(min = 48.dp).rowClick(onClick = onClick).padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(text, style = NbType.labelSmall, color = NbColors.chalk)
-        NbIcon(R.drawable.ic_chevron_right, null, NbColors.text2, 18.dp)
+        Text(text, style = NbType.labelSmall, color = NbColors.chalk, modifier = Modifier.underlined())
+        HSpacer(8.dp)
+        NbIcon(R.drawable.ic_chevron_right, null, NbColors.text3, 18.dp)
     }
 }
 

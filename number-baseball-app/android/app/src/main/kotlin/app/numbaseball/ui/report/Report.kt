@@ -1,5 +1,8 @@
 package app.numbaseball.ui.report
 
+import app.numbaseball.ui.design.InsetDivider
+import androidx.compose.foundation.layout.Arrangement
+import app.numbaseball.core.protocol.Stats
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +24,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.numbaseball.R
@@ -136,21 +140,32 @@ fun PlayerCard(
     onReport: () -> Unit,
     onBlock: () -> Unit,
     onUnblock: () -> Unit,
+    /** Quick-match record (12 §2); only known for my own card (the protocol has no record of other players). */
+    record: Stats? = null,
 ) {
+    // Prototype `.card-h`: 8 / 16 / 16, 12 dp gap.
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
         if (target.team != null) {
             TeamBadge(target.team)
             HSpacer(12.dp)
         }
         Column(Modifier.weight(1f)) {
-            NameWithTag(target.nickname, target.tag, nameStyle = NbType.title, tagStyle = NbType.numTag.copy(fontSize = NbType.numMemo.fontSize))
+            NameWithTag(target.nickname, target.tag, nameStyle = NbType.title, tagStyle = NbType.numTag.copy(fontSize = 18.sp, lineHeight = 28.sp))
             if (context != null) Text(context, style = NbType.caption, color = NbColors.text3)
+        }
+    }
+    if (record != null && !blocked) {
+        // `.card-rec`: 20 dp gaps, 0 / 16 / 16; values Barlow 600 24 / 28 over `caption` labels.
+        Row(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+            RecordValue(record.wins, stringResource(R.string.record_win))
+            RecordValue(record.losses, stringResource(R.string.record_loss))
+            RecordValue(record.draws, stringResource(R.string.record_draw))
         }
     }
     if (!self) {
         Hairline()
         ListRow(stringResource(R.string.report_action), icon = R.drawable.ic_flag, chevron = true, onClick = onReport, modifier = Modifier.testTag("cardReport"))
-        Hairline()
+        InsetDivider(56.dp)
         if (blocked) {
             ListRow(stringResource(R.string.unblock_action), icon = R.drawable.ic_block, onClick = onUnblock)
         } else {
@@ -164,7 +179,16 @@ fun PlayerCard(
             )
         }
     }
-    VSpacer(24.dp)
+    // 24 dp + the sheet's 8 dp bottom padding, of which the navigation inset below the sheet covers 24 (shot report-card).
+    VSpacer(8.dp)
+}
+
+@Composable
+private fun RecordValue(value: Int, label: String) {
+    Column {
+        Text(value.toString(), style = NbType.numStat.copy(fontSize = 24.sp, lineHeight = 28.sp), color = NbColors.chalk)
+        Text(label, style = NbType.caption, color = NbColors.text3)
+    }
 }
 
 /** Reasons sheet, then the sent sheet (12 §3). */
@@ -175,12 +199,14 @@ fun ReportSheet(state: ReportUiState, onChoice: (ReportChoice) -> Unit, onNoteCh
         return
     }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-        Column(Modifier.padding(horizontal = 16.dp)) {
+        // Prototype `.sh-title` 4 / 16 / 4, `.sh-sub` 0 / 16 / 8.
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp)) {
             Text(stringResource(R.string.report_title, state.target.displayName), style = NbType.title, color = NbColors.chalk, modifier = Modifier.semantics { heading() })
             state.target.messageText?.let {
                 VSpacer(4.dp)
                 Text(it, style = NbType.bodyStrong, color = NbColors.chalk, maxLines = 2)
             }
+            VSpacer(4.dp)
             Text(stringResource(R.string.report_pick), style = NbType.caption, color = NbColors.text3)
         }
         VSpacer(8.dp)
@@ -190,17 +216,23 @@ fun ReportSheet(state: ReportUiState, onChoice: (ReportChoice) -> Unit, onNoteCh
             }
         }
         Column(Modifier.padding(horizontal = 16.dp)) {
-            VSpacer(16.dp)
+            VSpacer(8.dp)
             NbTextField(
                 value = state.note,
                 onValueChange = onNoteChange,
                 placeholder = stringResource(R.string.report_note),
                 height = 48.dp,
+                horizontalPadding = 12.dp,
                 textStyle = NbType.body.copy(color = NbColors.chalk),
                 modifier = Modifier.fillMaxWidth(),
             )
-            VSpacer(16.dp)
-            IconNote(R.drawable.ic_info, stringResource(R.string.report_evidence))
+            VSpacer(12.dp)
+            // `.evidence`: `info` 16 dp, 8 dp gap, `caption` `text3`, left-aligned.
+            Row {
+                NbIcon(R.drawable.ic_info, null, NbColors.text3, 16.dp, Modifier.padding(top = 1.dp))
+                HSpacer(8.dp)
+                Text(stringResource(R.string.report_evidence), style = NbType.caption, color = NbColors.text3)
+            }
             state.error?.let {
                 VSpacer(8.dp)
                 Text(
@@ -209,7 +241,7 @@ fun ReportSheet(state: ReportUiState, onChoice: (ReportChoice) -> Unit, onNoteCh
                     color = NbColors.out,
                 )
             }
-            VSpacer(24.dp)
+            VSpacer(16.dp)
             NbButton(
                 stringResource(R.string.report_send),
                 onSubmit,
@@ -217,19 +249,20 @@ fun ReportSheet(state: ReportUiState, onChoice: (ReportChoice) -> Unit, onNoteCh
                 modifier = Modifier.fillMaxWidth().testTag("reportSend"),
                 content = if (state.sending) ({ ChaseLamps() }) else null,
             )
-            VSpacer(24.dp)
+            // 16 dp actions padding + 16 dp sheet bottom, less the 24 dp navigation inset below the sheet.
+            VSpacer(8.dp)
         }
     }
 }
 
 @Composable
 private fun ReportDone(state: ReportUiState, onBlockToo: () -> Unit, onClose: () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        VSpacer(16.dp)
+    // Prototype `.done`: 12 / 24 / 4 padding, 8 dp gaps; `.sh-actions` 16 dp padding, 8 dp gap.
+    Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.size(48.dp).background(NbColors.surface4, CircleShape), contentAlignment = Alignment.Center) {
             NbIcon(R.drawable.ic_check, null, NbColors.ball)
         }
-        VSpacer(16.dp)
+        VSpacer(8.dp)
         Text(stringResource(R.string.report_done_title), style = NbType.title, color = NbColors.chalk, modifier = Modifier.semantics { heading() })
         VSpacer(8.dp)
         Text(stringResource(R.string.report_done_body), style = NbType.body, color = NbColors.text2, textAlign = TextAlign.Center)
@@ -237,7 +270,8 @@ private fun ReportDone(state: ReportUiState, onBlockToo: () -> Unit, onClose: ()
             VSpacer(8.dp)
             Text(stringResource(R.string.report_child_safety_note), style = NbType.body, color = NbColors.text2, textAlign = TextAlign.Center)
         }
-        VSpacer(24.dp)
+    }
+    Column(Modifier.fillMaxWidth().padding(16.dp)) {
         if (!state.blocked) {
             NbButton(
                 stringResource(R.string.block_too),
@@ -250,8 +284,8 @@ private fun ReportDone(state: ReportUiState, onBlockToo: () -> Unit, onClose: ()
             VSpacer(8.dp)
         }
         NbButton(stringResource(R.string.action_close), onClose, kind = ButtonKind.TONAL, modifier = Modifier.fillMaxWidth())
-        VSpacer(24.dp)
     }
+    // 16 + 8 dp under the actions in the shot, less the 24 dp navigation inset: nothing extra.
 }
 
 /** Block confirmation (12 §4). */

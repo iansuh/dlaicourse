@@ -1,5 +1,7 @@
 package app.numbaseball.ui.match
 
+import androidx.compose.ui.unit.sp
+import app.numbaseball.ui.design.crossBars
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,7 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -125,7 +127,7 @@ private fun DigitHeaderCell(digit: Int, mark: MemoMark, modifier: Modifier, onCl
                 Canvas(Modifier.size(22.dp)) {
                     // 22 dp diagonal stroke, bottom-left to top-right.
                     val inset = size.width * 0.15f
-                    drawLine(NbColors.text3, Offset(inset, size.height - inset), Offset(size.width - inset, inset), 1.5.dp.toPx(), StrokeCap.Round)
+                    drawLine(NbColors.text3, Offset(inset, size.height - inset), Offset(size.width - inset, inset), 1.5.dp.toPx(), StrokeCap.Butt)
                 }
             }
             MemoMark.NONE -> Text(digit.toString(), style = NbType.numMemo, color = NbColors.chalk)
@@ -148,13 +150,11 @@ private fun PositionCell(position: Int, digit: Int, mark: MemoMark, modifier: Mo
     ) {
         when (mark) {
             MemoMark.NONE -> Box(Modifier.size(4.dp).background(NbColors.lampOffRing, CircleShape))
-            MemoMark.OUT -> Canvas(Modifier.size(10.dp)) {
-                val w = 1.5.dp.toPx()
-                drawLine(NbColors.text3, Offset(0f, 0f), Offset(size.width, size.height), w, StrokeCap.Round)
-                drawLine(NbColors.text3, Offset(size.width, 0f), Offset(0f, size.height), w, StrokeCap.Round)
-            }
+            // Prototype `.mc.x`: two 10 × 1.5 dp bars crossed at 45°.
+            MemoMark.OUT -> Canvas(Modifier.size(10.dp)) { crossBars(NbColors.text3, armLength = 10.dp.toPx(), stroke = 1.5.dp.toPx()) }
+            // `.mc > b`: the memo digit at 16 sp inside a cell plate.
             MemoMark.IN -> Box(Modifier.size(24.dp).background(NbColors.chalk, RoundedCornerShape(NbRadius.s)), contentAlignment = Alignment.Center) {
-                Text(digit.toString(), style = NbType.numMemo, color = NbColors.onChalk)
+                Text(digit.toString(), style = NbType.numMemo.copy(fontSize = 16.sp), color = NbColors.onChalk)
             }
         }
     }

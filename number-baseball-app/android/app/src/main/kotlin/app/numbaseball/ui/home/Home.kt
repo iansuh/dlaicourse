@@ -23,7 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.numbaseball.R
@@ -277,8 +278,8 @@ private fun Hero(state: HomeUiState, showForm: Boolean, onProfile: () -> Unit) {
             .testTag("profile"),
     ) {
         Text(stringResource(R.string.record_label), style = NbType.caption, color = NbColors.text3)
-        VSpacer(4.dp)
-        NameWithTag(state.nickname, state.tag, nameStyle = NbType.title, tagStyle = NbType.numTag.copy(fontSize = NbType.numMemo.fontSize))
+        VSpacer(2.dp)
+        NameWithTag(state.nickname, state.tag, nameStyle = NbType.title, tagStyle = NbType.numTag.copy(fontSize = 18.sp, lineHeight = 28.sp))
         VSpacer(16.dp)
         Row(Modifier.height(IntrinsicSize.Min)) {
             StatColumn(stats?.wins, stringResource(R.string.record_win), loading, first = true)
@@ -293,6 +294,7 @@ private fun Hero(state: HomeUiState, showForm: Boolean, onProfile: () -> Unit) {
                     style = NbType.numStat,
                     color = if (loading) NbColors.textDisabled else NbColors.text2,
                 )
+                VSpacer(2.dp)
                 Text(stringResource(R.string.record_rate), style = NbType.caption, color = NbColors.text3, maxLines = 1)
             }
         }
@@ -328,6 +330,7 @@ private fun StatColumn(value: Int?, label: String, loading: Boolean, first: Bool
             style = NbType.numStat,
             color = if (loading) NbColors.textDisabled else NbColors.chalk,
         )
+        VSpacer(2.dp)
         Text(label, style = NbType.caption, color = NbColors.text3, maxLines = 1)
     }
 }
@@ -368,6 +371,7 @@ private fun QuickDock(state: HomeUiState, onQuickDigits: (Int) -> Unit, onQuickM
         Column(Modifier.padding(start = 16.dp, end = 16.dp, top = if (compact) 12.dp else 16.dp, bottom = if (compact) 12.dp else 24.dp)) {
             if (!compact) {
                 Text(stringResource(R.string.quick_title), style = NbType.subtitle, color = NbColors.chalk)
+                VSpacer(2.dp)
                 Text(stringResource(R.string.quick_sub), style = NbType.caption, color = NbColors.text3)
                 VSpacer(12.dp)
             }

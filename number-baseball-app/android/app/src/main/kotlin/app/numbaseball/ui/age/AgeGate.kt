@@ -1,5 +1,12 @@
 package app.numbaseball.ui.age
 
+import app.numbaseball.ui.design.underlined
+import app.numbaseball.ui.theme.NbRadius
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -131,7 +138,7 @@ fun AgeScreen(state: AgeUiState, onDigit: (Char) -> Unit, onDelete: () -> Unit, 
             used = emptySet(),
             locked = state.submitting,
             actionLabel = stringResource(R.string.age_confirm),
-            actionState = if (state.year.length == 4 && !state.submitting) ActionState.ENABLED else ActionState.DISABLED,
+            actionState = if (state.year.length == 4 && !state.invalid && !state.submitting) ActionState.ENABLED else ActionState.DISABLED,
             onDigit = {
                 audio.play(SoundCue.KEY_DOWN)
                 haptics.perform(HapticCue.KEY_TAP)
@@ -164,17 +171,30 @@ fun NotAvailableScreen(onPrivacyPolicy: () -> Unit) {
         Column(
             Modifier.fillMaxSize().padding(horizontal = 32.dp),
             verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             BrandMark(width = 33.dp, height = 48.dp, alpha = 0.55f)
-            VSpacer(8.dp)
-            Text(stringResource(R.string.na_title), style = NbType.title, color = NbColors.chalk)
-            VSpacer(16.dp)
-            Text(stringResource(R.string.na_body), style = NbType.body, color = NbColors.text2)
             VSpacer(24.dp)
-            Box(Modifier.padding(start = 0.dp)) {
-                NbButton(stringResource(R.string.privacy_policy), onPrivacyPolicy, kind = ButtonKind.TEXT, modifier = Modifier.padding(start = 0.dp))
+            Text(stringResource(R.string.na_title), style = NbType.title, color = NbColors.chalk, textAlign = TextAlign.Center)
+            VSpacer(16.dp)
+            Text(stringResource(R.string.na_body), style = NbType.body, color = NbColors.text2, textAlign = TextAlign.Center)
+            VSpacer(40.dp)
+            // Text link (prototype `.na .link`): `labelSmall` `text2`, underlined in `outline`, 48 dp target.
+            val label = stringResource(R.string.privacy_policy)
+            Box(
+                Modifier
+                    .heightIn(min = 48.dp)
+                    .clip(RoundedCornerShape(NbRadius.s))
+                    .clickable(role = Role.Button, onClick = onPrivacyPolicy),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    label,
+                    style = NbType.labelSmall,
+                    color = NbColors.text2,
+                    modifier = Modifier.underlined(),
+                )
             }
-            Spacer(Modifier.height(0.dp))
         }
     }
 }

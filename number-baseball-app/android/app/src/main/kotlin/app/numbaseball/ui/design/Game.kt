@@ -1,5 +1,7 @@
 package app.numbaseball.ui.design
 
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -23,7 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -119,15 +120,15 @@ fun ChaseLamps(size: Dp = NbSize.lampM, color: LampColor = LampColor.CHALK) {
 
 /** `OUT` tag (DESIGN_SYSTEM 12.6): `numLabel` 14 sp, `out` text, 1 dp `out` border, radius 4, 22 dp tall, 6 dp padding. */
 @Composable
-fun OutTag(modifier: Modifier = Modifier, height: Dp = 22.dp) {
+fun OutTag(modifier: Modifier = Modifier, height: Dp = 22.dp, fontSize: TextUnit = 14.sp, padding: Dp = 6.dp) {
     Box(
         modifier
             .height(height)
             .border(1.dp, NbColors.out, RoundedCornerShape(NbRadius.s))
-            .padding(horizontal = 6.dp),
+            .padding(horizontal = padding),
         contentAlignment = Alignment.Center,
     ) {
-        Text("OUT", style = NbType.numLabel.copy(letterSpacing = (0.08f * 14).sp), color = NbColors.out)
+        Text("OUT", style = NbType.numLabel.copy(fontSize = fontSize, letterSpacing = 0.08.em), color = NbColors.out)
     }
 }
 
@@ -391,10 +392,9 @@ private fun DigitKey(digit: Char, used: Boolean, locked: Boolean, memo: MemoMark
     ) {
         Text(digit.toString(), style = NbType.numKey, color = digitColor)
         if (memo == MemoMark.OUT) {
-            Canvas(Modifier.align(Alignment.TopEnd).padding(top = 11.dp, end = 8.dp).size(9.dp)) {
-                val w = 1.5.dp.toPx()
-                drawLine(markColor, Offset(0f, 0f), Offset(size.width, size.height), w, StrokeCap.Round)
-                drawLine(markColor, Offset(size.width, 0f), Offset(0f, size.height), w, StrokeCap.Round)
+            // Prototype `.key.mx`: two 9 × 1.5 dp bars crossed at 45° in a 9 dp box 8 dp from the right, 11 dp from the top.
+            Canvas(Modifier.align(Alignment.TopEnd).padding(top = 11.dp, end = 8.dp).size(9.dp, 1.5.dp)) {
+                crossBars(markColor, armLength = 9.dp.toPx(), stroke = 1.5.dp.toPx())
             }
         }
         if (memo == MemoMark.IN) {
@@ -512,4 +512,12 @@ fun QuestionPlate(lit: Boolean, width: Dp, height: Dp) {
     Box(Modifier.size(width, height).background(NbColors.surface2, RoundedCornerShape(NbRadius.m)), contentAlignment = Alignment.Center) {
         Text("?", style = NbType.numSlot, color = if (lit) NbColors.chalk else NbColors.textDisabled)
     }
+}
+
+/** Two bars of [armLength] crossed at ±45° around the centre (the prototype's rotated pseudo-element bars). */
+fun androidx.compose.ui.graphics.drawscope.DrawScope.crossBars(color: Color, armLength: Float, stroke: Float) {
+    val h = armLength / (2f * kotlin.math.sqrt(2f))
+    val c = center
+    drawLine(color, Offset(c.x - h, c.y - h), Offset(c.x + h, c.y + h), stroke, StrokeCap.Butt)
+    drawLine(color, Offset(c.x + h, c.y - h), Offset(c.x - h, c.y + h), stroke, StrokeCap.Butt)
 }

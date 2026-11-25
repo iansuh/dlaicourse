@@ -1,15 +1,18 @@
 package app.numbaseball.ui.firstrun
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,7 +81,9 @@ class FirstRunViewModel(private val accounts: AccountRepository) : ViewModel() {
         } else {
             clean
         }
-        _state.update { it.copy(nickname = capped, nicknameProblem = null, error = null) }
+        // One character is "too short" while typing (01 §1 states); longer problems show after Start.
+        val short = capped.codePointCount(0, capped.length) == 1
+        _state.update { it.copy(nickname = capped, nicknameProblem = if (short) NicknameProblem.TOO_SHORT else null, error = null) }
     }
 
     fun onTransferCodeChange(value: String) = _state.update { it.copy(transferCode = value, error = null) }
@@ -137,7 +142,10 @@ fun FirstRunScreen(
         ErrorCodes.NICKNAME_UNAVAILABLE -> R.string.nick_error_unavailable
         else -> null
     }
-    NbScreen(modifier = Modifier.imePadding()) {
+    // The field is focused on open, IME up (01 §1).
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(state.transferMode) { if (!state.transferMode) runCatching { focus.requestFocus() } }
+    NbScreen(imeAware = true) {
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             VSpacer(32.dp)
             Eyebrow { Text(stringResource(R.string.nick_eyebrow), style = NbType.labelSmall, color = NbColors.text2) }
@@ -173,7 +181,7 @@ fun FirstRunScreen(
                     isError = nickError != null,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { onSubmit() }),
-                    modifier = Modifier.fillMaxWidth().testTag("nickname"),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("nickname"),
                     trailing = if (state.nickname.isNotEmpty()) {
                         { IconButton48(R.drawable.ic_close, stringResource(R.string.nick_clear), { onNicknameChange("") }, tint = NbColors.text3, iconSize = 20.dp) }
                     } else {
@@ -191,14 +199,14 @@ fun FirstRunScreen(
                     Text(
                         "${state.nickname.codePointCount(0, state.nickname.length)} / ${Limits.NICKNAME_MAX}",
                         style = NbType.numTag,
-                        color = NbColors.text3,
+                        color = if (nickError != null) NbColors.out else NbColors.text3,
                     )
                 }
                 VSpacer(24.dp)
                 Hairline()
-                Column(Modifier.padding(vertical = 16.dp)) {
+                Column(Modifier.padding(top = 16.dp)) {
                     Text(stringResource(R.string.nick_preview), style = NbType.caption, color = NbColors.text3)
-                    VSpacer(8.dp)
+                    VSpacer(10.dp)
                     Text(
                         buildAnnotatedString {
                             append(state.nickname.ifEmpty { "–" })
@@ -217,7 +225,7 @@ fun FirstRunScreen(
             }
         }
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
-            val enabled = !state.submitting && if (state.transferMode) state.transferCode.isNotBlank() else state.nickname.isNotEmpty()
+            val enabled = !state.submitting && if (state.transferMode) state.transferCode.isNotBlank() else state.nickname.isNotEmpty() && state.nicknameProblem == null
             NbButton(
                 text = stringResource(if (state.transferMode) R.string.transfer_redeem else R.string.nick_start),
                 onClick = onSubmit,

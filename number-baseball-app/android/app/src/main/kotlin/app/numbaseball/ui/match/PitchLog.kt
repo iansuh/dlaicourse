@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import app.numbaseball.R
 import app.numbaseball.core.protocol.RoundEntry
 import app.numbaseball.ui.design.HSpacer
@@ -113,8 +114,9 @@ private fun LogRow(
         entry.balls,
     )
     Column(Modifier.fillMaxWidth().background(if (latest) NbColors.surface1 else NbColors.bg).semantics(mergeDescendants = true) { contentDescription = spoken }) {
+        // Row heights include the 1 dp top line (prototype `.log-row`, border-box).
         Hairline()
-        Row(Modifier.fillMaxWidth().height(height).padding(horizontal = columns.padding), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().height(height - 1.dp).padding(horizontal = columns.padding), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 entry.round.toString(),
                 style = NbType.numLabel,
@@ -123,7 +125,7 @@ private fun LogRow(
             )
             Text(
                 entry.guess ?: "—",
-                style = if (latest && !compact) NbType.numSlotSm.copy(letterSpacing = NbType.numLog.letterSpacing) else NbType.numLog,
+                style = if (latest && !compact) NbType.numSlotSm.copy(letterSpacing = 0.12.em) else NbType.numLog,
                 color = if (entry.guess == null) NbColors.text3 else NbColors.chalk,
                 maxLines = 1,
                 modifier = Modifier.weight(1f).clearAndSetSemantics {},
@@ -190,16 +192,17 @@ fun HintLegend(compact: Boolean, modifier: Modifier = Modifier) {
 private fun LegendCount(color: LampColor, letter: Char) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Lamp(color, lit = true, size = NbSize.lampM)
-        HSpacer(8.dp)
-        HintCountText(1, letter, color.lit, NbType.numHint.copy(fontSize = NbType.numSlotSm.fontSize * 0.86f))
+        HSpacer(6.dp)
+        HintCountText(1, letter, color.lit, NbType.numHint)
     }
 }
 
 @Composable
 private fun LegendRow(padding: Dp, height: Dp, lead: @Composable () -> Unit, name: String, line: String) {
+    // 44 dp including its 1 dp top line (prototype `.lg-row`, border-box).
     Column(Modifier.fillMaxWidth()) {
         Hairline()
-        Row(Modifier.fillMaxWidth().height(height).padding(horizontal = padding), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().height(height - 1.dp).padding(horizontal = padding), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.width(56.dp)) { lead() }
             Text(
                 buildAnnotatedString {
@@ -207,7 +210,7 @@ private fun LegendRow(padding: Dp, height: Dp, lead: @Composable () -> Unit, nam
                     append(" · ")
                     append(line)
                 },
-                style = NbType.body,
+                style = NbType.caption,
                 color = NbColors.text2,
                 maxLines = 2,
             )

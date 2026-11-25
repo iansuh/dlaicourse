@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -12,7 +11,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -118,12 +117,12 @@ fun JoinScreen(state: JoinUiState, onCodeChange: (String) -> Unit, onJoin: () ->
     state.error?.let { error ->
         val text = stringResource(error.message())
         LaunchedEffect(state.shake) {
-            toast.show(text)
+            toast.show(text, error = true)
             onErrorShown()
         }
     }
     NbScreen(
-        modifier = Modifier.imePadding(),
+        imeAware = true,
         topBar = { TopBar(stringResource(R.string.join_title), R.drawable.ic_arrow_back, stringResource(R.string.action_back), onBack) },
         bottomBar = {
             NbButton(

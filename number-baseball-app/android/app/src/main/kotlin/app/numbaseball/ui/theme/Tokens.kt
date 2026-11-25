@@ -63,7 +63,7 @@ object NbFonts {
 object NbType {
     /** DESIGN_SYSTEM 16: no font padding and centred line height, so numerals sit exactly in their plates. */
     private val platform = PlatformTextStyle(includeFontPadding = false)
-    private val lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None)
+    private val lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None, LineHeightStyle.Mode.Fixed)
 
     /** Korean wraps between words (CSS `word-break: keep-all` in the prototype), not between syllables. */
     private val lineBreak = LineBreak(LineBreak.Strategy.HighQuality, LineBreak.Strictness.Normal, LineBreak.WordBreak.Phrase)

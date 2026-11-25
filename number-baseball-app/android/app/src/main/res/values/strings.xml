@@ -214,8 +214,8 @@
     <string name="chat_muted">Chat is muted</string>
     <string name="chat_unmute">Turn on</string>
     <plurals name="chat_rate_limited">
-        <item quantity="one">Too fast. You can send again in %d second</item>
-        <item quantity="other">Too fast. You can send again in %d seconds</item>
+        <item quantity="one">Too fast. You can send again in %d s</item>
+        <item quantity="other">Too fast. You can send again in %d s</item>
     </plurals>
     <string name="chat_restricted">Chat is restricted for 24 hours after reports</string>
     <string name="chat_phrases_only">Quick match chat uses quick phrases only</string>

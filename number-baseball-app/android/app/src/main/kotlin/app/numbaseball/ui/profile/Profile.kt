@@ -1,5 +1,8 @@
 package app.numbaseball.ui.profile
 
+import app.numbaseball.audio.ScreenMusic
+import app.numbaseball.audio.MusicTrack
+import app.numbaseball.audio.LocalGameAudio
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -107,6 +110,7 @@ class ProfileViewModel(private val accounts: AccountRepository, settings: Settin
  */
 @Composable
 fun ProfileScreen(state: ProfileUiState, onRename: (String) -> Unit, onRenameShown: () -> Unit, onBack: () -> Unit) {
+    ScreenMusic(MusicTrack.MENU, LocalGameAudio.current)
     var sheet by rememberSaveable { mutableStateOf(false) }
     NbScreen(
         topBar = { TopBar(stringResource(R.string.profile_title), R.drawable.ic_arrow_back, stringResource(R.string.action_back), onBack) },
@@ -114,7 +118,7 @@ fun ProfileScreen(state: ProfileUiState, onRename: (String) -> Unit, onRenameSho
     ) {
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
             Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 20.dp)) {
-                NameWithTag(state.nickname, state.tag, modifier = Modifier.exactLineHeight(NbType.headline), nameStyle = NbType.headline, tagStyle = NbType.numTag.copy(fontSize = 22.sp, lineHeight = 28.sp))
+                NameWithTag(state.nickname, state.tag, nameStyle = NbType.headline, tagStyle = NbType.numTag.copy(fontSize = 22.sp, lineHeight = 28.sp))
                 if (!state.online && state.registered) {
                     Text(stringResource(R.string.profile_offline), style = NbType.caption, color = NbColors.text3)
                 } else if (!state.registered) {

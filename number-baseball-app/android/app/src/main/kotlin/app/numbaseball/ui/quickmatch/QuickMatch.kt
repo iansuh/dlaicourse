@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -163,6 +163,9 @@ fun QuickMatchScreen(
                     }
                     NbButton(stringResource(R.string.search_cancel), onCancel, kind = ButtonKind.SECONDARY, modifier = Modifier.fillMaxWidth().testTag("cancelSearch"))
                 }
+            } else {
+                // Cancel is hidden once found; its padded area stays so the block does not jump (04, `.actions`).
+                VSpacer(if (compact) 12.dp else 40.dp)
             }
         },
     ) {
@@ -179,7 +182,7 @@ fun QuickMatchScreen(
                 targetState = state.found,
                 transitionSpec = { fadeIn(tween(NbMotion.medium)) togetherWith fadeOut(tween(NbMotion.short)) },
                 label = "found",
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+                modifier = Modifier.padding(horizontal = 24.dp),
             ) { found ->
                 if (found == null) {
                     Searching(state.digits, elapsed, slow, compact)
@@ -233,10 +236,10 @@ private fun Searching(digits: Int, elapsed: Int, slow: Boolean, compact: Boolean
 private fun Found(opponent: FoundOpponent) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }) {
         Text("VS", style = NbType.numLabel.copy(letterSpacing = 0.12.sp * 14), color = NbColors.text3)
+        VSpacer(6.dp)
+        NameWithTag(opponent.nickname, opponent.tag, nameStyle = NbType.headline, tagStyle = NbType.numTag.copy(fontSize = 22.sp, lineHeight = 34.sp))
         VSpacer(20.dp)
-        NameWithTag(opponent.nickname, opponent.tag, modifier = Modifier.exactLineHeight(NbType.headline), nameStyle = NbType.headline, tagStyle = NbType.numTag.copy(fontSize = 22.sp, lineHeight = 28.sp))
-        VSpacer(20.dp)
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { repeat(3) { Lamp(LampColor.CHALK, lit = true, size = 12.dp, glow = false) } }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { repeat(3) { Lamp(LampColor.CHALK, lit = true, size = 12.dp, glow = false) } }
         VSpacer(20.dp)
         Text(stringResource(R.string.found_title), style = NbType.title, color = NbColors.chalk, textAlign = TextAlign.Center)
         VSpacer(20.dp)

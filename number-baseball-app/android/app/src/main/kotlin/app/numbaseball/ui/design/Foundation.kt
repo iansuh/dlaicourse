@@ -1,5 +1,6 @@
 package app.numbaseball.ui.design
 
+import androidx.compose.ui.draw.drawBehind
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -18,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -224,11 +224,12 @@ fun NameWithTag(
     tagStyle: TextStyle = NbType.numTag,
     tagColor: Color = NbColors.text3,
 ) {
-    Row(modifier, verticalAlignment = Alignment.Bottom) {
-        Text(name, style = nameStyle, color = nameColor, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+    // Name and tag sit on one baseline, like the prototype's inline `.pname` + `.ptag`.
+    Row(modifier) {
+        Text(name, style = nameStyle, color = nameColor, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false).alignByBaseline())
         if (tag != null) {
             Spacer(Modifier.width(1.dp))
-            Text("#$tag", style = tagStyle, color = tagColor, maxLines = 1, softWrap = false)
+            Text("#$tag", style = tagStyle, color = tagColor, maxLines = 1, softWrap = false, modifier = Modifier.alignByBaseline())
         }
     }
 }
@@ -278,3 +279,12 @@ internal fun HSpacer(width: Dp) = Spacer(Modifier.width(width))
 internal fun VSpacer(height: Dp) = Spacer(Modifier.height(height))
 
 internal val SpacedBy8 = Arrangement.spacedBy(8.dp)
+
+/**
+ * Text link underline like the prototype's `text-decoration: underline; text-underline-offset: 3px;
+ * text-decoration-color: outline`: a 1 dp `outline` line 3 dp under the baseline of single-line text.
+ */
+fun Modifier.underlined(color: Color = NbColors.outline): Modifier = drawBehind {
+    val y = size.height / 2 + 4.5.dp.toPx() + 3.dp.toPx()
+    drawLine(color, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), strokeWidth = 1.dp.toPx())
+}
