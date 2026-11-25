@@ -137,7 +137,7 @@ fun LegalTextScreen(title: String, page: LegalPage, onBack: () -> Unit, onWebVer
                         if (page.meta != null) {
                             VSpacer(4.dp)
                             // The version inside is `numTag` (20 dp line), so the meta line box is 20 dp (prototype `.meta`).
-                            Text(page.meta, style = NbType.caption.copy(lineHeight = NbType.numTag.lineHeight), color = NbColors.text3)
+                            Text(metaText(page.meta), style = NbType.caption.copy(lineHeight = NbType.numTag.lineHeight), color = NbColors.text3)
                         }
                         VSpacer(16.dp)
                     }
@@ -206,4 +206,19 @@ fun LegalTextScreen(title: String, page: LegalPage, onBack: () -> Unit, onWebVer
             }
         }
     }
+}
+
+/** The meta line with its version ("2026-11-v1") in `numTag` (15 Layout, D2-28). */
+private val VERSION = Regex("""\d{4}-\d{2}-v\d+""")
+
+private fun metaText(meta: String) = androidx.compose.ui.text.buildAnnotatedString {
+    var last = 0
+    VERSION.findAll(meta).forEach { m ->
+        append(meta.substring(last, m.range.first))
+        pushStyle(NbType.numTag.toSpanStyle())
+        append(m.value)
+        pop()
+        last = m.range.last + 1
+    }
+    append(meta.substring(last))
 }

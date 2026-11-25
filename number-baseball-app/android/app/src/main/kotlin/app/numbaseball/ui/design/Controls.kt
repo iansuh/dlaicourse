@@ -251,7 +251,8 @@ fun VolumeSliderRow(label: String, value: Float, enabled: Boolean, onChange: (Fl
             Box(Modifier.fillMaxWidth(value.coerceIn(0f, 1f)).height(4.dp).background(activeColor, RoundedCornerShape(2.dp)))
             Box(
                 Modifier
-                    .offset(x = (maxWidth - 20.dp) * value.coerceIn(0f, 1f))
+                    // Thumb centre = track start + value × track width; it overhangs the track ends by 10 dp (D2-21).
+                    .offset(x = maxWidth * value.coerceIn(0f, 1f) - 10.dp)
                     .size(20.dp)
                     .background(activeColor, CircleShape),
             )

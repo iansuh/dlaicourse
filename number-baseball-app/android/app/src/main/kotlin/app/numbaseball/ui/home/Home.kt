@@ -274,11 +274,12 @@ private fun Hero(state: HomeUiState, showForm: Boolean, onProfile: () -> Unit) {
                 contentDescription = spoken
                 onClick(openProfile) { onProfile(); true }
             }
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)
+            // Measured against home-ko (D2-18): the block sat 3 dp high (dividers, lamps, numerals), the label 1.5 dp.
+            .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 5.dp)
             .testTag("profile"),
     ) {
         Text(stringResource(R.string.record_label), style = NbType.caption, color = NbColors.text3)
-        VSpacer(2.dp)
+        VSpacer(3.dp)
         NameWithTag(state.nickname, state.tag, nameStyle = NbType.title, tagStyle = NbType.numTag.copy(fontSize = 18.sp, lineHeight = 28.sp))
         VSpacer(16.dp)
         Row(Modifier.height(IntrinsicSize.Min)) {

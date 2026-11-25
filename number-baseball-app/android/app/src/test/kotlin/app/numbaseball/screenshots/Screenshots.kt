@@ -726,7 +726,7 @@ abstract class ScreenshotSuite(protected val lang: String, private val small: Bo
         LaunchedEffect(Unit) { toast.show(text) }
         Box(Modifier.fillMaxSize()) {
             MatchScreen(Design.guessState(), matchActions().withChat())
-            ToastHost(toast, bottomOffset = 16.dp + 172.dp + 24.dp + 24.dp)
+            ToastHost(toast, bottomOffset = 16.dp + 172.dp + 24.dp)
         }
     }
 

@@ -39,7 +39,7 @@ fun HowToPlayScreen(onBack: () -> Unit) {
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).semantics { heading() },
             )
             VSpacer(8.dp)
-            HintLegend(compact = false)
+            HintLegend(compact = false, scrollable = false)
             VSpacer(16.dp)
             STEPS.forEachIndexed { i, step ->
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {

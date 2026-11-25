@@ -71,6 +71,19 @@ The terms and privacy policy shown in the app are generated at build time from t
 Languages: `values/` (English) and `values-ko/`. Add a language by adding `values-xx/strings.xml`, its tag to
 `res/xml/locales_config.xml` and `SupportedLanguages`; `ResourcesTest` checks they agree.
 
+## Deviations from the design (for design sign-off)
+
+Written down per the phase 2 review (`../design/REVIEW_PHASE2.md`); none is accepted until design approves it.
+
+| Spec | What the app does | Why |
+| --- | --- | --- |
+| 10 Profile: "자리수별 기록" and "모드별" tables (D2-15) | Both sections are laid out as specified but show the empty state (`–`) | `/api/v1/me` returns only total W/L/D and the app keeps no per-digit or per-mode history. Needs per-digit / per-mode stats in the account response (server change). |
+| DESIGN_SYSTEM 3.3 numeral cap | Every `num` (Barlow) text is capped at `size × min(fontScale, 1.3)` in the shared `Text`, not only fixed controls | All numerals sit in fixed plates, columns or tags; capping in one place guarantees no control clips them. |
+| 09 / 12.15: tapping the sender name opens the player card (D2-10) | The player card opens from the long-press sheet ("플레이어 정보 보기") and as a TalkBack action on the bubble | The 20 dp name line cannot get a 48 dp target without overlapping the bubble. |
+| 08 reconnect countdown (D2-14) | Counted from the server time the session first saw the player offline (shared by the duel strip and the team board) | The protocol sends no disconnect deadline; exact only if this client was connected when the player dropped. |
+| 05 §2.9 "상대 기록 보기" sheet, 12.17 server-error dialog | Not built; errors use toasts | Separate items, not part of review round 1. |
+| 01 §2 tutorial: optional team-play card, "tutorial seen" flag | Not built; first run always goes age → nickname → tutorial → Home once, Home's help replays it | Small follow-up. |
+
 ## CI
 
 `.github/workflows/number-baseball-app.yml` runs on pushes to the feature branch that touch `number-baseball-app/**`

@@ -181,12 +181,12 @@ private fun OpponentHint(entry: RoundEntry) {
 
 /** Empty log during secret entry (DESIGN_SYSTEM 12.7): "판정 읽는 법" + three 44 dp legend rows. */
 @Composable
-fun HintLegend(compact: Boolean, modifier: Modifier = Modifier) {
+fun HintLegend(compact: Boolean, modifier: Modifier = Modifier, scrollable: Boolean = true) {
     val pad = if (compact) 12.dp else 16.dp
     val rowHeight = if (compact) 40.dp else 44.dp
     // Scrolls when large text makes the rows taller than the region (D2-25).
     val scroll = androidx.compose.foundation.rememberScrollState()
-    Column(modifier.fillMaxWidth().fadingEdges(bottom = 16.dp, enabled = scroll.canScrollForward).verticalScroll(scroll)) {
+    Column(modifier.fillMaxWidth().then(if (scrollable) Modifier.fadingEdges(bottom = 16.dp, enabled = scroll.canScrollForward).verticalScroll(scroll) else Modifier)) {
         if (!compact) {
             Hairline()
             Box(Modifier.fillMaxWidth().heightIn(min = NbSize.historyHeader).padding(horizontal = pad), contentAlignment = Alignment.CenterStart) {

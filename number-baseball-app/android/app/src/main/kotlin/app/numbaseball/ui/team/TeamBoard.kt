@@ -362,7 +362,7 @@ private fun ReconnectStatus(since: Long?, serverNow: () -> Long) {
         }
     }
     val left = ((Limits.DISCONNECT_GRACE_MS - (now - start)) / 1000).toInt().coerceIn(0, (Limits.DISCONNECT_GRACE_MS / 1000).toInt())
-    Text(stringResource(R.string.status_reconnecting, formatClock(left)), style = NbType.caption, color = NbColors.strike, textAlign = TextAlign.Center, maxLines = 2)
+    Text(stringResource(R.string.status_reconnecting, formatClock(left)), style = NbType.caption, color = NbColors.strike, textAlign = TextAlign.Center)
 }
 
 @Composable

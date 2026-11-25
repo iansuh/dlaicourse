@@ -77,6 +77,8 @@ fun ComputerSetupSheet(
             }
             ListRow(
                 title = stringResource(R.string.label_timer),
+                // The `timer` icon (`text2`) justifies the 56 dp text start (DESIGN_SYSTEM 4, D2-29).
+                icon = R.drawable.ic_timer,
                 titleStyle = NbType.body,
                 value = timerLabel(choice.roundSeconds),
                 chevron = true,
