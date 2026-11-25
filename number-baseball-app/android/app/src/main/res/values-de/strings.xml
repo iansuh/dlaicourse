@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <string name="app_name">Zahlen-Baseball: Leises Duell</string>
     <string name="app_name_main">Zahlen-Baseball</string>
@@ -214,7 +214,7 @@
     <string name="res_lose_sub">Dein Gegner hat es zuerst geknackt, Runde %1$d</string>
     <string name="res_draw_sub">Ihr habt es beide in Runde %1$d geknackt</string>
     <string name="res_forfeit_me">Du hast aufgegeben</string>
-    <string name="res_timeout_me">Zwei Zeitabläufe in Folge beendeten das Duell</string>
+    <string name="res_timeout_me">Zwei Zeitabläufe nacheinander beendeten das Duell</string>
     <string name="res_disconnect_me">Zu lange getrennt, das Duell ist verloren</string>
     <string name="res_forfeit_opp">Dein Gegner hat aufgegeben</string>
     <string name="res_timeout_opp">Dein Gegner war zweimal zu langsam</string>

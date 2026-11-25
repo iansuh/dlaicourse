@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <string name="app_name">Baseball des chiffres : duel</string>
     <string name="app_name_main">Baseball des chiffres</string>
@@ -63,7 +63,7 @@
     <string name="needs_internet">Connexion internet requise</string>
     <string name="waiting_connection">En attente de connexion</string>
     <string name="choose_nickname_again">Choisir un autre pseudo</string>
-    <plurals name="digit_unit">
+    <plurals name="digit_unit" tools:ignore="ImpliedQuantity">
         <item quantity="one">chiffre</item>
         <item quantity="many">chiffres</item>
         <item quantity="other">chiffres</item>

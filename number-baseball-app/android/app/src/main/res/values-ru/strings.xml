@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <string name="app_name">Числовой бейсбол: тихая дуэль</string>
     <string name="app_name_main">Числовой бейсбол</string>
@@ -63,7 +63,7 @@
     <string name="needs_internet">Нужен интернет</string>
     <string name="waiting_connection">Ждём подключения</string>
     <string name="choose_nickname_again">Выбрать другой ник</string>
-    <plurals name="digit_unit">
+    <plurals name="digit_unit" tools:ignore="ImpliedQuantity">
         <item quantity="one">цифра</item>
         <item quantity="few">цифры</item>
         <item quantity="many">цифр</item>
