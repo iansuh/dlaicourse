@@ -33,6 +33,11 @@ Network: dl.google.com and gcp.mirrors.maven.org are allowed in the environment 
 | Play release (`docs/play/`) | Policy checklist, review, privacy policy, terms, deletion page, store listing (10 languages), Korean release guide | Fill placeholders once the owner provides contact email/domain |
 | Translations | App strings exist in `values/` (en) and `values-ko/` | 8 locales: ja, `b+zh+Hans`, es, fr, de, `pt` (Brazilian), ru, vi. Store listing texts already exist in `docs/play/STORE_LISTING.md` |
 
+## Findings 2026-11-25 (new session)
+- `backend: ./gradlew test` fails to compile: `server/src/test/.../qa/QaClients.kt` was rewritten (QaInstance/QaServer.start) but the 5 QA test files still use the removed `QaHttp`. QA phase 2 must finish this migration first. `:core:test` is green.
+- Android: 194 unit tests green; lint had 1 error (`NbApp.kt:542` LocalContextGetResourceValueCall), assigned to the Android phase 2 agent.
+- Maven Central often answers HTTP 429 here; rerunning Gradle works because downloads are cached.
+
 ## Suggested order
 1. Android phase 2 (opus) and sound finishing (sonnet) in parallel.
 2. Design review of the new renders (opus), then one Android fix round.
