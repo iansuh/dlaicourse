@@ -39,7 +39,7 @@ Network: dl.google.com and gcp.mirrors.maven.org are allowed in the environment 
 - Maven Central often answers HTTP 429 here; rerunning Gradle works because downloads are cached.
 
 ## New owner decision 2026-11-25: Remove ads purchase
-README "Remove ads" + updated interstitial rule (now also after online matches). Not implemented yet. After Android phase 2 lands: an Android agent (opus) adds Play Billing + Settings/results entry + interstitial rule change + tests; the release docs (`docs/play/`: Data safety, privacy policy, store listing "In-app purchases", RELEASE_GUIDE product setup in Play Console) get a sonnet docs pass. Owner must create the in-app product `remove_ads` in Play Console.
+README "Remove ads" + updated interstitial rule (now also after online matches). Not implemented yet. After Android phase 2 lands: an Android agent (opus) adds Play Billing + Settings/results entry + interstitial rule change + tests; the release docs (`docs/play/`: Data safety, privacy policy, store listing "In-app purchases", RELEASE_GUIDE product setup in Play Console) get a sonnet docs pass. Owner must create the in-app product `remove_ads` in Play Console. Play docs are updated (2026-11-25; terms now `2026-11-v3`). Billing agent must also meet `docs/play/POLICY_CHECKLIST.md` 11.1 and 12 and POLICY_REVIEW Android item 13: purchase token never logged or sent to our server; after purchase no Mobile Ads init and no UMP form; online interstitial safeguards (not with chat/keyboard open, not if the player left the screen, not in the review room, not when `remove_ads` is owned).
 
 ## Suggested order
 1. Android phase 2 (opus) and sound finishing (sonnet) in parallel.
