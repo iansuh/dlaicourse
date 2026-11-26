@@ -16,6 +16,10 @@ These are fixed for v1. Change them here first if the team agrees on something e
 - 10 languages: ko, en, ja, zh-CN, es, fr, de, pt-BR, ru, vi. A beginner can learn the rules inside the app.
 - Spirit: "a quiet quick match in a short break". Silent by default, one-handed, works in split-screen / pop-up windows, short reconnects survive an app switch.
 
+### Visual design (owner decision 2026-11-26)
+- After playing the app the owner found the dark "night game" look cluttered. **Direction A "Clean white"** (`design/redesign/PROPOSAL.md`) is the new default: white background, near-black text, one blue accent, flat, one clear primary action per screen, memo behind a "메모" sheet, inning table behind "회별 기록 보기", hints with letter + shape + colour (colour-blind safe), Inter digits.
+- A dark theme may come later as the system dark-mode option; light is the default.
+
 ### Sound (owner request 2026-11-21)
 - **Sound effects**: keypad, sending a guess, the hint reveal (distinct for strike, ball and out), solving, win / lose / draw, match found, round timer warning, chat message, UI navigation. Short, crisp, ballpark-flavoured, never cartoonish.
 - **Music**: one calm menu loop and one low-key match loop, off by default.
