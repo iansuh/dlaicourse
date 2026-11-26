@@ -151,3 +151,26 @@ Build `7d73fc4`. Same method as round 1: reference | render | diff for the 59 re
 Fixed and verified: the 1.3× numeral cap and the large-text match layout (all six digits kept), results / lobby / team result at 200 % and small windows, compact slots, memo labels, chat targets and name line, masked colour, team best hints, the interactive tutorial, the transfer-entry position, home hero, lobby band, slider, scrim, phrases, remove-ads rows and states, the result link. No non-token colour.
 
 Deviation decisions: player card from the long-press sheet accepted; reconnect countdown from the first sighting accepted as interim; empty profile tables rejected (hide the sections until the server sends the data); missing opponent sheet and server-error dialog rejected; tutorial team card, review-room bot id, interstitial hold timing, the delete-dialog purchase paragraph, the privacy-row behaviour, the live-board leave copy, the small-window team status and the deferred cross-fade accepted.
+
+## 2026-11-26: Final sign-off review after fix round 2 (480 renders + 70 QA locale renders)
+
+Build `e8e9102`. The renders were recorded in `25fdd6e`, and the app source has not changed since. Same method as round 2: reference | render pairs (now including de / ru), every `-small-*`, `-ko-font200`, de / ru / vi and QA locale render opened, PIL measurements at density 2, a flat-colour audit over all 550 PNGs, and AA contrast for the new pairs. Full report: [`REVIEW_FINAL.md`](REVIEW_FINAL.md).
+
+**Verdict: SIGN-OFF WITH LISTED MINORS.** Of the 24 items open after round 2: 21 fixed, 1 resolved by a spec update (D2-51), 2 partly fixed and carried as minors (D2-22, D2-48). New: 3 minors. Open in total: 0 blocker, 0 major, 5 minor.
+
+| Remaining minors | |
+| --- | --- |
+| M-1 | `report-card-norecord` header block 4.5 dp taller than the shot (D2-22 residual) |
+| M-2 | 360 × 320 lobby with the reconnect banner shows only a ~20 dp sliver of a seat (D2-48 residual) |
+| M-3 | `WordFit` auto-shrink has no absolute floor (13 sp may reach 6.5 dp at 100 %); renders are fine today (smallest ≈ 80–90 %) |
+| M-4 | de / ru copy drifts from the design strings ("Geg." / "Сопер." abbreviations that are not needed, "Raten" / "Назвать" lose the pitch metaphor, "Start" for Home) |
+| M-5 | 7 sweep findings at 360 × 320 + 200 % (de 6, en 1); the `search-60s` clipped height should scroll |
+
+Spec changes made in this review:
+- **11 §2 transfer code:** 3 × 4 plates, width min(28, fit) with a 22 dp floor, 2 / 8 dp gaps, 48 dp high at large text, and the expired state.
+- **DESIGN_SYSTEM 11.3 shrink-to-fit rule:** floor = max(component minimum, 11 dp rendered, 100 % token size at font scale ≥ 1.5), then wrap / ellipsis.
+- **01 §0:** update note for the approved birth year + month entry.
+
+Deviation decisions: year + month age entry accepted; server-error dialog actions accepted; opponent sheet from the overflow menu accepted; result link hidden at large text accepted; auto-shrink accepted with the floor.
+
+Conditions before release (carried, not design defects): the best-hint 150 ms cross-fade (round-2 condition, still "not yet"), and the owner must fill in the `[개발자 표시명]` / `[시행일]` placeholders in the legal docs (the release build already refuses them).

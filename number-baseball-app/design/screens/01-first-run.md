@@ -6,6 +6,8 @@ Order on first launch: **age → nickname → tutorial → Home**. A restored ac
 
 ## 0. Age (birth year)
 
+> **Update 2026-11-26 (final sign-off): birth year and month.** Owner decision on DEF-051 (minimum age 14 must hold exactly). The app asks for year **and month** on one keypad: "태어난 해" over 4 plates, 16 dp gap, "달" over 2 plates; plate width shrinks to fit 6 plates + gaps in the content width (≤ 56 dp, 64 dp high); title "태어난 해와 달을 입력해 주세요", lead "태어난 해와 달만 확인해요. 이름이나 생일 날짜는 묻지 않아요.", error "올바른 연도와 달을 입력해 주세요"; 확인 enabled at 6 digits; age = full years as of the current month (the birth month counts as passed); only the resulting band is stored. The Android renders `age-*` are the reference until the shots are regenerated; where the table below says "year" / 4 slots, read year + month / 6 slots.
+
 **Purpose:** owner decision: minimum age 14. The screen is neutral: it asks only for the birth year and never hints at the required age (no number, no "you must be…").
 
 | Element | Spec |

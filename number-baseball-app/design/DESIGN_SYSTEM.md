@@ -457,6 +457,7 @@ Live regions: round result (polite, the log row text), pitch clock at 10 s and 5
 - Hints are never colour alone (section 2.3). Error states always have text, not only a red outline.
 - All text meets 4.5:1, all control boundaries 3:1 (section 2.2).
 - At 200 % font scale no text is clipped: titles wrap to 2 lines, buttons grow in height (min 56 dp, padding 16 dp vertical) and wrap to 2 lines rather than ellipsize; the keypad numerals cap at 1.3×.
+- **Shrink to fit (added at final sign-off, 2026-11-26).** A UI label (never player content such as names or chat) that would clip, ellipsize or break inside a word may step its size down before it wraps or ellipsizes, in 5 % steps, to a floor of **the larger of** (a) its per-component minimum scale (70 % default; 50–55 % for segment items, column headers, button labels and team badges), (b) **11 dp rendered**, and (c) at font scale ≥ 1.5, **the token's size at 100 %** (a large-text user never sees a label smaller than a default-size user). Below the floor the normal fallbacks apply: wrap by word / 어절, then ellipsis with the full text in TalkBack. `micro` (12 sp) stays the smallest token; shrinking is a fitting step, not a style.
 - Keyboard and switch access: a 2 dp chalk focus ring, 2 dp outside every focusable element; Enter on a key types it; Enter on Pitch pitches. Hardware number keys type digits on the match screen.
 
 ---
