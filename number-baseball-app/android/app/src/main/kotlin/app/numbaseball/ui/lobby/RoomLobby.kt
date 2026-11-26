@@ -300,7 +300,7 @@ fun RoomLobbyScreen(state: LobbyUiState, actions: LobbyActions) {
         // ADAPTIVE §1 (V2-17): in small windows the region opens scrolled just far enough to show the team header and one
         // full seat (36 + 56 dp), e.g. under the reconnect banner; the invite row and rules stay one scroll away.
         var teamsTop by remember { mutableStateOf(-1) }
-        val headerAndSeat = with(androidx.compose.ui.platform.LocalDensity.current) { (36.dp + 4.dp + 56.dp).roundToPx() }
+        val headerAndSeat = with(androidx.compose.ui.platform.LocalDensity.current) { (36.dp + 4.dp + 56.dp + 20.dp).roundToPx() }
         LaunchedEffect(compact, teamsTop, scroll.viewportSize, state.connection) {
             if (!compact || teamsTop < 0 || scroll.viewportSize == 0) return@LaunchedEffect
             val target = (teamsTop + headerAndSeat - scroll.viewportSize).coerceIn(0, scroll.maxValue)

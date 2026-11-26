@@ -206,7 +206,8 @@ fun HomeScreen(
         }
         val modes: @Composable () -> Unit = {
             Column {
-                if (!compact) {
+                // Large text: no section label either (as in small windows), so the tiles fit (polish 3).
+                if (!compact && !large) {
                     Text(stringResource(R.string.home_other_modes), style = NbType.labelSmall, color = NbColors.text3, modifier = Modifier.padding(start = 4.dp))
                     VSpacer(12.dp)
                 }
@@ -241,7 +242,7 @@ fun HomeScreen(
                 ) {
                     Column(Modifier.heightIn(min = with(this@SubcomposeLayout) { constraints.maxHeight.toDp() })) {
                         upper()
-                        Spacer(Modifier.weight(1f).heightIn(min = if (compact) 8.dp else 16.dp))
+                        Spacer(Modifier.weight(1f).heightIn(min = if (compact || large) 8.dp else 16.dp))
                         if (showHero) {
                             hero()
                             Spacer(Modifier.weight(1f).heightIn(min = 16.dp))
@@ -326,7 +327,8 @@ private fun MeAndRecord(state: HomeUiState, compact: Boolean, onProfile: () -> U
             HSpacer(12.dp)
             Column(Modifier.weight(1f)) {
                 NameWithTag(state.nickname, state.tag, nameStyle = NbType.subtitle.copy(fontSize = 17.sp, lineHeight = 24.sp))
-                if (!compact) Text(stringResource(R.string.record_label), style = NbType.caption, color = NbColors.text3)
+                // Large text drops the caption too (as in small windows), so the three mode tiles stay in view (polish 3).
+                if (!compact && !large) Text(stringResource(R.string.record_label), style = NbType.caption, color = NbColors.text3)
             }
         }
         VSpacer(if (compact) 8.dp else 20.dp)

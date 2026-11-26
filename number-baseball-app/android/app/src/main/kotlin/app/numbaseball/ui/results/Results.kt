@@ -448,7 +448,9 @@ private fun LineScore(summary: MatchSummary, large: Boolean, modifier: Modifier 
             val label = if (large) 96.dp else 80.dp
             val best = if (large) 72.dp else 56.dp
             val available = maxWidth - label - best
-            val scrolls = rounds > 9 || (large && available / rounds < 32.dp)
+            // Large text: columns may narrow to 26 dp (one capped digit fits) before the table scrolls, so a 6-round
+            // match shows round 1 (V2-11); when it does scroll, the left fade shows while scrolled from the start.
+            val scrolls = rounds > 9 || (large && available / rounds < 26.dp)
             val column = if (scrolls) 32.dp else minOf(if (large) 48.dp else 32.dp, available / rounds)
             val scroll = rememberScrollState()
             LaunchedEffect(rounds) { scroll.scrollTo(scroll.maxValue) }

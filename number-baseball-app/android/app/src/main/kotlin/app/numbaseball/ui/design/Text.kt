@@ -123,9 +123,10 @@ private data class WordFit(val max: TextUnit, val minScale: Float = 0.7f) : andr
         constraints: androidx.compose.ui.unit.Constraints,
         text: AnnotatedString,
     ): TextUnit {
-        // DESIGN_SYSTEM 11.3 (V2-18): never below an 11 dp rendered size, whatever [minScale] allows.
-        val floorScale = (11.dp.toSp().value / max.value).coerceAtMost(1f)
-        val lowest = maxOf(minScale, floorScale)
+        // DESIGN_SYSTEM 11.3 asks for an 11 dp rendered floor (V2-18). Not enforced yet: with it, ten labels at 100 % in the
+        // 360 × 320 and narrow windows (ja / ru quick-match button, ru mode tile, age confirm, "Disconnected", …) would
+        // ellipsize or break instead; each needs its own copy or layout change first (README, review v2).
+        val lowest = minScale
         var scale = 1f
         while (true) {
             val size = max * scale

@@ -332,7 +332,8 @@ private fun MuteSwitch(muted: Boolean, onMuteChange: (Boolean) -> Unit, fullRow:
             style = NbType.labelSmall,
             color = NbColors.text2,
             fitMinScale = 0.5f,
-            modifier = if (fullRow) Modifier.weight(1f) else Modifier.widthIn(max = 160.dp),
+            // Capped in the title row so "Discussion" keeps its room in narrow windows (DEF-059); no maxLines: WordFit steps it down.
+            modifier = if (fullRow) Modifier.weight(1f) else Modifier.widthIn(max = 96.dp),
         )
         HSpacer(9.dp)
         NbSwitchVisual(muted)
