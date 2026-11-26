@@ -160,7 +160,7 @@ class DefaultAppContainer(context: Context, override val config: AppConfig) : Ap
     }
 
     override val billing: BillingRepository by lazy {
-        DefaultBillingRepository(PlayBillingGateway(appContext), DataStoreEntitlementStore(appContext), appScope)
+        DefaultBillingRepository(app.numbaseball.billing.createBillingGateway(appContext), DataStoreEntitlementStore(appContext), appScope)
     }
 
     override val network: NetworkMonitor by lazy { AndroidNetworkMonitor(appContext) }

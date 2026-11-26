@@ -36,8 +36,10 @@ class AudioGateTest {
         assertFalse(effects(settings = defaults.copy(effectsEnabled = false)))
     }
 
-    @Test fun musicIsOffByDefault() {
-        assertFalse(AudioGate.musicAllowed(defaults, foreground = true, audioMode = AudioManager.MODE_NORMAL))
+    @Test fun musicIsOnByDefaultButFollowsSilentMode() {
+        // Owner decision 2026-11-26: the calm music is on by default; silent/vibrate mode still mutes it.
+        assertTrue(AudioGate.musicAllowed(defaults, foreground = true, audioMode = AudioManager.MODE_NORMAL))
+        assertFalse(AudioGate.musicAllowed(defaults, foreground = true, audioMode = AudioManager.MODE_NORMAL, ringerMode = AudioManager.RINGER_MODE_SILENT))
         val on = defaults.copy(musicEnabled = true)
         assertTrue(AudioGate.musicAllowed(on, foreground = true, audioMode = AudioManager.MODE_NORMAL))
         assertFalse(AudioGate.musicAllowed(on, foreground = false, audioMode = AudioManager.MODE_NORMAL))

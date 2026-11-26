@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.map
 data class AppSettings(
     val effectsEnabled: Boolean = true,
     val effectsVolume: Float = 0.7f,
-    val musicEnabled: Boolean = false,
+    val musicEnabled: Boolean = true, // owner decision 2026-11-26: calm music on by default (still muted by "Follow silent mode")
     val musicVolume: Float = 0.4f,
     val followSilentMode: Boolean = true,
     val hapticsEnabled: Boolean = true,
