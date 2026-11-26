@@ -62,3 +62,9 @@ When agents stop with a usage-limit error, note the reset time and resume work a
 - Fixed after the readiness pass: graceful-stop flake (writer flush wait before engine stop, `acSrv01` 6/6) and stale `DEFAULT_TERMS_VERSION`.
 - Before the production release: (1) a final design sign-off review (opus) on the round-2 renders (`design/REVIEW_PHASE2_ROUND2.md` still says not signed off; fix round 2 addressed all its items); (2) make the release build fail when `docs/play/*.md` still contain `[대괄호]` placeholders (check in `generateLegalTexts`); (3) the manual on-device checklist once the owner has AdMob, Play Console and license testers.
 - The hourly scheduled task was deleted because nothing runs while we wait on the owner. Create a new one when work resumes.
+
+## After the final design review (2026-11-26)
+- Design: **signed off with 5 minors** (`design/REVIEW_FINAL.md`). Release condition (best-hint 150 ms cross-fade, 08 §2) is done in `TeamBoard.kt`.
+- M-3 (shrink floor, DESIGN_SYSTEM 11.3) is **not applied**: tried in `WordFit` (11 dp floor, and the 100 % size floor at font scale ≥ 1.5); both reintroduce clipping/word breaks in the QA layout sweeps (ru/de/ja/vi at 320 dp, 360×320 and 200 %). Needs layout work per screen; post-release minor. M-1, M-2, M-4 (de/ru wording), M-5 (7 findings) also post-release.
+- Release build refuses `[placeholder]` blanks in the public sections of `docs/play/TERMS_OF_USE.md` / `PRIVACY_POLICY.md` (`checkReleaseConfig`; skipped with `NB_ALLOW_PLACEHOLDER_RELEASE=true` for CI).
+- Remaining work is waiting on the owner (`docs/play/RELEASE_READINESS.md` §5), then the manual on-device checklist.

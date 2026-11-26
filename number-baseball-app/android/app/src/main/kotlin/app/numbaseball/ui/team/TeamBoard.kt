@@ -594,10 +594,13 @@ private fun PlayerCell(player: PlayerView?, winner: Boolean, loser: Boolean, bes
             best != null -> {
                 Text(stringResource(R.string.best), style = NbType.caption, color = NbColors.text3)
                 HSpacer(6.dp)
-                if (best.first == 0 && best.second == 0) {
-                    OutTag(height = 18.dp, fontSize = 11.sp, padding = 4.dp)
-                } else {
-                    Text("${best.first}S ${best.second}B", style = NbType.numTag, color = if (loser) NbColors.text3 else NbColors.text2)
+                // 08 §2: a new best hint cross-fades in over 150 ms.
+                androidx.compose.animation.Crossfade(best, animationSpec = androidx.compose.animation.core.tween(150), label = "bestHint") { b ->
+                    if (b.first == 0 && b.second == 0) {
+                        OutTag(height = 18.dp, fontSize = 11.sp, padding = 4.dp)
+                    } else {
+                        Text("${b.first}S ${b.second}B", style = NbType.numTag, color = if (loser) NbColors.text3 else NbColors.text2)
+                    }
                 }
             }
             // No resolved guess yet (or a 1.0 server without best hints): "최고 –", so every row keeps its two lines (08 §2).
