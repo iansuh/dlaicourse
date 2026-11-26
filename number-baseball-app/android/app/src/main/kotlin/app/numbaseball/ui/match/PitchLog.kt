@@ -95,6 +95,10 @@ fun PitchLog(
     val rows = myRounds.asReversed()
     val listState = rememberLazyListState()
     val canScroll by remember { derivedStateOf { listState.canScrollForward } }
+    // A new round is inserted at the top; LazyColumn would keep the previous first row anchored and leave the new
+    // result just above the visible area (owner feedback 2026-11-26). Bring the newest row into view every round.
+    val newestRound = rows.firstOrNull()?.round
+    androidx.compose.runtime.LaunchedEffect(newestRound) { if (newestRound != null) listState.scrollToItem(0) }
     LazyColumn(state = listState, modifier = modifier.fillMaxSize().fadingEdges(bottom = 16.dp, enabled = canScroll)) {
         itemsIndexed(rows, key = { _, r -> r.round }) { index, entry ->
             val opponentEntry = opponentRounds.firstOrNull { it.round == entry.round }
