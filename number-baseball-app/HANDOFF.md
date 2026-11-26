@@ -68,3 +68,10 @@ When agents stop with a usage-limit error, note the reset time and resume work a
 - M-3 (shrink floor, DESIGN_SYSTEM 11.3) is **not applied**: tried in `WordFit` (11 dp floor, and the 100 % size floor at font scale ≥ 1.5); both reintroduce clipping/word breaks in the QA layout sweeps (ru/de/ja/vi at 320 dp, 360×320 and 200 %). Needs layout work per screen; post-release minor. M-1, M-2, M-4 (de/ru wording), M-5 (7 findings) also post-release.
 - Release build refuses `[placeholder]` blanks in the public sections of `docs/play/TERMS_OF_USE.md` / `PRIVACY_POLICY.md` (`checkReleaseConfig`; skipped with `NB_ALLOW_PLACEHOLDER_RELEASE=true` for CI).
 - Remaining work is waiting on the owner (`docs/play/RELEASE_READINESS.md` §5), then the manual on-device checklist.
+
+## Light redesign v2 (2026-11-26)
+- Owner found the dark look cluttered and chose Direction A "Clean White" (README "Visual design"). Design system v2 (`design/REDESIGN_V2.md`, tokens 2.0.0, 60 light shots), Android implementation, review (`design/REVIEW_V2.md`), fix round and **sign-off with minors** (`design/REVIEW_V2_SIGNOFF.md`).
+- Post-release minors: V2-18 (11 dp shrink floor; shorten 10 ja/ru/de strings first), V2-20 (5 de ellipses at 360×320 + 200 %), V3-01 (sent-phrase bubble overlaps the opponent status at 200 %), V3-02 (chat list edge fade + bottom padding at 200 %).
+- Owner feedback fixed: pitch log jumps to the newest round.
+- Owner progress: email `numbaseball.help@gmail.com`, name 서상현 / Sanghyun Suh, developer name Number Baseball, domain `quietdual.com` (gabia), KIPRIS/Play name check done. Still open: address (home vs virtual office), 070 number, effective date, Render deploy, AdMob, Play Console, payments profile, upload key. Open question: light launcher icon?
+- Test APKs for the owner: `android/app/build/share/numbaseball-test-*.apk` (debug, not committed).

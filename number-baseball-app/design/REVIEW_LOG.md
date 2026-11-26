@@ -224,3 +224,17 @@ Top polish suggestions:
 3. Compact mode tiles on Home at large text.
 4. One 20 dp fade rule for every scroll edge above a pinned bar.
 5. Drag-to-dismiss on sheets.
+
+## 2026-11-26: Sign-off of the v2 fix round (`71b8fb3`, 495 renders)
+
+Every V2 item was checked from the renders. PIL measurements were taken at density 2: toast position, team-board lines, Home divider, lobby rules row, dialog scrim colour and the report no-record sheet. Full report: [`REVIEW_V2_SIGNOFF.md`](REVIEW_V2_SIGNOFF.md).
+
+**Verdict: SIGN-OFF WITH MINORS.**
+- The majors V2-01 (chat header at 200 %) and V2-02 (match toast) are fixed.
+- 16 of the 18 minors are fixed.
+- V2-18 (the 11 dp `WordFit` floor would clip 10 labels in narrow windows) and V2-20 (5 de ellipses at 360 × 320 + 200 %) are accepted as post-release minors. For V2-18, the copy for those strings comes first, then the floor.
+- The polish items P1–P5 cause no regressions. The label-only Home tiles at large text are accepted.
+- New post-release minors:
+  - V3-01: the sent-phrase bubble covers the opponent status at 200 %.
+  - V3-02: the chat list has hard cuts at both edges at 200 %, and the last timestamp is clipped.
+- Release condition still open (not design): the legal placeholders `[개발자 표시명]` / `[시행일]` in `docs/play/`.
