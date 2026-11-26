@@ -5,7 +5,9 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.Settings
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -28,8 +30,14 @@ class MainActivity : AppCompatActivity() {
     @Volatile private var hapticsEnabled = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        // DESIGN_SYSTEM 1.1: light window, transparent bars with dark icons whatever the system dark mode says.
+        val bars = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+        enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
         super.onCreate(savedInstanceState)
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
+        }
         val container = (application as NumBaseballApp).container
         // Ad consent and SDK start wait for the age screen (NbApp), so nothing ad-related happens before it.
         // Remove ads: entitlement from Play at start and on every resume (refunds, pending payments, other devices).
