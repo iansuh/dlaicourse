@@ -56,7 +56,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
@@ -80,8 +79,8 @@ import app.numbaseball.ui.theme.NbType
 import kotlinx.coroutines.delay
 
 /**
- * Top bar (DESIGN_SYSTEM 12.1): 56 dp (48 compact) on `bg`; scrolled = `surface1` with a 1 dp `line` edge, the status-bar
- * area too. Leading icon button at x = 4, title at x = 64 (16 without an icon), trailing buttons end 4 dp from the edge.
+ * Top bar (DESIGN_SYSTEM 12.1): 56 dp (48 compact) on `bg`; scrolled = a 1 dp `line` bottom edge appears (no fill
+ * change). Leading icon button at x = 4, title at x = 64 (16 without an icon), trailing buttons end 4 dp from the edge.
  */
 @Composable
 fun TopBar(
@@ -101,8 +100,7 @@ fun TopBar(
     compactHeight: Dp = 48.dp,
 ) {
     val compact = isCompactHeight()
-    val bg = if (scrolled) NbColors.surface1 else Color.Transparent
-    Column(modifier.fillMaxWidth().background(bg)) {
+    Column(modifier.fillMaxWidth().background(NbColors.bg)) {
         Spacer(Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
         Row(
             Modifier.fillMaxWidth().heightIn(min = if (compact) compactHeight else height).padding(start = 4.dp, end = 4.dp),
@@ -118,7 +116,7 @@ fun TopBar(
                 if (titleContent != null) {
                     titleContent()
                 } else if (title != null) {
-                    Text(title, style = NbType.title, color = NbColors.chalk, maxLines = 2, modifier = Modifier.semantics { heading() })
+                    Text(title, style = NbType.title, color = NbColors.ink, maxLines = 2, modifier = Modifier.semantics { heading() })
                 }
             }
             actions()
@@ -176,8 +174,8 @@ fun ContentColumn(modifier: Modifier = Modifier, content: @Composable ColumnScop
 }
 
 /**
- * Connection banner (DESIGN_SYSTEM 12.16, 14 §2): `surface3`, 1 dp `line` bottom, 10 × 16 dp padding, 12 dp gaps: chase
- * lamps · title + line · countdown in `strike`. Pushes content down, never overlays.
+ * Connection banner (DESIGN_SYSTEM 12.17, 14 §2): full-width `surface2` band, 10 × 16 dp padding, 12 dp gaps: three 8 dp
+ * chase dots · title + line · countdown in `strike`. Pushes content down, never overlays.
  */
 @Composable
 fun ConnectionBanner(title: String, line: String?, countdown: String?) {
@@ -187,7 +185,7 @@ fun ConnectionBanner(title: String, line: String?, countdown: String?) {
     Column(
         Modifier
             .fillMaxWidth()
-            .background(NbColors.surface3)
+            .background(NbColors.surface2)
             .semantics(mergeDescendants = true) {
                 liveRegion = LiveRegionMode.Assertive
                 if (compact) contentDescription = spoken
@@ -199,13 +197,13 @@ fun ConnectionBanner(title: String, line: String?, countdown: String?) {
                 .then(if (compact) Modifier.heightIn(min = 39.dp).padding(horizontal = 12.dp) else Modifier.padding(horizontal = 16.dp, vertical = 10.dp)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ChaseLamps(NbSize.lampM)
+            ChaseLamps(NbSize.dot)
             HSpacer(12.dp)
             // Large text (D2-37, ADAPTIVE §2.2): at most two title lines and the countdown; the explanation is read by
             // TalkBack only, so the banner never pushes the log below its latest row.
             val large = isLargeFont()
             Column(Modifier.weight(1f).then(if (large) Modifier.semantics { contentDescription = spoken } else Modifier)) {
-                Text(title, style = NbType.bodyStrong, color = NbColors.chalk, maxLines = if (compact) 1 else if (large) 2 else Int.MAX_VALUE, overflow = TextOverflow.Ellipsis, fitMinScale = 0.5f)
+                Text(title, style = NbType.bodyStrong, color = NbColors.ink, maxLines = if (compact) 1 else if (large) 2 else Int.MAX_VALUE, overflow = TextOverflow.Ellipsis, fitMinScale = 0.5f)
                 if (line != null && !compact && !large) Text(line, style = NbType.caption, color = NbColors.text2)
             }
             if (countdown != null) {
@@ -213,17 +211,15 @@ fun ConnectionBanner(title: String, line: String?, countdown: String?) {
                 Text(countdown, style = NbType.numTimer, color = NbColors.strike, maxLines = 1, softWrap = false)
             }
         }
-        Hairline()
     }
 }
 
-/** Sheet body (DESIGN_SYSTEM 12.16): `surface3`, top radius 16, grab handle 32 × 4 dp `outline` 12 dp from the top. */
+/** Sheet body (DESIGN_SYSTEM 12.17): white `surface3`, top radius 16, grab handle 32 × 4 dp `dotOff` 12 dp from the top, no shadow. */
 @Composable
 fun SheetSurface(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier
             .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(topStart = NbRadius.l, topEnd = NbRadius.l), ambientColor = NbColors.shadow, spotColor = NbColors.shadow)
             .background(NbColors.surface3, RoundedCornerShape(topStart = NbRadius.l, topEnd = NbRadius.l)),
     ) {
         SheetHandle()
@@ -236,15 +232,15 @@ fun SheetSurface(modifier: Modifier = Modifier, content: @Composable ColumnScope
 @Composable
 fun SheetHandle() {
     Box(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp), contentAlignment = Alignment.Center) {
-        Box(Modifier.size(32.dp, 4.dp).background(NbColors.outline, RoundedCornerShape(2.dp)))
+        Box(Modifier.size(32.dp, 4.dp).background(NbColors.dotOff, RoundedCornerShape(2.dp)))
     }
 }
 
-/** Sheet title row: 48 dp, `title` at 16 dp, optional trailing content (close button, switch). */
+/** Sheet title row: 56 dp (48 for the chat), `title` at 16 dp, optional trailing content (close button, switch). */
 @Composable
-fun SheetTitle(title: String, trailing: @Composable RowScope.() -> Unit = {}) {
-    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = NbType.title, color = NbColors.chalk, fitMinScale = 0.5f, modifier = Modifier.weight(1f).semantics { heading() })
+fun SheetTitle(title: String, height: Dp = 56.dp, trailing: @Composable RowScope.() -> Unit = {}) {
+    Row(Modifier.fillMaxWidth().heightIn(min = if (isCompactHeight()) 48.dp else height).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(title, style = NbType.title, color = NbColors.ink, fitMinScale = 0.5f, modifier = Modifier.weight(1f).semantics { heading() })
         trailing()
     }
 }
@@ -268,7 +264,7 @@ fun NbModalSheet(onDismiss: () -> Unit, skipPartiallyExpanded: Boolean = true, c
         onDismissRequest = onDismiss,
         sheetState = state,
         containerColor = NbColors.surface3,
-        contentColor = NbColors.chalk,
+        contentColor = NbColors.ink,
         scrimColor = NbColors.scrim,
         shape = RoundedCornerShape(topStart = NbRadius.l, topEnd = NbRadius.l),
         tonalElevation = 0.dp,
@@ -303,7 +299,7 @@ fun NbDialog(
 
 /**
  * Server error / unknown failure (DESIGN_SYSTEM 12.17, 14 §1, D2-43): "문제가 생겼어요" / "잠시 후 다시 시도해 주세요." with
- * 다시 시도 (primary, chalk) and 홈으로. Back or a tap outside only closes it.
+ * 다시 시도 (`accent`) and 홈으로. Back or a tap outside only closes it.
  */
 @Composable
 fun ServerErrorDialog(onRetry: () -> Unit, onHome: () -> Unit, onDismiss: () -> Unit) {
@@ -322,7 +318,7 @@ fun ServerErrorDialog(onRetry: () -> Unit, onHome: () -> Unit, onDismiss: () -> 
 }
 
 /**
- * Dialog windows dim the screen with the `scrim` token (#A3000000 = 64 %) instead of the platform's 60 % (D2-23). Call
+ * Dialog windows dim the screen with the `scrim` token (40 % ink) instead of the platform's 60 % (D2-23). Call
  * inside a `Dialog` content.
  */
 @Composable
@@ -346,19 +342,19 @@ fun DialogSurface(
             Modifier
                 .widthIn(max = 400.dp)
                 .fillMaxWidth()
-                .shadow(8.dp, RoundedCornerShape(NbRadius.l), ambientColor = NbColors.shadow, spotColor = NbColors.shadow)
                 .background(NbColors.surface3, RoundedCornerShape(NbRadius.l))
                 .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp),
         ) {
-            Text(title, style = NbType.title, color = NbColors.chalk, modifier = Modifier.semantics { heading() })
+            Text(title, style = NbType.title, color = NbColors.ink, modifier = Modifier.semantics { heading() })
             if (body != null) {
                 VSpacer(12.dp)
                 Text(body, style = NbType.body, color = NbColors.text2)
             }
             VSpacer(24.dp)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                if (dismissLabel != null) DialogAction(dismissLabel, NbColors.text2, onDismiss)
-                DialogAction(confirmLabel, if (destructive) NbColors.out else NbColors.chalk, onConfirm)
+                // Text-button actions (DESIGN_SYSTEM 12.17): `accent`, destructive `danger`.
+                if (dismissLabel != null) DialogAction(dismissLabel, NbColors.accent, onDismiss)
+                DialogAction(confirmLabel, if (destructive) NbColors.danger else NbColors.accent, onConfirm)
             }
         }
     }
@@ -414,7 +410,7 @@ class ToastState {
 @Composable
 fun rememberToastState() = remember { ToastState() }
 
-/** Toast: 16 dp side margins, [bottomOffset] above the keypad or bottom bar, min 48 dp, radius 8, `surface3`, `body`. */
+/** Toast: 16 dp side margins, [bottomOffset] above the keypad or bottom bar, min 48 dp, radius 12, `inverse`, `body` `onInverse`. */
 @Composable
 fun BoxScope.ToastHost(state: ToastState, bottomOffset: Dp = 16.dp) {
     val message = state.message
@@ -436,14 +432,13 @@ fun BoxScope.ToastHost(state: ToastState, bottomOffset: Dp = 16.dp) {
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = 48.dp)
-                .shadow(8.dp, RoundedCornerShape(NbRadius.m), ambientColor = NbColors.shadow, spotColor = NbColors.shadow)
-                .background(NbColors.surface3, RoundedCornerShape(NbRadius.m))
+                .background(NbColors.inverse, RoundedCornerShape(NbRadius.m))
                 .padding(start = 16.dp, end = 4.dp)
                 .semantics { liveRegion = LiveRegionMode.Polite },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(message.orEmpty(), style = NbType.body, color = NbColors.chalk, modifier = Modifier.weight(1f).padding(vertical = 12.dp))
-            state.actionLabel?.let { NbButton(it, { state.runAction() }, kind = ButtonKind.TEXT) }
+            Text(message.orEmpty(), style = NbType.body, color = NbColors.onInverse, modifier = Modifier.weight(1f).padding(vertical = 12.dp))
+            state.actionLabel?.let { NbButton(it, { state.runAction() }, kind = ButtonKind.TEXT, textColorOverride = NbColors.inverseAccent) }
         }
     }
 }
@@ -474,7 +469,7 @@ internal fun ScreenPadding(content: @Composable ColumnScope.() -> Unit) {
 
 data class MenuItem(val label: String, val destructive: Boolean = false, val onClick: () -> Unit)
 
-/** `more_vert` icon button with its menu (`surface3`, radius 8, `body` items; destructive items in `out`). */
+/** `more_vert` icon button with its menu (`surface3`, radius 12, 1 dp `line` border, no shadow; destructive items in `danger`). */
 @Composable
 fun OverflowMenu(items: List<MenuItem>, description: String) {
     var expanded by remember { mutableStateOf(false) }
@@ -485,10 +480,13 @@ fun OverflowMenu(items: List<MenuItem>, description: String) {
             onDismissRequest = { expanded = false },
             containerColor = NbColors.surface3,
             shape = RoundedCornerShape(NbRadius.m),
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
+            border = androidx.compose.foundation.BorderStroke(1.dp, NbColors.line),
         ) {
             items.forEach { item ->
                 DropdownMenuItem(
-                    text = { Text(item.label, style = NbType.body, color = if (item.destructive) NbColors.out else NbColors.chalk) },
+                    text = { Text(item.label, style = NbType.body, color = if (item.destructive) NbColors.danger else NbColors.ink) },
                     onClick = {
                         expanded = false
                         item.onClick()

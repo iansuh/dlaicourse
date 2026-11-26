@@ -28,7 +28,6 @@ import app.numbaseball.data.online.ConnectionState
 import app.numbaseball.data.online.StopReason
 import app.numbaseball.ui.design.ButtonKind
 import app.numbaseball.ui.design.ConnectionBanner
-import app.numbaseball.ui.design.Hairline
 import app.numbaseball.ui.design.NbButton
 import app.numbaseball.ui.design.formatClock
 import app.numbaseball.ui.theme.NbColors
@@ -79,11 +78,10 @@ private fun StoppedBanner(reason: StopReason, onRetry: () -> Unit) {
         StopReason.NO_ACCOUNT -> R.string.action_retry
         else -> null
     }
-    Column(Modifier.fillMaxWidth().background(NbColors.surface3).semantics { liveRegion = LiveRegionMode.Assertive }) {
+    Column(Modifier.fillMaxWidth().background(NbColors.surface2).semantics { liveRegion = LiveRegionMode.Assertive }) {
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(text), style = NbType.caption, color = NbColors.chalk, modifier = Modifier.weight(1f).padding(vertical = 4.dp))
-            if (action != null) NbButton(stringResource(action), onRetry, kind = ButtonKind.TEXT)
+            Text(stringResource(text), style = NbType.caption, color = NbColors.ink, modifier = Modifier.weight(1f).padding(vertical = 4.dp))
+            if (action != null) NbButton(stringResource(action), onRetry, kind = ButtonKind.TEXT, textColorOverride = NbColors.accent)
         }
-        Hairline()
     }
 }

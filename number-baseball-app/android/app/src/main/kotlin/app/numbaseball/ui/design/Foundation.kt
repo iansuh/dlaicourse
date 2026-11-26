@@ -17,7 +17,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import app.numbaseball.ui.theme.NbSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -36,7 +39,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.vector.PathParser
@@ -80,7 +82,7 @@ fun IconButton48(
     contentDescription: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    tint: Color = NbColors.chalk,
+    tint: Color = NbColors.ink,
     enabled: Boolean = true,
     iconSize: Dp = 24.dp,
 ) {
@@ -90,7 +92,7 @@ fun IconButton48(
             .size(48.dp)
             .clickable(
                 interactionSource = interaction,
-                indication = ripple(bounded = false, radius = 24.dp, color = NbColors.chalk),
+                indication = ripple(bounded = false, radius = 24.dp, color = NbColors.ink),
                 enabled = enabled,
                 role = Role.Button,
                 onClick = onClick,
@@ -108,7 +110,7 @@ fun Hairline(modifier: Modifier = Modifier, color: Color = NbColors.line) {
 }
 
 /** Fades the bottom (and optionally top) edge of scrolling content with a DstIn gradient mask (DESIGN_SYSTEM 16). */
-fun Modifier.fadingEdges(bottom: Dp = 16.dp, top: Dp = 0.dp, enabled: Boolean = true): Modifier =
+fun Modifier.fadingEdges(bottom: Dp = 20.dp, top: Dp = 0.dp, enabled: Boolean = true): Modifier =
     if (!enabled) {
         this
     } else {
@@ -186,31 +188,54 @@ private val MARK_THREE = PathParser().parsePathString(
 ).toPath()
 
 /**
- * Brand mark (DESIGN_SYSTEM 15): number plate with a chalk 3 above three lit strike lamps, drawn from
- * design/icon/ic_launcher_foreground.svg. Default 22 × 32 dp.
+ * In-app brand mark v2 (DESIGN_SYSTEM 15): 32 × 32 dp `ink` plate (radius 8) with the icon's white 3 over three strike
+ * dots ("three strikes"), drawn like the prototype's `mark()` SVG (viewBox 32 × 32).
  */
 @Composable
-fun BrandMark(modifier: Modifier = Modifier, width: Dp = 22.dp, height: Dp = 32.dp, alpha: Float = 1f) {
-    Canvas(modifier.size(width, height).graphicsLayer { this.alpha = alpha }) {
-        // SVG region x 34..74, y 27..85.2 (plate, digit, lamps); scale it into the canvas.
-        val s = size.height / 58.2f
-        val dx = (size.width - 40f * s) / 2f
-        translate(left = dx - 34f * s, top = -27f * s) {
-            scale(s, pivot = Offset.Zero) {
-                drawRoundRect(NbColors.surface2, Offset(36f, 28f), Size(36f, 44f), CornerRadius(6f))
-                drawRoundRect(NbColors.lampOffRing, Offset(36.5f, 28.5f), Size(35f, 43f), CornerRadius(5.5f), style = Stroke(1f))
-                drawPath(MARK_THREE, NbColors.chalk)
-                listOf(44.5f, 54f, 63.5f).forEach { x ->
-                    drawCircle(
-                        Brush.radialGradient(listOf(NbColors.strike.copy(alpha = 0.55f), Color.Transparent), Offset(x, 81.5f), 6.6f),
-                        radius = 6.6f,
-                        center = Offset(x, 81.5f),
-                    )
-                    drawCircle(NbColors.strike, radius = 2.75f, center = Offset(x, 81.5f))
+fun BrandMark(modifier: Modifier = Modifier, size: Dp = 32.dp, alpha: Float = 1f) {
+    Canvas(modifier.size(size).graphicsLayer { this.alpha = alpha }.clearAndSetSemantics {}) {
+        val u = this.size.minDimension / 32f
+        scale(u, pivot = Offset.Zero) {
+            drawRoundRect(NbColors.ink, Offset.Zero, Size(32f, 32f), CornerRadius(8f))
+            translate(11.2f, 4.6f) {
+                scale(0.62f, pivot = Offset.Zero) {
+                    translate(-46.47f, -36f) { drawPath(MARK_THREE, NbColors.onInk) }
                 }
             }
+            listOf(11f, 16f, 21f).forEach { x -> drawCircle(NbColors.strike, radius = 1.7f, center = Offset(x, 26f)) }
         }
     }
+}
+
+/** Avatar (DESIGN_SYSTEM 12.10): `surface2` circle with the first grapheme of the name (`subtitle`, `ink`); decorative. */
+@Composable
+fun Avatar(name: String, size: Dp = NbSize.avatarL, modifier: Modifier = Modifier, @DrawableRes icon: Int? = null) {
+    Box(modifier.size(size).background(NbColors.surface2, CircleShape).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+        if (icon != null) {
+            NbIcon(icon, null, NbColors.ink, 20.dp)
+        } else {
+            val initial = remember(name) {
+                val it = java.text.BreakIterator.getCharacterInstance()
+                it.setText(name)
+                val end = it.next()
+                if (end > 0) name.substring(0, end).uppercase() else ""
+            }
+            Text(
+                initial,
+                style = NbType.subtitle.copy(fontSize = if (size >= 48.dp) 18.sp else 15.sp, lineHeight = if (size >= 48.dp) 24.sp else 20.sp),
+                color = NbColors.ink,
+                maxLines = 1,
+                softWrap = false,
+                autoFit = false,
+            )
+        }
+    }
+}
+
+/** A flat status / chase / fill dot (DESIGN_SYSTEM 12: no glow). */
+@Composable
+fun Dot(color: Color, size: Dp = NbSize.dotS, modifier: Modifier = Modifier) {
+    Box(modifier.size(size).background(color, CircleShape).clearAndSetSemantics {})
 }
 
 /** Name (sans) + `#1234` (num, text3) with no space; the name ellipsizes, the tag never does (DESIGN_SYSTEM 3.2). */
@@ -220,7 +245,7 @@ fun NameWithTag(
     tag: String?,
     modifier: Modifier = Modifier,
     nameStyle: TextStyle = NbType.subtitle,
-    nameColor: Color = NbColors.chalk,
+    nameColor: Color = NbColors.ink,
     tagStyle: TextStyle = NbType.numTag,
     tagColor: Color = NbColors.text3,
 ) {
@@ -234,7 +259,7 @@ fun NameWithTag(
     }
 }
 
-/** Team badge 24 × 24 dp (16 dp in chat), radius 4, letter Barlow 700 on team A blue / team B chalk. */
+/** Team badge 24 × 24 dp (16 dp in chat), radius 6, white Inter 700 letter on `teamA` / `teamB` (DESIGN_SYSTEM 12.10). */
 @Composable
 fun TeamBadge(team: Team, size: Dp = 24.dp) {
     Box(
@@ -243,8 +268,8 @@ fun TeamBadge(team: Team, size: Dp = 24.dp) {
     ) {
         Text(
             if (team == Team.A) "A" else "B",
-            style = TextStyle(fontFamily = NbFonts.num, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = if (size >= 24.dp) 16.sp else 12.sp, lineHeight = if (size >= 24.dp) 16.sp else 12.sp),
-            color = NbColors.onChalk,
+            style = TextStyle(fontFamily = NbFonts.num, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = if (size >= 24.dp) 14.sp else 11.sp, lineHeight = if (size >= 24.dp) 16.sp else 12.sp),
+            color = NbColors.onInk,
             maxLines = 1,
             softWrap = false,
             fitMinScale = 0.5f,
@@ -252,23 +277,20 @@ fun TeamBadge(team: Team, size: Dp = 24.dp) {
     }
 }
 
-/** Tags (`micro`, 20 dp, radius 4): outline ("방장", "오프라인") or solid chalk ("나"). */
+/**
+ * Tags (`micro`, 20 dp, radius 6, 6 dp padding, DESIGN_SYSTEM 12.10): default `surface2` + `text2` ("방장", "오프라인";
+ * [onSurface2] = on a `surface2` seat, where the fill is `bg`), or solid `ink` + `onInk` ("나").
+ */
 @Composable
-fun NbTag(text: String, solid: Boolean = false) {
+fun NbTag(text: String, solid: Boolean = false, onSurface2: Boolean = false) {
     Box(
         Modifier
             .heightIn(min = 20.dp)
-            .then(
-                if (solid) {
-                    Modifier.background(NbColors.chalk, RoundedCornerShape(NbRadius.s))
-                } else {
-                    Modifier.border(1.dp, NbColors.outline, RoundedCornerShape(NbRadius.s))
-                },
-            )
+            .background(if (solid) NbColors.ink else if (onSurface2) NbColors.bg else NbColors.surface2, RoundedCornerShape(NbRadius.s))
             .padding(horizontal = 6.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = NbType.micro, color = if (solid) NbColors.onChalk else NbColors.text2, maxLines = 1)
+        Text(text, style = NbType.micro, color = if (solid) NbColors.onInk else NbColors.text2, maxLines = 1)
     }
 }
 
@@ -287,7 +309,7 @@ internal val SpacedBy8 = Arrangement.spacedBy(8.dp)
  * Text link underline like the prototype's `text-decoration: underline; text-underline-offset: 3px;
  * text-decoration-color: outline`: a 1 dp `outline` line 3 dp under the baseline of single-line text.
  */
-fun Modifier.underlined(color: Color = NbColors.outline): Modifier = drawBehind {
+fun Modifier.underlined(color: Color = NbColors.accent): Modifier = drawBehind {
     val y = size.height / 2 + 4.5.dp.toPx() + 3.dp.toPx()
     drawLine(color, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), strokeWidth = 1.dp.toPx())
 }

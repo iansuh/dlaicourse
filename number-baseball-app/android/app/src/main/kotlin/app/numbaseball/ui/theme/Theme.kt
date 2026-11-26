@@ -2,39 +2,51 @@ package app.numbaseball.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
-import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
-private val NightGameColors = darkColorScheme(
-    primary = NbColors.chalk,
-    onPrimary = NbColors.onChalk,
-    primaryContainer = NbColors.surface3,
-    onPrimaryContainer = NbColors.chalk,
-    secondary = NbColors.ball,
-    onSecondary = NbColors.onChalk,
-    secondaryContainer = NbColors.surface3,
-    onSecondaryContainer = NbColors.chalk,
+/**
+ * "Clean White" (DESIGN_SYSTEM v2 16): Material roles mapped onto the tokens. Flat: every container role is `bg` or
+ * `surface2`, so a Material default can never add a tinted (tonal) surface.
+ */
+private val CleanWhiteColors = lightColorScheme(
+    primary = NbColors.accent,
+    onPrimary = NbColors.onAccent,
+    primaryContainer = NbColors.accentTint,
+    onPrimaryContainer = NbColors.ink,
+    secondary = NbColors.ink,
+    onSecondary = NbColors.onInk,
+    secondaryContainer = NbColors.surface2,
+    onSecondaryContainer = NbColors.ink,
     tertiary = NbColors.strike,
-    onTertiary = NbColors.onChalk,
+    onTertiary = NbColors.onAccent,
     background = NbColors.bg,
-    onBackground = NbColors.chalk,
+    onBackground = NbColors.ink,
     surface = NbColors.bg,
-    onSurface = NbColors.chalk,
+    onSurface = NbColors.ink,
     surfaceVariant = NbColors.surface2,
     onSurfaceVariant = NbColors.text2,
+    surfaceTint = NbColors.bg,
+    surfaceBright = NbColors.bg,
+    surfaceDim = NbColors.surface2,
     surfaceContainerLowest = NbColors.bg,
-    surfaceContainerLow = NbColors.surface1,
+    surfaceContainerLow = NbColors.bg,
     surfaceContainer = NbColors.surface2,
-    surfaceContainerHigh = NbColors.surface3,
-    surfaceContainerHighest = NbColors.surface4,
+    surfaceContainerHigh = NbColors.bg,
+    surfaceContainerHighest = NbColors.surface2,
+    inverseSurface = NbColors.inverse,
+    inverseOnSurface = NbColors.onInverse,
+    inversePrimary = NbColors.inverseAccent,
     outline = NbColors.outline,
     outlineVariant = NbColors.line,
-    error = NbColors.out,
-    onError = NbColors.onChalk,
+    error = NbColors.danger,
+    onError = NbColors.onAccent,
+    errorContainer = NbColors.dangerTint,
+    onErrorContainer = NbColors.danger,
     scrim = NbColors.scrim,
 )
 
-private val NightGameTypography = Typography(
+private val CleanWhiteTypography = Typography(
     displaySmall = NbType.display,
     headlineMedium = NbType.headline,
     titleLarge = NbType.title,
@@ -47,8 +59,8 @@ private val NightGameTypography = Typography(
     labelSmall = NbType.micro,
 )
 
-/** Dark-only theme wired to design/tokens.json. Phase 2 builds the custom components on top of [NbColors] / [NbType]. */
+/** Light-only theme wired to design/tokens.json 2.0.0 (a system-driven dark palette may follow, DESIGN_SYSTEM 1.3). */
 @Composable
 fun NumBaseballTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = NightGameColors, typography = NightGameTypography, content = content)
+    MaterialTheme(colorScheme = CleanWhiteColors, typography = CleanWhiteTypography, content = content)
 }

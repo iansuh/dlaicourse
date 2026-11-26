@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.ripple
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -67,11 +70,12 @@ import app.numbaseball.ui.theme.NbSize
 import app.numbaseball.ui.theme.NbType
 import kotlin.math.roundToInt
 
-enum class ButtonKind { PRIMARY, SECONDARY, TONAL, TEXT, DESTRUCTIVE_OUTLINE, DESTRUCTIVE_TEXT }
+enum class ButtonKind { PRIMARY, SECONDARY, TONAL, TEXT, LINK, DESTRUCTIVE_OUTLINE, DESTRUCTIVE_TEXT }
 
 /**
- * Buttons of DESIGN_SYSTEM 12.13: radius 8, icon 20 dp + 8 dp gap, 24 dp padding (12 small), wraps to 2 lines rather
- * than truncating. Disabled = `surface2` fill, no border, `textDisabled`.
+ * Buttons of DESIGN_SYSTEM 12.14: radius 12, icon 20 dp + 8 dp gap, 24 dp padding (12 small), wraps to 2 lines rather
+ * than truncating. Primary 56 `accent`; secondary 56 `bg` + 1.5 dp `line`; tonal 48 `surface2`; text 36 (48 target)
+ * `labelSmall` `text2`; link `labelSmall` 14 sp `accent` + chevron. Disabled = `surface2`, no border, `textDisabled`.
  */
 @Composable
 fun NbButton(
@@ -84,36 +88,54 @@ fun NbButton(
     small: Boolean = false,
     /** Overrides the variant's height (buttons side by side in small windows are 48 dp, ADAPTIVE.md §1). */
     heightOverride: Dp? = null,
+    /** Text colour override for text buttons (dialog-style accent actions). */
+    textColorOverride: Color? = null,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val shape = RoundedCornerShape(NbRadius.m)
+    val textLike = kind == ButtonKind.TEXT || kind == ButtonKind.DESTRUCTIVE_TEXT || kind == ButtonKind.LINK
     val height = when {
         heightOverride != null -> heightOverride
         small -> NbSize.buttonHeightSmall
         kind == ButtonKind.PRIMARY -> NbSize.buttonHeight
-        kind == ButtonKind.TEXT || kind == ButtonKind.DESTRUCTIVE_TEXT -> NbSize.buttonHeightSmall
+        kind == ButtonKind.TONAL -> NbSize.buttonHeightTonal
+        textLike -> NbSize.buttonHeightSmall
         else -> NbSize.buttonHeightSecondary
     }
     val (fill, border, textColor) = when {
-        !enabled && kind != ButtonKind.TEXT && kind != ButtonKind.DESTRUCTIVE_TEXT -> Triple(NbColors.surface2, null, NbColors.textDisabled)
+        !enabled && !textLike -> Triple(NbColors.surface2, null, NbColors.textDisabled)
         !enabled -> Triple(Color.Transparent, null, NbColors.textDisabled)
-        kind == ButtonKind.PRIMARY -> Triple(if (pressed) NbColors.chalkPressed else NbColors.chalk, null, NbColors.onChalk)
-        kind == ButtonKind.SECONDARY -> Triple(if (pressed) NbColors.surface2 else Color.Transparent, NbColors.outline, NbColors.chalk)
-        kind == ButtonKind.TONAL -> Triple(if (pressed) NbColors.surface3 else NbColors.surface2, null, NbColors.chalk)
-        kind == ButtonKind.DESTRUCTIVE_OUTLINE -> Triple(if (pressed) NbColors.surface2 else Color.Transparent, NbColors.out, NbColors.out)
-        kind == ButtonKind.DESTRUCTIVE_TEXT -> Triple(Color.Transparent, null, NbColors.out)
-        else -> Triple(Color.Transparent, null, NbColors.text2)
+        kind == ButtonKind.PRIMARY -> Triple(if (pressed) NbColors.accentPressed else NbColors.accent, null, NbColors.onAccent)
+        kind == ButtonKind.SECONDARY -> Triple(if (pressed) NbColors.surface2 else NbColors.bg, NbColors.line, NbColors.ink)
+        kind == ButtonKind.TONAL -> Triple(if (pressed) NbColors.surface4 else NbColors.surface2, null, NbColors.ink)
+        kind == ButtonKind.DESTRUCTIVE_OUTLINE -> Triple(if (pressed) NbColors.dangerTint else NbColors.bg, NbColors.danger, NbColors.danger)
+        kind == ButtonKind.DESTRUCTIVE_TEXT -> Triple(Color.Transparent, null, NbColors.danger)
+        kind == ButtonKind.LINK -> Triple(Color.Transparent, null, NbColors.accent)
+        else -> Triple(Color.Transparent, null, textColorOverride ?: NbColors.text2)
     }
-    val textStyle = if (small || kind == ButtonKind.TEXT || kind == ButtonKind.DESTRUCTIVE_TEXT) NbType.labelSmall else NbType.label
+    val textStyle = when {
+        kind == ButtonKind.LINK -> NbType.labelSmall.copy(fontSize = 14.sp)
+        small || textLike -> NbType.labelSmall
+        else -> NbType.label
+    }
     Row(
         modifier = modifier
-            .heightIn(min = maxOf(height, if (kind == ButtonKind.TEXT) 48.dp else height))
+            .heightIn(min = maxOf(height, if (textLike) 48.dp else height))
+            .clip(shape)
             .background(fill, shape)
-            .then(if (border != null) Modifier.border(1.dp, border, shape) else Modifier)
-            .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
-            .padding(horizontal = if (kind == ButtonKind.TEXT) 8.dp else if (small) 12.dp else 24.dp, vertical = 8.dp),
+            .then(if (border != null) Modifier.border(NbSize.border, border, shape) else Modifier)
+            .clickable(interactionSource = interaction, indication = if (textLike) ripple(color = NbColors.ink) else null, enabled = enabled, role = Role.Button, onClick = onClick)
+            .padding(
+                horizontal = when {
+                    kind == ButtonKind.LINK -> 4.dp
+                    textLike -> 8.dp
+                    small -> 12.dp
+                    else -> 24.dp
+                },
+                vertical = if (isLargeFont() && !textLike) 16.dp else 8.dp,
+            ),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -125,12 +147,19 @@ fun NbButton(
                 HSpacer(8.dp)
             }
             // Two lines at most; a long word steps the size down instead of breaking (DEF-059).
-            Text(text, style = textStyle, color = textColor, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, fitMinScale = 0.55f)
+            Text(text, style = textStyle, color = textColor, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, fitMinScale = 0.55f, modifier = Modifier.weight(1f, fill = false))
+            if (kind == ButtonKind.LINK) {
+                HSpacer(2.dp)
+                NbIcon(R.drawable.ic_chevron_right, null, textColor, 18.dp)
+            }
         }
     }
 }
 
-/** Segmented control (DESIGN_SYSTEM 12.12): 48 dp `surface2` track, 4 dp padding and gap, items radius 4. */
+/**
+ * Segmented control = tiles (DESIGN_SYSTEM 12.13): no track, equal `surface2` tiles, 8 dp gap, 48 dp min ([tileHeight]
+ * 52 on Home), radius 12; selected tile `ink`.
+ */
 @Composable
 fun <T> Segmented(
     items: List<T>,
@@ -138,23 +167,22 @@ fun <T> Segmented(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    tileHeight: Dp = NbSize.segmented,
     label: @Composable (item: T, selected: Boolean) -> Unit,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = NbSize.segmented)
-            .background(NbColors.surface2, RoundedCornerShape(NbRadius.m))
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items.forEach { item ->
             val isSelected = item == selected
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = 40.dp)
-                    .background(if (isSelected) NbColors.chalk else Color.Transparent, RoundedCornerShape(NbRadius.s))
+                    .fillMaxHeight()
+                    .heightIn(min = tileHeight)
+                    .clip(RoundedCornerShape(NbRadius.m))
+                    .background(if (isSelected) NbColors.ink else NbColors.surface2)
                     .clickable(enabled = enabled, role = Role.RadioButton) { onSelect(item) },
                 contentAlignment = Alignment.Center,
             ) { label(item, isSelected) }
@@ -162,16 +190,15 @@ fun <T> Segmented(
     }
 }
 
-/** Segment label: Barlow 600 20 sp number + `labelSmall` unit ("3자리"), selected `onChalk`, else `text2`. */
+/** Segment label: number `numSummary` `ink` + unit `labelSmall` `text2` ("4자리"); selected: both `onInk`. */
 @Composable
 fun NumberUnitLabel(number: String, unit: String?, selected: Boolean) {
-    val color = if (selected) NbColors.onChalk else NbColors.text2
-    // Number and unit share a baseline (prototype `.seg button`: align-items baseline, number 600 20 / 40).
-    Row {
-        Text(number, style = NbType.numHint.copy(fontSize = 20.sp, lineHeight = 40.sp, letterSpacing = 0.sp), color = color, modifier = Modifier.alignByBaseline())
+    // Number and unit share a baseline (prototype `.seg button`: align-items baseline, gap 2).
+    Row(Modifier.padding(horizontal = 2.dp)) {
+        Text(number, style = NbType.numSummary, color = if (selected) NbColors.onInk else NbColors.ink, maxLines = 1, softWrap = false, modifier = Modifier.alignByBaseline())
         if (unit != null) {
             HSpacer(2.dp)
-            Text(unit, style = NbType.labelSmall, color = color, maxLines = 1, modifier = Modifier.alignByBaseline())
+            Text(unit, style = NbType.labelSmall, color = if (selected) NbColors.onInk else NbColors.text2, maxLines = 1, softWrap = false, fitMinScale = 0.5f, modifier = Modifier.alignByBaseline())
         }
     }
 }
@@ -181,7 +208,7 @@ fun TextSegmentLabel(text: String, selected: Boolean) {
     Text(
         text,
         style = NbType.labelSmall,
-        color = if (selected) NbColors.onChalk else NbColors.text2,
+        color = if (selected) NbColors.onInk else NbColors.text2,
         textAlign = TextAlign.Center,
         // One line, never broken inside a word (D2-44): the shared Text steps the size down when it does not fit.
         maxLines = 1,
@@ -191,7 +218,7 @@ fun TextSegmentLabel(text: String, selected: Boolean) {
     )
 }
 
-/** Switch 52 × 32 dp (DESIGN_SYSTEM 12.14). The whole row is the target, so this draws only. */
+/** Switch 52 × 32 dp (DESIGN_SYSTEM 12.15): off `bg` + 2 dp `outline` ring, 16 dp `outline` thumb; on `accent`, 24 dp white thumb. */
 @Composable
 fun NbSwitchVisual(checked: Boolean) {
     val thumbX by animateDpAsState(if (checked) 24.dp else 8.dp, tween(NbMotion.short), label = "thumb")
@@ -199,14 +226,14 @@ fun NbSwitchVisual(checked: Boolean) {
     Box(
         Modifier
             .size(52.dp, 32.dp)
-            .background(if (checked) NbColors.chalk else NbColors.surface2, CircleShape)
+            .background(if (checked) NbColors.accent else NbColors.bg, CircleShape)
             .then(if (checked) Modifier else Modifier.border(2.dp, NbColors.outline, CircleShape)),
     ) {
         Box(
             Modifier
                 .offset(x = thumbX, y = (32.dp - thumbSize) / 2)
                 .size(thumbSize)
-                .background(if (checked) NbColors.onChalk else NbColors.text3, CircleShape),
+                .background(if (checked) NbColors.onAccent else NbColors.outline, CircleShape),
         )
     }
 }
@@ -215,7 +242,7 @@ fun NbSwitchVisual(checked: Boolean) {
 @Composable
 fun VolumeSliderRow(label: String, value: Float, enabled: Boolean, onChange: (Float) -> Unit, onRelease: () -> Unit = {}) {
     val percent = (value * 100).roundToInt()
-    val activeColor = if (enabled) NbColors.chalk else NbColors.textDisabled
+    val activeColor = if (enabled) NbColors.accent else NbColors.textDisabled
     var widthPx by remember { mutableStateOf(1f) }
     val density = LocalDensity.current
     fun valueAt(x: Float): Float = ((x / widthPx).coerceIn(0f, 1f) * 20f).roundToInt() / 20f
@@ -252,7 +279,7 @@ fun VolumeSliderRow(label: String, value: Float, enabled: Boolean, onChange: (Fl
             contentAlignment = Alignment.CenterStart,
         ) {
             widthPx = with(density) { maxWidth.toPx() }
-            Box(Modifier.fillMaxWidth().height(4.dp).background(NbColors.surface4, RoundedCornerShape(2.dp)))
+            Box(Modifier.fillMaxWidth().height(4.dp).background(NbColors.line, RoundedCornerShape(2.dp)))
             Box(Modifier.fillMaxWidth(value.coerceIn(0f, 1f)).height(4.dp).background(activeColor, RoundedCornerShape(2.dp)))
             Box(
                 Modifier
@@ -277,10 +304,10 @@ fun VolumeSliderRow(label: String, value: Float, enabled: Boolean, onChange: (Fl
 @Composable
 fun NbRadioVisual(selected: Boolean) {
     Box(
-        Modifier.size(20.dp).border(2.dp, if (selected) NbColors.chalk else NbColors.outline, CircleShape),
+        Modifier.size(20.dp).border(2.dp, if (selected) NbColors.accent else NbColors.outline, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        if (selected) Box(Modifier.size(10.dp).background(NbColors.chalk, CircleShape))
+        if (selected) Box(Modifier.size(10.dp).background(NbColors.accent, CircleShape))
     }
 }
 
@@ -296,7 +323,7 @@ fun RadioRow(text: String, selected: Boolean, onClick: () -> Unit, modifier: Mod
     ) {
         NbRadioVisual(selected)
         HSpacer(16.dp)
-        Text(text, style = NbType.body, color = NbColors.chalk)
+        Text(text, style = NbType.body, color = NbColors.ink)
     }
 }
 
@@ -325,7 +352,7 @@ fun ListRow(
     value: String? = null,
     chevron: Boolean = false,
     destructive: Boolean = false,
-    /** Settings' "Delete account" has only its title in `out` (shot settings-ko-end); the block rows colour the icon too. */
+    /** Settings' "Delete account" has only its title in `danger` (shot settings-ko-end); the block rows colour the icon too. */
     destructiveIcon: Boolean = destructive,
     enabled: Boolean = true,
     titleStyle: TextStyle = NbType.subtitle,
@@ -343,7 +370,7 @@ fun ListRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
-            NbIcon(icon, null, if (destructiveIcon) NbColors.out else if (enabled) NbColors.text2 else NbColors.textDisabled)
+            NbIcon(icon, null, if (destructiveIcon) NbColors.danger else if (enabled) NbColors.text2 else NbColors.textDisabled)
             HSpacer(16.dp)
         } else {
             HSpacer(40.dp)
@@ -351,8 +378,8 @@ fun ListRow(
         Column(Modifier.weight(1f)) {
             Text(title, style = titleStyle, color = when {
                 !enabled -> NbColors.textDisabled
-                destructive -> NbColors.out
-                else -> NbColors.chalk
+                destructive -> NbColors.danger
+                else -> NbColors.ink
             })
             if (subtitle != null) {
                 VSpacer(2.dp)
@@ -398,7 +425,7 @@ fun InsetDivider(inset: Dp = 56.dp) {
     )
 }
 
-/** Text field (DESIGN_SYSTEM 12.14): 56 dp `surface2`, radius 8, 16 dp padding, text 18 sp; focus 2 dp chalk, error 2 dp `out`. */
+/** Text field (DESIGN_SYSTEM 12.15): 56 dp `surface2`, radius 12, 16 dp padding, text 18 sp; focus 2 dp `accent`, error 2 dp `danger`. */
 @Composable
 fun NbTextField(
     value: String,
@@ -407,7 +434,7 @@ fun NbTextField(
     placeholder: String? = null,
     isError: Boolean = false,
     height: Dp = NbSize.textField,
-    textStyle: TextStyle = TextStyle(fontFamily = NbFonts.sans, fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Normal, color = NbColors.chalk),
+    textStyle: TextStyle = TextStyle(fontFamily = NbFonts.sans, fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Normal, color = NbColors.ink),
     horizontalPadding: Dp = 16.dp,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -430,7 +457,7 @@ fun NbTextField(
         singleLine = singleLine,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
-        cursorBrush = SolidColor(NbColors.chalk),
+        cursorBrush = SolidColor(NbColors.accent),
         decorationBox = { inner ->
             Row(
                 Modifier
@@ -439,8 +466,8 @@ fun NbTextField(
                     .background(NbColors.surface2, shape)
                     .then(
                         when {
-                            isError -> Modifier.border(2.dp, NbColors.out, shape)
-                            focused -> Modifier.border(2.dp, NbColors.chalk, shape)
+                            isError -> Modifier.border(2.dp, NbColors.danger, shape)
+                            focused -> Modifier.border(2.dp, NbColors.accent, shape)
                             else -> Modifier
                         },
                     )

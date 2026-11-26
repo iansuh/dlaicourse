@@ -23,7 +23,8 @@ import app.numbaseball.R
 import app.numbaseball.core.protocol.RoundEntry
 import app.numbaseball.ui.design.FitText
 import app.numbaseball.ui.design.Hairline
-import app.numbaseball.ui.design.HintColumns
+import app.numbaseball.ui.design.HintChips
+import app.numbaseball.ui.design.ChipSize
 import app.numbaseball.ui.design.IconButton48
 import app.numbaseball.ui.design.SheetBottomSpace
 import app.numbaseball.ui.design.SheetTitle
@@ -40,40 +41,41 @@ import app.numbaseball.ui.theme.NbType
 @Composable
 fun ColumnScope.OpponentLogSheet(digits: Int, rounds: List<RoundEntry>, onClose: () -> Unit) {
     SheetTitle(stringResource(R.string.opp_log_title)) {
-        IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), onClose, tint = NbColors.text2)
+        IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), onClose)
     }
-    val hint = if (digits >= 5) 52.dp else 44.dp
+    val chips = if (digits >= 5) ChipSize.Wide else ChipSize.Normal
+    val hint = chips.outMinWidth / 2
     if (rounds.isEmpty()) {
         Box(Modifier.fillMaxWidth().heightIn(min = 96.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.opp_log_empty), style = NbType.caption, color = NbColors.text3, textAlign = TextAlign.Center)
         }
     } else {
         Hairline()
-        Row(Modifier.fillMaxWidth().heightIn(min = NbSize.historyHeader).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("#", style = NbType.labelSmall, color = NbColors.text3, maxLines = 1, modifier = Modifier.width(28.dp))
+        Row(Modifier.fillMaxWidth().heightIn(min = 28.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("#", style = NbType.labelSmall, color = NbColors.text3, maxLines = 1, modifier = Modifier.width(30.dp))
             Text(stringResource(R.string.col_opp_guess), style = NbType.labelSmall, color = NbColors.text3, maxLines = 1, modifier = Modifier.weight(1f))
             Text(stringResource(R.string.col_hint), style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.Center, maxLines = 1, modifier = Modifier.width(hint * 2))
         }
         LazyColumn(Modifier.weight(1f, fill = false)) {
-            items(rounds.asReversed(), key = { it.round }) { entry -> OpponentRow(entry, hint) }
+            items(rounds.asReversed(), key = { it.round }) { entry -> OpponentRow(entry, hint, chips) }
         }
     }
     SheetBottomSpace()
 }
 
 @Composable
-private fun OpponentRow(entry: RoundEntry, hint: androidx.compose.ui.unit.Dp) {
+private fun OpponentRow(entry: RoundEntry, hint: androidx.compose.ui.unit.Dp, chips: ChipSize) {
     val spoken = stringResource(R.string.log_row_spoken, entry.round, entry.guess?.toList()?.joinToString(" ") ?: "–", entry.strikes, entry.balls)
     Column(Modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = spoken }) {
         Hairline()
         Row(Modifier.fillMaxWidth().heightIn(min = 47.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(entry.round.toString(), style = NbType.numLabel, color = NbColors.text3, modifier = Modifier.width(28.dp).clearAndSetSemantics {})
-            FitText(entry.guess ?: "—", style = NbType.numLog, color = if (entry.guess == null) NbColors.text3 else NbColors.chalk, modifier = Modifier.weight(1f).clearAndSetSemantics {})
+            Text(entry.round.toString(), style = NbType.numLabel, color = NbColors.text3, modifier = Modifier.width(30.dp).clearAndSetSemantics {})
+            FitText(entry.guess ?: "—", style = NbType.numLog, color = if (entry.guess == null) NbColors.text3 else NbColors.ink, modifier = Modifier.weight(1f).clearAndSetSemantics {})
             Box(Modifier.clearAndSetSemantics {}) {
                 if (entry.guess == null) {
                     Box(Modifier.width(hint * 2), contentAlignment = Alignment.Center) { Text("—", style = NbType.numHint, color = NbColors.text3) }
                 } else {
-                    HintColumns(strikes = entry.strikes, balls = entry.balls, column = hint)
+                    HintChips(strikes = entry.strikes, balls = entry.balls, size = chips)
                 }
             }
         }

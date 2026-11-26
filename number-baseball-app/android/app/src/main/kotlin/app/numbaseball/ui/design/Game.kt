@@ -25,6 +25,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,48 +66,12 @@ import app.numbaseball.ui.theme.NbSize
 import app.numbaseball.ui.theme.NbType
 import kotlinx.coroutines.delay
 
-enum class LampColor(val lit: Color, val glow: Color) {
-    STRIKE(NbColors.strike, NbColors.strikeGlow),
-    BALL(NbColors.ball, NbColors.ballGlow),
-    OUT(NbColors.out, NbColors.outGlow),
-    CHALK(NbColors.chalk, Color(0x40ECEFE6)),
-}
-
 /**
- * Count lamp (DESIGN_SYSTEM 12.6): disc + radial glow drawn behind (radius 1.25 × size, no blur). [ignite] 0..1 animates
- * opacity and glow radius. Unlit: `lampOff` + 1 dp `lampOffRing`. Decorative for TalkBack.
+ * Waiting chase (DESIGN_SYSTEM 8.2.4): three flat dots, one [lit] at a time (400 ms each), the others [off]; one static
+ * lit dot under reduced motion. The name is kept from v1 (lamps are gone in v2). Decorative for TalkBack.
  */
 @Composable
-fun Lamp(color: LampColor, lit: Boolean, size: Dp = NbSize.lampS, ignite: Float = 1f, glow: Boolean = true) {
-    Canvas(Modifier.size(size).clearAndSetSemantics {}) {
-        val r = this.size.minDimension / 2
-        val c = center
-        if (!lit || ignite <= 0f) {
-            drawCircle(NbColors.lampOff, r, c)
-            drawCircle(NbColors.lampOffRing, r - 0.5.dp.toPx(), c, style = Stroke(1.dp.toPx()))
-        }
-        if (lit && ignite > 0f) {
-            if (glow) {
-                val gr = this.size.minDimension * 1.25f * ignite
-                drawCircle(Brush.radialGradient(listOf(color.glow, Color.Transparent), c, gr.coerceAtLeast(0.1f)), gr, c)
-            }
-            drawCircle(color.lit.copy(alpha = ignite), r, c)
-        }
-    }
-}
-
-/** A row of [total] lamps of which the first [lit] are on; gap 6 / 3 dp (2 dp for 5+ lamps). */
-@Composable
-fun LampRow(color: LampColor, total: Int, lit: Int, size: Dp = NbSize.lampS, gap: Dp? = null, ignites: List<Float>? = null) {
-    val g = gap ?: if (total >= 5) 2.dp else if (size >= NbSize.lampL) 6.dp else 3.dp
-    Row(horizontalArrangement = Arrangement.spacedBy(g), modifier = Modifier.clearAndSetSemantics {}) {
-        repeat(total) { i -> Lamp(color, i < lit, size, ignites?.getOrNull(i) ?: 1f) }
-    }
-}
-
-/** Waiting chase (DESIGN_SYSTEM 8.2.4): three chalk lamps, one lit at a time, 400 ms each; static under reduced motion. */
-@Composable
-fun ChaseLamps(size: Dp = NbSize.lampM, color: LampColor = LampColor.CHALK) {
+fun ChaseLamps(size: Dp = NbSize.dotS, lit: Color = NbColors.accent, off: Color = NbColors.dotOff) {
     val reduce = LocalReduceMotion.current
     var step by remember { mutableIntStateOf(0) }
     if (!reduce) {
@@ -113,78 +82,111 @@ fun ChaseLamps(size: Dp = NbSize.lampM, color: LampColor = LampColor.CHALK) {
             }
         }
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(if (size >= 8.dp) 6.dp else 3.dp), modifier = Modifier.clearAndSetSemantics {}) {
-        repeat(3) { i -> Lamp(color, lit = i == step, size = size, glow = false) }
+    Row(horizontalArrangement = Arrangement.spacedBy(if (size >= 8.dp) 6.dp else 4.dp), modifier = Modifier.clearAndSetSemantics {}) {
+        repeat(3) { i -> Dot(if (i == step) lit else off, size) }
     }
 }
 
-/** `OUT` tag (DESIGN_SYSTEM 12.6): `numLabel` 14 sp, `out` text, 1 dp `out` border, radius 4, 22 dp tall, 6 dp padding. */
-@Composable
-fun OutTag(modifier: Modifier = Modifier, height: Dp = 22.dp, fontSize: TextUnit = 14.sp, padding: Dp = 6.dp) {
-    Box(
-        modifier
-            .heightIn(min = height)
-            .border(1.dp, NbColors.out, RoundedCornerShape(NbRadius.s))
-            .padding(horizontal = padding),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text("OUT", style = NbType.numLabel.copy(fontSize = fontSize, letterSpacing = 0.08.em), color = NbColors.out, maxLines = 1, softWrap = false, fitMinScale = 0.5f)
+/** Geometry of the hint chips (DESIGN_SYSTEM 12.7; n ≥ 5 `wide`; small windows ADAPTIVE §1). */
+data class ChipSize(val height: Dp, val minWidth: Dp, val outMinWidth: Dp, val padding: Dp) {
+    companion object {
+        val Normal = ChipSize(NbSize.hintChipH, NbSize.hintChipMinW, NbSize.outChipMinW, 8.dp)
+        val Wide = ChipSize(NbSize.hintChipH, 40.dp, 86.dp, 6.dp)
+        val Compact = ChipSize(24.dp, 38.dp, 82.dp, 6.dp)
+        val Legend = Normal
     }
 }
 
-/** One hint count: `2S` / `1B` in `numHint`; a zero count in `textDisabled` so the columns stay aligned. */
+private enum class ChipKind { STRIKE, BALL, ZERO, OUT }
+
+/** One hint chip: S solid `strike` / B `bg` + 2 dp `ball` ring / zero plain `text3` / OUT `surface2` + 1.5 dp `out` ring. */
 @Composable
-fun HintCountText(count: Int, letter: Char, color: Color, style: androidx.compose.ui.text.TextStyle = NbType.numHint) {
-    Text("$count$letter", style = style, color = if (count == 0) NbColors.textDisabled else color, maxLines = 1, softWrap = false)
+private fun HintChip(text: String, kind: ChipKind, size: ChipSize, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(NbRadius.s)
+    val cap = LocalDensity.current.fontScale.coerceIn(1f, NUMERAL_SCALE_CAP)
+    val base = Modifier
+        .heightIn(min = size.height * cap)
+        .widthIn(min = if (kind == ChipKind.OUT) size.outMinWidth else size.minWidth)
+    val (decor, color) = when (kind) {
+        ChipKind.STRIKE -> Modifier.background(NbColors.strike, shape) to NbColors.onAccent
+        ChipKind.BALL -> Modifier.background(NbColors.bg, shape).border(2.dp, NbColors.ball, shape) to NbColors.ball
+        ChipKind.OUT -> Modifier.background(NbColors.surface2, shape).border(NbSize.border, NbColors.out, shape) to NbColors.out
+        ChipKind.ZERO -> Modifier to NbColors.text3
+    }
+    Box(modifier.then(base).then(decor).padding(horizontal = size.padding), contentAlignment = Alignment.Center) {
+        Text(
+            text,
+            style = when (kind) {
+                ChipKind.OUT -> NbType.numHint.copy(letterSpacing = 0.08.em)
+                ChipKind.ZERO -> NbType.numHint.copy(fontWeight = FontWeight.SemiBold)
+                else -> NbType.numHint
+            },
+            color = color,
+            maxLines = 1,
+            softWrap = false,
+            autoFit = false,
+        )
+    }
 }
 
 /**
- * The two fixed hint columns (S then B, [column] wide each); 0S 0B is the `OUT` tag spanning both. With [digits] set,
- * n lamps are drawn under each count (latest log row) and [ignites] animates them.
+ * Hint chips (DESIGN_SYSTEM 12.7), right-aligned, 6 dp apart: S chip then B chip; a zero count is plain text in the same
+ * min-width box; 0S 0B is one wide OUT chip. With reveal progress ([strikeSteps] / [ballSteps]: one 0..1 ignite per
+ * `lamp(...)` hook) the chips scale 0.8 → 1 on their first step and count up one per hook (8.2 #1); a zero count and the
+ * OUT chip follow [zeroAlpha] / [outIgnite]. Not a focus stop: the log row speaks the hint.
  */
 @Composable
-fun HintColumns(
+fun HintChips(
     strikes: Int,
     balls: Int,
-    column: Dp,
-    digits: Int? = null,
-    strikeIgnites: List<Float>? = null,
-    ballIgnites: List<Float>? = null,
+    modifier: Modifier = Modifier,
+    size: ChipSize = ChipSize.Normal,
+    strikeSteps: List<Float>? = null,
+    ballSteps: List<Float>? = null,
+    zeroAlpha: Float = 1f,
     outIgnite: Float = 1f,
-    textAlpha: Pair<Float, Float> = 1f to 1f,
 ) {
-    Box(Modifier.width(column * 2), contentAlignment = Alignment.Center) {
+    Row(modifier.clearAndSetSemantics {}, horizontalArrangement = Arrangement.spacedBy(NbSize.hintChipGap), verticalAlignment = Alignment.CenterVertically) {
         if (strikes == 0 && balls == 0) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                OutTag(Modifier.graphicsLayer { alpha = outIgnite })
-                if (digits != null) {
-                    VSpacer(6.dp)
-                    Lamp(LampColor.OUT, lit = true, size = NbSize.lampS, ignite = outIgnite)
-                }
-            }
-        } else {
-            Row {
-                listOf(Triple(strikes, 'S', LampColor.STRIKE), Triple(balls, 'B', LampColor.BALL)).forEachIndexed { index, (count, letter, lamp) ->
-                    Column(Modifier.width(column), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(Modifier.graphicsLayer { alpha = if (index == 0) textAlpha.first else textAlpha.second }) {
-                            HintCountText(count, letter, lamp.lit)
-                        }
-                        if (digits != null) {
-                            VSpacer(6.dp)
-                            LampRow(lamp, digits, count, ignites = if (index == 0) strikeIgnites else ballIgnites)
-                        }
-                    }
-                }
+            HintChip("OUT", ChipKind.OUT, size, Modifier.graphicsLayer { alpha = outIgnite; val sc = 0.8f + 0.2f * outIgnite; scaleX = sc; scaleY = sc })
+            return@Row
+        }
+        listOf(Triple(strikes, 'S', strikeSteps), Triple(balls, 'B', ballSteps)).forEach { (count, letter, steps) ->
+            if (count == 0) {
+                HintChip("0$letter", ChipKind.ZERO, size, Modifier.graphicsLayer { alpha = zeroAlpha })
+            } else {
+                val first = steps?.firstOrNull() ?: 1f
+                val shown = steps?.count { it > 0f }?.coerceAtLeast(1) ?: count
+                HintChip(
+                    "$shown$letter",
+                    if (letter == 'S') ChipKind.STRIKE else ChipKind.BALL,
+                    size,
+                    Modifier.graphicsLayer { alpha = first; val sc = 0.8f + 0.2f * first; scaleX = sc; scaleY = sc },
+                )
             }
         }
     }
 }
 
-enum class SlotState { EMPTY, ACTIVE, FILLED, LOCKED, ERROR, HIT }
+/** A single legend chip ("1S" solid, "1B" outlined, "OUT"), DESIGN_SYSTEM 12.8 legend box. */
+@Composable
+fun LegendChip(letter: Char?) {
+    when (letter) {
+        'S' -> HintChip("1S", ChipKind.STRIKE, ChipSize.Legend)
+        'B' -> HintChip("1B", ChipKind.BALL, ChipSize.Legend)
+        else -> HintChip("OUT", ChipKind.OUT, ChipSize.Legend)
+    }
+}
+
+/** Opponent hint as plain text (`numLabel` `text3`): "2S 1B" / "OUT" — never chips (DESIGN_SYSTEM 12.7). */
+fun hintText(strikes: Int, balls: Int): String = if (strikes == 0 && balls == 0) "OUT" else "${strikes}S ${balls}B"
+
+enum class SlotState { EMPTY, ACTIVE, FILLED, LOCKED, ERROR, PLATE, QUESTION }
 
 /**
- * Digit slots (DESIGN_SYSTEM 12.4): n plates centred, gap 8 dp, width min(56, (content − (n − 1) × 8) ÷ n), height 64
- * (48 compact), radius 8. [shakeKey] changes trigger the ±6 dp, 3-cycle, 280 ms shake. Tapping slot i calls [onTapSlot].
+ * Digit slots (DESIGN_SYSTEM 12.4): n plates centred, gap 10 dp, width min(60, (content − (n − 1) × 10) ÷ n) (min 44),
+ * height 64 (48 compact), radius 12. [plate] draws result / answer plates (`ink`, `onInk`). [shakeKey] changes trigger the
+ * ±6 dp, 3-cycle, 280 ms shake. Tapping slot i calls [onTapSlot].
  */
 @Composable
 fun DigitSlots(
@@ -193,14 +195,17 @@ fun DigitSlots(
     modifier: Modifier = Modifier,
     locked: Boolean = false,
     error: Boolean = false,
-    hit: Boolean = false,
+    plate: Boolean = false,
     compact: Boolean = false,
     plateWidth: Dp? = null,
     plateHeight: Dp? = null,
+    gap: Dp = NbSize.slotGap,
     showActive: Boolean = true,
     placeholder: Char? = null,
     shakeKey: Int = 0,
     contentDescription: String? = null,
+    /** Per-digit alpha (result reveal, 8.3 C). */
+    digitAlpha: (Int) -> Float = { 1f },
     onTapSlot: ((Int) -> Unit)? = null,
 ) {
     val density = LocalDensity.current
@@ -222,15 +227,16 @@ fun DigitSlots(
             .then(if (contentDescription != null) Modifier.semantics(mergeDescendants = true) { this.contentDescription = contentDescription } else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        val gap = NbSize.slotGap
         // Compact slots are 48 × 48 (ADAPTIVE.md §1, D2-05).
-        val w = plateWidth ?: minOf(if (compact) NbSize.slotHeightCompact else NbSize.slotWidth, (maxWidth - gap * (digits - 1)) / digits).coerceAtLeast(NbSize.slotWidthMin)
+        val g = if (compact && gap == NbSize.slotGap) 8.dp else gap
+        val w = plateWidth ?: minOf(if (compact) NbSize.slotHeightCompact else NbSize.slotWidth, (maxWidth - g * (digits - 1)) / digits).coerceAtLeast(NbSize.slotWidthMin)
         val h = plateHeight ?: if (compact) NbSize.slotHeightCompact else NbSize.slotHeight
-        Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(g)) {
             repeat(digits) { i ->
                 val ch = value.getOrNull(i)
                 val state = when {
-                    hit && ch != null -> SlotState.HIT
+                    plate -> SlotState.PLATE
+                    ch == null && placeholder == '?' -> SlotState.QUESTION
                     error -> SlotState.ERROR
                     ch != null && locked -> SlotState.LOCKED
                     ch != null -> SlotState.FILLED
@@ -243,6 +249,7 @@ fun DigitSlots(
                     width = w,
                     height = h,
                     compact = compact,
+                    alpha = digitAlpha(i),
                     onClick = if (onTapSlot != null && ch != null && !locked) ({ onTapSlot(i) }) else null,
                 )
             }
@@ -251,21 +258,23 @@ fun DigitSlots(
 }
 
 @Composable
-private fun Slot(char: Char?, state: SlotState, width: Dp, height: Dp, compact: Boolean, onClick: (() -> Unit)?) {
+private fun Slot(char: Char?, state: SlotState, width: Dp, height: Dp, compact: Boolean, alpha: Float, onClick: (() -> Unit)?) {
     val shape = RoundedCornerShape(NbRadius.m)
     val (fill, border, borderWidth) = when (state) {
-        SlotState.EMPTY -> Triple(NbColors.bg, NbColors.outline, 1.dp)
-        SlotState.ACTIVE -> Triple(NbColors.bg, NbColors.chalk, 2.dp)
+        SlotState.EMPTY -> Triple(NbColors.bg, NbColors.outline, NbSize.border)
+        SlotState.ACTIVE -> Triple(NbColors.bg, NbColors.accent, 2.dp)
         SlotState.FILLED -> Triple(NbColors.surface2, null, 0.dp)
         SlotState.LOCKED -> Triple(NbColors.surface1, null, 0.dp)
-        SlotState.ERROR -> Triple(NbColors.outTint, NbColors.out, 2.dp)
-        SlotState.HIT -> Triple(NbColors.strike, null, 0.dp)
+        SlotState.ERROR -> Triple(NbColors.dangerTint, NbColors.danger, 2.dp)
+        SlotState.PLATE -> Triple(NbColors.ink, null, 0.dp)
+        SlotState.QUESTION -> Triple(NbColors.bg, NbColors.line, NbSize.border)
     }
     val textColor = when (state) {
         SlotState.LOCKED -> NbColors.text2
-        SlotState.HIT -> NbColors.onChalk
+        SlotState.PLATE -> NbColors.onInk
+        SlotState.QUESTION -> NbColors.text3
         SlotState.EMPTY, SlotState.ACTIVE -> NbColors.textDisabled
-        else -> NbColors.chalk
+        else -> NbColors.ink
     }
     val scale = remember { Animatable(1f) }
     val reduce = LocalReduceMotion.current
@@ -276,20 +285,20 @@ private fun Slot(char: Char?, state: SlotState, width: Dp, height: Dp, compact: 
         }
     }
     val style = when {
-        height >= 60.dp && width >= 52.dp -> NbType.numSlot.copy(fontSize = if (height == 60.dp) 32.sp else 40.sp)
-        compact || height <= 48.dp -> NbType.numSlotSm
+        compact || height <= 48.dp -> NbType.numSlotSm.copy(letterSpacing = 0.sp)
         else -> NbType.numSlot
     }
     Box(
         Modifier
-            .size(width, height)
+            .width(width)
+            .heightIn(min = height)
             .background(fill, shape)
             .then(if (border != null) Modifier.border(borderWidth, border, shape) else Modifier)
             .then(if (onClick != null) Modifier.combinedClickableCompat(onClick) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         if (char != null) {
-            Text(char.toString(), style = style, color = textColor, modifier = Modifier.graphicsLayer { scaleX = scale.value; scaleY = scale.value })
+            Text(char.toString(), style = style, color = textColor, maxLines = 1, softWrap = false, autoFit = false, modifier = Modifier.graphicsLayer { scaleX = scale.value; scaleY = scale.value; this.alpha = alpha })
         }
     }
 }
@@ -325,14 +334,14 @@ fun DigitKeypad(
     memo: Map<Char, MemoMark> = emptyMap(),
     compact: Boolean = false,
     waitingLabel: String? = null,
-    /** A key the tutorial asks for: 2 dp chalk inset (01 §2). */
+    /** A key the tutorial asks for: 2 dp `accent` inset (01 §2). */
     highlight: Char? = null,
 ) {
     val gap = if (compact) 4.dp else NbSize.keyGap
     val keyHeight = if (compact) NbSize.keyHeightCompact else NbSize.keyHeight
     val digitKey: @Composable (Char, Modifier) -> Unit = { d, m ->
         val isUsed = mode != KeypadMode.AGE && d in used
-        DigitKey(d, isUsed, locked, memo[d] ?: MemoMark.NONE, keyHeight, if (d == highlight) m.border(2.dp, NbColors.chalk, RoundedCornerShape(NbRadius.m)) else m) { onDigit(d) }
+        DigitKey(d, isUsed, locked, memo[d] ?: MemoMark.NONE, keyHeight, if (d == highlight) m.border(2.dp, NbColors.accent, RoundedCornerShape(NbRadius.m)) else m) { onDigit(d) }
     }
     val backspace: @Composable (Modifier) -> Unit = { m -> IconKey(R.drawable.ic_backspace, stringResource(R.string.backspace), locked, keyHeight, m, onBackspace, onClear) }
     val action: @Composable (Modifier) -> Unit = { m ->
@@ -377,32 +386,37 @@ private fun DigitKey(digit: Char, used: Boolean, locked: Boolean, memo: MemoMark
     val digitColor = when {
         disabled -> NbColors.textDisabled
         memo == MemoMark.OUT -> NbColors.text3
-        else -> NbColors.chalk
+        else -> NbColors.ink
     }
-    // Memo marks follow the key: a used or locked key shows its mark in `textDisabled` (DESIGN_SYSTEM 12.5).
-    val markColor = if (disabled) NbColors.textDisabled else if (memo == MemoMark.IN) NbColors.chalk else NbColors.text3
+    // Memo marks follow the key: a used or locked key shows its mark in `textDisabled` (DESIGN_SYSTEM 12.6).
+    val markColor = if (disabled) NbColors.textDisabled else if (memo == MemoMark.IN) NbColors.ink else NbColors.text3
     Box(
         modifier
-            .height(height)
-            .background(fill, RoundedCornerShape(NbRadius.m))
+            .heightIn(min = height)
+            .clip(RoundedCornerShape(NbRadius.m))
+            .background(fill)
             .testTag("key_$digit")
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 if (disabled) disabled()
             }
-            .then(if (!disabled) Modifier.combinedClickableCompat(onClick) else Modifier),
+            .then(if (!disabled) Modifier.combinedClickableCompat(onClick) else Modifier)
+            .then(if (memo == MemoMark.OUT) Modifier.ruledOut(markColor) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        Text(digit.toString(), style = NbType.numKey, color = digitColor)
-        if (memo == MemoMark.OUT) {
-            // Prototype `.key.mx`: two 9 × 1.5 dp bars crossed at 45° in a 9 dp box 8 dp from the right, 11 dp from the top.
-            Canvas(Modifier.align(Alignment.TopEnd).padding(top = 11.dp, end = 8.dp).size(9.dp, 1.5.dp)) {
-                crossBars(markColor, armLength = 9.dp.toPx(), stroke = 1.5.dp.toPx())
-            }
-        }
+        Text(digit.toString(), style = NbType.numKey, color = digitColor, autoFit = false)
         if (memo == MemoMark.IN) {
-            Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 7.dp).size(14.dp, 3.dp).background(markColor, RoundedCornerShape(1.dp)))
+            Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 7.dp).size(14.dp, 3.dp).background(markColor, RoundedCornerShape(2.dp)))
         }
+    }
+}
+
+/** Ruled-out mark (DESIGN_SYSTEM 12.6 / 16): one 22 × 2 dp stroke, round caps, rotated −45°, centred over the content. */
+fun Modifier.ruledOut(color: Color, length: Dp = NbSize.ruledStrokeL): Modifier = drawWithContent {
+    drawContent()
+    val half = length.toPx() / 2f
+    rotate(-45f) {
+        drawLine(color, Offset(center.x - half, center.y), Offset(center.x + half, center.y), NbSize.ruledStrokeW.toPx(), StrokeCap.Round)
     }
 }
 
@@ -411,14 +425,15 @@ private fun DigitKey(digit: Char, used: Boolean, locked: Boolean, memo: MemoMark
 private fun IconKey(icon: Int, description: String, locked: Boolean, height: Dp, modifier: Modifier, onClick: () -> Unit, onLongClick: (() -> Unit)?) {
     Box(
         modifier
-            .height(height)
-            .background(if (locked) NbColors.surface1 else NbColors.surface2, RoundedCornerShape(NbRadius.m))
+            .heightIn(min = height)
+            .clip(RoundedCornerShape(NbRadius.m))
+            .background(if (locked) NbColors.surface1 else NbColors.surface2)
             .semantics { if (locked) disabled() }
             .then(if (!locked) Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick, role = Role.Button) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        // Function keys are secondary: `text2` glyphs (prototype `.key.fn`, D2-06).
-        NbIcon(icon, description, if (locked) NbColors.textDisabled else NbColors.text2)
+        // Function keys: `ink` glyphs (DESIGN_SYSTEM 12.6, prototype `.key.fn`).
+        NbIcon(icon, description, if (locked) NbColors.textDisabled else NbColors.ink)
     }
 }
 
@@ -434,16 +449,17 @@ private fun ActionKey(
     onClick: () -> Unit,
 ) {
     val enabled = state == ActionState.ENABLED
-    val fill = if (enabled) NbColors.chalk else NbColors.surface2
+    val fill = if (enabled) NbColors.accent else NbColors.surface2
     val textColor = when (state) {
-        ActionState.ENABLED -> NbColors.onChalk
+        ActionState.ENABLED -> NbColors.onAccent
         ActionState.WAITING -> NbColors.text2
         else -> NbColors.textDisabled
     }
     Box(
         modifier
             .heightIn(min = height)
-            .background(fill, RoundedCornerShape(NbRadius.m))
+            .clip(RoundedCornerShape(NbRadius.m))
+            .background(fill)
             .semantics(mergeDescendants = true) { role = Role.Button; if (!enabled) disabled() }
             .then(if (enabled) Modifier.combinedClickableCompat(onClick) else Modifier),
         contentAlignment = Alignment.Center,
@@ -451,20 +467,20 @@ private fun ActionKey(
         if (state == ActionState.WAITING && !compact && isLargeFont()) {
             // Large text (D2-38, ADAPTIVE §2.2): the key grows to 64 dp, the lamps move above a label of up to two lines.
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.heightIn(min = 64.dp).padding(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.Center) {
-                ChaseLamps(NbSize.lampS)
+                ChaseLamps(NbSize.dotS)
                 VSpacer(4.dp)
-                Text(waitingLabel ?: label, style = NbType.label, color = textColor, textAlign = TextAlign.Center, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                Text(waitingLabel ?: label, style = NbType.labelSmall.copy(fontSize = 14.sp), color = textColor, textAlign = TextAlign.Center, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             }
         } else if (state == ActionState.WAITING && !compact) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp)) {
-                ChaseLamps(NbSize.lampS)
+                ChaseLamps(NbSize.dotS)
                 HSpacer(8.dp)
-                Text(waitingLabel ?: label, style = NbType.label, color = textColor, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                Text(waitingLabel ?: label, style = NbType.labelSmall.copy(fontSize = 14.sp), color = textColor, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             }
         } else {
             Text(
                 label,
-                style = if (compact) NbType.labelSmall else NbType.label,
+                style = if (compact) NbType.labelSmall else NbType.label.copy(fontSize = 17.sp),
                 color = textColor,
                 textAlign = TextAlign.Center,
                 maxLines = if (compact) 1 else 2,
@@ -486,55 +502,71 @@ fun clockLevel(secondsLeft: Int?, paused: Boolean): ClockLevel = when {
 }
 
 private fun ClockLevel.color(): Color = when (this) {
-    ClockLevel.NORMAL -> NbColors.chalk
+    ClockLevel.NORMAL -> NbColors.ink
     ClockLevel.WARN -> NbColors.strike
-    ClockLevel.CRITICAL -> NbColors.out
+    ClockLevel.CRITICAL -> NbColors.danger
     ClockLevel.PAUSED -> NbColors.textDisabled
 }
 
+private fun ClockLevel.lineColor(): Color = if (this == ClockLevel.NORMAL) NbColors.accent else color()
+
 fun formatClock(seconds: Int): String = "%d:%02d".format(seconds.coerceAtLeast(0) / 60, seconds.coerceAtLeast(0) % 60)
 
-/** Pitch clock (DESIGN_SYSTEM 12.2): `timer` 18 dp + `numTimer` m:ss, right-aligned, min width 38 dp. */
+/**
+ * Pitch clock pill (DESIGN_SYSTEM 12.2): 36 dp, `surface2`, radius full, 12 dp padding: `timer` 18 dp `text2` + 6 dp +
+ * `numTimer` m:ss (min width 34 dp, right-aligned). Warn `strike`, critical `danger` (value pulses), paused `textDisabled`.
+ */
 @Composable
-fun PitchClock(secondsLeft: Int, level: ClockLevel, modifier: Modifier = Modifier) {
+fun PitchClock(secondsLeft: Int, level: ClockLevel, modifier: Modifier = Modifier, pill: Boolean = true) {
     val color = level.color()
-    Row(modifier.semantics(mergeDescendants = true) {}, verticalAlignment = Alignment.CenterVertically) {
-        NbIcon(R.drawable.ic_timer, null, if (level == ClockLevel.NORMAL) NbColors.text3 else color, 18.dp)
-        HSpacer(4.dp)
-        Text(formatClock(secondsLeft), style = NbType.numTimer, color = color, textAlign = TextAlign.End, modifier = Modifier.widthIn(min = 38.dp))
-    }
-}
-
-/** 2 dp clock line at the bottom edge of the top bar: track `line`, fill shrinks right to left. */
-@Composable
-fun ClockLine(fraction: Float, level: ClockLevel, modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxWidth().height(2.dp).background(NbColors.line)) {
-        Box(Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).height(2.dp).background(level.color()))
-    }
-}
-
-/** Mini plates of my secret in the duel strip: 18 × 22 dp, `surface2`, radius 4, Barlow 600 16 sp `text2`, 2 dp apart. */
-@Composable
-fun MiniPlates(value: String, plate: Dp = 18.dp, height: Dp = 22.dp) {
-    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        value.forEach { ch ->
-            // Plates grow with the capped numeral at large text instead of cutting it (D2-01).
-            Box(Modifier.widthIn(min = plate).heightIn(min = height).background(NbColors.surface2, RoundedCornerShape(NbRadius.s)).padding(horizontal = 1.dp), contentAlignment = Alignment.Center) {
-                Text(ch.toString(), style = NbType.numTag.copy(fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, letterSpacing = 0.sp), color = NbColors.text2)
-            }
+    val pulse = remember { Animatable(1f) }
+    val reduce = LocalReduceMotion.current
+    LaunchedEffect(secondsLeft, level) {
+        if (level == ClockLevel.CRITICAL && !reduce) {
+            pulse.animateTo(1.06f, tween(NbMotion.short / 2 + 25))
+            pulse.animateTo(1f, tween(NbMotion.short / 2 + 25))
         }
     }
-}
-
-/** A `?` plate (search screen): `surface2`, radius 8, `numSlot`, chalk when swept, else `textDisabled`. */
-@Composable
-fun QuestionPlate(lit: Boolean, width: Dp, height: Dp) {
-    Box(Modifier.size(width, height).background(NbColors.surface2, RoundedCornerShape(NbRadius.m)), contentAlignment = Alignment.Center) {
-        Text("?", style = NbType.numSlot, color = if (lit) NbColors.chalk else NbColors.textDisabled)
+    Row(
+        modifier
+            .semantics(mergeDescendants = true) {}
+            .then(if (pill) Modifier.heightIn(min = NbSize.timerPillH).background(NbColors.surface2, CircleShape).padding(horizontal = 12.dp) else Modifier),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        NbIcon(R.drawable.ic_timer, null, if (level == ClockLevel.NORMAL) NbColors.text2 else color, 18.dp)
+        HSpacer(6.dp)
+        Text(
+            formatClock(secondsLeft),
+            style = NbType.numTimer,
+            color = color,
+            textAlign = TextAlign.End,
+            maxLines = 1,
+            softWrap = false,
+            autoFit = false,
+            modifier = Modifier.widthIn(min = 34.dp).graphicsLayer { scaleX = pulse.value; scaleY = pulse.value },
+        )
     }
 }
 
-/** Two bars of [armLength] crossed at ±45° around the centre (the prototype's rotated pseudo-element bars). */
+/** 3 dp progress line under the match top bar (DESIGN_SYSTEM 12.2): radius 2, track `line`, fill `accent`, shrinks right to left. */
+@Composable
+fun ClockLine(fraction: Float, level: ClockLevel, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(2.dp)
+    Box(modifier.fillMaxWidth().height(NbSize.progressH).clip(shape).background(NbColors.line)) {
+        Box(Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).height(NbSize.progressH).clip(shape).background(level.lineColor()))
+    }
+}
+
+/** A `?` plate (Home hero, search): question state, `bg` + 1.5 dp `line`, `numSlot` `text3`; [lit] = swept (`ink`). */
+@Composable
+fun QuestionPlate(lit: Boolean, width: Dp, height: Dp) {
+    val shape = RoundedCornerShape(NbRadius.m)
+    Box(Modifier.size(width, height).background(NbColors.bg, shape).border(NbSize.border, if (lit) NbColors.outline else NbColors.line, shape), contentAlignment = Alignment.Center) {
+        Text("?", style = NbType.numSlot, color = if (lit) NbColors.ink else NbColors.text3, autoFit = false)
+    }
+}
+
+/** Two bars of [armLength] crossed at ±45° around the centre (memo "out" cell). */
 fun androidx.compose.ui.graphics.drawscope.DrawScope.crossBars(color: Color, armLength: Float, stroke: Float) {
     val h = armLength / (2f * kotlin.math.sqrt(2f))
     val c = center
