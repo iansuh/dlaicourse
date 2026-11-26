@@ -114,6 +114,7 @@ import app.numbaseball.ui.match.MatchSummary
 import app.numbaseball.ui.match.OnlineMatchViewModel
 import app.numbaseball.ui.match.Outcome
 import app.numbaseball.ui.match.PhraseBubble
+import app.numbaseball.data.online.RequestResult
 import app.numbaseball.ui.match.PracticeInfo
 import app.numbaseball.ui.profile.ProfileScreen
 import app.numbaseball.ui.profile.ProfileViewModel
@@ -710,12 +711,23 @@ private fun OnlineMatchDestination(navController: NavHostController, home: () ->
     val latestPhrase = chat.lastOrNull { it.kind == ChatKind.PHRASE }
     val phraseLabel = latestPhrase?.phraseId?.let { phraseText(it) }
     val me = stringResource(R.string.tag_me)
+    // My own phrase is shown from the send itself (V2-15, 05 §2.8), so the server's echo of it is skipped here.
+    var sentPhrase by remember { mutableStateOf<String?>(null) }
+    val sentLabel = sentPhrase?.let { phraseText(it) }
+    var sentSerial by remember { mutableStateOf(0L) }
     LaunchedEffect(latestPhrase?.id, muted) {
-        if (latestPhrase == null || muted || !quick || phraseLabel == null) return@LaunchedEffect
-        val sender = if (latestPhrase.senderId == room?.youId) me else latestPhrase.senderNickname.orEmpty()
-        bubble = PhraseBubble(latestPhrase.id, sender, phraseLabel)
+        if (latestPhrase == null || muted || !quick || phraseLabel == null || latestPhrase.senderId == room?.youId) return@LaunchedEffect
+        val received = PhraseBubble(latestPhrase.id, latestPhrase.senderNickname.orEmpty(), phraseLabel)
+        bubble = received
         delay(2_800)
-        bubble = null
+        if (bubble == received) bubble = null
+    }
+    LaunchedEffect(sentSerial) {
+        if (sentSerial == 0L || sentLabel == null) return@LaunchedEffect
+        val mine = PhraseBubble(-sentSerial, me, sentLabel, mine = true)
+        bubble = mine
+        delay(2_800)
+        if (bubble == mine) bubble = null
     }
     // My duel is over but the team match is not: the board replaces the match screen (08 §1).
     LaunchedEffect(current.phase, current.summary) {
@@ -790,7 +802,12 @@ private fun OnlineMatchDestination(navController: NavHostController, home: () ->
                 phraseSheet = false
                 lastPhraseAt = SystemClock.elapsedRealtime()
                 container.audio.play(SoundCue.QUICK_PHRASE)
-                scope.launch { session.sendPhrase(id) }
+                scope.launch {
+                    if (session.sendPhrase(id) == RequestResult.Ok) {
+                        sentPhrase = id
+                        sentSerial++
+                    }
+                }
             },
             onDismiss = { phraseSheet = false },
         )

@@ -1,6 +1,7 @@
 package app.numbaseball.ui.home
 
 import app.numbaseball.ui.design.isLargeFont
+import app.numbaseball.ui.design.scrollFade
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
@@ -29,6 +30,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.semantics.stateDescription
 import app.numbaseball.ui.theme.NbSize
@@ -82,7 +84,6 @@ import app.numbaseball.ui.design.NbScreen
 import app.numbaseball.ui.design.NumberUnitLabel
 import app.numbaseball.ui.design.Segmented
 import app.numbaseball.ui.design.VSpacer
-import app.numbaseball.ui.design.fadingEdges
 import app.numbaseball.ui.design.isCompactHeight
 import app.numbaseball.ui.design.rowClick
 import app.numbaseball.ui.theme.NbColors
@@ -207,13 +208,16 @@ fun HomeScreen(
             Column {
                 if (!compact) {
                     Text(stringResource(R.string.home_other_modes), style = NbType.labelSmall, color = NbColors.text3, modifier = Modifier.padding(start = 4.dp))
-                    VSpacer(10.dp)
+                    VSpacer(12.dp)
                 }
-                // Three equal tiles, all as tall as the tallest (labels may wrap to 2 lines, 02 States).
-                EqualTilesRow(8.dp, if (compact) 56.dp else NbSize.modeTileH) {
-                    ModeTile(R.drawable.ic_memory, stringResource(R.string.tile_cpu), enabled = true, compact = compact, onClick = onVsComputer)
-                    ModeTile(R.drawable.ic_group, stringResource(R.string.tile_room), enabled = state.canPlayOnline, compact = compact, onClick = onCreateRoom)
-                    ModeTile(R.drawable.ic_login, stringResource(R.string.tile_join), enabled = state.canPlayOnline, compact = compact, onClick = onJoinRoom)
+                // Three equal tiles, all as tall as the tallest (labels may wrap to 2 lines, 02 States). Large text uses
+                // the small window's 56 dp tiles, so all three stay visible above the pinned quick-match block (review v2
+                // polish 3).
+                val tileCompact = compact || large
+                EqualTilesRow(8.dp, if (tileCompact) 56.dp else NbSize.modeTileH) {
+                    ModeTile(R.drawable.ic_memory, stringResource(R.string.tile_cpu), enabled = true, compact = tileCompact, onClick = onVsComputer)
+                    ModeTile(R.drawable.ic_group, stringResource(R.string.tile_room), enabled = state.canPlayOnline, compact = tileCompact, onClick = onCreateRoom)
+                    ModeTile(R.drawable.ic_login, stringResource(R.string.tile_join), enabled = state.canPlayOnline, compact = tileCompact, onClick = onJoinRoom)
                 }
             }
         }
@@ -231,7 +235,7 @@ fun HomeScreen(
                 Column(
                     Modifier
                         .fillMaxSize()
-                        .fadingEdges(enabled = scroll.canScrollForward)
+                        .scrollFade(scroll)
                         .verticalScroll(scroll)
                         .padding(horizontal = margin),
                 ) {
@@ -345,7 +349,8 @@ private fun MeAndRecord(state: HomeUiState, compact: Boolean, onProfile: () -> U
                 rateCell()
             }
         }
-        VSpacer(if (compact) 8.dp else 20.dp)
+        // V2-08: 23 dp (the prototype's caption line box under the values), so the divider sits at 237 dp as in the shot.
+        VSpacer(if (compact) 8.dp else 23.dp)
         Hairline()
     }
 }
@@ -404,7 +409,8 @@ private fun ModeTile(@DrawableRes icon: Int, label: String, enabled: Boolean, co
         NbIcon(icon, null, color)
     }
     val text: @Composable () -> Unit = {
-        Text(label, style = NbType.labelSmall.copy(fontSize = 14.sp, lineHeight = 20.sp), color = color, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, fitMinScale = 0.5f)
+        // V2-13: strict CJK line breaking by phrase, so "ー" never starts a line and no word is split.
+        Text(label, style = NbType.labelSmall.copy(fontSize = 14.sp, lineHeight = 20.sp, lineBreak = LineBreak(LineBreak.Strategy.Balanced, LineBreak.Strictness.Strict, LineBreak.WordBreak.Phrase)), color = color, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, fitMinScale = 0.5f)
     }
     Box(
         modifier

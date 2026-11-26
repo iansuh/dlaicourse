@@ -467,6 +467,8 @@
     <string name="tut_2">Tap **0**, **7**, **5**, then pitch.</string>
     <string name="tut_3">**0** is the right digit in the right place: a strike (S). **7** is in the number but elsewhere: a ball (B). 5 isn’t there.</string>
     <string name="tut_legend">S right digit, right place · B right digit, wrong place</string>
+    <string name="tut_legend_strike">right digit, right place</string>
+    <string name="tut_legend_ball">right digit, wrong place</string>
     <string name="tut_out">When no digit matches, it’s an **out**.</string>
     <string name="tut_4">The hidden number is **0 4 7**. Guess it yourself.</string>
     <string name="tut_done">All strikes wins! If both of you solve it in the same round, it’s a draw.</string>

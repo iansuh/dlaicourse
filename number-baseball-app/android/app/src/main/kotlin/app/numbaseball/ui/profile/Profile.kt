@@ -18,6 +18,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
 import app.numbaseball.ui.design.Hairline
+import app.numbaseball.ui.design.scrollFade
 import app.numbaseball.ui.design.InsetDivider
 import app.numbaseball.ui.design.SectionHeader
 import app.numbaseball.ui.design.isLargeFont
@@ -138,7 +139,8 @@ fun ProfileScreen(state: ProfileUiState, onRename: (String) -> Unit, onRenameSho
         topBar = { TopBar(stringResource(R.string.profile_title), R.drawable.ic_arrow_back, stringResource(R.string.action_back), onBack) },
         bottomBar = { if (state.online) AdBanner() },
     ) {
-        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+        val bodyScroll = rememberScrollState()
+        Column(Modifier.weight(1f).fillMaxWidth().scrollFade(bodyScroll).verticalScroll(bodyScroll)) {
             // Profile (10 v2): avatar 48 + name over status / "닉네임 바꾸기", then the Home-style record row (no form row).
             Row(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Avatar(state.nickname, NbSize.avatarL)

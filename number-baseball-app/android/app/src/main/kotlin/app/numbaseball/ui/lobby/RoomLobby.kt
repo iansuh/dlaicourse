@@ -32,6 +32,9 @@ import app.numbaseball.ui.design.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -93,7 +96,7 @@ import app.numbaseball.ui.design.TeamBadge
 import app.numbaseball.ui.design.ToastHost
 import app.numbaseball.ui.design.TopBar
 import app.numbaseball.ui.design.VSpacer
-import app.numbaseball.ui.design.fadingEdges
+import app.numbaseball.ui.design.scrollFade
 import app.numbaseball.ui.design.rememberToastState
 import app.numbaseball.ui.design.rowClick
 import app.numbaseball.ui.theme.NbColors
@@ -294,6 +297,15 @@ fun RoomLobbyScreen(state: LobbyUiState, actions: LobbyActions) {
         }
         val greyed = state.connection.offline
         val scroll = rememberScrollState()
+        // ADAPTIVE §1 (V2-17): in small windows the region opens scrolled just far enough to show the team header and one
+        // full seat (36 + 56 dp), e.g. under the reconnect banner; the invite row and rules stay one scroll away.
+        var teamsTop by remember { mutableStateOf(-1) }
+        val headerAndSeat = with(androidx.compose.ui.platform.LocalDensity.current) { (36.dp + 4.dp + 56.dp).roundToPx() }
+        LaunchedEffect(compact, teamsTop, scroll.viewportSize, state.connection) {
+            if (!compact || teamsTop < 0 || scroll.viewportSize == 0) return@LaunchedEffect
+            val target = (teamsTop + headerAndSeat - scroll.viewportSize).coerceIn(0, scroll.maxValue)
+            if (target > scroll.value) scroll.scrollTo(target)
+        }
         val practice: @Composable (Modifier) -> Unit = { m ->
             NbButton(
                 stringResource(R.string.practice),
@@ -309,14 +321,14 @@ fun RoomLobbyScreen(state: LobbyUiState, actions: LobbyActions) {
             // pinned practice button (88 dp with its padding); when it cannot (banner, large text), the button scrolls.
             val inlinePractice = showPractice && (app.numbaseball.ui.design.isLargeFont() || maxHeight < 420.dp)
             Column(Modifier.fillMaxSize()) {
-                Column(Modifier.weight(1f).fillMaxWidth().fadingEdges(bottom = 16.dp, enabled = scroll.canScrollForward).verticalScroll(scroll)) {
+                Column(Modifier.weight(1f).fillMaxWidth().scrollFade(scroll).verticalScroll(scroll)) {
                     Invite(room, state.players.size <= 1, onCopy = {
                         actions.onCopy(it)
                         toast.show(copied)
                     }, onShare = actions.onShare)
                     RulesBand(room.settings, editable = state.isHost && !state.full && room.phase == RoomPhase.LOBBY) { settingsSheet = true }
                     if (!compact) FillStatus(state)
-                    Teams(state, greyed, actions)
+                    Box(Modifier.onPlaced { teamsTop = it.positionInParent().y.toInt() }) { Teams(state, greyed, actions) }
                     Spacer(Modifier.weight(1f).heightIn(min = 16.dp))
                     if (inlinePractice) practice(Modifier)
                 }
@@ -424,13 +436,13 @@ fun roomRulesText(settings: RoomSettings): String {
 private fun RulesBand(settings: RoomSettings, editable: Boolean, onEdit: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(horizontal = if (isCompactHeight()) 12.dp else 16.dp)) {
         Hairline()
-        // 48 dp including both 1 dp lines (prototype `.rules`, border-box).
-        Row(Modifier.fillMaxWidth().heightIn(min = 46.dp), verticalAlignment = Alignment.CenterVertically) {
+        // 48 dp between the two 1 dp lines (07; shot 263–311, V2-09).
+        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
             NbIcon(R.drawable.ic_tune, null, NbColors.text2, 20.dp)
             HSpacer(8.dp)
             Text(roomRulesText(settings), style = NbType.bodyStrong, color = NbColors.ink, modifier = Modifier.weight(1f).padding(vertical = 4.dp))
             // The 48 dp target overlaps the band's 1 dp lines instead of making the band 50 dp (D2-19 a).
-            if (editable) NbButton(stringResource(R.string.action_edit), onEdit, kind = ButtonKind.TEXT, modifier = Modifier.targetOverflow(46.dp))
+            if (editable) NbButton(stringResource(R.string.action_edit), onEdit, kind = ButtonKind.TEXT, modifier = Modifier.targetOverflow(48.dp))
         }
         Hairline()
     }

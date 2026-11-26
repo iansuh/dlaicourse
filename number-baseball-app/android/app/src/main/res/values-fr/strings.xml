@@ -434,6 +434,8 @@
     <string name="tut_2">Touchez **0**, **7**, **5**, puis lancez.</string>
     <string name="tut_3">**0** est le bon chiffre à la bonne place : un strike (S). **7** est dans le nombre mais ailleurs : une balle (B). Le 5 n’y est pas.</string>
     <string name="tut_legend">S bon chiffre, bonne place · B bon chiffre, autre place</string>
+    <string name="tut_legend_strike">bon chiffre, bonne place</string>
+    <string name="tut_legend_ball">bon chiffre, autre place</string>
     <string name="tut_out">Si aucun chiffre ne correspond, c’est un **out**.</string>
     <string name="tut_4">Le nombre caché est **0 4 7**. À vous de le trouver.</string>
     <string name="tut_done">Tous les strikes, c’est gagné ! Si vous y arrivez ensemble à la même manche, c’est une égalité.</string>

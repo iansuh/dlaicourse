@@ -188,8 +188,10 @@ fun ColumnScope.PlayerCard(
                     RecordValue(stats?.draws, stringResource(R.string.record_draw))
                 }
             }
-            CardRecord.NotAvailable -> Box(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp).padding(bottom = 10.dp), contentAlignment = Alignment.CenterStart) {
-                Text(stringResource(R.string.card_record_none), style = NbType.caption, color = NbColors.text3)
+            // V2-16 (M-1, measured against report-card-norecord-ko): the line sits 7.5 dp under the header in a 55 dp
+            // block, no centring space above it, so the sheet and the message match the shot.
+            CardRecord.NotAvailable -> Box(Modifier.fillMaxWidth().heightIn(min = 55.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.TopStart) {
+                Text(stringResource(R.string.card_record_none), style = NbType.caption, color = NbColors.text3, modifier = Modifier.padding(top = 7.5.dp))
             }
             CardRecord.Failed -> Row(
                 Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = 16.dp, end = 8.dp).padding(bottom = 10.dp),

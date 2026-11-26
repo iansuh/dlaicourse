@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -75,6 +76,7 @@ import app.numbaseball.ui.design.ConnectionBanner
 import app.numbaseball.ui.design.DigitKeypad
 import app.numbaseball.ui.design.DigitSlots
 import app.numbaseball.ui.design.HSpacer
+import app.numbaseball.ui.design.LegendChip
 import app.numbaseball.ui.design.Hairline
 import app.numbaseball.ui.design.IconButton48
 import app.numbaseball.ui.design.KeypadMode
@@ -131,8 +133,8 @@ class MatchActions(
     val onFinished: (MatchSummary) -> Unit = {},
 )
 
-/** A quick phrase shown as a bubble under the opponent row for 2.8 s (05 §2.8). */
-data class PhraseBubble(val id: Long, val sender: String, val text: String)
+/** A quick phrase shown as a bubble under the opponent row for 2.8 s (05 §2.8); [mine]: the one I sent (`accentTint`, left). */
+data class PhraseBubble(val id: Long, val sender: String, val text: String, val mine: Boolean = false)
 
 /**
  * The game (05, DESIGN_SYSTEM v2): top bar with the timer pill and progress line · opponent row · log · entry head
@@ -149,11 +151,14 @@ fun MatchScreen(
     initialMemo: Boolean = false,
     /** The interactive tutorial (01 §2) runs on this screen with a coach box and its own action key. */
     tutorial: app.numbaseball.ui.tutorial.TutorialUi? = null,
+    /** Shows this toast once on open (screenshot `match-toast-ko`). */
+    initialToast: String? = null,
 ) {
     val audio = LocalGameAudio.current
     val haptics = LocalGameHaptics.current
     val compact = isCompactHeight()
     val toast = rememberToastState()
+    if (initialToast != null) LaunchedEffect(initialToast) { toast.show(initialToast) }
     var showMenu by remember { mutableStateOf(false) }
     var confirmForfeit by rememberSaveable { mutableStateOf(false) }
     var confirmLeave by rememberSaveable { mutableStateOf(false) }
@@ -242,7 +247,6 @@ fun MatchScreen(
             )
         },
         overlay = {
-            ToastHost(toast, bottomOffset = if (compact) 8.dp else 16.dp + 172.dp + 24.dp)
             if (opponentLog && !secretPhase) {
                 BackHandler { opponentLog = false }
                 SheetFrame(onDismiss = { opponentLog = false }) {
@@ -298,13 +302,24 @@ fun MatchScreen(
                                 solvedFlash = reveal.flash,
                                 onOpponentLog = if (tutorial == null) ({ opponentLog = true }) else null,
                                 highlightLatest = tutorial?.legend != null,
+                                latestFooter = tutorial?.legend?.let { legend -> { TutorialLegend(legend, compact) } },
                             )
-                            tutorial?.legend?.let { TutorialLegend(it, compact) }
                         }
                     }
                 }
             }
-            if (bubble != null && !compact) PhraseBubbleView(bubble, Modifier.align(Alignment.TopEnd).padding(end = 16.dp).offset(y = NbLayout.oppRow + 4.dp + 8.dp))
+            if (bubble != null && !compact) {
+                PhraseBubbleView(
+                    bubble,
+                    Modifier.align(if (bubble.mine) Alignment.TopStart else Alignment.TopEnd)
+                        .padding(start = if (bubble.mine) 16.dp else 0.dp, end = if (bubble.mine) 0.dp else 16.dp)
+                        .offset(y = NbLayout.oppRow + 4.dp + 8.dp),
+                )
+            }
+            // V2-02 (DESIGN_SYSTEM 12.17): the toast sits at the bottom of the log region, 8 dp above the entry head, so it
+            // never covers the entry head, slots or keypad; compact windows: at the top of the log, 8 dp under the
+            // progress line (ADAPTIVE §1).
+            ToastHost(toast, bottomOffset = 8.dp, top = compact)
         }
         EntryBlock(
             state = state,
@@ -580,7 +595,7 @@ private fun PhraseBubbleView(bubble: PhraseBubble, modifier: Modifier) {
     Column(
         modifier
             .widthIn(max = 240.dp)
-            .background(NbColors.surface2, RoundedCornerShape(NbRadius.m))
+            .background(if (bubble.mine) NbColors.accentTint else NbColors.surface2, RoundedCornerShape(NbRadius.m))
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
         Text(bubble.sender, style = NbType.micro, color = NbColors.text2)
@@ -882,6 +897,7 @@ private fun CoachBand(tutorial: app.numbaseball.ui.tutorial.TutorialUi, compact:
 }
 
 /** Step 3: a one-line legend under the highlighted log row, using the same chips (01 §2). */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun TutorialLegend(text: String, compact: Boolean) {
     // Small windows: TalkBack only; the coach text already explains the row (D2-41).
@@ -889,7 +905,20 @@ private fun TutorialLegend(text: String, compact: Boolean) {
         Box(Modifier.fillMaxWidth().semantics { contentDescription = text })
         return
     }
-    Text(text, style = NbType.caption, color = NbColors.text3, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+    // 01 §2 step 3 (V2-12): a 1-line legend using the same chips, 8 dp under the ringed latest row.
+    androidx.compose.foundation.layout.FlowRow(
+        Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp).clearAndSetSemantics { contentDescription = text },
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        listOf('S' to R.string.tut_legend_strike, 'B' to R.string.tut_legend_ball).forEach { (letter, caption) ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                LegendChip(letter)
+                HSpacer(6.dp)
+                Text(stringResource(caption), style = NbType.caption, color = NbColors.text2)
+            }
+        }
+    }
 }
 
 /** Windows shorter than 600 dp: with the connection banner the duel strip gives way to the log (D2-37, DEF-060). */

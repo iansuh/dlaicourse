@@ -105,13 +105,13 @@
     <string name="mode_line">%1$s · %2$s</string>
     <string name="team_line">Команда A %1$d : %2$d B</string>
     <string name="opp_thinking">Думает</string>
-    <string name="opp_pitched">Ответил</string>
+    <string name="opp_pitched">Бросил</string>
     <string name="opp_picking">Соперник загадывает число</string>
     <string name="opp_ready">Число загадано</string>
     <string name="opp_disconnected">Нет связи · %1$s</string>
     <string name="my_secret">Моё число</string>
     <string name="col_hint">Подсказка</string>
-    <string name="col_opp">Сопер.</string>
+    <string name="col_opp">Соперник</string>
     <string name="opp_log_title">Ходы соперника</string>
     <string name="menu_opp_log">Ходы соперника</string>
     <string name="opp_log_empty">Ходов пока нет</string>
@@ -128,7 +128,7 @@
     <string name="memo">Заметки</string>
     <string name="memo_help">Нажатие: нет → есть → сброс</string>
     <string name="memo_clear">Сбросить</string>
-    <string name="pitch">Назвать</string>
+    <string name="pitch">Бросок</string>
     <string name="waiting_opp">Ждём соперника</string>
     <string name="waiting_ready">Ждём соперника</string>
     <string name="backspace">Удалить цифру</string>
@@ -439,9 +439,11 @@
     <string name="tut_next">Далее</string>
     <string name="tut_start">Играть</string>
     <string name="tut_1">Соперник загадал **3 разные цифры**. Попробуем угадать?</string>
-    <string name="tut_2">Нажмите **0**, **7**, **5**, затем «Назвать».</string>
+    <string name="tut_2">Нажмите **0**, **7**, **5**, затем «Бросок».</string>
     <string name="tut_3">**0** верная цифра на своём месте: страйк (S). **7** есть в числе, но не на месте: болл (B). Цифры 5 нет.</string>
     <string name="tut_legend">S цифра и место верны · B цифра верна, место нет</string>
+    <string name="tut_legend_strike">цифра и место верны</string>
+    <string name="tut_legend_ball">цифра верна, место нет</string>
     <string name="tut_out">Если ни одна цифра не подошла, это **аут**.</string>
     <string name="tut_4">Загаданное число **0 4 7**. Угадайте сами.</string>
     <string name="tut_done">Одни страйки — победа! Если оба угадали в одном раунде, это ничья.</string>

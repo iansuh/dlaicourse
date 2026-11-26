@@ -137,6 +137,12 @@ fun Modifier.fadingEdges(bottom: Dp = 20.dp, top: Dp = 0.dp, enabled: Boolean = 
         }
     }
 
+/**
+ * Review v2 polish 4: the one fade rule for every scroll edge. Where a scroll region meets a pinned bar (actions, the
+ * quick-match block, the ad band) and its content continues below, it ends in a 20 dp `bg` fade instead of a hard cut.
+ */
+fun Modifier.scrollFade(state: androidx.compose.foundation.ScrollState): Modifier = fadingEdges(enabled = state.canScrollForward)
+
 /** Horizontal fade at the right edge (scrolling chip rows, 16 dp). */
 fun Modifier.fadingEnd(width: Dp = 16.dp): Modifier =
     graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {
@@ -251,12 +257,29 @@ fun NameWithTag(
 ) {
     // Name and tag sit on one baseline, like the prototype's inline `.pname` + `.ptag`.
     Row(modifier) {
-        Text(name, style = nameStyle, color = nameColor, maxLines = 1, overflow = TextOverflow.Ellipsis, autoFit = false, modifier = Modifier.weight(1f, fill = false).alignByBaseline())
+        // Review v2 polish 1: an ellipsized name keeps the full width it was offered, which opened a hole before the tag;
+        // the name is narrowed to its drawn line so the tag sits the specified 1 dp after the "…".
+        val ink = remember { LineRight() }
+        Text(
+            name, style = nameStyle, color = nameColor, maxLines = 1, overflow = TextOverflow.Ellipsis, autoFit = false,
+            onTextLayout = { ink.value = if (it.lineCount > 0 && it.isLineEllipsized(0)) it.getLineRight(0) else -1f },
+            modifier = Modifier.weight(1f, fill = false).alignByBaseline().layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                val right = ink.value
+                val width = if (right >= 0f) kotlin.math.ceil(right).toInt().coerceIn(constraints.minWidth, placeable.width) else placeable.width
+                layout(width, placeable.height) { placeable.place(0, 0) }
+            },
+        )
         if (tag != null) {
             Spacer(Modifier.width(1.dp))
             Text("#$tag", style = tagStyle, color = tagColor, maxLines = 1, softWrap = false, modifier = Modifier.alignByBaseline())
         }
     }
+}
+
+/** Written by the name's own measure pass, read right after it (not state on purpose). */
+private class LineRight {
+    var value = -1f
 }
 
 /** Team badge 24 × 24 dp (16 dp in chat), radius 6, white Inter 700 letter on `teamA` / `teamB` (DESIGN_SYSTEM 12.10). */

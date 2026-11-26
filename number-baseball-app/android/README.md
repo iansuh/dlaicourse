@@ -138,15 +138,22 @@ The launcher icon is unchanged (dark plate; `nb_icon_*` colours).
 
 | Spec | What the app does | Why / status |
 | --- | --- | --- |
-| 12.9 memo sheet, 06 §1.1 innings sheet: `ModalBottomSheet` | Drawn with the app's own `SheetFrame` (in-window `scrim` + white sheet, grab handle; dismissed by scrim tap, back or `close`, not by drag) like the other in-match sheets | Deviation: no drag-to-dismiss. The sheet must not take the window: reveals, sounds, the clock and the keypad marks keep running underneath and Robolectric renders it. Looks identical. |
-| 06 §1 "내 기록 13승" | My wins from the account's cached `/api/v1/me` stats | The record may lag by the match just played until the next refresh (no protocol field for it). |
-| 06 §1 summary values ("6회", "13승") | Digits in Inter, the translated unit in the system face at the same size | DESIGN_SYSTEM 3.1: Inter never sets translated text. |
-| 05 §2.8 own phrase bubble | Only received phrases show a bubble | Unchanged from v1; needs a send-echo in the phrase flow. |
-| ADAPTIVE §1 compact Home digit tiles | Numbers only (no "자리" unit) in the 48 dp tiles | 4 × 48 dp tiles cannot hold the unit at 360 dp. |
-| ADAPTIVE §3 medium / expanded windows | v1 layouts (centred 560 dp column; memo as a sheet, no permanent memo panel) | Not in this change. |
-| 12.3 opponent row tap | The opponent's full log opens from a tap on any row's opponent hint and from the menu, no longer from the opponent row | 12.8 names the hint as the entry point. |
-| `MatchActions.onMemoCollapse`, `MemoState.collapsed` | Kept in the API but unused (no inline memo any more) | Avoids touching the view models; remove with the next cleanup. |
-| Shots `team-final-ko`, status bar | The renders keep the 24 dp gesture inset under the banner and draw no status-bar glyphs | Test frame (real insets); the reference shot of the team result has no gesture area. |
+| 12.9 memo sheet, 06 §1.1 innings sheet: `ModalBottomSheet` | Drawn with the app's own `SheetFrame` (in-window `scrim` + white sheet, grab handle; dismissed by scrim tap, back, `close` or a vertical drag on the handle / header row: past 30 % of the sheet height or a downward fling, otherwise it springs back) like the other in-match sheets | *Accepted for 1.0* (review v2). The sheet must not take the window: reveals, sounds, the clock and the keypad marks keep running underneath and Robolectric renders it. Drag (the 1.1 follow-up, polish 5) is built: `LocalSheetDrag` on `SheetHandle` / `SheetTitle`; the sheet body itself does not drag. |
+| 06 §1 "내 기록 13승" | My wins from the account's cached `/api/v1/me` stats; unknown = "–" in `text3` | *Accepted as interim* (review v2). For 1.1 the protocol's match-end message should carry the player's stats. |
+| 06 §1 summary values ("6회", "13승") | Digits in Inter, the translated unit in the system face at the same size | *Accepted* (DESIGN_SYSTEM 3.1, 12.20 reworded). |
+| 05 §2.8 own phrase bubble | Built (V2-15): after a successful send my phrase shows as an `accentTint` bubble, left-aligned under the opponent row, for 2.8 s (also while chat is muted: it is my own action); the server's echo of it is not shown twice | — |
+| ADAPTIVE §1 compact Home digit tiles | Numbers only (no "자리" unit) in the 48 dp tiles | *Accepted* (ADAPTIVE §1 updated; TalkBack keeps "4자리"). |
+| ADAPTIVE §3 medium / expanded windows | v1 layouts (centred 560 dp column; memo as a sheet, no permanent memo panel) | *Accepted as interim for 1.0*; the panes are the 1.1 target. |
+| 12.3 opponent row tap | The opponent's full log opens from a tap on any row's opponent hint and from the menu, no longer from the opponent row | *Accepted* (12.3 / 12.8). |
+| `MatchActions.onMemoCollapse`, `MemoState.collapsed` | Kept in the API but unused (no inline memo any more) | *Accepted*; remove with the next cleanup. |
+| Shots `team-final-ko`, status bar | The renders keep the 24 dp gesture inset under the banner and draw no status-bar glyphs | *Accepted* as a frame difference. With the rules caption hidden on the result (06 §4 Fit, V2-07) all three rows of a 3 v 3 fit. |
+
+### Review v2 fixes (`../design/REVIEW_V2.md`)
+
+- **V2-01** chat header at large text: "전체 채팅 끄기" + switch get their own full-width 48 dp row under the 48 dp title row; otherwise the label shares the title row without `maxLines` (WordFit steps it down, 160 dp cap).
+- **V2-02** match toasts: the match screen hosts its own toast at the bottom of the log region, 8 dp above the entry head (above the secret-entry title in the secret phase); in compact windows at the top of the log, 8 dp under the progress line (ADAPTIVE §1).
+- **V2-03 … V2-14, V2-16 … V2-19** as the review's fix column: compact quick-match found state (name + headline 16 dp under the tiles), privacy link `accent` 700 without underline, the 20 dp fade on the nickname body, 4 dp under my duel row, no rules caption on the team result, Home record spacing (23 / 12 dp), lobby rules row 48 dp between its lines, dialogs draw the `scrim` token in a full-window dialog (`DialogFrame`, platform dim off), innings table left fade whenever scrolled from its start, tutorial legend with the S / B chips 8 dp under the coached row (`tut_legend_strike` / `tut_legend_ball`, ten languages), ja "コンピュータ" + strict phrase line breaking on mode tiles, "–" in `text3` in the result summary, report card no-record line, the small lobby opens scrolled to the team header and one full seat, `WordFit` floor of 11 dp rendered, de / ru design strings (M-4: "Verloren", "Startseite", "Werfen" / "Geworfen", "Gegner", "Löschen"; "Бросок" / "Бросил", "Соперник").
+- **Polish:** names ellipsize against their tag (`NameWithTag` narrows the name to its drawn line); the result hides its badge at large text; Home uses the 56 dp mode tiles at large text; one `Modifier.scrollFade(state)` (20 dp `bg` fade) wherever a scroll region meets a pinned bar (terms gate, nickname, join, age gate, profile, Home, lobby, results, team board); drag-to-dismiss on `SheetFrame` sheets.
 
 ## Deviations from the design (for design sign-off)
 
@@ -166,7 +173,7 @@ approved there; the rest still need design approval.
 | 11 §2 delete-account dialog | Extra paragraph: the remove-ads purchase stays with the Google account | *Accepted*. |
 | 11 §1.1 개인정보 보호 옵션 | Hidden for an owner (UMP never runs), shown after a purchase in the same process | *Accepted*. |
 | 08 §1 leave dialog on the live board | "방에서 나갈까요?" / "내 대결은 끝났어요. 지금 나가면 팀 결과를 볼 수 없어요." · 취소 · 나가기 | *Accepted*. |
-| 08 §2 best hint 150 ms cross-fade | Not yet | *Accepted as a follow-up*; must land before release. |
+| 08 §2 best hint 150 ms cross-fade | Built: `Crossfade(tween(150))` on the best hint in `TeamBoard.kt` | Done. |
 | ADAPTIVE §1 small-window team rows | Round over the winner, a status word, or both best hints | *Accepted*. |
 | 11 §2 transfer plates (D2-51) | 3 groups of 4 `numCode` plates, 28 × 40 dp, narrower when 12 plates do not fit 328 dp (24.5 dp at 360 dp); expired: plates disabled, "코드가 만료됐어요", "새 코드 만들기" | Waiting for design's 11 §2 update; the 28 dp plates only fit from about 380 dp. |
 | 12.17 server-error dialog (D2-43) | Built (`ServerErrorDialog`): used for 5xx / unknown codes on the terms gate (다시 시도 = agree again, 홈으로 = close), join, lobby (홈으로 = leave the room) and settings (홈으로 = back). Other errors stay toasts | The catalogue names no screen-specific actions; these are the obvious ones. |

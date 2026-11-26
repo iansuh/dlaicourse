@@ -457,6 +457,8 @@
     <string name="tut_2">**0**, **7**, **5**를 눌러 보세요.</string>
     <string name="tut_3">**0**은 숫자와 자리가 맞아서 스트라이크(S), **7**은 숫자만 맞아서 볼(B)이에요. 5는 없어요.</string>
     <string name="tut_legend">S 숫자와 자리가 맞음 · B 숫자만 맞음</string>
+    <string name="tut_legend_strike">숫자와 자리가 맞음</string>
+    <string name="tut_legend_ball">숫자만 맞음</string>
     <string name="tut_out">하나도 맞지 않으면 **아웃**이에요.</string>
     <string name="tut_4">숨긴 숫자는 **0 4 7**. 직접 맞혀 보세요.</string>
     <string name="tut_done">모두 스트라이크면 **승리**! 같은 회에 둘 다 맞히면 무승부예요.</string>

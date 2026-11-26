@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
 import app.numbaseball.ui.design.underlined
+import app.numbaseball.ui.design.scrollFade
 import app.numbaseball.ui.design.HSpacer
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
@@ -94,7 +95,8 @@ fun TermsGateScreen(
         },
         overlay = { ToastHost(toast, bottomOffset = 120.dp) },
     ) {
-        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+        val bodyScroll = rememberScrollState()
+        Column(Modifier.weight(1f).fillMaxWidth().scrollFade(bodyScroll).verticalScroll(bodyScroll).padding(horizontal = 16.dp)) {
             VSpacer(8.dp)
             Text(
                 stringResource(if (updated) R.string.terms_changed_title else R.string.terms_gate_title),

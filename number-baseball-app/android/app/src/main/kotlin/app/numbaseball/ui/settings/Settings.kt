@@ -44,7 +44,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.numbaseball.R
@@ -418,8 +417,7 @@ fun SettingsScreen(
     }
     state.transferCode?.let { TransferSheet(it, state.transferLoading, actions, now) }
     if (deleteDialog || state.deleting) {
-        Dialog(onDismissRequest = { if (!state.deleting) deleteDialog = false }) {
-            app.numbaseball.ui.design.ScrimDim()
+        app.numbaseball.ui.design.DialogFrame(onDismiss = { if (!state.deleting) deleteDialog = false }) {
             DeleteDialog(state.deleting, onCancel = { deleteDialog = false }, onConfirm = actions.onDeleteConfirm)
         }
     }

@@ -418,6 +418,8 @@
     <string name="tut_2">依次点 **0**、**7**、**5**，然后投球。</string>
     <string name="tut_3">**0** 数字和位置都对，是好球（S）；**7** 在数里但位置不对，是坏球（B）；5 不在数里。</string>
     <string name="tut_legend">S 数字和位置都对 · B 数字对位置不对</string>
+    <string name="tut_legend_strike">数字和位置都对</string>
+    <string name="tut_legend_ball">数字对位置不对</string>
     <string name="tut_out">一个数字都没猜中，就是**出局**。</string>
     <string name="tut_4">藏着的数是 **0 4 7**。自己来猜吧。</string>
     <string name="tut_done">全部好球就赢了！如果双方在同一回合猜中，则为平局。</string>

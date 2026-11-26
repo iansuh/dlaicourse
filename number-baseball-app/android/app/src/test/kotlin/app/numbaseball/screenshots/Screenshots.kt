@@ -79,7 +79,6 @@ import app.numbaseball.ui.computer.ComputerSetupSheet
 import app.numbaseball.ui.design.LocalReduceMotion
 import app.numbaseball.ui.design.MemoMark
 import app.numbaseball.ui.design.SheetFrame
-import app.numbaseball.ui.design.ToastHost
 import app.numbaseball.ui.firstrun.FirstRunScreen
 import app.numbaseball.ui.firstrun.FirstRunUiState
 import app.numbaseball.ui.home.HomeScreen
@@ -499,7 +498,7 @@ abstract class ScreenshotSuite(
     }
 
     @Test fun resultLose() = capture("result-lose-{lang}", ads = true) {
-        ResultsScreen(Design.resultSummary(Outcome.LOSE), showBanner = true, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {})
+        ResultsScreen(Design.resultSummary(Outcome.LOSE), showBanner = true, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {}, myWins = 12)
     }
 
     @Test fun resultDraw() = capture("result-draw-{lang}", ads = true) {
@@ -520,7 +519,7 @@ abstract class ScreenshotSuite(
 
     // Online result after an interstitial: link, flag, no banner (result-link-ko/en).
     @Test fun resultLink() = capture("result-link-{lang}", ads = true) {
-        ResultsScreen(Design.resultSummary(), showBanner = false, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {})
+        ResultsScreen(Design.resultSummary(), showBanner = false, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {}, myWins = 13)
     }
 
     // remove_ads owned: no link, no banner.
@@ -818,13 +817,16 @@ abstract class ScreenshotSuite(
     @Test fun matchMemo() = capture("match-memo-{lang}") { MatchScreen(Design.guessState(), matchActions().withChat(), initialMemo = true) }
 
     @Test fun matchToast() = capture("match-toast-{lang}", before = { mainClock.autoAdvance = false; mainClock.advanceTimeBy(1_000) }) {
-        val toast = app.numbaseball.ui.design.rememberToastState()
+        // V2-02: the match screen's own toast host (8 dp above the entry head; compact: top of the log).
         val text = androidx.compose.ui.res.stringResource(app.numbaseball.R.string.timer_expired)
-        LaunchedEffect(Unit) { toast.show(text) }
-        Box(Modifier.fillMaxSize()) {
-            MatchScreen(Design.guessState(), matchActions().withChat())
-            ToastHost(toast, bottomOffset = 16.dp + 172.dp + 24.dp)
-        }
+        MatchScreen(Design.guessState(), matchActions().withChat(), initialToast = text)
+    }
+
+    // V2-15 (05 §2.8): my own sent phrase as an `accentTint` bubble under the opponent row.
+    @Test fun matchPhraseSent() = capture("match-phrase-sent-{lang}") {
+        val me = androidx.compose.ui.res.stringResource(app.numbaseball.R.string.tag_me)
+        val phrase = androidx.compose.ui.res.stringResource(app.numbaseball.R.string.phrase_good_luck)
+        MatchScreen(Design.lateState(), matchActions().withChat(), bubble = app.numbaseball.ui.match.PhraseBubble(1, me, phrase, mine = true))
     }
 
     @Test fun profileOffline() = capture("profile-offline-{lang}") {

@@ -15,17 +15,18 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import app.numbaseball.ui.design.Text
+import app.numbaseball.ui.design.scrollFade
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -167,7 +168,9 @@ fun FirstRunScreen(
         }
     }
     NbScreen(imeAware = true) {
-        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+        // 01 §1 Body scroll (V2-05): the body ends in a 20 dp fade where it continues under the pinned actions.
+        val bodyScroll = rememberScrollState()
+        Column(Modifier.weight(1f).fillMaxWidth().scrollFade(bodyScroll).verticalScroll(bodyScroll).padding(horizontal = 16.dp)) {
             VSpacer(32.dp)
             Eyebrow { Text(stringResource(R.string.nick_eyebrow), style = NbType.labelSmall, color = NbColors.text2) }
             VSpacer(16.dp)
@@ -263,7 +266,7 @@ fun FirstRunScreen(
                 buildAnnotatedString {
                     append(stringResource(R.string.nick_privacy_note))
                     append(" ")
-                    withStyle(SpanStyle(color = NbColors.text2, textDecoration = TextDecoration.Underline)) { append(stringResource(R.string.privacy_policy)) }
+                    withStyle(SpanStyle(color = NbColors.accent, fontWeight = FontWeight.Bold)) { append(stringResource(R.string.privacy_policy)) }
                 },
                 style = NbType.caption,
                 color = NbColors.text3,

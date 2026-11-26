@@ -88,6 +88,8 @@ fun PitchLog(
     onOpponentLog: (() -> Unit)? = null,
     /** Tutorial step 3: 2 dp `accent` ring on the latest row. */
     highlightLatest: Boolean = false,
+    /** Drawn directly under the latest row (tutorial step 3 legend, V2-12). */
+    latestFooter: (@Composable () -> Unit)? = null,
 ) {
     val c = columns(digits, compact)
     val rows = myRounds.asReversed()
@@ -115,6 +117,7 @@ fun PitchLog(
                 highlight = index == 0 && highlightLatest,
                 onOpponentLog = onOpponentLog,
             )
+            if (index == 0) latestFooter?.invoke()
         }
     }
 }

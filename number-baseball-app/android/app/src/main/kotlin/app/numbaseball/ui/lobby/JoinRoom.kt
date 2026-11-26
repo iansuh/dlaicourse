@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import app.numbaseball.ui.design.Text
+import app.numbaseball.ui.design.scrollFade
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -152,7 +153,8 @@ fun JoinScreen(state: JoinUiState, onCodeChange: (String) -> Unit, onJoin: () ->
         },
         overlay = { ToastHost(toast, bottomOffset = 88.dp) },
     ) {
-        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+        val bodyScroll = rememberScrollState()
+        Column(Modifier.weight(1f).fillMaxWidth().scrollFade(bodyScroll).verticalScroll(bodyScroll).padding(horizontal = 16.dp)) {
             VSpacer(24.dp)
             Text(stringResource(R.string.join_prompt), style = NbType.title, color = NbColors.ink)
             Text(stringResource(R.string.join_rule), style = NbType.caption, color = NbColors.text3)

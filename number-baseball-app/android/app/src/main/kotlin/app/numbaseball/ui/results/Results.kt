@@ -24,6 +24,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import app.numbaseball.ui.design.Text
+import app.numbaseball.ui.design.scrollFade
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -79,7 +80,6 @@ import app.numbaseball.ui.design.NbIcon
 import app.numbaseball.ui.design.NbScreen
 import app.numbaseball.ui.design.TopBar
 import app.numbaseball.ui.design.VSpacer
-import app.numbaseball.ui.design.fadingEdges
 import app.numbaseball.ui.design.fadingStart
 import app.numbaseball.ui.design.formatClock
 import app.numbaseball.ui.design.isCompactHeight
@@ -163,7 +163,7 @@ fun ResultsScreen(
             // Small window (ADAPTIVE.md §1): headline row 56 dp (32 dp badge + `title`), the opponent's number as 40 × 44
             // plates, buttons side by side (48 dp); no sub line, summary, innings link, 광고 제거 line or banner.
             Column(
-                Modifier.weight(1f).fillMaxWidth().fadingEdges(enabled = scroll.canScrollForward).verticalScroll(scroll),
+                Modifier.weight(1f).fillMaxWidth().scrollFade(scroll).verticalScroll(scroll),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 val headlineText = stringResource(headlineRes(summary.outcome))
@@ -201,12 +201,16 @@ fun ResultsScreen(
             return@NbScreen
         }
         Column(
-            Modifier.weight(1f).fillMaxWidth().fadingEdges(enabled = scroll.canScrollForward).verticalScroll(scroll).padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+            Modifier.weight(1f).fillMaxWidth().scrollFade(scroll).verticalScroll(scroll).padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            VSpacer(4.dp)
-            ResultBadge(summary.outcome, 64.dp)
-            VSpacer(12.dp)
+            // Review v2 polish 2: at large text the badge gives way (the headline carries the outcome), so the summary's
+            // first row is in view without scrolling.
+            if (!isLargeFont()) {
+                VSpacer(4.dp)
+                ResultBadge(summary.outcome, 64.dp)
+                VSpacer(12.dp)
+            }
             Text(
                 stringResource(headlineRes(summary.outcome)),
                 style = NbType.display,
@@ -401,7 +405,8 @@ private fun SummaryValue(value: String, @Suppress("UNUSED_PARAMETER") style: and
             Text(
                 unit.trimStart(),
                 style = if (unit == "–") NbType.numSummary else NbType.numSummary.copy(fontFamily = NbFonts.sans, letterSpacing = 0.sp),
-                color = NbColors.ink,
+                // 12.20 (V2-14): a value that is not known is "–" in `text3`.
+                color = if (unit == "–") NbColors.text3 else NbColors.ink,
                 maxLines = 1,
                 softWrap = false,
                 fitMinScale = 0.6f,
@@ -453,7 +458,8 @@ private fun LineScore(summary: MatchSummary, large: Boolean, modifier: Modifier 
                     LabelCell(stringResource(R.string.me_short), row)
                     LabelCell(opponentLabel, row)
                 }
-                Box(Modifier.weight(1f).then(if (scrolls) Modifier.fadingStart() else Modifier)) {
+                // 06 §1.1 (V2-11): the 16 dp left fade whenever the table is scrolled from its start.
+                Box(Modifier.weight(1f).then(if (scrolls && scroll.value > 0) Modifier.fadingStart() else Modifier)) {
                     Column(if (scrolls) Modifier.horizontalScroll(scroll) else Modifier) {
                         Row(Modifier.height(header), verticalAlignment = Alignment.CenterVertically) {
                             (0 until rounds).forEach { i ->

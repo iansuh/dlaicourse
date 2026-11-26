@@ -434,6 +434,8 @@
     <string name="tut_2">Toque em **0**, **7**, **5** e lance.</string>
     <string name="tut_3">**0** é o dígito certo no lugar certo: um strike (S). **7** está no número, mas em outro lugar: uma bola (B). O 5 não está.</string>
     <string name="tut_legend">S dígito e lugar certos · B dígito certo, outro lugar</string>
+    <string name="tut_legend_strike">dígito e lugar certos</string>
+    <string name="tut_legend_ball">dígito certo, outro lugar</string>
     <string name="tut_out">Se nenhum dígito confere, é um **out**.</string>
     <string name="tut_4">O número escondido é **0 4 7**. Descubra você mesmo.</string>
     <string name="tut_done">Todos os strikes vencem! Se os dois acertarem na mesma rodada, é empate.</string>

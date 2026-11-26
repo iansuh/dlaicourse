@@ -1,6 +1,7 @@
 package app.numbaseball.ui.age
 
 import app.numbaseball.ui.design.underlined
+import app.numbaseball.ui.design.scrollFade
 import app.numbaseball.ui.theme.NbRadius
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
@@ -126,7 +127,8 @@ fun AgeScreen(state: AgeUiState, onDigit: (Char) -> Unit, onDelete: () -> Unit, 
     val compact = isCompactHeight()
     val margin = if (compact) 12.dp else 16.dp
     NbScreen {
-        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = margin)) {
+        val bodyScroll = rememberScrollState()
+        Column(Modifier.weight(1f).fillMaxWidth().scrollFade(bodyScroll).verticalScroll(bodyScroll).padding(horizontal = margin)) {
             // Small window: title and the year only, so the slots stay above the pinned keypad (ADAPTIVE.md §1).
             VSpacer(if (compact) 12.dp else 32.dp)
             if (!compact) {

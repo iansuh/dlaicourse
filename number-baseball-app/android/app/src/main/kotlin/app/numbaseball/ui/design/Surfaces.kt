@@ -77,6 +77,11 @@ import app.numbaseball.ui.theme.NbRadius
 import app.numbaseball.ui.theme.NbSize
 import app.numbaseball.ui.theme.NbType
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.layout.onSizeChanged
 
 /**
  * Top bar (DESIGN_SYSTEM 12.1): 56 dp (48 compact) on `bg`; scrolled = a 1 dp `line` bottom edge appears (no fill
@@ -231,7 +236,7 @@ fun SheetSurface(modifier: Modifier = Modifier, content: @Composable ColumnScope
 
 @Composable
 fun SheetHandle() {
-    Box(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxWidth().then(LocalSheetDrag.current ?: Modifier).padding(top = 12.dp, bottom = 4.dp), contentAlignment = Alignment.Center) {
         Box(Modifier.size(32.dp, 4.dp).background(NbColors.dotOff, RoundedCornerShape(2.dp)))
     }
 }
@@ -239,7 +244,7 @@ fun SheetHandle() {
 /** Sheet title row: 56 dp (48 for the chat), `title` at 16 dp, optional trailing content (close button, switch). */
 @Composable
 fun SheetTitle(title: String, height: Dp = 56.dp, trailing: @Composable RowScope.() -> Unit = {}) {
-    Row(Modifier.fillMaxWidth().heightIn(min = if (isCompactHeight()) 48.dp else height).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().then(LocalSheetDrag.current ?: Modifier).heightIn(min = if (isCompactHeight()) 48.dp else height).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = NbType.title, color = NbColors.ink, fitMinScale = 0.5f, modifier = Modifier.weight(1f).semantics { heading() })
         trailing()
     }
@@ -268,9 +273,11 @@ fun NbModalSheet(onDismiss: () -> Unit, skipPartiallyExpanded: Boolean = true, c
         scrimColor = NbColors.scrim,
         shape = RoundedCornerShape(topStart = NbRadius.l, topEnd = NbRadius.l),
         tonalElevation = 0.dp,
-        dragHandle = { SheetHandle() },
-        content = content,
-    )
+        dragHandle = { androidx.compose.runtime.CompositionLocalProvider(LocalSheetDrag provides null) { SheetHandle() } },
+    ) {
+        // Material's sheet drags itself; never the gesture of an enclosing SheetFrame.
+        androidx.compose.runtime.CompositionLocalProvider(LocalSheetDrag provides null) { content() }
+    }
 }
 
 /**
@@ -288,11 +295,7 @@ fun NbDialog(
     destructive: Boolean = false,
     dismissible: Boolean = true,
 ) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = dismissible),
-    ) {
-        ScrimDim()
+    DialogFrame(onDismiss = onDismiss, dismissOnScrim = dismissible) {
         DialogSurface(title, body, confirmLabel, onConfirm, dismissLabel, onDismiss, destructive)
     }
 }
@@ -303,8 +306,7 @@ fun NbDialog(
  */
 @Composable
 fun ServerErrorDialog(onRetry: () -> Unit, onHome: () -> Unit, onDismiss: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        ScrimDim()
+    DialogFrame(onDismiss = onDismiss) {
         DialogSurface(
             title = androidx.compose.ui.res.stringResource(R.string.server_error_title),
             body = androidx.compose.ui.res.stringResource(R.string.server_error_body),
@@ -318,13 +320,31 @@ fun ServerErrorDialog(onRetry: () -> Unit, onHome: () -> Unit, onDismiss: () -> 
 }
 
 /**
- * Dialog windows dim the screen with the `scrim` token (40 % ink) instead of the platform's 60 % (D2-23). Call
- * inside a `Dialog` content.
+ * Dialog window (DESIGN_SYSTEM 12.17, V2-10): the window spans the screen, the platform dim (black) is off and the
+ * `scrim` token (40 % ink) is drawn inside the window behind the centred content. A tap on the scrim dismisses unless
+ * [dismissOnScrim] is false (alert dialogs); back always calls [onDismiss].
  */
 @Composable
-fun ScrimDim() {
-    val window = (LocalView.current.parent as? DialogWindowProvider)?.window
-    SideEffect { window?.setDimAmount(NbColors.scrim.alpha) }
+fun DialogFrame(onDismiss: () -> Unit, dismissOnScrim: Boolean = true, content: @Composable BoxScope.() -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false, dismissOnClickOutside = false),
+    ) {
+        val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+        SideEffect {
+            window?.setDimAmount(0f)
+            window?.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
+        }
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(NbColors.scrim)
+                .clickable(interactionSource = null, indication = null) { if (dismissOnScrim) onDismiss() },
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(Modifier.clickable(interactionSource = null, indication = null) {}, contentAlignment = Alignment.Center, content = content)
+        }
+    }
 }
 
 @Composable
@@ -410,9 +430,12 @@ class ToastState {
 @Composable
 fun rememberToastState() = remember { ToastState() }
 
-/** Toast: 16 dp side margins, [bottomOffset] above the keypad or bottom bar, min 48 dp, radius 12, `inverse`, `body` `onInverse`. */
+/**
+ * Toast: 16 dp side margins, [bottomOffset] above the keypad or bottom bar, min 48 dp, radius 12, `inverse`, `body`
+ * `onInverse`. [top]: anchored [bottomOffset] under the top of its box instead (match screen in compact windows).
+ */
 @Composable
-fun BoxScope.ToastHost(state: ToastState, bottomOffset: Dp = 16.dp) {
+fun BoxScope.ToastHost(state: ToastState, bottomOffset: Dp = 16.dp, top: Boolean = false) {
     val message = state.message
     val audio = LocalGameAudio.current
     LaunchedEffect(state.key()) {
@@ -424,9 +447,13 @@ fun BoxScope.ToastHost(state: ToastState, bottomOffset: Dp = 16.dp) {
     }
     AnimatedVisibility(
         visible = message != null,
-        enter = fadeIn() + slideInVertically { it / 4 },
+        enter = fadeIn() + slideInVertically { if (top) -it / 4 else it / 4 },
         exit = fadeOut(),
-        modifier = Modifier.align(Alignment.BottomCenter).padding(start = 16.dp, end = 16.dp, bottom = bottomOffset),
+        modifier = if (top) {
+            Modifier.align(Alignment.TopCenter).padding(start = 16.dp, end = 16.dp, top = bottomOffset)
+        } else {
+            Modifier.align(Alignment.BottomCenter).padding(start = 16.dp, end = 16.dp, bottom = bottomOffset)
+        },
     ) {
         Row(
             Modifier
@@ -497,6 +524,9 @@ fun OverflowMenu(items: List<MenuItem>, description: String) {
     }
 }
 
+/** The drag-to-dismiss gesture of the enclosing [SheetFrame], applied to its handle and header row; null elsewhere. */
+val LocalSheetDrag = androidx.compose.runtime.compositionLocalOf<Modifier?> { null }
+
 /** App-wide toast (block with undo, reconnected, search stopped): shown above every screen by NbApp. */
 val LocalAppToast = staticCompositionLocalOf { ToastState() }
 
@@ -508,6 +538,26 @@ val LocalAppToast = staticCompositionLocalOf { ToastState() }
 fun SheetFrame(onDismiss: () -> Unit, top: Dp? = null, content: @Composable ColumnScope.() -> Unit) {
     // Small windows: sheets open at full window height (ADAPTIVE.md §1).
     val top = if (top != null && isCompactHeight()) 0.dp else top
+    // Review v2 polish 5: a vertical drag on the handle and header row moves the sheet; it dismisses past 30 % of the
+    // sheet's height or on a downward fling, otherwise it springs back. Scrim tap, back and `close` still work.
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val drag = remember { androidx.compose.animation.core.Animatable(0f) }
+    var sheetHeight by remember { mutableStateOf(0) }
+    val flingPx = with(LocalDensity.current) { 800.dp.toPx() }
+    val dragState = androidx.compose.foundation.gestures.rememberDraggableState { delta ->
+        scope.launch { drag.snapTo((drag.value + delta).coerceAtLeast(0f)) }
+    }
+    val dragModifier = Modifier.draggable(
+        state = dragState,
+        orientation = androidx.compose.foundation.gestures.Orientation.Vertical,
+        onDragStopped = { velocity ->
+            if (sheetHeight > 0 && (drag.value > sheetHeight * 0.3f || velocity > flingPx)) {
+                onDismiss()
+            } else {
+                drag.animateTo(0f, androidx.compose.animation.core.tween(NbMotion.short))
+            }
+        },
+    )
     Box(
         Modifier
             .fillMaxSize()
@@ -524,7 +574,14 @@ fun SheetFrame(onDismiss: () -> Unit, top: Dp? = null, content: @Composable Colu
                 .clickable(interactionSource = null, indication = null) {},
             contentAlignment = Alignment.BottomCenter,
         ) {
-            SheetSurface(if (top != null) Modifier.fillMaxHeight() else Modifier, content = content)
+            androidx.compose.runtime.CompositionLocalProvider(LocalSheetDrag provides dragModifier) {
+                SheetSurface(
+                    (if (top != null) Modifier.fillMaxHeight() else Modifier)
+                        .onSizeChanged { sheetHeight = it.height }
+                        .offset { androidx.compose.ui.unit.IntOffset(0, drag.value.roundToInt()) },
+                    content = content,
+                )
+            }
         }
     }
 }

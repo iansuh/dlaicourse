@@ -99,13 +99,13 @@
     <string name="mode_line">%1$s · %2$s</string>
     <string name="team_line">Team A %1$d : %2$d B</string>
     <string name="opp_thinking">Denkt nach</string>
-    <string name="opp_pitched">Hat geraten</string>
+    <string name="opp_pitched">Geworfen</string>
     <string name="opp_picking">Gegner wählt eine Zahl</string>
     <string name="opp_ready">Zahl gewählt</string>
     <string name="opp_disconnected">Getrennt · %1$s</string>
     <string name="my_secret">Meine Zahl</string>
     <string name="col_hint">Hinweis</string>
-    <string name="col_opp">Geg.</string>
+    <string name="col_opp">Gegner</string>
     <string name="opp_log_title">Gegnerprotokoll</string>
     <string name="menu_opp_log">Gegnerprotokoll</string>
     <string name="opp_log_empty">Noch keine Würfe</string>
@@ -121,8 +121,8 @@
     <string name="legend_out">keine Ziffer stimmt</string>
     <string name="memo">Notizen</string>
     <string name="memo_help">Tippen: raus → drin → leer</string>
-    <string name="memo_clear">Leeren</string>
-    <string name="pitch">Raten</string>
+    <string name="memo_clear">Löschen</string>
+    <string name="pitch">Werfen</string>
     <string name="waiting_opp">Warten auf den Gegner</string>
     <string name="waiting_ready">Warten auf den Gegner</string>
     <string name="backspace">Eine Ziffer löschen</string>
@@ -205,7 +205,7 @@
     <string name="msg_block">Spieler blockieren</string>
     <string name="block_sub">Du siehst seinen Chat nicht mehr und wirst nicht erneut zugeteilt</string>
     <string name="res_win">Du gewinnst</string>
-    <string name="res_lose">Du verlierst</string>
+    <string name="res_lose">Verloren</string>
     <string name="res_draw">Unentschieden</string>
     <string name="res_team_draw">Team unentschieden</string>
     <string name="res_win_sub">Du hast es in Runde %1$d geknackt</string>
@@ -223,7 +223,7 @@
     <string name="me_short">Ich</string>
     <string name="cpu_short">Computer</string>
     <string name="rematch">Nochmal spielen</string>
-    <string name="home">Start</string>
+    <string name="home">Startseite</string>
     <string name="back_to_room">Zurück zum Raum</string>
     <string name="ad_notice">Vor dem nächsten Bildschirm läuft eine kurze Werbung</string>
     <string name="report_player">Melden</string>
@@ -423,9 +423,11 @@
     <string name="tut_next">Weiter</string>
     <string name="tut_start">Los geht’s</string>
     <string name="tut_1">Dein Gegner hat **3 verschiedene Ziffern** versteckt. Wollen wir raten?</string>
-    <string name="tut_2">Tippe **0**, **7**, **5** und rate dann.</string>
+    <string name="tut_2">Tippe **0**, **7**, **5** und dann „Werfen“.</string>
     <string name="tut_3">**0** ist richtig und an der richtigen Stelle: ein Strike (S). **7** kommt vor, aber woanders: ein Ball (B). Die 5 fehlt.</string>
     <string name="tut_legend">S richtige Ziffer und Stelle · B Ziffer richtig, Stelle falsch</string>
+    <string name="tut_legend_strike">richtige Ziffer und Stelle</string>
+    <string name="tut_legend_ball">Ziffer richtig, Stelle falsch</string>
     <string name="tut_out">Passt keine Ziffer, ist es ein **Out**.</string>
     <string name="tut_4">Die versteckte Zahl ist **0 4 7**. Knack sie selbst.</string>
     <string name="tut_done">Nur Strikes gewinnt! Schafft ihr es beide in derselben Runde, ist es unentschieden.</string>

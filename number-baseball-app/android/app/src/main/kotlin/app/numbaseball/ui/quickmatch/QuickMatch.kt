@@ -179,7 +179,12 @@ fun QuickMatchScreen(
                 NumberUnitLabel(d.toString(), unit, selected)
             }
         }
-        Box(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()), contentAlignment = Alignment.Center) {
+        // ADAPTIVE §1 (V2-03): in small windows the found state sits 16 dp under the digit tiles.
+        val compactFound = compact && state.found != null
+        Box(
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(top = if (compactFound) 16.dp else 0.dp),
+            contentAlignment = if (compactFound) Alignment.TopCenter else Alignment.Center,
+        ) {
             AnimatedContent(
                 targetState = state.found,
                 transitionSpec = { fadeIn(tween(NbMotion.medium)) togetherWith fadeOut(tween(NbMotion.short)) },
@@ -189,7 +194,7 @@ fun QuickMatchScreen(
                 if (found == null) {
                     Searching(state.digits, elapsed, slow, compact)
                 } else {
-                    Found(found)
+                    Found(found, compact)
                 }
             }
         }
@@ -235,8 +240,15 @@ private fun Searching(digits: Int, elapsed: Int, slow: Boolean, compact: Boolean
 }
 
 @Composable
-private fun Found(opponent: FoundOpponent) {
+private fun Found(opponent: FoundOpponent, compact: Boolean) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }) {
+        if (compact) {
+            // ADAPTIVE §1 quick-match found (V2-03): no avatar, no "VS"; name + tag (`title`) and the headline only.
+            NameWithTag(opponent.nickname, opponent.tag, nameStyle = NbType.title, tagStyle = NbType.numTag)
+            VSpacer(8.dp)
+            Text(stringResource(R.string.found_title), style = NbType.title, color = NbColors.ink, textAlign = TextAlign.Center)
+            return@Column
+        }
         // Found (04 v2): avatar 48 · `VS` · name + tag (`headline`) · three lit `accent` dots · title · sub.
         Avatar(opponent.nickname, NbSize.avatarL)
         VSpacer(12.dp)

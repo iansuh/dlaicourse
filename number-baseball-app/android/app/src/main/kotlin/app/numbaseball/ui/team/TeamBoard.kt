@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import app.numbaseball.ui.design.Text
+import app.numbaseball.ui.design.scrollFade
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -74,7 +75,6 @@ import app.numbaseball.ui.design.NbScreen
 import app.numbaseball.ui.design.TeamBadge
 import app.numbaseball.ui.design.TopBar
 import app.numbaseball.ui.design.VSpacer
-import app.numbaseball.ui.design.fadingEdges
 import app.numbaseball.ui.design.formatClock
 import app.numbaseball.ui.design.isCompactHeight
 import app.numbaseball.ui.design.isLargeFont
@@ -168,10 +168,11 @@ fun TeamBoardScreen(
             if (mode == BoardMode.FINAL) {
                 FinalHero(match.result?.winner, myTeam, myWins, room.settings.teamSize)
             }
-            ScoreBlock(match.score.a, match.score.b, room.settings.teamSize)
+            // 06 §4 Fit (V2-07): the rules caption is hidden on the result, so a 3 v 3 shows all three rows.
+            ScoreBlock(match.score.a, match.score.b, room.settings.teamSize, showRule = mode != BoardMode.FINAL)
         }
         val scroll = rememberScrollState()
-        Column(Modifier.weight(1f).fillMaxWidth().fadingEdges(enabled = scroll.canScrollForward).verticalScroll(scroll).padding(horizontal = if (compact) 12.dp else 16.dp)) {
+        Column(Modifier.weight(1f).fillMaxWidth().scrollFade(scroll).verticalScroll(scroll).padding(horizontal = if (compact) 12.dp else 16.dp)) {
             // Duel rows (DESIGN_SYSTEM 12.12): 1 dp `line` bottom border; my row `surface2`, radius 12, no border.
             val players = room.players.associateBy { it.id }
             match.duels.forEachIndexed { i, duel ->
@@ -401,7 +402,7 @@ private fun Modifier.duelRowBackground(mine: Boolean): Modifier =
 
 /** Score block (08 §2): badge + name · `numScore` a : b (leading or tied in `ink`) · name + badge, then the rule line. */
 @Composable
-private fun ScoreBlock(scoreA: Int, scoreB: Int, teamSize: Int) {
+private fun ScoreBlock(scoreA: Int, scoreB: Int, teamSize: Int, showRule: Boolean = true) {
     val a by animateIntAsState(scoreA, tween(NbMotion.short), label = "a")
     val b by animateIntAsState(scoreB, tween(NbMotion.short), label = "b")
     val teamA = stringResource(R.string.team_a)
@@ -441,6 +442,7 @@ private fun ScoreBlock(scoreA: Int, scoreB: Int, teamSize: Int) {
             }
         }
         // Prototype: `.score` 20 dp bottom padding, `.score-sub` −12 dp margin and 16 dp bottom padding.
+        if (!showRule) return@Column
         VSpacer(8.dp)
         val needed = winsNeeded(teamSize)
         Text(
@@ -505,6 +507,8 @@ private fun DuelRow(
     Row(
         Modifier
             .fillMaxWidth()
+            // 12.12 (V2-06): 4 dp below my row, outside its `surface2` shape (as the latest log row).
+            .padding(bottom = if (mine) 4.dp else 0.dp)
             .heightIn(min = 72.dp)
             .duelRowBackground(mine)
             .clearAndSetSemantics { contentDescription = spoken },

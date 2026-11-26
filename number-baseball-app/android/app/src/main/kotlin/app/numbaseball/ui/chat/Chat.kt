@@ -271,37 +271,14 @@ class ChatActions(
 fun ChatSheet(state: ChatUiState, actions: ChatActions) {
     var held by remember { mutableStateOf<ChatMessage?>(null) }
     Column(Modifier.fillMaxSize()) {
+        // V2-01: at large text the "전체 채팅 끄기" switch gets its own full-width 48 dp row under the title row, so its
+        // label is never clipped; otherwise it shares the title row and steps its size down rather than clip (WordFit).
+        val large = isLargeFont()
         SheetTitle(stringResource(R.string.chat_title), height = 48.dp) {
-            val muteLabel = stringResource(R.string.chat_mute)
-            val on = stringResource(R.string.state_on)
-            val off = stringResource(R.string.state_off)
-            val audio = LocalGameAudio.current
-            val haptics = LocalGameHaptics.current
-            Row(
-                Modifier
-                    .heightIn(min = 48.dp)
-                    .clip(RoundedCornerShape(NbRadius.m))
-                    .rowClick {
-                        val next = !state.muted
-                        haptics.perform(if (next) HapticCue.TOGGLE_ON else HapticCue.TOGGLE_OFF)
-                        audio.play(if (next) SoundCue.TOGGLE_ON else SoundCue.TOGGLE_OFF)
-                        actions.onMuteChange(next)
-                    }
-                    .semantics(mergeDescendants = true) {
-                        role = Role.Switch
-                        contentDescription = muteLabel
-                        stateDescription = if (state.muted) on else off
-                    }
-                    .padding(start = 4.dp, end = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // Capped so the sheet title keeps its room in narrow windows (DEF-059: "Discussion" broke mid-word).
-                Text(muteLabel, style = NbType.labelSmall, color = NbColors.text2, maxLines = 2, modifier = Modifier.widthIn(max = 96.dp))
-                HSpacer(9.dp)
-                NbSwitchVisual(state.muted)
-            }
+            if (!large) MuteSwitch(state.muted, actions.onMuteChange, fullRow = false)
             IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), actions.onClose)
         }
+        if (large) MuteSwitch(state.muted, actions.onMuteChange, fullRow = true)
         if (state.muted) {
             MutedState(Modifier.weight(1f)) { actions.onMuteChange(false) }
         } else {
@@ -321,6 +298,44 @@ fun ChatSheet(state: ChatUiState, actions: ChatActions) {
             onPlayerCard = { held = null; actions.onPlayerCard(message) },
             onBlock = { held = null; actions.onBlock(message) },
         )
+    }
+}
+
+/** The chat-mute switch row (09 §2 header): label `labelSmall` `text2` + switch, 48 dp target. */
+@Composable
+private fun MuteSwitch(muted: Boolean, onMuteChange: (Boolean) -> Unit, fullRow: Boolean) {
+    val muteLabel = stringResource(R.string.chat_mute)
+    val on = stringResource(R.string.state_on)
+    val off = stringResource(R.string.state_off)
+    val audio = LocalGameAudio.current
+    val haptics = LocalGameHaptics.current
+    Row(
+        (if (fullRow) Modifier.fillMaxWidth().padding(horizontal = 12.dp) else Modifier)
+            .heightIn(min = 48.dp)
+            .clip(RoundedCornerShape(NbRadius.m))
+            .rowClick {
+                val next = !muted
+                haptics.perform(if (next) HapticCue.TOGGLE_ON else HapticCue.TOGGLE_OFF)
+                audio.play(if (next) SoundCue.TOGGLE_ON else SoundCue.TOGGLE_OFF)
+                onMuteChange(next)
+            }
+            .semantics(mergeDescendants = true) {
+                role = Role.Switch
+                contentDescription = muteLabel
+                stateDescription = if (muted) on else off
+            }
+            .padding(start = 4.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            muteLabel,
+            style = NbType.labelSmall,
+            color = NbColors.text2,
+            fitMinScale = 0.5f,
+            modifier = if (fullRow) Modifier.weight(1f) else Modifier.widthIn(max = 160.dp),
+        )
+        HSpacer(9.dp)
+        NbSwitchVisual(muted)
     }
 }
 

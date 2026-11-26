@@ -123,12 +123,15 @@ private data class WordFit(val max: TextUnit, val minScale: Float = 0.7f) : andr
         constraints: androidx.compose.ui.unit.Constraints,
         text: AnnotatedString,
     ): TextUnit {
+        // DESIGN_SYSTEM 11.3 (V2-18): never below an 11 dp rendered size, whatever [minScale] allows.
+        val floorScale = (11.dp.toSp().value / max.value).coerceAtMost(1f)
+        val lowest = maxOf(minScale, floorScale)
         var scale = 1f
         while (true) {
             val size = max * scale
             val result = performLayout(constraints, text, size)
-            if (scale <= minScale + 0.001f || fits(result, text.text, size.toPx())) return size
-            scale = (scale - 0.05f).coerceAtLeast(minScale)
+            if (scale <= lowest + 0.001f || fits(result, text.text, size.toPx())) return size
+            scale = (scale - 0.05f).coerceAtLeast(lowest)
         }
     }
 }

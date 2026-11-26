@@ -418,6 +418,8 @@
     <string name="tut_2">Chạm **0**, **7**, **5** rồi đoán.</string>
     <string name="tut_3">**0** đúng số đúng vị trí: Strike (S). **7** có trong số nhưng ở chỗ khác: Ball (B). Số 5 không có.</string>
     <string name="tut_legend">S đúng số, đúng vị trí · B đúng số, sai vị trí</string>
+    <string name="tut_legend_strike">đúng số, đúng vị trí</string>
+    <string name="tut_legend_ball">đúng số, sai vị trí</string>
     <string name="tut_out">Nếu không trúng số nào, đó là **Out**.</string>
     <string name="tut_4">Số bị giấu là **0 4 7**. Tự đoán thử nhé.</string>
     <string name="tut_done">Toàn Strike là thắng! Nếu cả hai cùng trúng trong một lượt thì hòa.</string>

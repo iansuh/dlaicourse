@@ -418,6 +418,8 @@
     <string name="tut_2">**0**、**7**、**5**をタップして、投げてみましょう。</string>
     <string name="tut_3">**0**は数字も位置も合っているのでストライク（S）、**7**は数字だけ合っているのでボール（B）です。5は入っていません。</string>
     <string name="tut_legend">S 数字と位置が正解・B 数字のみ正解</string>
+    <string name="tut_legend_strike">数字と位置が正解</string>
+    <string name="tut_legend_ball">数字のみ正解</string>
     <string name="tut_out">ひとつも合わないときは**アウト**です。</string>
     <string name="tut_4">隠された数字は**0 4 7**。自分で当ててみましょう。</string>
     <string name="tut_done">すべてストライクで勝ち！同じラウンドで2人とも当てたら引き分けです。</string>
@@ -456,7 +458,7 @@
     <string name="log_row_opp_spoken">相手の判定 %1$dストライク %2$dボール。</string>
     <string name="home_first_time">はじめての方へ：遊び方</string>
     <string name="home_other_modes">ほかの遊び方</string>
-    <string name="tile_cpu">コンピューター</string>
+    <string name="tile_cpu">コンピュータ</string>
     <string name="tile_room">ルーム作成</string>
     <string name="tile_join">コードで参加</string>
     <string name="quick_meta">60秒 · 近い実力の相手</string>
