@@ -191,3 +191,36 @@ The owner chose Direction A of [`redesign/PROPOSAL.md`](redesign/PROPOSAL.md). T
 Self-check: no non-token colour in the prototype except the ad creative and IME placeholders; one accent-filled control per screen; no shadows; the 광고 제거 target ends 24 dp above the band on every result shot with a banner; Home, result and match-late fit 360 × 800 without scrolling; compact match at 360 × 320 keeps two log rows.
 
 Open for the owner: launcher icon stays dark for now (REDESIGN_V2 §6).
+
+## 2026-11-26: Review of the v2 "Clean White" build (490 renders + 70 QA locale renders)
+
+Build `60316af` (renders and app source changed together). Method as in `REVIEW_FINAL`: 59 shot | render pairs (ranked by pixel difference, all opened), every `-small-ko`, `-ko-font200`, de / ru / vi and QA locale render opened as contact sheets, PIL measurements at density 2, flat-colour audit of all 560 PNGs against `tokens.json` 2.0.0 (scrim and disabled opacities composited), `Tokens.kt` checked against `tokens.json` (31 / 31 colours, `tnum` on every `num` style). Full report: [`REVIEW_V2.md`](REVIEW_V2.md).
+
+**Verdict: NOT SIGNED OFF YET.** Sign-off follows as soon as the two majors are fixed. Both are small; they were also present in the v1 renders and I missed them in `REVIEW_FINAL`. The redesign matches the shots closely: chips, slots, keys, the pill, the progress line and the log rows measure ±0.5 dp on `match-guess-ko`. It meets the owner's brief: white, one accent, uncluttered.
+
+| | |
+| --- | --- |
+| Majors | V2-01 chat header "전체 채팅 끄기" loses "끄기" at 200 % (`maxLines = 2` in 96 dp); V2-02 match toast covers the slots |
+| New minors (13) | small-window found screen clipped; nickname privacy link style and missing scroll fade; team-board 4 dp gap below my row; team result 3rd row cut (spec fix: hide the rules caption); Home record / tile offsets (3 / 2 dp); lobby rules row 46 vs 48 dp; dialog scrim black instead of ink; innings table at 200 % hides round 1 without a fade; tutorial legend without chips, far from the row; ja tile breaks before "ー"; unknown record "–" in ink + fixtures; own-phrase bubble missing |
+| Carried (5) | M-1 … M-5 still open (V2-16 … V2-20) |
+| Total open | 0 blocker, 2 major, 18 minor |
+
+Deviation decisions:
+- **Accepted (8):** in-window sheets without drag (1.0); cached record lag; units in the system face; compact digit tiles without "자리"; v1 tablet layouts (interim); opponent log from the hint / menu; unused memo-collapse API; test frame insets.
+- **Rejected (1):** no own-phrase bubble (V2-15).
+
+Spec changes:
+- **DESIGN_SYSTEM 12.17:** sheet header and bottom; dialog scrim; match toast placement; drag note.
+- **DESIGN_SYSTEM 12.12, 12.20, 12.3, 12.8:** small clarifications.
+- **01 §1:** transfer link and scroll fade.
+- **02:** default digit count 3.
+- **05 §2.8:** phrase sheet header 56 dp.
+- **06 §1 / §4 and 08:** record "–" and team-result fit.
+- **ADAPTIVE §1 / §3:** compact digit tiles, toast and found state; interim tablets.
+
+Top polish suggestions:
+1. Ellipsized names that hug the tag.
+2. Hide the result badge at large text so the summary shows.
+3. Compact mode tiles on Home at large text.
+4. One 20 dp fade rule for every scroll edge above a pinned bar.
+5. Drag-to-dismiss on sheets.

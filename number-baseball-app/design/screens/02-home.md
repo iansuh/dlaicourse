@@ -17,7 +17,7 @@ Design system v2 (Clean White, 2026-11-26). Prototype: `prototype/home.html` (`?
 | Hero | centred: four `?` plates 56 × 64 dp, 8 dp gap (question state, DESIGN_SYSTEM 12.4: `bg`, 1.5 dp `line`, `numSlot` `text3`); 12 dp; link "처음이라면 게임 방법 보기" + `chevron_right` (12.14 Link, 40 dp row, 48 dp target) → tutorial (01). Decorative plates are hidden from TalkBack |
 | Spacer | flexible, min 16 dp |
 | Other modes | label "다른 방법으로" `labelSmall` `text3` (4 dp left inset, 10 dp below); three mode tiles (12.19), 8 dp gap, 84 dp min: `memory` 컴퓨터와 · `group` 방 만들기 · `login` 코드로 참가 |
-| Quick match | 24 dp below the tiles: head row "빠른 대전" `subtitle` left, "60초 · 비슷한 상대" `caption` `text3` right (baseline aligned, 4 dp inset, 10 dp below); digit tiles (12.13, 52 dp, 3자리 … 6자리, default 4 on first launch, then last used); 12 dp; primary 56 dp "빠른 대전 시작" (no icon) |
+| Quick match | 24 dp below the tiles: head row "빠른 대전" `subtitle` left, "60초 · 비슷한 상대" `caption` `text3` right (baseline aligned, 4 dp inset, 10 dp below); digit tiles (12.13, 52 dp, 3자리 … 6자리, default **3** on first launch (unchanged from v1; the shots show a returning player whose last choice was 4), then last used); 12 dp; primary 56 dp "빠른 대전 시작" (no icon) |
 | Clear space | 24 dp (`banner_clear_space`) |
 | Ad band | anchored adaptive banner (DESIGN_SYSTEM 13): 1 dp `line`, `surface1`, 50–90 dp; collapsed when not loaded |
 | Navigation inset | below the band, `bg` |

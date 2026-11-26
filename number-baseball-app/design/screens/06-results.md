@@ -16,7 +16,7 @@ Design system v2 (Clean White, 2026-11-26). Prototype: `prototype/result.html` (
 | · Sub | 4 dp: `body` `text2` "6회 만에 상대 숫자를 맞혔어요" / "상대가 6회에 먼저 맞혔어요" / "6회에 둘 다 맞혔어요" (forfeit and timeout variants in §2) |
 | · Opponent number | 16 dp: "상대 숫자" `caption` `text3`; 8 dp; n answer plates 60 × 68 dp, 10 dp gap, `ink` fill, `onInk` `numSlot` digits (width rule of 12.4 for n ≥ 5) |
 | · My number | 12 dp: "내 숫자" `caption` `text3` + 6 dp + digits `numTag` 700, tracking 0.12 em, `text2` (one line) |
-| · Summary | 16 dp: result summary (12.20): **걸린 회** ("6회") · **시간** ("3:12", match duration) · **내 기록** (my online wins after this match, "13승"; vs Computer: **난이도** "보통", because computer games do not count in the record) |
+| · Summary | 16 dp: result summary (12.20; a record that is not cached yet shows "–" in `text3`; review v2 accepts that the cached count may lag by the match just played until the next `/me` refresh): **걸린 회** ("6회") · **시간** ("3:12", match duration) · **내 기록** (my online wins after this match, "13승"; vs Computer: **난이도** "보통", because computer games do not count in the record) |
 | · Innings link | 0 dp: link "회별 기록 보기" + `chevron_right` (48 dp target) → innings sheet (§1.1) |
 | Actions | pinned, 16 dp margins, 8 dp gap: primary "다시 하기" (56); secondary "홈으로" (56) |
 | 광고 제거 line | pinned under the actions: `caption` `text3` "광고 제거" / "Remove ads", centred, 48 dp target; **24 dp clear space below its target** when the banner is present (0 dp when not) |
@@ -67,6 +67,7 @@ When is an ad due: cap 1 per 3 finished matches, ≥ 4 minutes since the last in
 Same screen as the team board (08) in its final state:
 - `bg`, no wash. Hero: 64 dp badge (win `accentTint` + `check`; lose / draw `surface2` + `sports_baseball`), 12 dp, headline 승리 / 패배 / 무승부 ("팀 무승부" for ties). The v1 lamp row (one lamp per needed win) is gone: the score row says it.
 - Score row and duel rows exactly as the board; the winner of each duel has the 승 tag.
+- **Fit (review v2):** the rules caption under the score ("3 대 3 · 2승이면 승리") is hidden on the result (the result says it). With that, a 3 v 3 result shows all three duel rows at 360 × 800 with a 24 dp gesture inset and a 50 dp band; 4 v 4 and 5 v 5 rows scroll above the pinned actions (20 dp fade). The shot `team-final-ko` has no gesture area and still shows the caption.
 - Top bar `close` · "팀 대전" · `chat` (no 광고 제거 in the top bar any more).
 - Actions: primary "방으로 돌아가기", secondary "홈으로"; then the 광고 제거 line (§1.2); banner allowed unless reached through an interstitial (§3).
 

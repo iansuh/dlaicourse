@@ -43,7 +43,9 @@ Calm, final, no blame, no number: vertically centred column on `bg`, 32 dp side 
 | Field label | "닉네임" `labelSmall` `text2`, 32 dp below the lead, 8 dp above the field |
 | Text field | 56 dp, `surface2`, radius 12, focused 2 dp `accent` inset and `accent` caret, text 18 sp 400, clear button (48 dp, `close` 20 dp `text3`) at the right |
 | Helper row | 8 dp below: "2–12자 · 한글, 영문, 숫자" `caption` `text3` left; counter "4 / 12" `numTag` right |
+| Transfer link | 0 dp below: text button "다른 기기에서 옮겨 오기" (12.14 Text: `labelSmall` `text2`, 48 dp target, text aligned with the field) → the transfer-code form (11 §2). Not in the shots; it is part of the screen (review v2). The preview then starts 8 dp below it |
 | Preview | 24 dp below, 1 dp `line` on top, 16 dp padding: "다른 사람에게는 이렇게 보여요" `caption` `text3`; nickname `title` + "#····" (Inter `numTag` 20 sp `text3`); "번호는 자동으로 붙어요" `caption` `text3` |
+| Body scroll | the body above the pinned actions scrolls; when it continues under them it ends in a 20 dp `bg` fade (DESIGN_SYSTEM 4), so the preview caption is never cut hard by the actions |
 | Actions | pinned above the IME: 16 dp padding; "시작하기" primary 56 dp (`accent`); 12 dp; "닉네임은 다른 플레이어에게 보여요. 개인정보 처리방침" `caption` `text3` centred, the link `accent` 700 |
 
 **Behaviour**

@@ -473,6 +473,7 @@ Each component lists anatomy, size and every state. Compose names are suggestion
 - 52 dp min, padding 8 / 4 / 8 / 16, gap 10: avatar 36 dp (initial of the nickname `subtitle` 15 sp on `surface2`; computer: `memory` 20 dp) · name + tag (`subtitle` / `numTag`) over status (`caption` `text2` with a 6 dp dot) · quick-phrase / chat button (online only, 48 dp, `chat` `text2`).
 - Status: "생각 중" (dot `dotOff`) → "던짐" (dot `ball`) → "상대가 숫자를 정하는 중" (secret phase, `dotOff`) → "연결 끊김 · 0:41" (text `strike`, dot `dotOff`).
 - **My number moved** out of this row to the entry head (12.5).
+- The row itself is not a button: the opponent's full log opens from a tap on any row's opponent hint and from 더보기 > 상대 기록 보기 (12.8).
 
 ### 12.4 Digit slots (`DigitSlots`)
 - n plates centred, gap 10 dp; width = min(60, (content width − (n − 1) × 10) ÷ n) dp, min 44; height 64 dp (48 compact); radius 12; digit `numSlot` (`numSlotSm` tracking 0 compact).
@@ -501,7 +502,7 @@ Each component lists anatomy, size and every state. Compose names are suggestion
 
 ### 12.8 Pitch log (`PitchLog`)
 - **No header row.** 16 dp side padding, 8 dp top padding. Columns: round 22 dp (`numLabel` `text3`) · guess (flex, `numLog` `ink`) · hint chips (auto) · opponent hint (min 44 dp, right-aligned); 8 dp column gap; row padding 4 / 8.
-- Rows 46 dp min with a 1 dp `line` bottom border. **Latest row**: 64 dp min, `surface2`, radius 12, no border, 4 dp below it, padding 6 / 10 / 6 / 8; guess `numSlotSm`; the opponent hint has a small "상대" label (`caption` 11 sp `text3`) above it — only on the latest row.
+- Rows 46 dp min with a 1 dp `line` bottom border. **Latest row**: 64 dp min, `surface2`, radius 12, no border, 4 dp below it, padding 6 / 10 / 6 / 8; guess `numSlotSm`; the opponent hint has a small "상대" label (`caption` 11 sp `text3`, 5.25 : 1 on `surface2`; the one documented exception to the 12 sp `micro` minimum) above it — only on the latest row.
 - Newest on top; scrolls; 20 dp bottom fade mask when rows continue. At 360 × 800, n = 4, **six rows fit** without scrolling (shot `match-late-ko`).
 - Tap the opponent hint of any row, or 더보기 > 상대 기록 보기: opponent's full log sheet.
 - Empty (secret phase): the **legend box** — `surface2`, radius 12, 16 dp padding, 8 dp below the opponent row: "판정 읽는 법" `labelSmall` `text3`, then three rows (12 dp gaps, 96 dp key column): `1S` chip · `1B` chip · `OUT` chip, each with its `caption` `text2` explanation (term in `ink` 700).
@@ -526,7 +527,7 @@ Each component lists anatomy, size and every state. Compose names are suggestion
 - **taken**: `surface2`, name + tags; **mine**: same + solid "나" tag (no extra border); **empty, own team**: `bg` + 1.5 dp `line` border, 6 dp `dotOff` dot + "빈 자리" `caption` `text3`, not tappable; **empty, other team**: same border, `swap_horiz` 20 dp + "이 자리로 이동" `labelSmall` `accent`, tappable; **offline player**: name `text3` + tag "오프라인". One border style only.
 
 ### 12.12 Team board row (`DuelRow`)
-- 72 dp min; columns A player (flex) · status 88 dp · B player (flex, right-aligned); 12 dp side padding; 1 dp `line` bottom border. **My row**: `surface2`, radius 12, no border.
+- 72 dp min; columns A player (flex) · status 88 dp · B player (flex, right-aligned); 12 dp side padding; 1 dp `line` bottom border. **My row**: `surface2`, radius 12, no border, **4 dp below it** (as the latest log row; shots `team-board-ko`, `team-final-ko`).
 - Under each name, for every duel: "최고" `caption` `text3` + best hint (`numTag` `text2`, "2S 1B" / "OUT" as text) or, for the winner, the **승 tag** (`micro` white on `strike`, 20 dp, radius 6). Loser's name and hint `text3`. Null best: "최고 –".
 - Status: `R7` (`numLabel` `text3`) + "진행 중" with a 6 dp `accent` dot (`caption` `text2`) / "무승부" / "기권" / "재접속 대기 0:41" (`strike`).
 
@@ -565,10 +566,10 @@ Radius 12; icon 20 dp, 8 dp gap; padding 24 dp (12 small). **One primary per scr
 - Muted: centred empty state "채팅을 꺼 두었어요" + text button "켜기".
 
 ### 12.17 Sheets, dialogs, toasts, banners
-- Bottom sheet: `surface3`, top radius 16, grab handle 32 × 4 dp `dotOff` 12 dp from the top, no shadow, `scrim` behind; dismiss by drag, scrim tap or back unless noted.
-- Dialog: 24 dp side margins (max 400), radius 16, padding 24 / 24 / 16, `title`, body `body` `text2` 12 dp below, actions 24 dp below (text buttons `label` `accent`, destructive `danger`), right-aligned. Alert dialogs cannot be dismissed by scrim tap.
+- Bottom sheet: `surface3`, top radius 16, grab handle 32 × 4 dp `dotOff` 12 dp from the top, no shadow, `scrim` behind; dismiss by drag, scrim tap or back unless noted. Header row 56 dp (`title` · trailing actions · `close`; 48 dp for the chat and in compact windows). Content ends **24 dp + the navigation inset** above the window bottom (the memo, innings and phrase shots draw 16 dp; 24 dp is correct). *Review v2:* in-window sheets (`SheetFrame`) without drag-to-dismiss are accepted for 1.0 (scrim tap, back and `close` dismiss them); drag is a 1.1 follow-up, the handle stays.
+- Dialog: the scrim is the `scrim` token (40 % **ink**, `#A0A1A3` over white), drawn in the dialog window; never the platform window dim (black). 24 dp side margins (max 400), radius 16, padding 24 / 24 / 16, `title`, body `body` `text2` 12 dp below, actions 24 dp below (text buttons `label` `accent`, destructive `danger`), right-aligned. Alert dialogs cannot be dismissed by scrim tap.
 - Overflow menu (`more_vert`): `surface3`, radius 12, 1 dp `line` border instead of a shadow, rows 48 dp `body` `ink` (destructive `danger`), 8 dp vertical padding.
-- Toast: 16 dp margins, 16 dp above the keypad or bottom bar, min 48 dp, radius 12, **`inverse`** fill, `body` `onInverse`, action `labelSmall` `inverseAccent`; 2.8 s; never covers the slots.
+- Toast: 16 dp margins, 16 dp above the keypad or bottom bar, min 48 dp, radius 12, **`inverse`** fill, `body` `onInverse`, action `labelSmall` `inverseAccent`; 2.8 s; never covers the slots. **Match screen:** the toast sits at the bottom of the log region, its bottom edge 8 dp above the entry head (above the slots when the entry head is hidden), so it never covers the entry head, slots or keypad; compact windows: ADAPTIVE §1.
 - Connection banner: full-width `surface2` band 8 dp under the progress line (under the top bar elsewhere), padding 10 × 16, 12 dp gaps: three 8 dp chase dots · `bodyStrong` title + `caption` `text2` line · countdown `numTimer` `strike`; pushes content down.
 
 ### 12.18 Empty, error, offline, reconnecting
@@ -588,7 +589,7 @@ Radius 12; icon 20 dp, 8 dp gap; padding 24 dp (12 small). **One primary per scr
 - 3 equal tiles, 8 dp gap, 84 dp min, radius 12, `bg` + 1.5 dp `line` border; icon 24 dp `ink` over label `labelSmall` 14 sp `ink` (max 2 lines, centred, 6 dp gap). Disabled (offline): icon and label `textDisabled`.
 
 ### 12.20 Result summary (`ResultSummary`)
-- Full width, 1 dp `line` top and bottom, 14 dp vertical padding, 3 equal columns separated by 1 dp `line`: value `numSummary` `ink` (units in the same run: "6회", "13승") over label `caption` `text3`.
+- Full width, 1 dp `line` top and bottom, 14 dp vertical padding, 3 equal columns separated by 1 dp `line`: value `numSummary` `ink` (units in the same run: "6회", "13승") over label `caption` `text3`. The digits are Inter; the translated unit is the system `sans` face at the same size and weight on the same baseline (3.1: Inter never sets translated text). A value that is not known (no cached record) shows "–" in `text3`.
 
 ### 12.21 Ad banner slot (`AdBand`) and the 광고 제거 line
 See section 13.

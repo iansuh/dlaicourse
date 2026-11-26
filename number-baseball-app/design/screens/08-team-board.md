@@ -7,7 +7,7 @@ Design system v2 (Clean White, 2026-11-26). Prototype: `prototype/team-board.htm
 ## 1. Access
 - During my duel: tap the top-bar title of the match ("팀전 A 1 : 0 B") → the board opens as a full-height sheet; close returns to my duel. Expanded width: permanent right panel (ADAPTIVE.md).
 - After my duel ends and others are still playing: the board replaces the match screen (live state below). Back = leave the match dialog.
-- When all duels end: final state = team result (06 §4).
+- When all duels end: final state = team result (06 §4; the rules caption is hidden there, 06 §4 Fit).
 
 ## 2. Layout (live, 3 vs 3)
 

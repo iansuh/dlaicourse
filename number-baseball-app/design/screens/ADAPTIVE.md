@@ -9,7 +9,8 @@ Smallest supported window: **320 × 320 dp**; banner ads are hidden below **480 
 Reference shots: `shots/match-small-ko.png`, `shots/match-small-de.png` (360 × 320, density 2).
 
 **Global**
-- Margins 12 dp. No banner ads are requested or shown. Toasts sit 8 dp above the bottom.
+- Margins 12 dp. No banner ads are requested or shown. Toasts sit 8 dp above the bottom, except on the match screen, where they sit at the top of the log region (8 dp under the progress line) so they never cover the slots or keypad.
+- **Quick-match found (review v2):** the avatar and the "VS" line are hidden; name + tag (`title`) and "상대를 찾았어요" sit 16 dp under the digit tiles; nothing is clipped at 360 × 320.
 - Top bars are 48 dp. Section headers shrink to 32 dp.
 - Sheets open full height of the window with the top radius kept.
 
@@ -28,7 +29,7 @@ Reference shots: `shots/match-small-ko.png`, `shots/match-small-de.png` (360 × 
 - **Duel result:** top to bottom: top bar 48 dp (`close` · `flag`); headline row 56 dp (badge 32 dp with a 20 dp icon + 12 dp + headline `title`, one line); answer plates 40 × 44 dp (`ink`, `numSlotSm` tracking 0) centred (label, my number, summary and the innings link hidden; TalkBack still reads the sub line, "상대 숫자 3 9 1 6" and the summary); flexible space; buttons side by side, 48 dp each, 8 dp gap, 12 dp margins and bottom padding. No sub line, no 광고 제거 line, no banner, no interstitial.
 - **Team result:** top bar 48 dp (`close` · "팀 대전" · `chat`); headline row 56 dp with the score inline: badge 32 dp · "승리" (`title`) · "A 2 : 1 B" (team letters `numLabel`, score Inter 700 28 sp, capped like every `num` style); then the duel rows in a scroll region (rows 56 dp: names one line each side + status column 72 dp; best hints and the 승 tag move into the status column as "승 A" / "2S 1B · 1S 2B"); buttons side by side 48 dp pinned at the bottom. The score is never hidden: it is the result.
 - **Team board (live):** score block 56 dp (badges · score · badges, no rule line), rows as in the team result, watching note one line.
-- **Home:** top bar 48 dp; Me row without the "내 기록" caption; record values only (labels in TalkBack), one line; hero hidden; mode tiles 56 dp (icon left of the label); quick-match head hidden; digit tiles 48 dp and the button 48 dp, side by side when the width allows (tiles 4 × 48 dp + button flex), else stacked; the region above the quick-match block scrolls. No banner.
+- **Home:** top bar 48 dp; Me row without the "내 기록" caption; record values only (labels in TalkBack), one line; hero hidden; mode tiles 56 dp (icon left of the label); quick-match head hidden; digit tiles 48 dp showing the number only (no "자리" unit; TalkBack keeps "4자리"; review v2) and the button 48 dp, side by side when the width allows (tiles 4 × 48 dp + button flex), else stacked; the region above the quick-match block scrolls. No banner.
 - **Lobby:** invite code row (plates 40 × 48) with copy and share icon buttons on the same row. Invite row, rules band, fill status and teams are **one** vertical scroll region; only the practice button and the chat bar are pinned below it. The fill-status caption is dropped; teams stack A above B when the region is narrower than 2 × 156 dp. The region always shows at least the team header and one full seat (36 + 56 dp) before scrolling; if the window cannot give it that, the practice button moves into the scroll region too.
 - **Settings:** unchanged rows; the 구매 section works the same (Play's purchase sheet is a system window and sizes itself).
 - **Interstitial:** never requested or shown in a window shorter than 480 dp (same threshold as the banner); the result simply appears.
@@ -94,6 +95,8 @@ Opened by the 메모 button whenever fontScale ≥ 1.5 or "Larger memo" is on; r
 Small-window rules (§1) decide the structure; §2.1 decides sizes. Where both cannot fit (320 × 320 at 2.0), the match log keeps the latest row only and scrolls, the memo is the sheet, and nothing else is dropped.
 
 ## 3. Tablets and landscape
+
+*Review v2: for 1.0 the build keeps the v1 tablet layouts (centred 560 dp column, memo as a sheet); accepted as interim, the panes below are the 1.1 target.*
 
 **Medium width (600–839 dp), any height ≥ 480 dp**
 - Content is centred with max width 560 dp on Home, lobby, results, settings, terms; background `bg` fills the rest.
