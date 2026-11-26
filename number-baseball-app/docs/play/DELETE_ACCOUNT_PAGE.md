@@ -16,7 +16,7 @@
 
 **앱이 있다면:** 앱의 **설정 → 계정 삭제**를 누르면 즉시 삭제됩니다.
 
-**앱이 없다면:** [연락처 이메일] 로 앱에 표시되던 `닉네임#1234` 를 적어 "계정 삭제 요청"을 보내 주세요. 7일 안에 삭제하고 답장합니다. 다른 사람의 요청을 막기 위해, 요청 후에도 그 계정이 앱에서 계속 쓰이고 있으면 앱에서 직접 삭제해 달라고 안내할 수 있습니다.
+**앱이 없다면:** numbaseball.help@gmail.com 로 앱에 표시되던 `닉네임#1234` 를 적어 "계정 삭제 요청"을 보내 주세요. 7일 안에 삭제하고 답장합니다. 다른 사람의 요청을 막기 위해, 요청 후에도 그 계정이 앱에서 계속 쓰이고 있으면 앱에서 직접 삭제해 달라고 안내할 수 있습니다.
 
 **삭제되는 것:** 닉네임, 태그, 계정 번호, 계정 토큰(해시값), 전적, 차단 목록, 기기 이전 코드, 나에 대한 신고와 그 대화 기록. 내가 한 신고에서는 내 계정 번호가 지워집니다.
 
@@ -36,7 +36,7 @@ App: Number Baseball: Quiet Duel · Developer: [개발자 표시명]
 
 **If you have the app:** open **Settings → Delete account**. Your account is deleted immediately.
 
-**If you don't:** email [연락처 이메일] with the subject "Delete my account" and the `Nickname#1234` the app showed you. We delete it within 7 days and reply. To protect players from requests made by someone else, if the account is still being used in the app after your request, we may ask you to delete it in the app instead.
+**If you don't:** email numbaseball.help@gmail.com with the subject "Delete my account" and the `Nickname#1234` the app showed you. We delete it within 7 days and reply. To protect players from requests made by someone else, if the account is still being used in the app after your request, we may ask you to delete it in the app instead.
 
 **What is deleted:** nickname, tag, account ID, account token (hash), game record, block list, transfer code, reports about you and their conversation snapshots. Your account ID is removed from reports you filed.
 

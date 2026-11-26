@@ -238,7 +238,7 @@ No login or password is needed. On first launch, enter a birth year and month th
 - Account deletion: Settings > Delete account (immediate). Without the app: email the contact address, as explained at https://[도메인]/delete-account
 - Ads: banners only on the home, results and profile screens; a full-screen ad can appear after a finished match, on the way to the results screen (at most one per 3 matches and 4 minutes apart). Never during a match, on app start or exit. In the review room (code above) no full-screen ad is shown.
 - In-app purchase: Settings > Remove ads (one-time purchase, removes all ads). No purchase is needed to use any feature of the game.
-- The game server runs 24/7. Contact: [연락처 이메일]
+- The game server runs 24/7. Contact: numbaseball.help@gmail.com
 ```
 
 ---

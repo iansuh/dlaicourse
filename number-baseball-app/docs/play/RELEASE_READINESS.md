@@ -80,7 +80,7 @@ From `docs/qa/TEST_PLAN.md` 14.1 ("Remaining manual") and the DEFECTS notes. Use
 
 각 항목의 "넣을 곳"은 프로젝트 안에서 그 값이 들어가는 위치입니다. 자세한 클릭 순서는 `RELEASE_GUIDE.md` 장 번호를 보세요.
 
-1. **게임 전용 이메일 만들기** (Gmail, 2단계 인증). `RELEASE_GUIDE.md` 1장.
+1. ✅ **게임 전용 이메일 만들기** — 완료: `numbaseball.help@gmail.com` (문서에 반영됨, 빌드 값 `NB_CONTACT_EMAIL`은 출시 빌드 때 넣음) (Gmail, 2단계 인증). `RELEASE_GUIDE.md` 1장.
    - 넣을 곳: 빌드 값 `NB_CONTACT_EMAIL` (설정 화면의 문의 주소), `docs/play/PRIVACY_POLICY.md` / `TERMS_OF_USE.md` / `DELETE_ACCOUNT_PAGE.md`의 `[연락처 이메일]` (한국어·영어 본문 모두), `RELEASE_GUIDE.md` 6장의 `[연락처 이메일]`, Play Console 개발자 이메일, AdMob.
 2. **게임 전용 전화번호, 운영자 정보 정하기** (본인 명의). 한국 개인 계정과 트레이더는 이 번호가 스토어에 공개됩니다.
    - 넣을 곳: `docs/play/PRIVACY_POLICY.md`와 `TERMS_OF_USE.md`의 `[운영자 성명]`, `[운영자 주소]`, `[게임 전용 전화번호]`, `[개발자 표시명]`, `[시행일]` (본문 두 언어 모두). Play Console 결제 프로필과 같은 값이어야 합니다.

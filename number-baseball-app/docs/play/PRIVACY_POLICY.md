@@ -12,7 +12,7 @@
 > - Play Console 데이터 보안(Data safety) 답변(`POLICY_CHECKLIST.md` 5절)과 이 방침은 항상 같아야 합니다.
 > - **2026-11-25 변경(광고 제거 인앱 구매 `remove_ads`)**: 2절 표에 "구매 정보" 행, 3절 보유 기간 행, 4절 문장, 7-1절(새 절), 8절 삭제 항목이 추가됐습니다. 앱은 Google Play에서 구매 상태·구매 토큰만 받고 서버로 보내지 않는다는 전제입니다(서버 확인 없음). Android 담당이 (1) 구매 토큰을 우리 서버나 로그로 보내지 않는지, (2) 광고 제거 후 Mobile Ads SDK를 초기화하지 않고 동의 화면도 띄우지 않는지 확인해야 하며, 다르면 7-1절을 고칩니다. 구매 내역은 Data safety의 "금융 정보 → 구매 내역" 행과 맞춥니다.
 >
-> 채울 값: `[시행일]`, `[운영자 성명]`, `[운영자 주소]`, `[게임 전용 전화번호]`, `[개발자 표시명]`(스토어에 보이는 개발자 이름), `[연락처 이메일]`, `[도메인]`, `[개인정보 보호책임자: 직책 또는 성명]`, `[호스팅 업체명]`, `[호스팅 업체 연락처 또는 개인정보 문의 페이지]`, `[서버 국가]`, `[로그 보관 일수]`.
+> 채울 값: `[시행일]`, `[운영자 성명]`, `[운영자 주소]`, `[게임 전용 전화번호]`, `[개발자 표시명]`(스토어에 보이는 개발자 이름), `[도메인]`, `[개인정보 보호책임자: 직책 또는 성명]`, `[호스팅 업체명]`, `[호스팅 업체 연락처 또는 개인정보 문의 페이지]`, `[서버 국가]`, `[로그 보관 일수]`.
 
 ---
 
@@ -24,7 +24,7 @@
 
 [운영자 성명](Google Play 개발자 이름: [개발자 표시명], 이하 "운영자")은 숫자야구 게임 앱 **숫자야구: 조용한 한판**(이하 "앱")와 앱이 쓰는 게임 서버 및 웹 페이지(`https://[도메인]`)에서 이용자의 개인정보를 아래와 같이 처리합니다. 앱은 개인 개발자가 운영합니다.
 
-운영자 정보: [운영자 성명] / 주소 [운영자 주소] / 전화 [게임 전용 전화번호] / 이메일 [연락처 이메일] (Google Play의 개발자 정보와 같습니다)
+운영자 정보: [운영자 성명] / 주소 [운영자 주소] / 전화 [게임 전용 전화번호] / 이메일 numbaseball.help@gmail.com (Google Play의 개발자 정보와 같습니다)
 
 ### 1. 한눈에 보기
 
@@ -118,17 +118,17 @@
 
 ### 8. 이용자의 권리
 
-- **열람**: 앱의 프로필에서 닉네임, 태그, 전적을 볼 수 있습니다. 그 밖의 정보는 [연락처 이메일]로 요청하세요.
+- **열람**: 앱의 프로필에서 닉네임, 태그, 전적을 볼 수 있습니다. 그 밖의 정보는 numbaseball.help@gmail.com로 요청하세요.
 - **정정**: 앱 설정에서 닉네임을 바꿀 수 있습니다.
-- **삭제**: 앱 **설정 → 계정 삭제**(즉시). 앱이 없으면 [연락처 이메일]로 `닉네임#태그`를 보내 주세요(7일 안에 삭제). 안내: `https://[도메인]/delete-account`
+- **삭제**: 앱 **설정 → 계정 삭제**(즉시). 앱이 없으면 numbaseball.help@gmail.com로 `닉네임#태그`를 보내 주세요(7일 안에 삭제). 안내: `https://[도메인]/delete-account`
   - **계정을 삭제해도 "광고 제거" 구매는 Google 계정에 그대로 남습니다.** 운영자 서버에는 구매 정보가 없으므로 지울 것이 없고, 환불도 되지 않습니다. 같은 Google 계정으로 앱을 다시 설치하고 설정의 **구매 복원**을 누르면 새 계정에서도 광고가 제거됩니다. 구매 기록 삭제와 환불은 Google Play에서 요청합니다.
 - **처리 정지·동의 철회**: 광고는 7절의 방법으로, 그 밖의 처리는 계정 삭제 또는 이메일 요청으로.
-- 요청은 [연락처 이메일]로 보내 주세요. 이메일이나 이름을 묻지 않는 서비스이므로, 계정 확인을 위해 앱에 표시되는 `닉네임#태그`를 적어 주세요. 그 계정이 계속 앱에서 쓰이고 있으면 앱에서 직접 처리해 달라고 안내할 수 있습니다. 10일 이내에 답변합니다.
+- 요청은 numbaseball.help@gmail.com로 보내 주세요. 이메일이나 이름을 묻지 않는 서비스이므로, 계정 확인을 위해 앱에 표시되는 `닉네임#태그`를 적어 주세요. 그 계정이 계속 앱에서 쓰이고 있으면 앱에서 직접 처리해 달라고 안내할 수 있습니다. 10일 이내에 답변합니다.
 
 ### 9. 아동과 청소년
 
 - 앱은 **만 14세 이상**만 이용할 수 있습니다. 처음 실행할 때 나이를 확인하고, 만 14세 미만이면 계정을 만들지 않고 광고도 불러오지 않습니다. 따라서 만 14세 미만 아동의 개인정보를 수집하지 않으며, 법정대리인 동의 절차도 두지 않습니다.
-- 만 14세 미만 아동이 이용 중인 사실을 알게 되면 해당 계정을 즉시 삭제합니다. 보호자는 [연락처 이메일]로 알려 주세요.
+- 만 14세 미만 아동이 이용 중인 사실을 알게 되면 해당 계정을 즉시 삭제합니다. 보호자는 numbaseball.help@gmail.com로 알려 주세요.
 - 만 14세 이상 청소년도 이용할 수 있으므로, 빠른 대결에서는 정해진 문구만 쓸 수 있게 하고 신고·차단·채팅 끄기를 제공합니다.
 
 ### 10. 안전성 확보 조치
@@ -142,7 +142,7 @@
 ### 11. 개인정보 보호책임자와 연락처
 
 - 개인정보 보호책임자: [운영자 성명] (운영자)
-- 연락처: [연락처 이메일]
+- 연락처: numbaseball.help@gmail.com
 
 개인정보 침해에 대한 상담이나 신고는 아래 기관에도 할 수 있습니다.
 
@@ -170,7 +170,7 @@ Effective date: [시행일]
 
 [운영자 성명] (developer name on Google Play: [개발자 표시명]; "we") runs the number-guessing game app **Number Baseball: Quiet Duel** (the "app"), its game server and the web pages at `https://[도메인]`. This policy explains what personal data we process and why. The app is run by an individual developer.
 
-Who we are: [운영자 성명] / address [운영자 주소] / phone [게임 전용 전화번호] / email [연락처 이메일] (the same details as in our Google Play developer information)
+Who we are: [운영자 성명] / address [운영자 주소] / phone [게임 전용 전화번호] / email numbaseball.help@gmail.com (the same details as in our Google Play developer information)
 
 ### 1. Summary
 
@@ -262,17 +262,17 @@ We do not sell or give your personal data to other companies or people, except w
 
 ### 8. Your rights
 
-- **Access**: your profile in the app shows your nickname, tag and record. Ask us at [연락처 이메일] for anything else.
+- **Access**: your profile in the app shows your nickname, tag and record. Ask us at numbaseball.help@gmail.com for anything else.
 - **Correction**: change your nickname in Settings.
-- **Deletion**: **Settings → Delete account** in the app (immediate). Without the app, email your `Nickname#tag` to [연락처 이메일] (deleted within 7 days). Instructions: `https://[도메인]/delete-account`
+- **Deletion**: **Settings → Delete account** in the app (immediate). Without the app, email your `Nickname#tag` to numbaseball.help@gmail.com (deleted within 7 days). Instructions: `https://[도메인]/delete-account`
   - **Deleting your account does not remove the "Remove ads" purchase from your Google account.** Our server holds no purchase data, so there is nothing for us to erase, and nothing is refunded. If you reinstall the app with the same Google account and tap **Restore purchase** in Settings, ads are removed for the new account too. Ask Google Play to delete purchase records or to refund.
 - **Objection / withdrawing consent**: for ads, see section 7; for everything else, delete your account or email us.
-- Send requests to [연락처 이메일]. Because we never ask for your name or email, please include the `Nickname#tag` shown in the app. If that account is still being used in the app, we may ask you to handle it in the app instead. We reply within 10 days.
+- Send requests to numbaseball.help@gmail.com. Because we never ask for your name or email, please include the `Nickname#tag` shown in the app. If that account is still being used in the app, we may ask you to handle it in the app instead. We reply within 10 days.
 
 ### 9. Children and teens
 
 - The app is for people **aged 14 and over**. It asks your age on first launch; if you are under 14, it does not create an account and does not load ads. We therefore do not collect personal data from children under 14 and have no parental-consent process.
-- If we learn that a child under 14 is using the app, we delete the account immediately. Parents can tell us at [연락처 이메일].
+- If we learn that a child under 14 is using the app, we delete the account immediately. Parents can tell us at numbaseball.help@gmail.com.
 - Because teens aged 14 and over can play, Quick Match chat is limited to preset phrases, and reporting, blocking and turning chat off are always available.
 
 ### 10. Security
@@ -286,7 +286,7 @@ We do not sell or give your personal data to other companies or people, except w
 ### 11. Privacy contact
 
 - Person responsible for privacy: [운영자 성명] (operator)
-- Contact: [연락처 이메일]
+- Contact: numbaseball.help@gmail.com
 
 ### 12. Additional information for some regions
 

@@ -47,7 +47,7 @@
 
 ### 4. 아동 안전 (무관용) {#child-safety}
 
-**아동 성적 학대·착취(CSAE)와 관련된 모든 내용과 행동을 금지합니다.** 여기에는 아동을 성적으로 묘사하는 내용, 아동 성착취물의 공유나 요청, 미성년자에게 성적으로 접근하거나 만남을 유도하는 행위(그루밍)가 포함됩니다. 이를 발견하면 즉시 해당 내용을 지우고 계정을 영구 정지하며, 관련 법에 따라 수사기관 등 관계 기관(NCMEC 또는 해당 국가의 기관)에 신고합니다. 이런 내용을 보면 앱에서 바로 신고하거나 [연락처 이메일]로 알려 주세요.
+**아동 성적 학대·착취(CSAE)와 관련된 모든 내용과 행동을 금지합니다.** 여기에는 아동을 성적으로 묘사하는 내용, 아동 성착취물의 공유나 요청, 미성년자에게 성적으로 접근하거나 만남을 유도하는 행위(그루밍)가 포함됩니다. 이를 발견하면 즉시 해당 내용을 지우고 계정을 영구 정지하며, 관련 법에 따라 수사기관 등 관계 기관(NCMEC 또는 해당 국가의 기관)에 신고합니다. 이런 내용을 보면 앱에서 바로 신고하거나 numbaseball.help@gmail.com로 알려 주세요.
 
 ### 5. 신고, 차단, 채팅 끄기
 
@@ -55,7 +55,7 @@
 - 설정에서 **전체 채팅 끄기**를 할 수 있습니다.
 - 빠른 대결에서는 정해진 문구만 쓸 수 있고, 자유 채팅은 방 코드로 들어온 비공개 방에서만 할 수 있습니다. 방 코드는 아는 사람에게만 알려 주세요.
 - 운영자는 신고를 확인해 보통 24시간 안에, 늦어도 3일 안에 조치합니다. 신고할 때 그 방의 최근 대화가 증거로 저장됩니다(개인정보처리방침 참고).
-- 앱 밖에서는 [연락처 이메일]로 신고하거나 문의할 수 있습니다.
+- 앱 밖에서는 numbaseball.help@gmail.com로 신고하거나 문의할 수 있습니다.
 
 ### 6. 위반 시 조치
 
@@ -66,7 +66,7 @@
 3. 일정 기간 이용 정지
 4. 영구 정지
 
-아동 안전 위반, 심각한 위협, 개인정보 공개는 경고 없이 바로 영구 정지합니다. 같은 사람이 여러 사람에게 신고되면 검토 전에 임시로 채팅이 제한될 수 있습니다. 조치에 이의가 있으면 앱에 표시되는 `닉네임#태그`를 적어 [연락처 이메일]로 보내 주세요.
+아동 안전 위반, 심각한 위협, 개인정보 공개는 경고 없이 바로 영구 정지합니다. 같은 사람이 여러 사람에게 신고되면 검토 전에 임시로 채팅이 제한될 수 있습니다. 조치에 이의가 있으면 앱에 표시되는 `닉네임#태그`를 적어 numbaseball.help@gmail.com로 보내 주세요.
 
 ### 7. 광고와 광고 제거 구매
 
@@ -84,7 +84,7 @@
 
 ### 9. 계정 삭제
 
-앱 **설정 → 계정 삭제**에서 언제든 계정을 삭제할 수 있습니다. 앱이 없으면 [연락처 이메일]로 `닉네임#태그`를 보내 요청할 수 있습니다. 계정을 삭제해도 "광고 제거" 구매는 Google 계정에 남으며, 같은 Google 계정으로 앱을 다시 설치해 **구매 복원**을 누르면 새 계정에서도 광고가 제거됩니다(환불은 되지 않습니다).
+앱 **설정 → 계정 삭제**에서 언제든 계정을 삭제할 수 있습니다. 앱이 없으면 numbaseball.help@gmail.com로 `닉네임#태그`를 보내 요청할 수 있습니다. 계정을 삭제해도 "광고 제거" 구매는 Google 계정에 남으며, 같은 Google 계정으로 앱을 다시 설치해 **구매 복원**을 누르면 새 계정에서도 광고가 제거됩니다(환불은 되지 않습니다).
 
 ### 10. 준거법
 
@@ -99,7 +99,7 @@
 - 운영자: [운영자 성명] (개인 개발자, Google Play 개발자 이름: [개발자 표시명])
 - 주소: [운영자 주소 — Google Play에 표시되는 주소와 같게]
 - 전화: [게임 전용 전화번호]
-- 이메일: [연락처 이메일]
+- 이메일: numbaseball.help@gmail.com
 
 이 정보는 Google Play 스토어의 개발자 정보에도 표시됩니다. 문의는 이메일로 보내 주시면 가장 빠르게 답변합니다.
 
@@ -141,7 +141,7 @@ The following are not allowed, in chat and in nicknames:
 
 ### 4. Child safety (zero tolerance) {#child-safety}
 
-**We prohibit all child sexual abuse and exploitation (CSAE) content and behaviour.** This includes content that sexualizes minors, sharing or requesting child sexual abuse material, and approaching minors sexually or trying to arrange to meet them (grooming). When we find it, we remove it, permanently ban the account and report it to the relevant authorities as the law requires (NCMEC or the competent authority in the country concerned). If you see anything like this, report it in the app right away or email [연락처 이메일].
+**We prohibit all child sexual abuse and exploitation (CSAE) content and behaviour.** This includes content that sexualizes minors, sharing or requesting child sexual abuse material, and approaching minors sexually or trying to arrange to meet them (grooming). When we find it, we remove it, permanently ban the account and report it to the relevant authorities as the law requires (NCMEC or the competent authority in the country concerned). If you see anything like this, report it in the app right away or email numbaseball.help@gmail.com.
 
 ### 5. Reporting, blocking and turning chat off
 
@@ -149,7 +149,7 @@ The following are not allowed, in chat and in nicknames:
 - You can **turn off all chat** in Settings.
 - Quick Match chat is limited to preset phrases; free text is only available in private rooms joined with a room code. Share room codes only with people you know.
 - We review reports and normally act within 24 hours, and within 3 days at the latest. When you report, the recent conversation in that room is saved as evidence (see the Privacy Policy).
-- Outside the app, you can report or contact us at [연락처 이메일].
+- Outside the app, you can report or contact us at numbaseball.help@gmail.com.
 
 ### 6. What happens if you break the rules
 
@@ -160,7 +160,7 @@ Depending on how serious and how repeated the violation is:
 3. Suspension for a period
 4. Permanent ban
 
-Child-safety violations, serious threats and sharing personal information lead to an immediate permanent ban without warning. If several people report the same player, their chat may be restricted temporarily before we review. To appeal, email [연락처 이메일] with the `Nickname#tag` shown in the app.
+Child-safety violations, serious threats and sharing personal information lead to an immediate permanent ban without warning. If several people report the same player, their chat may be restricted temporarily before we review. To appeal, email numbaseball.help@gmail.com with the `Nickname#tag` shown in the app.
 
 ### 7. Ads and the Remove ads purchase
 
@@ -178,7 +178,7 @@ Child-safety violations, serious threats and sharing personal information lead t
 
 ### 9. Deleting your account
 
-You can delete your account at any time in **Settings → Delete account**. Without the app, email your `Nickname#tag` to [연락처 이메일]. Deleting your account does not remove the "Remove ads" purchase from your Google account: if you reinstall the app with the same Google account and tap **Restore purchase**, ads are removed for the new account too (no refund is given for deleting an account).
+You can delete your account at any time in **Settings → Delete account**. Without the app, email your `Nickname#tag` to numbaseball.help@gmail.com. Deleting your account does not remove the "Remove ads" purchase from your Google account: if you reinstall the app with the same Google account and tap **Restore purchase**, ads are removed for the new account too (no refund is given for deleting an account).
 
 ### 10. Governing law
 
@@ -193,6 +193,6 @@ We will announce changes in the app and on this page 7 days before they take eff
 - Operator: [운영자 성명] (individual developer; developer name on Google Play: [개발자 표시명])
 - Address: [운영자 주소 — same as shown on Google Play]
 - Phone: [게임 전용 전화번호]
-- Email: [연락처 이메일]
+- Email: numbaseball.help@gmail.com
 
 These details are also shown in the developer information on our Google Play page. Email is the fastest way to reach us.
