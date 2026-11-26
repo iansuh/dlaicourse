@@ -277,7 +277,7 @@
     <string name="follow_silent">Theo chế độ im lặng</string>
     <string name="follow_silent_sub">Không phát âm khi điện thoại ở chế độ im lặng hoặc rung</string>
     <string name="music">Nhạc</string>
-    <string name="music_sub">Nhạc menu và trận đấu (mặc định tắt)</string>
+    <string name="music_sub">Nhạc menu và trận đấu</string>
     <string name="music_volume">Âm lượng nhạc</string>
     <string name="haptics">Rung</string>
     <string name="haptics_sub">Phím, gợi ý, thắng và thua</string>

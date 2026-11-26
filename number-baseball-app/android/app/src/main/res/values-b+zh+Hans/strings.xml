@@ -277,7 +277,7 @@
     <string name="follow_silent">跟随静音模式</string>
     <string name="follow_silent_sub">手机静音或振动模式时不播放声音</string>
     <string name="music">音乐</string>
-    <string name="music_sub">菜单和对局音乐（默认关闭）</string>
+    <string name="music_sub">菜单和对局音乐</string>
     <string name="music_volume">音乐音量</string>
     <string name="haptics">振动</string>
     <string name="haptics_sub">按键、提示、胜负</string>

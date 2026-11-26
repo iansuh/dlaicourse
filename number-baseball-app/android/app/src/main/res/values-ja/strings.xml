@@ -277,7 +277,7 @@
     <string name="follow_silent">サイレントモードに従う</string>
     <string name="follow_silent_sub">サイレント・バイブ中は音を鳴らしません</string>
     <string name="music">音楽</string>
-    <string name="music_sub">メニューと対戦のBGM（初期設定はオフ）</string>
+    <string name="music_sub">メニューと対戦のBGM</string>
     <string name="music_volume">音楽の音量</string>
     <string name="haptics">振動</string>
     <string name="haptics_sub">キー、ヒント、勝ち負け</string>

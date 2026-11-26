@@ -291,7 +291,7 @@
     <string name="follow_silent">Respecter le mode silencieux</string>
     <string name="follow_silent_sub">Pas de son en mode silencieux ou vibreur</string>
     <string name="music">Musique</string>
-    <string name="music_sub">Musique des menus et des parties (désactivée par défaut)</string>
+    <string name="music_sub">Musique des menus et des parties</string>
     <string name="music_volume">Volume de la musique</string>
     <string name="haptics">Vibrations</string>
     <string name="haptics_sub">Touches, indices, victoire et défaite</string>

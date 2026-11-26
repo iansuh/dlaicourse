@@ -291,7 +291,7 @@
     <string name="follow_silent">Respetar el modo silencio</string>
     <string name="follow_silent_sub">Sin sonido con el teléfono en silencio o vibración</string>
     <string name="music">Música</string>
-    <string name="music_sub">Música de menú y partidas (desactivada por defecto)</string>
+    <string name="music_sub">Música de menú y partidas</string>
     <string name="music_volume">Volumen de música</string>
     <string name="haptics">Vibración</string>
     <string name="haptics_sub">Teclas, pistas, victoria y derrota</string>

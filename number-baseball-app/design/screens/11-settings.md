@@ -14,7 +14,7 @@ Top bar 56 dp: `arrow_back` · "설정". On scroll the top bar gets a 1 dp `line
 | 소리와 진동 | 효과음 (`volume_up`), sub "키 입력, 판정, 승패, 알림" | switch | **on** | |
 | | 효과음 볼륨 | slider row (DESIGN_SYSTEM 12.15) | 70 | preview cue on release |
 | | 무음 모드 따르기 (`do_not_disturb_on`), sub "휴대폰이 무음이나 진동일 때 소리를 꺼요" | switch | **on** | |
-| | 배경 음악 (`music_note`), sub "메뉴와 대결 음악 (기본값은 꺼짐)" | switch | **off** | |
+| | 배경 음악 (`music_note`), sub "메뉴와 대결 음악" | switch | **on** (owner decision 2026-11-26) | |
 | | 음악 볼륨 | slider row, disabled while music is off | 40 | music fades to the new level |
 | | 진동 (`mobile_vibrate`), sub "키 입력, 판정, 승패" | switch | **on** | |
 | 채팅 | 전체 채팅 끄기 (`notifications_off`), sub "모든 채팅과 빠른 문구를 숨겨요" | switch | off | same setting as the chat sheet switch |

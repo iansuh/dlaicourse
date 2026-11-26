@@ -298,7 +298,7 @@
     <string name="follow_silent">Учитывать беззвучный режим</string>
     <string name="follow_silent_sub">Без звука, когда телефон в беззвучном режиме или на вибрации</string>
     <string name="music">Музыка</string>
-    <string name="music_sub">Музыка в меню и в игре (по умолчанию выключена)</string>
+    <string name="music_sub">Музыка в меню и в игре</string>
     <string name="music_volume">Громкость музыки</string>
     <string name="haptics">Вибрация</string>
     <string name="haptics_sub">Кнопки, подсказки, победа и поражение</string>

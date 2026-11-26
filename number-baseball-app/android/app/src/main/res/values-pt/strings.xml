@@ -291,7 +291,7 @@
     <string name="follow_silent">Seguir o modo silencioso</string>
     <string name="follow_silent_sub">Sem som com o celular no silencioso ou vibrando</string>
     <string name="music">Música</string>
-    <string name="music_sub">Música do menu e das partidas (desligada por padrão)</string>
+    <string name="music_sub">Música do menu e das partidas</string>
     <string name="music_volume">Volume da música</string>
     <string name="haptics">Vibração</string>
     <string name="haptics_sub">Teclas, dicas, vitória e derrota</string>

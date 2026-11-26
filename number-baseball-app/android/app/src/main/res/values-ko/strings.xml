@@ -307,7 +307,7 @@
     <string name="follow_silent">무음 모드 따르기</string>
     <string name="follow_silent_sub">휴대폰이 무음이나 진동일 때 소리를 꺼요</string>
     <string name="music">배경 음악</string>
-    <string name="music_sub">메뉴와 대결 음악 (기본값은 꺼짐)</string>
+    <string name="music_sub">메뉴와 대결 음악</string>
     <string name="music_volume">음악 볼륨</string>
     <string name="haptics">진동</string>
     <string name="haptics_sub">키 입력, 판정, 승패</string>

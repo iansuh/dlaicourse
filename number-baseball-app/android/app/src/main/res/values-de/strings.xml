@@ -284,7 +284,7 @@
     <string name="follow_silent">Stummmodus beachten</string>
     <string name="follow_silent_sub">Kein Ton, wenn das Handy stumm oder auf Vibration steht</string>
     <string name="music">Musik</string>
-    <string name="music_sub">Musik in Menü und Spiel (standardmäßig aus)</string>
+    <string name="music_sub">Musik in Menü und Spiel</string>
     <string name="music_volume">Musiklautstärke</string>
     <string name="haptics">Vibration</string>
     <string name="haptics_sub">Tasten, Hinweise, Sieg und Niederlage</string>
