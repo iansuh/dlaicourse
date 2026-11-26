@@ -154,7 +154,7 @@ fun JoinScreen(state: JoinUiState, onCodeChange: (String) -> Unit, onJoin: () ->
     ) {
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             VSpacer(24.dp)
-            Text(stringResource(R.string.join_prompt), style = NbType.title, color = NbColors.chalk)
+            Text(stringResource(R.string.join_prompt), style = NbType.title, color = NbColors.ink)
             Text(stringResource(R.string.join_rule), style = NbType.caption, color = NbColors.text3)
             VSpacer(24.dp)
             Box(

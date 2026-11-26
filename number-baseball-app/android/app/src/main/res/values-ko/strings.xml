@@ -58,17 +58,11 @@
     <string name="record_loss">패</string>
     <string name="record_draw">무</string>
     <string name="record_rate">승률</string>
-    <string name="recent_form">최근 10경기</string>
     <string name="first_game_waiting">첫 경기를 기다리는 중</string>
-    <string name="other_modes">다른 방법으로 하기</string>
     <string name="cpu_title">컴퓨터와 대결</string>
-    <string name="cpu_sub">오프라인 · 쉬움 · 보통 · 어려움</string>
     <string name="room_title">방 만들기</string>
-    <string name="room_sub">친구와 1:1 또는 팀전, 최대 5 대 5</string>
     <string name="join_title">코드로 참가</string>
-    <string name="join_sub">친구에게 받은 5자리 코드</string>
     <string name="quick_title">빠른 대전</string>
-    <string name="quick_sub">비슷한 상대와 바로 한 판 · 60초 제한</string>
     <string name="quick_start">빠른 대전 시작</string>
     <string name="offline_band">오프라인 · 컴퓨터 대결만 할 수 있어요</string>
     <string name="needs_internet">인터넷 연결 필요</string>
@@ -123,7 +117,6 @@
     <string name="opp_ready">숫자를 정했어요</string>
     <string name="opp_disconnected">연결 끊김 · %1$s</string>
     <string name="my_secret">내 숫자</string>
-    <string name="col_guess">내 추측</string>
     <string name="col_hint">판정</string>
     <string name="col_opp">상대</string>
     <string name="opp_log_title">상대 기록</string>
@@ -142,8 +135,6 @@
     <string name="memo">메모</string>
     <string name="memo_help">누를 때마다 제외 → 확정 → 해제</string>
     <string name="memo_clear">지우기</string>
-    <string name="memo_collapse">메모 접기</string>
-    <string name="memo_expand">메모 펼치기</string>
     <string name="pitch">던지기</string>
     <string name="waiting_opp">상대의 투구를 기다리는 중</string>
     <string name="waiting_ready">상대를 기다리는 중</string>
@@ -243,7 +234,6 @@
     <string name="res_disconnect_opp">상대가 돌아오지 않아 이겼어요</string>
     <string name="res_cancelled">팀 승부가 먼저 결정됐어요</string>
     <string name="opp_secret">상대 숫자</string>
-    <string name="line_score">회별 스트라이크</string>
     <string name="best">최고</string>
     <string name="me_short">나</string>
     <string name="cpu_short">컴퓨터</string>
@@ -452,8 +442,6 @@
     <string name="lock_in_short">정하기</string>
     <string name="menu_random_fill">무작위로 채우기</string>
     <string name="nick_error_long">12자까지 쓸 수 있어요</string>
-    <string name="line_score_all">회별 기록 보기</string>
-    <string name="line_score_recent">최근 기록만 보기</string>
     <string name="practice_short">연습하기</string>
     <string name="msg_player_card">플레이어 정보 보기</string>
     <string name="profile_by_digits">자리수별 기록</string>
@@ -503,4 +491,20 @@
     <string name="card_context_online">온라인 대전 기록</string>
     <string name="best_none_a11y">최고 기록 없음</string>
     <string name="best_hint_a11y">최고 %1$d스트라이크 %2$d볼</string>
+    <string name="memo_open">메모 열기</string>
+    <string name="log_row_opp_spoken">상대 판정 %1$d스트라이크 %2$d볼.</string>
+    <string name="home_first_time">처음이라면 게임 방법 보기</string>
+    <string name="home_other_modes">다른 방법으로</string>
+    <string name="tile_cpu">컴퓨터와</string>
+    <string name="tile_room">방 만들기</string>
+    <string name="tile_join">코드로 참가</string>
+    <string name="quick_meta">60초 · 비슷한 상대</string>
+    <string name="result_taken">걸린 회</string>
+    <string name="result_time">시간</string>
+    <string name="result_level">난이도</string>
+    <string name="result_wins_value">%1$d승</string>
+    <string name="innings_link">회별 기록 보기</string>
+    <string name="innings_title">회별 기록</string>
+    <string name="result_summary_a11y">%1$s %2$s, %3$s %4$s, %5$s %6$s</string>
+    <string name="result_rounds_value">%1$d회</string>
 </resources>

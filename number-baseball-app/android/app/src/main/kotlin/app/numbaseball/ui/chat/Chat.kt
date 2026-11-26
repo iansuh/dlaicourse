@@ -33,6 +33,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import app.numbaseball.ui.design.Text
@@ -270,7 +271,7 @@ class ChatActions(
 fun ChatSheet(state: ChatUiState, actions: ChatActions) {
     var held by remember { mutableStateOf<ChatMessage?>(null) }
     Column(Modifier.fillMaxSize()) {
-        SheetTitle(stringResource(R.string.chat_title)) {
+        SheetTitle(stringResource(R.string.chat_title), height = 48.dp) {
             val muteLabel = stringResource(R.string.chat_mute)
             val on = stringResource(R.string.state_on)
             val off = stringResource(R.string.state_off)
@@ -299,7 +300,7 @@ fun ChatSheet(state: ChatUiState, actions: ChatActions) {
                 HSpacer(9.dp)
                 NbSwitchVisual(state.muted)
             }
-            IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), actions.onClose, tint = NbColors.chalk)
+            IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), actions.onClose)
         }
         if (state.muted) {
             MutedState(Modifier.weight(1f)) { actions.onMuteChange(false) }
@@ -447,8 +448,8 @@ private fun ChatLine(
                 Modifier
                     .widthIn(max = maxBubble)
                     .clip(shape)
-                    .background(if (mine) NbColors.chalk else NbColors.surface4)
-                    .then(if (held) Modifier.border(2.dp, NbColors.chalk, shape) else Modifier)
+                    .background(if (mine) NbColors.accentTint else NbColors.surface2)
+                    .then(if (held) Modifier.border(2.dp, NbColors.accent, shape) else Modifier)
                     .combinedClickable(onClick = {}, onLongClick = { onLongPress(message) })
                     .clearAndSetSemantics {
                         contentDescription = spoken
@@ -459,7 +460,7 @@ private fun ChatLine(
                     }
                     .padding(horizontal = 12.dp, vertical = 10.dp),
             ) {
-                Text(maskedText(text, mine), style = NbType.body, color = if (mine) NbColors.onChalk else NbColors.chalk)
+                Text(maskedText(text, mine), style = NbType.body, color = NbColors.ink)
             }
             if (showTime) {
                 VSpacer(4.dp)
@@ -470,8 +471,8 @@ private fun ChatLine(
 }
 
 /**
- * Masked words (`***`, tracking 0.1 em, TalkBack reads the text as is): `text2` on `surface4` in others' bubbles
- * (5.59 : 1), `textDisabled` on chalk in mine (5.48 : 1); never `text3` on `surface4` (DESIGN_SYSTEM 2.2 / 12.15).
+ * Masked words (`***`, tracking 0.1 em, TalkBack reads the text as is): `text2` in both bubbles (7.13 : 1 on `surface2`,
+ * 6.88 : 1 on `accentTint`, DESIGN_SYSTEM 12.16).
  */
 @Composable
 private fun maskedText(text: String, mine: Boolean) = buildAnnotatedString {
@@ -485,8 +486,7 @@ private fun maskedText(text: String, mine: Boolean) = buildAnnotatedString {
         append(text.substring(i, start))
         var end = start
         while (end < text.length && text[end] == '*') end++
-        // Others' bubbles: `text2` on `surface4` (5.59 : 1); `text3` there is 4.39 : 1, under AA (DESIGN_SYSTEM 2.2, D2-12).
-        withStyle(SpanStyle(color = if (mine) NbColors.textDisabled else NbColors.text2, letterSpacing = 0.1.em)) { append(text.substring(start, end)) }
+        withStyle(SpanStyle(color = NbColors.text2, letterSpacing = 0.1.em)) { append(text.substring(start, end)) }
         i = end
     }
 }
@@ -503,18 +503,18 @@ private fun PhraseChips(state: ChatUiState, onPhrase: (String) -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CHAT_CHIPS.forEach { id ->
-                val shape = RoundedCornerShape(NbRadius.s)
+                val shape = CircleShape
                 Box(Modifier.heightIn(min = 48.dp).rowClick(enabled = enabled) { onPhrase(id) }, contentAlignment = Alignment.Center) {
-                    // Disabled (rate limited): `surface2` fill, no outline, `textDisabled` (09 §3, shot chat-limit-en).
+                    // Quick-phrase pills (12.16): `surface2`; disabled (rate limited) `surface1` / `textDisabled`.
                     Box(
                         Modifier
                             .heightIn(min = 32.dp)
                             .clip(shape)
-                            .then(if (enabled) Modifier.border(1.dp, NbColors.outline, shape) else Modifier.background(NbColors.surface2))
+                            .background(if (enabled) NbColors.surface2 else NbColors.surface1)
                             .padding(horizontal = 12.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(phraseText(id).orEmpty(), style = NbType.labelSmall, color = if (enabled) NbColors.chalk else NbColors.textDisabled, maxLines = 1)
+                        Text(phraseText(id).orEmpty(), style = NbType.labelSmall, color = if (enabled) NbColors.ink else NbColors.textDisabled, maxLines = 1)
                     }
                 }
             }
@@ -531,7 +531,7 @@ private fun Composer(state: ChatUiState, actions: ChatActions) {
         ) {
             NbIcon(R.drawable.ic_block, null, NbColors.text2, 20.dp)
             HSpacer(12.dp)
-            Text(stringResource(R.string.chat_restricted), style = NbType.caption, color = NbColors.chalk)
+            Text(stringResource(R.string.chat_restricted), style = NbType.caption, color = NbColors.ink)
         }
         !state.canType -> Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
             Text(
@@ -558,7 +558,7 @@ private fun Composer(state: ChatUiState, actions: ChatActions) {
                     placeholder = pluralStringResource(R.plurals.chat_hint, CHAT_INPUT_MAX, CHAT_INPUT_MAX),
                     height = 48.dp,
                     horizontalPadding = 12.dp,
-                    textStyle = NbType.body.copy(color = NbColors.chalk),
+                    textStyle = NbType.body.copy(color = NbColors.ink),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { actions.onSend() }),
                     trailing = if (length >= CHAT_INPUT_MAX - 10) {
@@ -581,12 +581,12 @@ private fun Composer(state: ChatUiState, actions: ChatActions) {
                     Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(NbRadius.m))
-                        .background(if (canSend) NbColors.chalk else NbColors.surface2)
+                        .background(if (canSend) NbColors.accent else NbColors.surface2)
                         .rowClick(enabled = canSend, onClick = actions.onSend)
                         .testTag("chatSend"),
                     contentAlignment = Alignment.Center,
                 ) {
-                    NbIcon(R.drawable.ic_send, stringResource(R.string.chat_send), if (canSend) NbColors.onChalk else NbColors.textDisabled)
+                    NbIcon(R.drawable.ic_send, stringResource(R.string.chat_send), if (canSend) NbColors.onAccent else NbColors.textDisabled)
                 }
             }
         }
@@ -610,7 +610,7 @@ private fun MessageActions(
             Text(stringResource(R.string.msg_selected), style = NbType.caption, color = NbColors.text3)
             VSpacer(2.dp)
             val name = message.senderNickname?.let { "$it#${message.senderTag.orEmpty()}" } ?: stringResource(R.string.chat_deleted_player)
-            Text("$name · ${messageText(message)}", style = NbType.bodyStrong, color = NbColors.chalk, maxLines = 2)
+            Text("$name · ${messageText(message)}", style = NbType.bodyStrong, color = NbColors.ink, maxLines = 2)
         }
         Hairline()
         ListRow(stringResource(R.string.msg_copy), icon = R.drawable.ic_content_copy, onClick = onCopy)
@@ -635,7 +635,7 @@ fun QuickPhraseSheet(enabled: Boolean, onPhrase: (String) -> Unit, onDismiss: ()
         // gaps, 24 dp sheet bottom.
         VSpacer(4.dp)
         SheetTitle(stringResource(R.string.phrases_title)) {
-            IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), onDismiss, tint = NbColors.chalk)
+            IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), onDismiss)
         }
         Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp)) {
             Text(stringResource(R.string.phrases_note), style = NbType.caption, color = NbColors.text3)

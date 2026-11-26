@@ -27,7 +27,7 @@ import androidx.compose.material3.Text as MaterialText
 
 /**
  * Material `Text` with the design's exact line boxes (DESIGN_SYSTEM 3.2, 16). Android grows a line to the font's own
- * extents when they exceed the line height (Barlow numerals, and Hangul / kana / Han through the fallback fonts), so a
+ * extents when they exceed the line height (Inter numerals, and Hangul / kana / Han through the fallback fonts), so a
  * 16 / 22 Korean title measured 24 dp and every block of text drifted down. Like CSS, each line box here is exactly the
  * style's line height; the glyphs stay centred in it and may overflow it visually, never the layout. Every screen uses
  * this `Text` instead of the Material one.
@@ -210,7 +210,7 @@ private fun Modifier.designLineBoxes(lineHeight: TextUnit, fontSize: TextUnit, l
         this
     } else {
         layout { measurable, constraints ->
-            // The glyph extents (Barlow numerals, Hangul / kana fallbacks) may exceed the line box by up to about a third
+            // The glyph extents (Inter numerals, Hangul / kana fallbacks) may exceed the line box by up to about a third
             // of the font size; give the text that room so a container sized to the line boxes does not clip it.
             val slack = if (constraints.hasBoundedHeight && fontSize.isSp) (fontSize.toPx() * 0.35f).roundToInt() else 0
             val inner = if (slack > 0) constraints.copy(maxHeight = constraints.maxHeight + slack) else constraints

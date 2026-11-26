@@ -504,7 +504,7 @@ private fun PurchaseRow(
         NbIcon(R.drawable.ic_ad_off, null, NbColors.text2)
         HSpacer(16.dp)
         Column(Modifier.weight(1f).padding(vertical = 10.dp)) {
-            Text(title, style = NbType.subtitle, color = NbColors.chalk)
+            Text(title, style = NbType.subtitle, color = NbColors.ink)
             VSpacer(2.dp)
             Text(subtitle, style = NbType.caption, color = subtitleColor)
             if (large && trailing != null) {
@@ -534,7 +534,7 @@ private fun RestoreRow(restoring: Boolean, onRestore: () -> Unit) {
         NbIcon(R.drawable.ic_history, null, NbColors.text2)
         HSpacer(16.dp)
         Column(Modifier.weight(1f)) {
-            Text(stringResource(R.string.restore_purchase), style = NbType.subtitle, color = NbColors.chalk)
+            Text(stringResource(R.string.restore_purchase), style = NbType.subtitle, color = NbColors.ink)
             VSpacer(2.dp)
             if (restoring) {
                 Box(Modifier.heightIn(min = 18.dp), contentAlignment = Alignment.CenterStart) { ChaseLamps() }
@@ -584,7 +584,7 @@ private fun ContactRow(email: String, onCopy: () -> Unit) {
         HSpacer(16.dp)
         // Prototype `.row`: 10 dp vertical padding, 2 dp between the lines, 16 dp before the copy button.
         Column(Modifier.weight(1f).padding(vertical = 10.dp)) {
-            Text(stringResource(R.string.contact), style = NbType.subtitle, color = NbColors.chalk)
+            Text(stringResource(R.string.contact), style = NbType.subtitle, color = NbColors.ink)
             VSpacer(2.dp)
             SelectionContainer { Text(email, style = NbType.body, color = NbColors.text2, maxLines = 1, softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, fitMinScale = 0.5f) }
         }
@@ -611,7 +611,7 @@ fun NicknameChangeSheet(nickname: String, renaming: Boolean, error: UiError?, on
     var value by rememberSaveable { mutableStateOf(nickname) }
     NbModalSheet(onDismiss = onDismiss) {
         SheetTitle(stringResource(R.string.change_nickname)) {
-            IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), onDismiss, tint = NbColors.chalk)
+            IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), onDismiss, tint = NbColors.ink)
         }
         Column(Modifier.padding(horizontal = 16.dp)) {
             NbTextField(
@@ -625,7 +625,7 @@ fun NicknameChangeSheet(nickname: String, renaming: Boolean, error: UiError?, on
                 Text(
                     error?.let { stringResource(it.message()) } ?: stringResource(R.string.nick_helper),
                     style = NbType.caption,
-                    color = if (error != null) NbColors.out else NbColors.text3,
+                    color = if (error != null) NbColors.danger else NbColors.text3,
                     modifier = Modifier.weight(1f),
                 )
                 Text("${value.codePointCount(0, value.length)} / 12", style = NbType.numTag, color = NbColors.text3)
@@ -659,7 +659,7 @@ private fun TransferSheet(code: TransferCode, loading: Boolean, actions: Setting
     val expired = left == 0
     NbModalSheet(onDismiss = actions.onDismissCode) {
         SheetTitle(stringResource(R.string.transfer_title)) {
-            IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), actions.onDismissCode, tint = NbColors.chalk)
+            IconButton48(R.drawable.ic_close, stringResource(R.string.action_close), actions.onDismissCode, tint = NbColors.ink)
         }
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(stringResource(R.string.transfer_body), style = NbType.body, color = NbColors.text2)
@@ -702,7 +702,7 @@ private fun CodePlates(groups: List<String>, disabled: Boolean, modifier: Modifi
                             Modifier.width(w).heightIn(min = 40.dp).background(if (disabled) NbColors.surface1 else NbColors.surface2, RoundedCornerShape(NbRadius.s)),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(ch.toString(), style = NbType.numCode, color = if (disabled) NbColors.textDisabled else NbColors.chalk, maxLines = 1, softWrap = false)
+                            Text(ch.toString(), style = NbType.numCode, color = if (disabled) NbColors.textDisabled else NbColors.ink, maxLines = 1, softWrap = false)
                         }
                     }
                 }
@@ -768,7 +768,7 @@ fun BlockedPlayersScreen(blocked: List<BlockedPlayer>, onUnblock: (BlockedPlayer
 data class Licence(val component: String, val licence: String, val asset: String)
 
 val LICENCES = listOf(
-    Licence("Barlow Condensed", "SIL Open Font License 1.1", "licenses/OFL-BarlowCondensed.txt"),
+    Licence("Inter", "SIL Open Font License 1.1", "licenses/OFL-Inter.txt"),
     Licence("Material Symbols", "Apache License 2.0", "licenses/Apache-2.0.txt"),
     Licence("AndroidX, Jetpack Compose, Material 3", "Apache License 2.0", "licenses/Apache-2.0.txt"),
     Licence("Kotlin, kotlinx.coroutines, kotlinx.serialization", "Apache License 2.0", "licenses/Apache-2.0.txt"),

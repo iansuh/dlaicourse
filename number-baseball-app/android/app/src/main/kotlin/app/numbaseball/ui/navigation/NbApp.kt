@@ -207,7 +207,7 @@ internal fun WindowTooSmall() {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             app.numbaseball.ui.design.BrandMark()
             VSpacer(16.dp)
-            Text(stringResource(R.string.window_too_small_title), style = NbType.title, color = NbColors.chalk, textAlign = TextAlign.Center)
+            Text(stringResource(R.string.window_too_small_title), style = NbType.title, color = NbColors.ink, textAlign = TextAlign.Center)
             VSpacer(8.dp)
             Text(stringResource(R.string.window_too_small_body), style = NbType.caption, color = NbColors.text3, textAlign = TextAlign.Center)
         }
@@ -1016,8 +1016,10 @@ private fun ResultsDestination(summary: MatchSummary, afterAd: Boolean, reviewRo
     } else {
         null
     }
+    val account by LocalAppContainer.current.accountRepository.state.collectAsStateWithLifecycle()
     ResultsScreen(
         summary = summary,
+        myWins = (account as? AccountState.Registered)?.stats?.wins,
         showBanner = !afterAd,
         onRemoveAds = removeAdsAction(billingState, review = reviewRoom || summary.mode == MatchMode.PRACTICE),
         onRematch = rematch,

@@ -116,10 +116,10 @@ class TutorialUi(
     val onSkip: () -> Unit,
 )
 
-/** `**bold**` markup of the coach strings → key words in `bodyStrong` chalk. */
+/** `**bold**` markup of the coach strings → key words in `bodyStrong` `ink`. */
 fun coachText(raw: String): AnnotatedString = buildAnnotatedString {
     raw.split("**").forEachIndexed { i, part ->
-        if (i % 2 == 1) withStyle(SpanStyle(fontWeight = NbType.bodyStrong.fontWeight, color = NbColors.chalk)) { append(part) } else append(part)
+        if (i % 2 == 1) withStyle(SpanStyle(fontWeight = NbType.bodyStrong.fontWeight, color = NbColors.ink)) { append(part) } else append(part)
     }
 }
 

@@ -14,14 +14,25 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.stateDescription
+import app.numbaseball.ui.theme.NbSize
+import app.numbaseball.ui.theme.NbLayout
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import app.numbaseball.ui.design.Text
@@ -60,15 +71,15 @@ import app.numbaseball.ui.design.BrandMark
 import app.numbaseball.ui.design.HSpacer
 import app.numbaseball.ui.design.Hairline
 import app.numbaseball.ui.design.IconButton48
-import app.numbaseball.ui.design.InsetDivider
-import app.numbaseball.ui.design.Lamp
-import app.numbaseball.ui.design.LampColor
+import app.numbaseball.ui.design.Avatar
+import app.numbaseball.ui.design.EqualTilesRow
+import app.numbaseball.ui.design.ButtonKind
+import app.numbaseball.ui.design.QuestionPlate
 import app.numbaseball.ui.design.NameWithTag
 import app.numbaseball.ui.design.NbButton
 import app.numbaseball.ui.design.NbIcon
 import app.numbaseball.ui.design.NbScreen
 import app.numbaseball.ui.design.NumberUnitLabel
-import app.numbaseball.ui.design.SectionHeader
 import app.numbaseball.ui.design.Segmented
 import app.numbaseball.ui.design.VSpacer
 import app.numbaseball.ui.design.fadingEdges
@@ -158,7 +169,11 @@ class HomeViewModel(
     }
 }
 
-/** Home (02): header, record hero, other modes, the quick-match dock and the ad band. */
+/**
+ * Home (02, v2): header · Me row and 4-number record · `? ? ? ?` hero with the tutorial link · three mode tiles · the
+ * pinned quick-match block · 24 dp clear space · ad band. When the content does not fit, the hero hides first, then the
+ * region above the quick-match block scrolls.
+ */
 @Composable
 fun HomeScreen(
     state: HomeUiState,
@@ -174,6 +189,8 @@ fun HomeScreen(
 ) {
     ScreenMusic(MusicTrack.MENU, LocalGameAudio.current)
     val compact = isCompactHeight()
+    val large = isLargeFont()
+    val margin = if (compact) 12.dp else 16.dp
     NbScreen(
         bottomBar = { if (state.online) AdBanner() },
     ) {
@@ -183,82 +200,102 @@ fun HomeScreen(
         } else if (state.nicknameRejected) {
             InfoBand(R.drawable.ic_person, stringResource(R.string.choose_nickname_again), onClick = onChooseNickname)
         }
-        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-            val showForm = maxHeight >= 420.dp
-            val scroll = rememberScrollState()
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = maxHeight)
-                    .fadingEdges(bottom = 16.dp, enabled = scroll.canScrollForward)
-                    .verticalScroll(scroll),
-            ) {
-                Hero(state, showForm = showForm && !compact, onProfile = onProfile)
-                Spacer(Modifier.weight(1f).heightIn(min = 16.dp))
-                SectionHeader(stringResource(R.string.other_modes), first = true)
-                ModeRow(R.drawable.ic_memory, stringResource(R.string.cpu_title), stringResource(R.string.cpu_sub), enabled = true, onClick = onVsComputer)
-                InsetDivider(72.dp)
-                ModeRow(
-                    R.drawable.ic_group,
-                    stringResource(R.string.room_title),
-                    if (state.online) stringResource(R.string.room_sub) else stringResource(R.string.needs_internet),
-                    enabled = state.canPlayOnline,
-                    onClick = onCreateRoom,
-                )
-                InsetDivider(72.dp)
-                ModeRow(
-                    R.drawable.ic_login,
-                    stringResource(R.string.join_title),
-                    if (state.online) stringResource(R.string.join_sub) else stringResource(R.string.needs_internet),
-                    enabled = state.canPlayOnline,
-                    onClick = onJoinRoom,
-                )
-                VSpacer(8.dp)
+        val upper: @Composable () -> Unit = {
+            MeAndRecord(state, compact, onProfile)
+        }
+        val modes: @Composable () -> Unit = {
+            Column {
+                if (!compact) {
+                    Text(stringResource(R.string.home_other_modes), style = NbType.labelSmall, color = NbColors.text3, modifier = Modifier.padding(start = 4.dp))
+                    VSpacer(10.dp)
+                }
+                // Three equal tiles, all as tall as the tallest (labels may wrap to 2 lines, 02 States).
+                EqualTilesRow(8.dp, if (compact) 56.dp else NbSize.modeTileH) {
+                    ModeTile(R.drawable.ic_memory, stringResource(R.string.tile_cpu), enabled = true, compact = compact, onClick = onVsComputer)
+                    ModeTile(R.drawable.ic_group, stringResource(R.string.tile_room), enabled = state.canPlayOnline, compact = compact, onClick = onCreateRoom)
+                    ModeTile(R.drawable.ic_login, stringResource(R.string.tile_join), enabled = state.canPlayOnline, compact = compact, onClick = onJoinRoom)
+                }
             }
         }
-        QuickDock(state, onQuickDigits, onQuickMatch)
+        val hero: @Composable () -> Unit = { Hero(onHowToPlay) }
+        SubcomposeLayout(Modifier.weight(1f).fillMaxWidth()) { constraints ->
+            val probe = constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity)
+            // Measuring passes only: no semantics, so tests and TalkBack see each control once.
+            val fixedHeight = subcompose("probe") { Column(Modifier.clearAndSetSemantics {}.padding(horizontal = margin)) { upper(); modes() } }.sumOf { it.measure(probe).height }
+            val heroHeight = subcompose("hero") { Box(Modifier.clearAndSetSemantics {}) { hero() } }.sumOf { it.measure(probe).height }
+            val min = 16.dp.roundToPx()
+            // The fit rule (02 States): the hero hides first; small windows and large text never show it.
+            val showHero = !compact && !large && fixedHeight + heroHeight + 2 * min <= constraints.maxHeight
+            val content = subcompose("content") {
+                val scroll = rememberScrollState()
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .fadingEdges(enabled = scroll.canScrollForward)
+                        .verticalScroll(scroll)
+                        .padding(horizontal = margin),
+                ) {
+                    Column(Modifier.heightIn(min = with(this@SubcomposeLayout) { constraints.maxHeight.toDp() })) {
+                        upper()
+                        Spacer(Modifier.weight(1f).heightIn(min = if (compact) 8.dp else 16.dp))
+                        if (showHero) {
+                            hero()
+                            Spacer(Modifier.weight(1f).heightIn(min = 16.dp))
+                        }
+                        modes()
+                    }
+                }
+            }.first().measure(constraints)
+            layout(content.width, content.height) { content.place(0, 0) }
+        }
+        QuickBlock(state, compact, onQuickDigits, onQuickMatch)
     }
 }
 
+/** Home top bar (12.1 Home variant): brand mark 32 dp at x = 16, 10 dp, name stack, `help` and `settings` (`ink`). */
 @Composable
 private fun HomeHeader(onHowToPlay: () -> Unit, onSettings: () -> Unit) {
-    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    val compact = isCompactHeight()
+    Row(Modifier.fillMaxWidth().heightIn(min = if (compact) 48.dp else 56.dp).padding(start = if (compact) 12.dp else 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         BrandMark()
-        HSpacer(12.dp)
+        HSpacer(10.dp)
         Column(Modifier.weight(1f).semantics(mergeDescendants = true) { heading() }) {
-            Text(stringResource(R.string.app_name_main), style = NbType.subtitle, color = NbColors.chalk, maxLines = if (isLargeFont() && !isCompactHeight()) 2 else 1, overflow = TextOverflow.Ellipsis)
+            Text(stringResource(R.string.app_name_main), style = NbType.subtitle.copy(fontSize = 17.sp), color = NbColors.ink, maxLines = if (isLargeFont() && !compact) 2 else 1, overflow = TextOverflow.Ellipsis)
             Text(stringResource(R.string.app_name_sub), style = NbType.caption, color = NbColors.text3, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        IconButton48(R.drawable.ic_help, stringResource(R.string.home_help), onHowToPlay, tint = NbColors.text2)
-        HSpacer(12.dp)
-        IconButton48(R.drawable.ic_settings, stringResource(R.string.home_settings), onSettings, tint = NbColors.text2)
+        IconButton48(R.drawable.ic_help, stringResource(R.string.home_help), onHowToPlay)
+        HSpacer(8.dp)
+        IconButton48(R.drawable.ic_settings, stringResource(R.string.home_settings), onSettings)
     }
 }
 
-/** 48 dp `surface3` band under the header (offline, nickname to choose again). */
+/** 48 dp `surface2` band under the header (offline, nickname to choose again). */
 @Composable
 private fun InfoBand(@DrawableRes icon: Int, text: String, onClick: (() -> Unit)? = null) {
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
-            .background(NbColors.surface3)
+            .background(NbColors.surface2)
             .then(if (onClick != null) Modifier.rowClick(onClick = onClick) else Modifier)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         NbIcon(icon, null, NbColors.text2, 20.dp)
         HSpacer(12.dp)
-        Text(text, style = NbType.caption, color = NbColors.chalk, modifier = Modifier.weight(1f))
+        Text(text, style = NbType.caption, color = NbColors.ink, modifier = Modifier.weight(1f))
         if (onClick != null) NbIcon(R.drawable.ic_chevron_right, null, NbColors.text3, 20.dp)
     }
 }
 
+/**
+ * Me row + record (02): avatar 48 · 12 · nickname (`subtitle` 17 sp) + tag over "내 기록"; then 승 · 패 · 무 · 승률 spread
+ * across the width (`numStat` over `caption` `text3`), 20 dp bottom padding and a 1 dp `line`. One button → Profile.
+ */
 @Composable
-private fun Hero(state: HomeUiState, showForm: Boolean, onProfile: () -> Unit) {
+private fun MeAndRecord(state: HomeUiState, compact: Boolean, onProfile: () -> Unit) {
     val stats = state.stats
     val loading = stats == null
-    val newPlayer = !loading && state.gamesPlayed == 0
     val rate = stats?.takeIf { state.gamesPlayed > 0 }?.let { (it.wins * 100f / state.gamesPlayed).toInt() }
     val spoken = buildString {
         append(stringResource(R.string.record_label)).append(", ").append(state.nickname)
@@ -267,6 +304,7 @@ private fun Hero(state: HomeUiState, showForm: Boolean, onProfile: () -> Unit) {
         if (rate != null) append(", ").append(stringResource(R.string.record_rate)).append(" ").append(rate).append("%")
     }
     val openProfile = stringResource(R.string.profile_title)
+    val large = isLargeFont()
     Column(
         Modifier
             .fillMaxWidth()
@@ -276,123 +314,180 @@ private fun Hero(state: HomeUiState, showForm: Boolean, onProfile: () -> Unit) {
             .clearAndSetSemantics {
                 contentDescription = spoken
                 onClick(openProfile) { onProfile(); true }
-            }
-            // Measured against home-ko (D2-18): the block sat 3 dp high (dividers, lamps, numerals), the label 1.5 dp.
-            .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 5.dp),
+            },
     ) {
-        Text(stringResource(R.string.record_label), style = NbType.caption, color = NbColors.text3)
-        VSpacer(3.dp)
-        NameWithTag(state.nickname, state.tag, nameStyle = NbType.title, tagStyle = NbType.numTag.copy(fontSize = 18.sp, lineHeight = 28.sp))
-        VSpacer(16.dp)
-        Row(Modifier.height(IntrinsicSize.Min)) {
-            StatColumn(stats?.wins, stringResource(R.string.record_win), loading, first = true)
-            StatDivider()
-            StatColumn(stats?.losses, stringResource(R.string.record_loss), loading)
-            StatDivider()
-            StatColumn(stats?.draws, stringResource(R.string.record_draw), loading)
-            StatDivider()
-            Column(Modifier.padding(start = 20.dp)) {
-                Text(
-                    if (rate == null) "–" else "$rate%",
-                    style = NbType.numStat,
-                    color = if (loading) NbColors.textDisabled else NbColors.text2,
-                )
-                VSpacer(2.dp)
-                Text(stringResource(R.string.record_rate), style = NbType.caption, color = NbColors.text3, maxLines = 1)
+        VSpacer(if (compact) 8.dp else 16.dp)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Avatar(state.nickname, if (compact) NbSize.avatarM else NbSize.avatarL)
+            HSpacer(12.dp)
+            Column(Modifier.weight(1f)) {
+                NameWithTag(state.nickname, state.tag, nameStyle = NbType.subtitle.copy(fontSize = 17.sp, lineHeight = 24.sp))
+                if (!compact) Text(stringResource(R.string.record_label), style = NbType.caption, color = NbColors.text3)
             }
         }
-        if (showForm) {
-            VSpacer(16.dp)
-            if (newPlayer || state.recentForm.isEmpty()) {
-                if (newPlayer) Text(stringResource(R.string.first_game_waiting), style = NbType.caption, color = NbColors.text3)
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.recent_form), style = NbType.caption, color = NbColors.text3)
-                    HSpacer(12.dp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        state.recentForm.takeLast(10).forEach { result ->
-                            when (result) {
-                                'W' -> Lamp(LampColor.STRIKE, lit = true, size = 8.dp)
-                                'D' -> Box(Modifier.size(8.dp).border(1.5.dp, NbColors.chalk, CircleShape))
-                                else -> Lamp(LampColor.STRIKE, lit = false, size = 8.dp)
-                            }
-                        }
+        VSpacer(if (compact) 8.dp else 20.dp)
+        val values = listOf(
+            stats?.wins to stringResource(R.string.record_win),
+            stats?.losses to stringResource(R.string.record_loss),
+            stats?.draws to stringResource(R.string.record_draw),
+        )
+        val rateCell: @Composable () -> Unit = { RateCell(rate, loading, showLabel = !compact) }
+        if (large && !compact) {
+            // Large text (ADAPTIVE §2.5): W L D on one line, the win rate on the next.
+            Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                values.forEach { (v, l) -> StatCell(v, l, loading, showLabel = true) }
+            }
+            VSpacer(8.dp)
+            Box(Modifier.padding(horizontal = 4.dp)) { rateCell() }
+        } else {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+                values.forEach { (v, l) -> StatCell(v, l, loading, showLabel = !compact) }
+                rateCell()
+            }
+        }
+        VSpacer(if (compact) 8.dp else 20.dp)
+        Hairline()
+    }
+}
+
+@Composable
+private fun StatCell(value: Int?, label: String, loading: Boolean, showLabel: Boolean) {
+    val shown by animateIntAsState(value ?: 0, tween(NbMotion.short), label = "stat")
+    Column {
+        Text(if (loading) "–" else shown.toString(), style = NbType.numStat, color = if (loading) NbColors.textDisabled else NbColors.ink, maxLines = 1, softWrap = false, autoFit = false)
+        if (showLabel) Text(label, style = NbType.caption, color = NbColors.text3, maxLines = 1)
+    }
+}
+
+/** 승률: `52` + `%` at 0.7 em; no games = `–` in `text3`; loading = `–` in `textDisabled`. */
+@Composable
+private fun RateCell(rate: Int?, loading: Boolean, showLabel: Boolean) {
+    Column(horizontalAlignment = Alignment.Start) {
+        if (rate == null) {
+            Text("–", style = NbType.numStat, color = if (loading) NbColors.textDisabled else NbColors.text3, maxLines = 1, softWrap = false, autoFit = false)
+        } else {
+            Text(
+                buildAnnotatedString {
+                    append(rate.toString())
+                    withStyle(SpanStyle(fontSize = NbType.numStat.fontSize * 0.7f)) { append("%") }
+                },
+                style = NbType.numStat,
+                color = NbColors.ink,
+                maxLines = 1,
+                softWrap = false,
+                autoFit = false,
+            )
+        }
+        if (showLabel) Text(stringResource(R.string.record_rate), style = NbType.caption, color = NbColors.text3, maxLines = 1)
+    }
+}
+
+/** Hero (02): four decorative `?` plates 56 × 64 dp, 8 dp gap; 12 dp; link "처음이라면 게임 방법 보기" → tutorial. */
+@Composable
+private fun Hero(onHowToPlay: () -> Unit) {
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(Modifier.clearAndSetSemantics {}, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            repeat(4) { QuestionPlate(lit = false, width = 56.dp, height = 64.dp) }
+        }
+        VSpacer(8.dp)
+        NbButton(stringResource(R.string.home_first_time), onHowToPlay, kind = ButtonKind.LINK)
+    }
+}
+
+/** Mode tile (DESIGN_SYSTEM 12.19): 84 dp min, radius 12, `bg` + 1.5 dp `line`; icon 24 `ink` over `labelSmall` 14 sp. */
+@Composable
+private fun ModeTile(@DrawableRes icon: Int, label: String, enabled: Boolean, compact: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(NbRadius.m)
+    val color = if (enabled) NbColors.ink else NbColors.textDisabled
+    val needsInternet = stringResource(R.string.needs_internet)
+    val content: @Composable () -> Unit = {
+        NbIcon(icon, null, color)
+    }
+    val text: @Composable () -> Unit = {
+        Text(label, style = NbType.labelSmall.copy(fontSize = 14.sp, lineHeight = 20.sp), color = color, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, fitMinScale = 0.5f)
+    }
+    Box(
+        modifier
+            .clip(shape)
+            .border(NbSize.border, NbColors.line, shape)
+            .rowClick(enabled = enabled, onClick = onClick)
+            .then(if (!enabled) Modifier.semantics { stateDescription = needsInternet } else Modifier)
+            .padding(horizontal = 4.dp, vertical = if (compact) 6.dp else 12.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (compact && isLargeFont()) {
+            // Small window at large text: the label alone keeps the tile's width (the icon is decorative).
+            text()
+        } else if (compact) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                content()
+                HSpacer(6.dp)
+                text()
+            }
+        } else {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                content()
+                VSpacer(6.dp)
+                text()
+            }
+        }
+    }
+}
+
+/**
+ * Quick-match block (02), pinned: head "빠른 대전" + "60초 · 비슷한 상대"; digit tiles 52 dp; 12 dp; primary "빠른 대전 시작";
+ * 24 dp clear space before the band. Small windows: no head, 48 dp tiles and button side by side when they fit.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun QuickBlock(state: HomeUiState, compact: Boolean, onQuickDigits: (Int) -> Unit, onQuickMatch: () -> Unit) {
+    val margin = if (compact) 12.dp else 16.dp
+    val unit = pluralStringResource(R.plurals.digit_unit, 2)
+    val tiles: @Composable (Modifier) -> Unit = { m ->
+        Segmented(
+            items = Limits.DIGITS.toList(),
+            selected = state.quickDigits,
+            onSelect = onQuickDigits,
+            modifier = m,
+            tileHeight = if (compact) 48.dp else if (isLargeFont()) 64.dp else NbSize.digitTileH,
+        ) { d, selected -> NumberUnitLabel(d.toString(), if (compact) null else unit, selected) }
+    }
+    val button: @Composable (Modifier) -> Unit = { m ->
+        NbButton(
+            text = stringResource(if (state.online) R.string.quick_start else R.string.waiting_connection),
+            onClick = onQuickMatch,
+            enabled = state.canPlayOnline,
+            heightOverride = if (compact) 48.dp else null,
+            modifier = m.testTag("quickMatch"),
+        )
+    }
+    Column(Modifier.fillMaxWidth().padding(start = margin, end = margin, top = if (compact) 8.dp else 24.dp, bottom = if (compact) 12.dp else NbLayout.bannerClearSpace)) {
+        if (compact) {
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                // Side by side only when the button keeps room for its label (not at large text).
+                if (!isLargeFont() && maxWidth - (48.dp * 4 + 8.dp * 4) >= 112.dp) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        tiles(Modifier.width(48.dp * 4 + 8.dp * 3))
+                        HSpacer(8.dp)
+                        button(Modifier.weight(1f))
+                    }
+                } else {
+                    Column {
+                        tiles(Modifier)
+                        VSpacer(8.dp)
+                        button(Modifier.fillMaxWidth())
                     }
                 }
             }
+            return@Column
         }
-    }
-}
-
-@Composable
-private fun StatColumn(value: Int?, label: String, loading: Boolean, first: Boolean = false) {
-    val shown by animateIntAsState(value ?: 0, tween(NbMotion.short), label = "stat")
-    Column(Modifier.padding(start = if (first) 0.dp else 20.dp, end = 20.dp)) {
-        Text(
-            if (loading) "–" else shown.toString(),
-            style = NbType.numStat,
-            color = if (loading) NbColors.textDisabled else NbColors.chalk,
-        )
-        VSpacer(2.dp)
-        Text(label, style = NbType.caption, color = NbColors.text3, maxLines = 1)
-    }
-}
-
-@Composable
-private fun StatDivider() = Box(Modifier.width(1.dp).fillMaxHeight().background(NbColors.line))
-
-/** Mode row: 64 dp, 40 × 40 `surface2` plate (radius 8, icon 24 chalk), text at x = 72, chevron (02). */
-@Composable
-private fun ModeRow(@DrawableRes icon: Int, title: String, subtitle: String, enabled: Boolean, onClick: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = 64.dp)
-            .rowClick(enabled = enabled, onClick = onClick)
-            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(Modifier.size(40.dp).background(NbColors.surface2, RoundedCornerShape(NbRadius.m)), contentAlignment = Alignment.Center) {
-            NbIcon(icon, null, if (enabled) NbColors.chalk else NbColors.textDisabled)
+        FlowRow(Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, itemVerticalAlignment = Alignment.Bottom) {
+            Text(stringResource(R.string.quick_title), style = NbType.subtitle.copy(fontSize = 17.sp, lineHeight = 24.sp), color = NbColors.ink, modifier = Modifier.alignByBaseline().padding(end = 12.dp))
+            Text(stringResource(R.string.quick_meta), style = NbType.caption, color = NbColors.text3, modifier = Modifier.alignByBaseline())
         }
-        HSpacer(16.dp)
-        Column(Modifier.weight(1f)) {
-            Text(title, style = NbType.subtitle, color = if (enabled) NbColors.chalk else NbColors.textDisabled)
-            Text(subtitle, style = NbType.caption, color = if (enabled) NbColors.text3 else NbColors.textDisabled, maxLines = 2)
-        }
-        HSpacer(8.dp)
-        NbIcon(R.drawable.ic_chevron_right, null, if (enabled) NbColors.text3 else NbColors.textDisabled, 20.dp)
-    }
-}
-
-/** Quick-match dock: `surface1`, 1 dp line top, padding 16 / 16 / 24; title over caption, digits, start button. */
-@Composable
-private fun QuickDock(state: HomeUiState, onQuickDigits: (Int) -> Unit, onQuickMatch: () -> Unit) {
-    val compact = isCompactHeight()
-    Column(Modifier.fillMaxWidth().background(NbColors.surface1)) {
-        Hairline()
-        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = if (compact) 12.dp else 16.dp, bottom = if (compact) 12.dp else 24.dp)) {
-            if (!compact) {
-                Text(stringResource(R.string.quick_title), style = NbType.subtitle, color = NbColors.chalk)
-                VSpacer(2.dp)
-                Text(stringResource(R.string.quick_sub), style = NbType.caption, color = NbColors.text3)
-                VSpacer(12.dp)
-            }
-            val unit = pluralStringResource(R.plurals.digit_unit, 2)
-            Segmented(
-                items = Limits.DIGITS.toList(),
-                selected = state.quickDigits,
-                onSelect = onQuickDigits,
-                enabled = state.canPlayOnline,
-            ) { d, selected -> NumberUnitLabel(d.toString(), unit, selected) }
-            VSpacer(12.dp)
-            NbButton(
-                text = stringResource(if (state.online) R.string.quick_start else R.string.waiting_connection),
-                onClick = onQuickMatch,
-                icon = R.drawable.ic_bolt,
-                enabled = state.canPlayOnline,
-                modifier = Modifier.fillMaxWidth().testTag("quickMatch"),
-            )
-        }
+        VSpacer(10.dp)
+        tiles(Modifier)
+        VSpacer(12.dp)
+        button(Modifier.fillMaxWidth())
     }
 }

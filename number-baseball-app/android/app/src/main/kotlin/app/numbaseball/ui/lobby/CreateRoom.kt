@@ -80,11 +80,11 @@ fun RoomSettingsSheet(
                 Segmented(Limits.TEAM_SIZE.toList(), settings.teamSize, { if (it >= minTeamSize) onChange(settings.copy(teamSize = it)) }) { n, selected ->
                     Text(
                         "$n:$n",
-                        style = NbType.numLabel.copy(fontSize = 16.sp),
+                        style = NbType.numSummary,
                         color = when {
-                            selected -> NbColors.onChalk
+                            selected -> NbColors.onInk
                             n < minTeamSize -> NbColors.textDisabled
-                            else -> NbColors.text2
+                            else -> NbColors.ink
                         },
                     )
                 }
@@ -115,8 +115,8 @@ fun RoomSettingsSheet(
 enum class CodePlateState { EMPTY, ACTIVE, FILLED, ERROR }
 
 /**
- * Five code plates 48 × 60 dp, gap 8, `numCode`: empty `bg` + 1 dp `outline`, active 2 dp chalk, filled `surface2`, error
- * 2 dp `out`. [shakeKey] changes trigger the 280 ms shake. Read as single characters.
+ * Five code plates 48 × 60 dp, gap 8, radius 12, `numCode`: empty `bg` + 1.5 dp `outline`, active 2 dp `accent`, filled
+ * `surface2`, error `dangerTint` + 2 dp `danger`. [shakeKey] changes trigger the 280 ms shake. Read as single characters.
  */
 @Composable
 fun CodePlates(code: String, modifier: Modifier = Modifier, active: Boolean = false, error: Boolean = false, shakeKey: Int = 0, description: String? = null, plateWidth: Dp = 48.dp, plateHeight: Dp = 60.dp) {
@@ -149,18 +149,18 @@ fun CodePlates(code: String, modifier: Modifier = Modifier, active: Boolean = fa
             Box(
                 Modifier
                     .size(plateWidth, plateHeight)
-                    .background(if (ch != null) NbColors.surface2 else NbColors.bg, shape)
+                    .background(if (state == CodePlateState.ERROR) NbColors.dangerTint else if (ch != null) NbColors.surface2 else NbColors.bg, shape)
                     .then(
                         when (state) {
-                            CodePlateState.EMPTY -> Modifier.border(1.dp, NbColors.outline, shape)
-                            CodePlateState.ACTIVE -> Modifier.border(2.dp, NbColors.chalk, shape)
-                            CodePlateState.ERROR -> Modifier.border(2.dp, NbColors.out, shape)
+                            CodePlateState.EMPTY -> Modifier.border(app.numbaseball.ui.theme.NbSize.border, NbColors.outline, shape)
+                            CodePlateState.ACTIVE -> Modifier.border(2.dp, NbColors.accent, shape)
+                            CodePlateState.ERROR -> Modifier.border(2.dp, NbColors.danger, shape)
                             CodePlateState.FILLED -> Modifier
                         },
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                if (ch != null) Text(ch.toString(), style = if (plateHeight < 60.dp) NbType.numCode.copy(fontSize = 28.sp, lineHeight = 32.sp) else NbType.numCode, color = NbColors.chalk)
+                if (ch != null) Text(ch.toString(), style = if (plateHeight < 60.dp) NbType.numCode.copy(fontSize = 28.sp, lineHeight = 32.sp) else NbType.numCode, color = NbColors.ink)
             }
         }
     }

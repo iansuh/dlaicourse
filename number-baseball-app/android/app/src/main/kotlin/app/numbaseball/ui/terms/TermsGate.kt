@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.numbaseball.R
 import app.numbaseball.ui.design.ChaseLamps
 import app.numbaseball.ui.design.exactLineHeight
@@ -98,7 +99,7 @@ fun TermsGateScreen(
             Text(
                 stringResource(if (updated) R.string.terms_changed_title else R.string.terms_gate_title),
                 style = NbType.headline,
-                color = NbColors.chalk,
+                color = NbColors.ink,
                 maxLines = 2,
                 modifier = Modifier.exactLineHeight(NbType.headline).semantics { heading() },
             )
@@ -133,7 +134,7 @@ private fun Point(@DrawableRes icon: Int, title: Int, line: Int) {
         Box(Modifier.width(40.dp).padding(top = 1.dp)) { NbIcon(icon, null, NbColors.text2) }
         HSpacer(12.dp)
         Column {
-            Text(stringResource(title), style = NbType.bodyStrong, color = NbColors.chalk)
+            Text(stringResource(title), style = NbType.bodyStrong, color = NbColors.ink)
             Text(stringResource(line), style = NbType.caption.copy(lineHeight = NbType.body.lineHeight), color = NbColors.text3)
         }
     }
@@ -141,11 +142,11 @@ private fun Point(@DrawableRes icon: Int, title: Int, line: Int) {
 
 @Composable
 private fun LinkRow(text: String, onClick: () -> Unit) {
-    // Prototype `.links a`: `labelSmall` chalk, underlined in `outline` 3 dp under the baseline, chevron 18 dp `text3`, 8 dp gap.
+    // Link (12.14, 13 v2): `labelSmall` 14 sp `accent`, no underline, `chevron_right` 18 dp `accent`, 48 dp target.
     Row(Modifier.heightIn(min = 48.dp).rowClick(onClick = onClick).padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(text, style = NbType.labelSmall, color = NbColors.chalk, modifier = Modifier.underlined())
-        HSpacer(8.dp)
-        NbIcon(R.drawable.ic_chevron_right, null, NbColors.text3, 18.dp)
+        Text(text, style = NbType.labelSmall.copy(fontSize = 14.sp), color = NbColors.accent)
+        HSpacer(2.dp)
+        NbIcon(R.drawable.ic_chevron_right, null, NbColors.accent, 18.dp)
     }
 }
 

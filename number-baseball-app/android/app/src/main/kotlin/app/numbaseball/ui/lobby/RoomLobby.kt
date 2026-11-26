@@ -79,8 +79,8 @@ import app.numbaseball.ui.design.ButtonKind
 import app.numbaseball.ui.design.ChaseLamps
 import app.numbaseball.ui.design.HSpacer
 import app.numbaseball.ui.design.Hairline
-import app.numbaseball.ui.design.Lamp
-import app.numbaseball.ui.design.LampColor
+import app.numbaseball.ui.design.Dot
+import app.numbaseball.ui.theme.NbSize
 import app.numbaseball.ui.design.MenuItem
 import app.numbaseball.ui.design.NameWithTag
 import app.numbaseball.ui.design.NbButton
@@ -419,16 +419,16 @@ fun roomRulesText(settings: RoomSettings): String {
     return stringResource(R.string.room_rules, digits, settings.teamSize, timer)
 }
 
-/** Rules band: 48 dp `surface1`, 1 dp lines: `tune` · "4자리 · 3 대 3 · 60초" · host: "변경". */
+/** Rules row (07 v2): no fill, 1 dp `line` above and below inside the 16 dp margins: `tune` · "4자리 · 3 대 3 · 60초" · host: "변경". */
 @Composable
 private fun RulesBand(settings: RoomSettings, editable: Boolean, onEdit: () -> Unit) {
-    Column(Modifier.fillMaxWidth().background(NbColors.surface1)) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = if (isCompactHeight()) 12.dp else 16.dp)) {
         Hairline()
         // 48 dp including both 1 dp lines (prototype `.rules`, border-box).
-        Row(Modifier.fillMaxWidth().heightIn(min = 46.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().heightIn(min = 46.dp), verticalAlignment = Alignment.CenterVertically) {
             NbIcon(R.drawable.ic_tune, null, NbColors.text2, 20.dp)
             HSpacer(8.dp)
-            Text(roomRulesText(settings), style = NbType.bodyStrong, color = NbColors.chalk, modifier = Modifier.weight(1f).padding(vertical = 4.dp))
+            Text(roomRulesText(settings), style = NbType.bodyStrong, color = NbColors.ink, modifier = Modifier.weight(1f).padding(vertical = 4.dp))
             // The 48 dp target overlaps the band's 1 dp lines instead of making the band 50 dp (D2-19 a).
             if (editable) NbButton(stringResource(R.string.action_edit), onEdit, kind = ButtonKind.TEXT, modifier = Modifier.targetOverflow(46.dp))
         }
@@ -441,11 +441,12 @@ private fun FillStatus(state: LobbyUiState) {
     val present = state.players.size
     Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                repeat(state.seats) { Lamp(LampColor.CHALK, lit = it < present, size = 8.dp, glow = false) }
+            // Fill dots (07 v2): 8 dp, `ink` for each player, `dotOff` for open seats.
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                repeat(state.seats) { Dot(if (it < present) NbColors.ink else NbColors.dotOff, NbSize.dot) }
             }
             HSpacer(12.dp)
-            Text(stringResource(R.string.room_filled, present, state.seats), style = NbType.bodyStrong, color = NbColors.chalk)
+            Text(stringResource(R.string.room_filled, present, state.seats), style = NbType.bodyStrong, color = NbColors.ink)
         }
         VSpacer(2.dp)
         Text(stringResource(R.string.auto_start), style = NbType.caption, color = NbColors.text3)
@@ -484,20 +485,18 @@ private fun TeamHeader(team: Team, count: Int, teamSize: Int, myTeam: Team?) {
         if (teamSize > 1) {
             TeamBadge(team)
             HSpacer(8.dp)
-            Text(stringResource(if (team == Team.A) R.string.team_a else R.string.team_b), style = NbType.subtitle, color = NbColors.chalk, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            Text(stringResource(if (team == Team.A) R.string.team_a else R.string.team_b), style = NbType.subtitle, color = NbColors.ink, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             Text("$count/$teamSize", style = NbType.numLabel, color = NbColors.text3)
         } else {
             // 1:1 room: "나" / "상대" without team badges (07 §5).
             Text(
                 stringResource(if (team == myTeam) R.string.tag_me else R.string.seat_opponent),
                 style = NbType.subtitle,
-                color = NbColors.chalk,
+                color = NbColors.ink,
             )
         }
     }
 }
-
-private fun teamStripe(team: Team) = if (team == Team.A) NbColors.teamA else NbColors.teamB
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -511,19 +510,13 @@ private fun Seat(player: LobbyPlayer, team: Team, index: Int, greyed: Boolean, o
     }
     val spoken = "$teamName, ${index + 1}, ${player.nickname} ${player.tag}" + tags.joinToString("") { ", $it" }
     val cardLabel = stringResource(R.string.report_player)
-    val stripe = teamStripe(team)
+    // Seat (DESIGN_SYSTEM 12.11): `surface2`, radius 12, padding 0 / 10 / 0 / 12; mine = the solid "나" tag only.
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .clip(shape)
-            .background(NbColors.surface1)
-            // The 3 dp stripe is drawn over my seat's outline, on the outer edge, full height (D2-19 b).
-            .drawWithContent {
-                drawContent()
-                drawRect(stripe, size = androidx.compose.ui.geometry.Size(3.dp.toPx(), size.height))
-            }
-            .then(if (player.you) Modifier.border(1.dp, NbColors.outline, shape) else Modifier)
+            .background(NbColors.surface2)
             .then(if (!player.you) Modifier.combinedClickable(onClick = {}, onLongClick = { onCard(player) }) else Modifier)
             .clearAndSetSemantics {
                 contentDescription = spoken
@@ -531,16 +524,15 @@ private fun Seat(player: LobbyPlayer, team: Team, index: Int, greyed: Boolean, o
             },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Spacer(Modifier.width(3.dp))
-        Column(Modifier.weight(1f).padding(start = 10.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)) {
+        Column(Modifier.weight(1f).padding(start = 12.dp, end = 10.dp, top = 6.dp, bottom = 6.dp)) {
             val dim = greyed || !player.connected
-            NameWithTag(player.nickname, player.tag, nameStyle = NbType.bodyStrong, nameColor = if (dim) NbColors.text3 else NbColors.chalk)
+            NameWithTag(player.nickname, player.tag, nameStyle = NbType.subtitle, nameColor = if (dim) NbColors.text3 else NbColors.ink)
             if (tags.isNotEmpty()) {
                 VSpacer(2.dp)
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     if (player.you) NbTag(stringResource(R.string.tag_me), solid = true)
-                    if (player.host) NbTag(stringResource(R.string.tag_host))
-                    if (!player.connected) NbTag(stringResource(R.string.tag_offline))
+                    if (player.host) NbTag(stringResource(R.string.tag_host), onSurface2 = true)
+                    if (!player.connected) NbTag(stringResource(R.string.tag_offline), onSurface2 = true)
                 }
             }
         }
@@ -557,31 +549,31 @@ private fun EmptySeat(team: Team, index: Int, canMove: Boolean, onMove: () -> Un
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .clip(shape)
-            .border(1.dp, if (canMove) NbColors.outline else NbColors.line, shape)
+            .border(NbSize.border, NbColors.line, shape)
             .then(if (canMove) Modifier.rowClick(onClick = onMove) else Modifier)
             .semantics(mergeDescendants = true) { contentDescription = "$teamName ${index + 1}, $label" },
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (canMove) {
-            // Prototype `.seat.move`: `swap_horiz` 20 dp, 6 dp gap, `labelSmall` chalk.
-            NbIcon(R.drawable.ic_swap_horiz, null, NbColors.chalk, 20.dp)
+            // Empty seat of the other team (12.11): `swap_horiz` 20 dp + "이 자리로 이동" `labelSmall` `accent`.
+            NbIcon(R.drawable.ic_swap_horiz, null, NbColors.accent, 20.dp)
             HSpacer(6.dp)
-            Text(label, style = NbType.labelSmall, color = NbColors.chalk, maxLines = 1)
+            Text(label, style = NbType.labelSmall, color = NbColors.accent, maxLines = 1)
         } else {
-            // `.seat.empty`: unlit 6 dp lamp, 6 dp gap, `caption` `text3`.
-            Lamp(LampColor.CHALK, lit = false, size = 6.dp)
+            // Empty seat of my team: 6 dp `dotOff` dot, 6 dp gap, `caption` `text3`.
+            Dot(NbColors.dotOff, NbSize.dotS)
             HSpacer(6.dp)
             Text(label, style = NbType.caption, color = NbColors.text3, maxLines = 1)
         }
     }
 }
 
-/** Chat bar: 56 dp `surface1`, 1 dp line top: `chat` · last message (sender + text, one line) · unread badge. */
+/** Chat bar: 56 dp `bg`, 1 dp line top: `chat` · last message (sender + text, one line) · `accent` unread badge. */
 @Composable
 private fun ChatPeek(state: LobbyUiState, onChat: () -> Unit, onPractice: (() -> Unit)? = null) {
     val last = state.chat.lastOrNull()
-    Column(Modifier.fillMaxWidth().background(NbColors.surface1)) {
+    Column(Modifier.fillMaxWidth().background(NbColors.bg)) {
         Hairline()
         Row(
             // 56 dp including the 1 dp top line (prototype `.chatbar`, border-box).
@@ -598,7 +590,7 @@ private fun ChatPeek(state: LobbyUiState, onChat: () -> Unit, onPractice: (() ->
                 val sender = last.senderNickname ?: stringResource(R.string.chat_deleted_player)
                 val body = if (last.kind == ChatKind.PHRASE) last.phraseId?.let { phraseText(it) }.orEmpty() else last.text.orEmpty()
                 buildAnnotatedString {
-                    withStyle(SpanStyle(fontWeight = NbType.bodyStrong.fontWeight, color = NbColors.chalk)) { append(sender) }
+                    withStyle(SpanStyle(fontWeight = NbType.bodyStrong.fontWeight, color = NbColors.ink)) { append(sender) }
                     append(" ")
                     append(body)
                 }
@@ -607,13 +599,13 @@ private fun ChatPeek(state: LobbyUiState, onChat: () -> Unit, onPractice: (() ->
             if (state.unread > 0) {
                 HSpacer(12.dp)
                 Box(
-                    Modifier.heightIn(min = 20.dp).widthIn(min = 20.dp).background(NbColors.chalk, CircleShape).padding(horizontal = 6.dp),
+                    Modifier.heightIn(min = 20.dp).widthIn(min = 20.dp).background(NbColors.accent, CircleShape).padding(horizontal = 6.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         state.unread.coerceAtMost(99).toString(),
                         style = NbType.numLabel.copy(fontSize = 13.sp, lineHeight = 20.sp, letterSpacing = 0.sp),
-                        color = NbColors.onChalk,
+                        color = NbColors.onAccent,
                     )
                 }
             }

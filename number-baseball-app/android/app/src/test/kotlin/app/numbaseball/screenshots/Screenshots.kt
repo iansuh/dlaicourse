@@ -1,6 +1,7 @@
 package app.numbaseball.screenshots
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -315,14 +316,14 @@ private object Design {
 @Composable
 private fun SampleBannerCreative() {
     Row(
-        Modifier.size(320.dp, 50.dp).background(Color(0xFFD9DCD4)),
+        Modifier.size(320.dp, 50.dp).background(Color(0xFFECEDEF)),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.background(Color(0xFF3A3F3B), RoundedCornerShape(2.dp)).padding(horizontal = 4.dp, vertical = 1.dp)) {
-            Text("AD", style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFD9DCD4)))
+        Box(Modifier.border(1.dp, Color(0xFF4B5260), RoundedCornerShape(3.dp)).padding(horizontal = 4.dp)) {
+            Text("AD", style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4B5260)))
         }
-        Text("Sample banner creative · adaptive 360×50", style = TextStyle(fontSize = 12.sp, lineHeight = 16.sp, color = Color(0xFF3A3F3B)))
+        Text("Sample banner creative · adaptive 360×50", style = TextStyle(fontSize = 12.sp, lineHeight = 16.sp, color = Color(0xFF4B5260)))
     }
 }
 
@@ -373,8 +374,8 @@ abstract class ScreenshotSuite(
                     Box(Modifier.fillMaxSize().background(NbColors.bg)) {
                         content()
                         if (ime > 0.dp && !small) {
-                            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(ime).background(Color(0xFF1F2421)), contentAlignment = Alignment.Center) {
-                                Text("IME", style = TextStyle(fontSize = 12.sp, color = Color(0xFF7D857F)))
+                            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(ime).background(Color(0xFFE8EAED)).border(1.dp, NbColors.line), contentAlignment = Alignment.Center) {
+                                Text("IME", style = TextStyle(fontSize = 12.sp, color = Color(0xFF5F6673)))
                             }
                         }
                     }
@@ -489,7 +490,12 @@ abstract class ScreenshotSuite(
 
     // 06 Results
     @Test fun resultWin() = capture("result-win-{lang}", ads = true) {
-        ResultsScreen(Design.resultSummary(), showBanner = true, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {})
+        ResultsScreen(Design.resultSummary(), showBanner = true, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {}, myWins = 13)
+    }
+
+    // 06 §1.1 v2: the innings sheet ("회별 기록 보기", shot result-innings-ko).
+    @Test fun resultInnings() = capture("result-innings-{lang}", ads = true) {
+        ResultsScreen(Design.resultSummary(), showBanner = true, onRemoveAds = {}, onRematch = {}, onHome = {}, onBackToRoom = null, onReport = {}, myWins = 13, initialInnings = true)
     }
 
     @Test fun resultLose() = capture("result-lose-{lang}", ads = true) {
@@ -807,6 +813,9 @@ abstract class ScreenshotSuite(
     }
 
     @Test fun matchMemoSheet() = capture("match-memo-sheet-{lang}") { MatchScreen(Design.lateState(), matchActions().withChat(), initialLargeMemo = true) }
+
+    // 05 §2.4 v2: the memo sheet over the guessing screen (shot match-memo-ko).
+    @Test fun matchMemo() = capture("match-memo-{lang}") { MatchScreen(Design.guessState(), matchActions().withChat(), initialMemo = true) }
 
     @Test fun matchToast() = capture("match-toast-{lang}", before = { mainClock.autoAdvance = false; mainClock.advanceTimeBy(1_000) }) {
         val toast = app.numbaseball.ui.design.rememberToastState()

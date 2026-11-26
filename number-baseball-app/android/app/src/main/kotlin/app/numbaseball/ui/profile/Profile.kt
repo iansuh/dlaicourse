@@ -55,8 +55,12 @@ import app.numbaseball.ui.common.toUiError
 import app.numbaseball.ui.design.ButtonKind
 import app.numbaseball.ui.design.exactLineHeight
 import app.numbaseball.ui.design.HSpacer
-import app.numbaseball.ui.design.Lamp
-import app.numbaseball.ui.design.LampColor
+import app.numbaseball.ui.design.Avatar
+import app.numbaseball.ui.theme.NbSize
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import app.numbaseball.ui.design.NameWithTag
 import app.numbaseball.ui.design.NbButton
 import app.numbaseball.ui.design.NbScreen
@@ -135,22 +139,29 @@ fun ProfileScreen(state: ProfileUiState, onRename: (String) -> Unit, onRenameSho
         bottomBar = { if (state.online) AdBanner() },
     ) {
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
-            Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 20.dp)) {
-                NameWithTag(state.nickname, state.tag, nameStyle = NbType.headline, tagStyle = NbType.numTag.copy(fontSize = 22.sp, lineHeight = 28.sp))
-                if (!state.online && state.registered) {
-                    Text(stringResource(R.string.profile_offline), style = NbType.caption, color = NbColors.text3)
-                } else if (!state.registered) {
-                    Text(stringResource(R.string.profile_unregistered), style = NbType.caption, color = NbColors.text3)
-                }
-                VSpacer(4.dp)
-                Box(Modifier.padding(start = 0.dp)) {
-                    NbButton(stringResource(R.string.change_nickname), { sheet = true }, kind = ButtonKind.TEXT, enabled = state.registered && state.online)
+            // Profile (10 v2): avatar 48 + name over status / "닉네임 바꾸기", then the Home-style record row (no form row).
+            Row(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Avatar(state.nickname, NbSize.avatarL)
+                HSpacer(12.dp)
+                Column(Modifier.weight(1f)) {
+                    NameWithTag(state.nickname, state.tag, nameStyle = NbType.title, tagStyle = NbType.numTag.copy(fontSize = 18.sp, lineHeight = 28.sp))
+                    if (!state.online && state.registered) {
+                        Text(stringResource(R.string.profile_offline), style = NbType.caption, color = NbColors.text3)
+                    } else if (!state.registered) {
+                        Text(stringResource(R.string.profile_unregistered), style = NbType.caption, color = NbColors.text3)
+                    }
                 }
             }
+            Box(Modifier.padding(start = 8.dp)) {
+                NbButton(stringResource(R.string.change_nickname), { sheet = true }, kind = ButtonKind.TEXT, textColorOverride = NbColors.accent, enabled = state.registered && state.online)
+            }
+            VSpacer(8.dp)
             RecordRow(state.stats)
             VSpacer(16.dp)
-            FormRow(state)
-            VSpacer(8.dp)
+            if ((state.stats?.let { it.wins + it.losses + it.draws } ?: 0) == 0) {
+                Text(stringResource(R.string.first_game_waiting), style = NbType.caption, color = NbColors.text3, modifier = Modifier.padding(horizontal = 16.dp))
+                VSpacer(8.dp)
+            }
             // Design decision (round 2, D2-15): until `/api/v1/me` sends per-digit / per-mode records, both sections are
             // hidden, header included; a table of dashes would read as "never played".
             state.byDigits?.let { DigitTable(it) }
@@ -172,58 +183,46 @@ fun ProfileScreen(state: ProfileUiState, onRename: (String) -> Unit, onRenameSho
     }
 }
 
+/** Record row as on Home (02): 승 · 패 · 무 · 승률 spread across the width, `numStat` `ink` over `caption` `text3`. */
 @Composable
 private fun RecordRow(stats: Stats?) {
     val total = stats?.let { it.wins + it.losses + it.draws } ?: 0
     val rate = stats?.takeIf { total > 0 }?.let { (it.wins * 100f / total).toInt() }
     val spoken = stats?.let { stringResource(R.string.record_value, it.wins, it.losses, it.draws) }.orEmpty()
-    // Narrow windows (320 dp, DEF-058): 12 dp gaps instead of 20, so "52%" stays on one line with its label.
-    val windowWidth = with(androidx.compose.ui.platform.LocalDensity.current) { androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp() }
-    val gap = if (windowWidth < 360.dp) 12.dp else 20.dp
-    Row(Modifier.padding(horizontal = 16.dp).height(IntrinsicSize.Min).semantics(mergeDescendants = true) { contentDescription = spoken }) {
-        Stat(stats?.wins, stringResource(R.string.record_win), first = true, gap = gap)
-        Divider()
-        Stat(stats?.losses, stringResource(R.string.record_loss), gap = gap)
-        Divider()
-        Stat(stats?.draws, stringResource(R.string.record_draw), gap = gap)
-        Divider()
-        Column(Modifier.padding(start = gap).align(Alignment.Bottom)) {
-            Text(if (rate == null) "–" else "$rate%", style = NbType.numStat, color = NbColors.text2, maxLines = 1, softWrap = false)
-            Text(stringResource(R.string.record_rate), style = NbType.caption, color = NbColors.text3, maxLines = 1)
-        }
-    }
-}
-
-@Composable
-private fun Stat(value: Int?, label: String, first: Boolean = false, gap: androidx.compose.ui.unit.Dp = 20.dp) {
-    Column(Modifier.padding(start = if (first) 0.dp else gap, end = gap)) {
-        Text(value?.toString() ?: "–", style = NbType.numScore, color = if (value == null) NbColors.textDisabled else NbColors.chalk)
-        Text(label, style = NbType.caption, color = NbColors.text3)
-    }
-}
-
-@Composable
-private fun Divider() = Box(Modifier.width(1.dp).fillMaxHeight().background(NbColors.line))
-
-@Composable
-private fun FormRow(state: ProfileUiState) {
-    val total = state.stats?.let { it.wins + it.losses + it.draws } ?: 0
-    Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (total == 0 || state.recentForm.isEmpty()) {
-            if (total == 0) Text(stringResource(R.string.first_game_waiting), style = NbType.caption, color = NbColors.text3)
-            return@Row
-        }
-        Text(stringResource(R.string.recent_form), style = NbType.caption, color = NbColors.text3)
-        HSpacer(12.dp)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            state.recentForm.takeLast(10).forEach { result ->
-                when (result) {
-                    'W' -> Lamp(LampColor.STRIKE, lit = true, size = 8.dp)
-                    'D' -> Box(Modifier.size(8.dp).border(1.5.dp, NbColors.chalk, CircleShape))
-                    else -> Lamp(LampColor.STRIKE, lit = false, size = 8.dp)
-                }
+    Column(Modifier.padding(horizontal = 16.dp)) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 4.dp).semantics(mergeDescendants = true) { contentDescription = spoken },
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Stat(stats?.wins, stringResource(R.string.record_win))
+            Stat(stats?.losses, stringResource(R.string.record_loss))
+            Stat(stats?.draws, stringResource(R.string.record_draw))
+            Column {
+                Text(
+                    if (rate == null) AnnotatedString("–") else buildAnnotatedString {
+                        append(rate.toString())
+                        withStyle(SpanStyle(fontSize = NbType.numStat.fontSize * 0.7f)) { append("%") }
+                    },
+                    style = NbType.numStat,
+                    color = if (rate == null) NbColors.text3 else NbColors.ink,
+                    maxLines = 1,
+                    softWrap = false,
+                    autoFit = false,
+                )
+                Text(stringResource(R.string.record_rate), style = NbType.caption, color = NbColors.text3, maxLines = 1)
             }
         }
+        VSpacer(20.dp)
+        Hairline()
+    }
+}
+
+@Composable
+private fun Stat(value: Int?, label: String) {
+    Column {
+        // Zero counts in `text3` (faint-zero fix, DESIGN_SYSTEM 2.2).
+        Text(value?.toString() ?: "–", style = NbType.numStat, color = when (value) { null -> NbColors.textDisabled; 0 -> NbColors.text3; else -> NbColors.ink }, maxLines = 1, softWrap = false, autoFit = false)
+        Text(label, style = NbType.caption, color = NbColors.text3, maxLines = 1)
     }
 }
 
@@ -265,13 +264,13 @@ private fun TableHeader(text: String, modifier: Modifier, align: TextAlign = Tex
     Text(text, style = NbType.labelSmall, color = NbColors.text3, textAlign = align, maxLines = if (isLargeFont()) 2 else 1, softWrap = isLargeFont(), modifier = modifier)
 }
 
-/** `numLog` chalk; zero in `textDisabled`; `–` when there is no record. */
+/** `numLog` `ink`; zero in `text3` (AA); `–` when there is no record (`textDisabled`). */
 @Composable
 private fun TableValue(value: Int?, modifier: Modifier, align: TextAlign = TextAlign.Center, zeroDisabled: Boolean = true) {
     Text(
         value?.toString() ?: "–",
         style = NbType.numLog.copy(letterSpacing = NbType.numHint.letterSpacing),
-        color = if (value == null || (zeroDisabled && value == 0)) NbColors.textDisabled else NbColors.chalk,
+        color = if (value == null) NbColors.textDisabled else if (zeroDisabled && value == 0) NbColors.text3 else NbColors.ink,
         textAlign = align,
         modifier = modifier,
     )
@@ -299,7 +298,7 @@ private fun ModeRows(records: Map<RecordMode, ModeRecord>?) {
                 .clearAndSetSemantics { contentDescription = "$title, ${value ?: "–"}" },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(title, style = NbType.subtitle, color = NbColors.chalk, modifier = Modifier.weight(1f).padding(vertical = 8.dp))
+            Text(title, style = NbType.subtitle, color = NbColors.ink, modifier = Modifier.weight(1f).padding(vertical = 8.dp))
             HSpacer(12.dp)
             if (record == null) {
                 Text("–", style = NbType.numTag, color = NbColors.textDisabled)

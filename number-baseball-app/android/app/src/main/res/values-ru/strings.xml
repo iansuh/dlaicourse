@@ -48,17 +48,11 @@
     <string name="record_loss">П</string>
     <string name="record_draw">Н</string>
     <string name="record_rate">Побед</string>
-    <string name="recent_form">Последние 10</string>
     <string name="first_game_waiting">Ждём вашу первую игру</string>
-    <string name="other_modes">Другие режимы</string>
     <string name="cpu_title">Против компьютера</string>
-    <string name="cpu_sub">Офлайн · Легко · Нормально · Сложно</string>
     <string name="room_title">Создать комнату</string>
-    <string name="room_sub">1 на 1 или командами с друзьями, до 5 на 5</string>
     <string name="join_title">Войти по коду</string>
-    <string name="join_sub">Код из 5 символов от друга</string>
     <string name="quick_title">Быстрая игра</string>
-    <string name="quick_sub">Сразу сыграйте с равным соперником · ход 60 с</string>
     <string name="quick_start">Начать быструю игру</string>
     <string name="offline_band">Офлайн · доступно только против компьютера</string>
     <string name="needs_internet">Нужен интернет</string>
@@ -116,7 +110,6 @@
     <string name="opp_ready">Число загадано</string>
     <string name="opp_disconnected">Нет связи · %1$s</string>
     <string name="my_secret">Моё число</string>
-    <string name="col_guess">Мой ход</string>
     <string name="col_hint">Подсказка</string>
     <string name="col_opp">Сопер.</string>
     <string name="opp_log_title">Ходы соперника</string>
@@ -135,8 +128,6 @@
     <string name="memo">Заметки</string>
     <string name="memo_help">Нажатие: нет → есть → сброс</string>
     <string name="memo_clear">Сбросить</string>
-    <string name="memo_collapse">Скрыть заметки</string>
-    <string name="memo_expand">Показать заметки</string>
     <string name="pitch">Назвать</string>
     <string name="waiting_opp">Ждём соперника</string>
     <string name="waiting_ready">Ждём соперника</string>
@@ -242,7 +233,6 @@
     <string name="res_disconnect_opp">Соперник не вернулся</string>
     <string name="res_cancelled">Командный матч уже решён</string>
     <string name="opp_secret">Его число</string>
-    <string name="line_score">Страйки по раундам</string>
     <string name="best">Лучший</string>
     <string name="me_short">Я</string>
     <string name="cpu_short">Компьютер</string>
@@ -437,8 +427,6 @@
     <string name="lock_in_short">Готово</string>
     <string name="menu_random_fill">Заполнить случайно</string>
     <string name="nick_error_long">Не больше 12 символов</string>
-    <string name="line_score_all">Показать все раунды</string>
-    <string name="line_score_recent">Показать последние раунды</string>
     <string name="practice_short">Тренировка</string>
     <string name="msg_player_card">Посмотреть игрока</string>
     <string name="profile_by_digits">По числу цифр</string>
@@ -488,4 +476,20 @@
     <string name="card_context_online">Онлайн-итоги</string>
     <string name="best_none_a11y">лучшего результата пока нет</string>
     <string name="best_hint_a11y">лучший: страйков %1$d, боллов %2$d</string>
+    <string name="memo_open">Открыть заметки</string>
+    <string name="log_row_opp_spoken">Подсказка сопернику: %1$d страйков, %2$d боллов.</string>
+    <string name="home_first_time">Впервые? Как играть</string>
+    <string name="home_other_modes">Другие режимы</string>
+    <string name="tile_cpu">С компьютером</string>
+    <string name="tile_room">Создать комнату</string>
+    <string name="tile_join">Войти по коду</string>
+    <string name="quick_meta">60 с · похожий соперник</string>
+    <string name="result_taken">Раунды</string>
+    <string name="result_time">Время</string>
+    <string name="result_level">Уровень</string>
+    <string name="result_wins_value">%1$d П</string>
+    <string name="innings_link">По раундам</string>
+    <string name="innings_title">По раундам</string>
+    <string name="result_summary_a11y">%1$s %2$s, %3$s %4$s, %5$s %6$s</string>
+    <string name="result_rounds_value">%1$d</string>
 </resources>

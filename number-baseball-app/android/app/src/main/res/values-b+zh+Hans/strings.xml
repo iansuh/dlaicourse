@@ -48,17 +48,11 @@
     <string name="record_loss">负</string>
     <string name="record_draw">平</string>
     <string name="record_rate">胜率</string>
-    <string name="recent_form">最近 10 局</string>
     <string name="first_game_waiting">等你的第一局</string>
-    <string name="other_modes">更多玩法</string>
     <string name="cpu_title">对战电脑</string>
-    <string name="cpu_sub">离线 · 简单 · 普通 · 困难</string>
     <string name="room_title">创建房间</string>
-    <string name="room_sub">1 对 1，或和朋友组队，最多 5 对 5</string>
     <string name="join_title">输入房间码加入</string>
-    <string name="join_sub">朋友发来的 5 位房间码</string>
     <string name="quick_title">快速匹配</string>
-    <string name="quick_sub">立刻匹配水平相近的对手 · 每回合 60 秒</string>
     <string name="quick_start">开始快速匹配</string>
     <string name="offline_band">离线 · 只能对战电脑</string>
     <string name="needs_internet">需要联网</string>
@@ -107,7 +101,6 @@
     <string name="opp_ready">已选好数字</string>
     <string name="opp_disconnected">已断线 · %1$s</string>
     <string name="my_secret">我的数字</string>
-    <string name="col_guess">我的猜测</string>
     <string name="col_hint">提示</string>
     <string name="col_opp">对手</string>
     <string name="opp_log_title">对手记录</string>
@@ -126,8 +119,6 @@
     <string name="memo">笔记</string>
     <string name="memo_help">点按切换：排除 → 确定 → 清除</string>
     <string name="memo_clear">清除</string>
-    <string name="memo_collapse">收起笔记</string>
-    <string name="memo_expand">展开笔记</string>
     <string name="pitch">投球</string>
     <string name="waiting_opp">等待对手</string>
     <string name="waiting_ready">等待对手</string>
@@ -221,7 +212,6 @@
     <string name="res_disconnect_opp">对手没有回来</string>
     <string name="res_cancelled">团队对战已先分出胜负</string>
     <string name="opp_secret">对方的数字</string>
-    <string name="line_score">各回合好球数</string>
     <string name="best">最佳</string>
     <string name="me_short">我</string>
     <string name="cpu_short">电脑</string>
@@ -413,8 +403,6 @@
     <string name="lock_in_short">确定</string>
     <string name="menu_random_fill">随机填入</string>
     <string name="nick_error_long">最多 12 个字符</string>
-    <string name="line_score_all">显示所有回合</string>
-    <string name="line_score_recent">显示最近回合</string>
     <string name="practice_short">练习</string>
     <string name="msg_player_card">查看玩家</string>
     <string name="profile_by_digits">按位数</string>
@@ -464,4 +452,20 @@
     <string name="card_context_online">在线战绩</string>
     <string name="best_none_a11y">暂无最佳</string>
     <string name="best_hint_a11y">最佳 %1$d 好球 %2$d 坏球</string>
+    <string name="memo_open">打开笔记</string>
+    <string name="log_row_opp_spoken">对手的判定 %1$d 好球 %2$d 坏球。</string>
+    <string name="home_first_time">第一次玩？看看玩法</string>
+    <string name="home_other_modes">其他玩法</string>
+    <string name="tile_cpu">对战电脑</string>
+    <string name="tile_room">创建房间</string>
+    <string name="tile_join">用代码加入</string>
+    <string name="quick_meta">60 秒 · 实力相近的对手</string>
+    <string name="result_taken">用时回合</string>
+    <string name="result_time">时间</string>
+    <string name="result_level">难度</string>
+    <string name="result_wins_value">%1$d 胜</string>
+    <string name="innings_link">查看每回合记录</string>
+    <string name="innings_title">每回合记录</string>
+    <string name="result_summary_a11y">%1$s %2$s，%3$s %4$s，%5$s %6$s</string>
+    <string name="result_rounds_value">%1$d 回合</string>
 </resources>

@@ -557,12 +557,18 @@ fun ClockLine(fraction: Float, level: ClockLevel, modifier: Modifier = Modifier)
     }
 }
 
-/** A `?` plate (Home hero, search): question state, `bg` + 1.5 dp `line`, `numSlot` `text3`; [lit] = swept (`ink`). */
+/**
+ * A `?` plate (DESIGN_SYSTEM 12.4 question state): `bg` + 1.5 dp `line`, `numSlot` `?` in [color] (`text3` on Home,
+ * `textDisabled` while searching); [lit] = the search sweep's plate (`surface2`, `ink`).
+ */
 @Composable
-fun QuestionPlate(lit: Boolean, width: Dp, height: Dp) {
+fun QuestionPlate(lit: Boolean, width: Dp, height: Dp, color: Color = NbColors.text3) {
     val shape = RoundedCornerShape(NbRadius.m)
-    Box(Modifier.size(width, height).background(NbColors.bg, shape).border(NbSize.border, if (lit) NbColors.outline else NbColors.line, shape), contentAlignment = Alignment.Center) {
-        Text("?", style = NbType.numSlot, color = if (lit) NbColors.ink else NbColors.text3, autoFit = false)
+    Box(
+        Modifier.size(width, height).then(if (lit) Modifier.background(NbColors.surface2, shape) else Modifier.background(NbColors.bg, shape).border(NbSize.border, NbColors.line, shape)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text("?", style = NbType.numSlot, color = if (lit) NbColors.ink else color, autoFit = false)
     }
 }
 

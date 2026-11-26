@@ -49,13 +49,6 @@ object NbColors {
     val scrim = Color(0x66111418)
     val focus = Color(0xFF2453E6)
 
-    // TEMPORARY v1 names, removed once every screen is migrated (REDESIGN_V2 §2.1).
-    @Deprecated("split: ink / accent") val chalk = ink
-    @Deprecated("accentPressed") val chalkPressed = accentPressed
-    @Deprecated("split: onAccent / onInk") val onChalk = onAccent
-    @Deprecated("dangerTint") val outTint = dangerTint
-    @Deprecated("dotOff") val lampOff = dotOff
-    @Deprecated("dotOff") val lampOffRing = dotOff
 }
 
 object NbFonts {

@@ -185,7 +185,7 @@ fun LegalTextScreen(title: String, page: LegalPage, onBack: () -> Unit, onWebVer
                                 is LegalBlock.Heading -> Text(
                                     block.text,
                                     style = if (block.level == top) NbType.subtitle else NbType.bodyStrong,
-                                    color = NbColors.chalk,
+                                    color = NbColors.ink,
                                     modifier = Modifier.semantics { heading() },
                                 )
                                 is LegalBlock.Bullet -> Row(Modifier.padding(start = 4.dp)) {
@@ -195,9 +195,9 @@ fun LegalTextScreen(title: String, page: LegalPage, onBack: () -> Unit, onWebVer
                                             Modifier.padding(start = 2.dp, top = 2.dp).size(5.dp).background(NbColors.text3, androidx.compose.foundation.shape.CircleShape),
                                         )
                                     }
-                                    Text(LegalMarkdown.styled(block.text), style = NbType.reading, color = NbColors.chalk)
+                                    Text(LegalMarkdown.styled(block.text), style = NbType.reading, color = NbColors.ink)
                                 }
-                                is LegalBlock.Paragraph -> Text(LegalMarkdown.styled(block.text), style = NbType.reading, color = NbColors.chalk)
+                                is LegalBlock.Paragraph -> Text(LegalMarkdown.styled(block.text), style = NbType.reading, color = NbColors.ink)
                             }
                         }
                     }

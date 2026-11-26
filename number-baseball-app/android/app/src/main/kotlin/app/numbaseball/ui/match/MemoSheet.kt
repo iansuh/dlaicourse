@@ -4,7 +4,7 @@ import androidx.compose.ui.unit.sp
 import app.numbaseball.ui.design.crossBars
 import app.numbaseball.ui.design.ruledOut
 import app.numbaseball.ui.design.isCompactHeight
-import app.numbaseball.ui.design.SheetBottomSpace
+import app.numbaseball.ui.design.VSpacer
 import androidx.compose.ui.semantics.heading
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.heightIn
@@ -115,7 +115,8 @@ fun ColumnScope.MemoSheet(
                 }
             }
         }
-        SheetBottomSpace(24.dp)
+        // 24 dp + the navigation inset (the sheet surface adds the inset below).
+        VSpacer(24.dp)
     }
 }
 

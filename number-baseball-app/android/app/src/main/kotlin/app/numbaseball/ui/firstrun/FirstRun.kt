@@ -171,7 +171,7 @@ fun FirstRunScreen(
             VSpacer(32.dp)
             Eyebrow { Text(stringResource(R.string.nick_eyebrow), style = NbType.labelSmall, color = NbColors.text2) }
             VSpacer(16.dp)
-            Text(stringResource(R.string.nick_title), style = NbType.headline, color = NbColors.chalk, maxLines = 2, modifier = Modifier.exactLineHeight(NbType.headline))
+            Text(stringResource(R.string.nick_title), style = NbType.headline, color = NbColors.ink, maxLines = 2, modifier = Modifier.exactLineHeight(NbType.headline))
             VSpacer(8.dp)
             Text(stringResource(R.string.nick_lead), style = NbType.body, color = NbColors.text2)
             VSpacer(32.dp)
@@ -191,7 +191,7 @@ fun FirstRunScreen(
                 Text(
                     state.error?.let { stringResource(it.message()) } ?: stringResource(R.string.transfer_note),
                     style = NbType.caption,
-                    color = if (state.error != null) NbColors.out else NbColors.text3,
+                    color = if (state.error != null) NbColors.danger else NbColors.text3,
                 )
               }
                 NbButton(stringResource(R.string.nick_new_account), { onTransferModeChange(false) }, kind = ButtonKind.TEXT, modifier = Modifier.offset(x = (-8).dp))
@@ -216,13 +216,13 @@ fun FirstRunScreen(
                     Text(
                         if (nickError != null) stringResource(nickError) else stringResource(R.string.nick_helper),
                         style = NbType.caption,
-                        color = if (nickError != null) NbColors.out else NbColors.text3,
+                        color = if (nickError != null) NbColors.danger else NbColors.text3,
                         modifier = Modifier.weight(1f),
                     )
                     Text(
                         "${state.nickname.codePointCount(0, state.nickname.length)} / ${Limits.NICKNAME_MAX}",
                         style = NbType.numTag,
-                        color = if (nickError != null) NbColors.out else NbColors.text3,
+                        color = if (nickError != null) NbColors.danger else NbColors.text3,
                     )
                 }
                 // Directly under the nickname field so it stays visible above the IME (11 §Transfer, D2-17). The text
@@ -241,7 +241,7 @@ fun FirstRunScreen(
                             }
                         },
                         style = NbType.title,
-                        color = NbColors.chalk,
+                        color = NbColors.ink,
                         maxLines = 1,
                     )
                     VSpacer(4.dp)

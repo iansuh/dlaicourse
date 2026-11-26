@@ -58,17 +58,11 @@
     <string name="record_loss">L</string>
     <string name="record_draw">D</string>
     <string name="record_rate">Win rate</string>
-    <string name="recent_form">Last 10</string>
     <string name="first_game_waiting">Waiting for your first game</string>
-    <string name="other_modes">More ways to play</string>
     <string name="cpu_title">vs Computer</string>
-    <string name="cpu_sub">Offline · Easy · Normal · Hard</string>
     <string name="room_title">Create room</string>
-    <string name="room_sub">1 vs 1 or teams with friends, up to 5 vs 5</string>
     <string name="join_title">Join with code</string>
-    <string name="join_sub">The 5-character code from a friend</string>
     <string name="quick_title">Quick match</string>
-    <string name="quick_sub">Play a similar opponent now · 60 s turns</string>
     <string name="quick_start">Start quick match</string>
     <string name="offline_band">Offline · only vs Computer is available</string>
     <string name="needs_internet">Internet connection needed</string>
@@ -126,7 +120,6 @@
     <string name="opp_ready">Number picked</string>
     <string name="opp_disconnected">Disconnected · %1$s</string>
     <string name="my_secret">My number</string>
-    <string name="col_guess">My guess</string>
     <string name="col_hint">Hint</string>
     <string name="col_opp">Opp.</string>
     <string name="opp_log_title">Opponent\'s log</string>
@@ -145,8 +138,6 @@
     <string name="memo">Notes</string>
     <string name="memo_help">Tap: out → in → clear</string>
     <string name="memo_clear">Clear</string>
-    <string name="memo_collapse">Hide notes</string>
-    <string name="memo_expand">Show notes</string>
     <string name="pitch">Pitch</string>
     <string name="waiting_opp">Waiting for the opponent</string>
     <string name="waiting_ready">Waiting for the opponent</string>
@@ -250,7 +241,6 @@
     <string name="res_disconnect_opp">Your opponent didn’t come back</string>
     <string name="res_cancelled">The team match was decided first</string>
     <string name="opp_secret">Their number</string>
-    <string name="line_score">Strikes by round</string>
     <string name="best">Best</string>
     <string name="me_short">Me</string>
     <string name="cpu_short">Computer</string>
@@ -462,8 +452,6 @@
     <string name="lock_in_short">Lock in</string>
     <string name="menu_random_fill">Fill at random</string>
     <string name="nick_error_long">Up to 12 characters</string>
-    <string name="line_score_all">Show every round</string>
-    <string name="line_score_recent">Show recent rounds</string>
     <string name="practice_short">Practise</string>
     <string name="msg_player_card">View player</string>
     <string name="profile_by_digits">By digit count</string>
@@ -513,4 +501,20 @@
     <string name="card_context_online">Online record</string>
     <string name="best_none_a11y">no best yet</string>
     <string name="best_hint_a11y">best %1$d strikes %2$d balls</string>
+    <string name="memo_open">Open notes</string>
+    <string name="log_row_opp_spoken">Opponent\'s hint %1$d strikes %2$d balls.</string>
+    <string name="home_first_time">New here? How to play</string>
+    <string name="home_other_modes">More ways to play</string>
+    <string name="tile_cpu">vs Computer</string>
+    <string name="tile_room">Create room</string>
+    <string name="tile_join">Join with code</string>
+    <string name="quick_meta">60 s · similar opponent</string>
+    <string name="result_taken">Rounds</string>
+    <string name="result_time">Time</string>
+    <string name="result_level">Level</string>
+    <string name="result_wins_value">%1$d W</string>
+    <string name="innings_link">Round by round</string>
+    <string name="innings_title">Round by round</string>
+    <string name="result_summary_a11y">%1$s %2$s, %3$s %4$s, %5$s %6$s</string>
+    <string name="result_rounds_value">%1$d</string>
 </resources>

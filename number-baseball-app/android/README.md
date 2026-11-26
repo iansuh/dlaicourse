@@ -1,6 +1,6 @@
 # Number Baseball — Android app
 
-Kotlin + Jetpack Compose (Material 3 on the design tokens), single activity, Compose Navigation, ViewModels with
+Kotlin + Jetpack Compose (Material 3 on the design tokens of design system v2 "Clean White", light theme), single activity, Compose Navigation, ViewModels with
 immutable `StateFlow` state and a small manual DI container (`AppContainer`). The game rules, computer AI, duel engine,
 protocol messages and text filters come from the shared `:core` module in `../backend` (composite build).
 
@@ -60,9 +60,10 @@ How it works (`billing/DefaultBillingRepository.kt`):
   (UMP never runs), still shown if consent was gathered earlier in the same process (consent can still be changed).
 - The purchase token stays inside `billing/`: `PlayPurchase.toString()` hides it, nothing in the package logs, and it never
   goes to our server (`RemoveAdsRulesTest.thePurchaseTokenStaysInTheBillingPackage` checks the sources).
-- Entry points: Settings "구매" section (11 §1.1) and the quiet top-bar text button on duel and final team results (06 §1),
-  hidden while billing is unavailable or pending, in the review room and practice, and in windows lower than 480 dp. No
-  pop-ups, never during a match.
+- Entry points: Settings "구매" section (11 §1.1) and the quiet "광고 제거" caption line above the banner on duel and final
+  team results (06 §1.2, design v2; its 48 dp target ends 24 dp above the ad band, `RemoveAdsLine`), hidden while billing
+  is unavailable or pending, in the review room and practice, and in windows lower than 480 dp. No pop-ups, never during
+  a match.
 
 Set-up and testing (owner / release lead; details in `../docs/play/RELEASE_GUIDE.md`):
 1. Upload a build with Play Billing to the internal test track, then create the in-app product **`remove_ads`** (one-time,
@@ -122,6 +123,31 @@ The terms and privacy policy shown in the app are generated at build time from t
 Languages: ten (`values/` English, `values-ko/`, `ja`, `b+zh+Hans`, `es`, `fr`, `de`, `pt`, `ru`, `vi`). Add a language by adding `values-xx/strings.xml`, its tag to
 `res/xml/locales_config.xml` and `SupportedLanguages`; `ResourcesTest` checks they agree.
 
+## Redesign v2 "Clean White" (2026-11-26)
+
+Implemented from `../design/REDESIGN_V2.md`, `DESIGN_SYSTEM.md` v2 and `tokens.json` 2.0.0: light theme (`lightColorScheme`
+on the tokens, every container role `bg` / `surface2`, no tonal or shadow elevation), dark system-bar icons
+(`SystemBarStyle.light`, `windowLightStatusBar` / `windowLightNavigationBar`), Inter (OFL 1.1, tabular figures on every
+`num` style) instead of Barlow Condensed, `chalk` / `onChalk` / `out` split by role into `ink` / `accent`, `onInk` /
+`onAccent` and `out` / `danger`, flat dots instead of lamps (`ChaseLamps` keeps its name), hint chips (`HintChips`, steps
+on the unchanged `lamp(...)` hooks), opponent row, timer pill + 3 dp progress line, entry head with the 메모 button and
+the memo sheet (`MemoSheet.kt`, the logic in `Memo.kt` unchanged), ruled-out stroke on keys, new Home (4-number record,
+`? ? ? ?` hero, 3 mode tiles, pinned quick-match block), new result (badge, `ink` plates, summary, innings sheet,
+`RemoveAdsLine` above the banner), lobby / team board without stripes, chat, settings, sheets, dialogs and toasts restyled.
+The launcher icon is unchanged (dark plate; `nb_icon_*` colours).
+
+| Spec | What the app does | Why / status |
+| --- | --- | --- |
+| 12.9 memo sheet, 06 §1.1 innings sheet: `ModalBottomSheet` | Drawn with the app's own `SheetFrame` (in-window `scrim` + white sheet, grab handle; dismissed by scrim tap, back or `close`, not by drag) like the other in-match sheets | Deviation: no drag-to-dismiss. The sheet must not take the window: reveals, sounds, the clock and the keypad marks keep running underneath and Robolectric renders it. Looks identical. |
+| 06 §1 "내 기록 13승" | My wins from the account's cached `/api/v1/me` stats | The record may lag by the match just played until the next refresh (no protocol field for it). |
+| 06 §1 summary values ("6회", "13승") | Digits in Inter, the translated unit in the system face at the same size | DESIGN_SYSTEM 3.1: Inter never sets translated text. |
+| 05 §2.8 own phrase bubble | Only received phrases show a bubble | Unchanged from v1; needs a send-echo in the phrase flow. |
+| ADAPTIVE §1 compact Home digit tiles | Numbers only (no "자리" unit) in the 48 dp tiles | 4 × 48 dp tiles cannot hold the unit at 360 dp. |
+| ADAPTIVE §3 medium / expanded windows | v1 layouts (centred 560 dp column; memo as a sheet, no permanent memo panel) | Not in this change. |
+| 12.3 opponent row tap | The opponent's full log opens from a tap on any row's opponent hint and from the menu, no longer from the opponent row | 12.8 names the hint as the entry point. |
+| `MatchActions.onMemoCollapse`, `MemoState.collapsed` | Kept in the API but unused (no inline memo any more) | Avoids touching the view models; remove with the next cleanup. |
+| Shots `team-final-ko`, status bar | The renders keep the 24 dp gesture inset under the banner and draw no status-bar glyphs | Test frame (real insets); the reference shot of the team result has no gesture area. |
+
 ## Deviations from the design (for design sign-off)
 
 Updated after design review round 2 (`../design/REVIEW_PHASE2_ROUND2.md`, §3 decisions). Rows marked *accepted* were
@@ -144,9 +170,8 @@ approved there; the rest still need design approval.
 | ADAPTIVE §1 small-window team rows | Round over the winner, a status word, or both best hints | *Accepted*. |
 | 11 §2 transfer plates (D2-51) | 3 groups of 4 `numCode` plates, 28 × 40 dp, narrower when 12 plates do not fit 328 dp (24.5 dp at 360 dp); expired: plates disabled, "코드가 만료됐어요", "새 코드 만들기" | Waiting for design's 11 §2 update; the 28 dp plates only fit from about 380 dp. |
 | 12.17 server-error dialog (D2-43) | Built (`ServerErrorDialog`): used for 5xx / unknown codes on the terms gate (다시 시도 = agree again, 홈으로 = close), join, lobby (홈으로 = leave the room) and settings (홈으로 = back). Other errors stay toasts | The catalogue names no screen-specific actions; these are the obvious ones. |
-| 05 §2.9 opponent-log sheet (D2-43) | Built (`OpponentLogSheet`): from the duel strip's opponent area, the overflow menu ("상대 기록 보기") and the log header button when the opponent column is hidden (6 digits at large text, log narrower than 320 dp) | — |
-| Large text, team final top bar | The "광고 제거" link is hidden at large text (as in small windows) | The title would lose its width; Settings keeps the purchase. |
-| Large text / long translations (DEF-054 … 061) | One-line and two-line labels that would clip, ellipsize or break inside a word step their size down (to 70 %, 50–55 % for segment labels, table headers, buttons and the team badge) before anything else (`WordFit` in `design/Text.kt`); the lobby's copy / share buttons stack at large text; list-row values move under the title at large text; small-window opponent status at large text shows the lamp and countdown only (the word is read by TalkBack) | 7 findings remain, all in the 360 × 320 window at 200 % (see `src/test/resources/qa/layout-baseline.tsv`). |
+| 05 §2.9 opponent-log sheet (D2-43) | Built (`OpponentLogSheet`): from a tap on any row's opponent hint and the overflow menu ("상대 기록 보기"); below 320 dp width the opponent column is hidden and the menu is the way in | — |
+| Large text / long translations (DEF-054 … 061) | One-line and two-line labels that would clip, ellipsize or break inside a word step their size down (to 70 %, 50–55 % for segment labels, table headers, buttons and the team badge) before anything else (`WordFit` in `design/Text.kt`); the lobby's copy / share buttons stack at large text; list-row values move under the title at large text; small-window opponent status at large text shows the dot and countdown only (the word is read by TalkBack) | 5 findings remain, all in the 360 × 320 window at 200 % (see `src/test/resources/qa/layout-baseline.tsv`; v2 fixed the two `search-60s` entries). |
 | Lobby practice button (D2-48) | Scrolls with the content at large text and when the region is shorter than 420 dp; small windows keep it in the chat bar | The small window with the reconnect banner still shows only part of a seat before scrolling. |
 
 ## CI

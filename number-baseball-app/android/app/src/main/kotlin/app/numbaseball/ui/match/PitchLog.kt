@@ -186,7 +186,7 @@ private fun LogRow(
                 maxLines = 1,
                 softWrap = false,
                 autoFit = false,
-                modifier = Modifier.width(columns.round).clearAndSetSemantics {},
+                modifier = Modifier.width(columns.round),
             )
             HSpacer(8.dp)
             Column(Modifier.weight(1f).clearAndSetSemantics {}) {

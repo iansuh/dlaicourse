@@ -105,7 +105,7 @@ class AgeViewModel(private val ages: AgeRepository) : ViewModel() {
     }
 }
 
-/** Eyebrow: brand mark 22 × 32 dp + 10 dp + a text stack (01). */
+/** Eyebrow: brand mark 32 × 32 dp + 10 dp + a text stack (01). */
 @Composable
 fun Eyebrow(content: @Composable () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -138,7 +138,7 @@ fun AgeScreen(state: AgeUiState, onDigit: (Char) -> Unit, onDelete: () -> Unit, 
                 }
                 VSpacer(24.dp)
             }
-            Text(stringResource(R.string.age_title), style = if (compact) NbType.title else NbType.headline, color = NbColors.chalk)
+            Text(stringResource(R.string.age_title), style = if (compact) NbType.title else NbType.headline, color = NbColors.ink)
             if (!compact) {
                 VSpacer(8.dp)
                 Text(stringResource(R.string.age_lead), style = NbType.body, color = NbColors.text2)
@@ -147,7 +147,7 @@ fun AgeScreen(state: AgeUiState, onDigit: (Char) -> Unit, onDelete: () -> Unit, 
             BirthFields(state, compact)
             VSpacer(12.dp)
             Box(Modifier.fillMaxWidth().heightIn(min = 18.dp).semantics { liveRegion = LiveRegionMode.Polite }, contentAlignment = Alignment.Center) {
-                if (state.invalid) Text(stringResource(R.string.age_invalid), style = NbType.caption, color = NbColors.out)
+                if (state.invalid) Text(stringResource(R.string.age_invalid), style = NbType.caption, color = NbColors.danger)
             }
         }
         DigitKeypad(
@@ -187,21 +187,23 @@ private fun BirthFields(state: AgeUiState, compact: Boolean) {
     val yearLabel = stringResource(R.string.age_year)
     val monthLabel = stringResource(R.string.age_month)
     androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        val gap = app.numbaseball.ui.theme.NbSize.slotGap
+        // 01 §0 v2: 6 dp gap inside a group, 16 dp between groups, width min(56, fit), 64 dp high (48 compact).
+        val gap = 6.dp
         val between = 16.dp
         val fit = (maxWidth - between - gap * 4) / 6
-        val w = minOf(if (compact) 40.dp else 44.dp, fit)
-        val h = if (compact) 48.dp else 56.dp
+        val w = minOf(if (compact) 40.dp else 56.dp, fit)
+        val h = if (compact) 48.dp else 64.dp
         Row(horizontalArrangement = Arrangement.spacedBy(between), verticalAlignment = Alignment.Bottom) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(yearLabel, style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.Center, maxLines = 1)
-                VSpacer(12.dp)
+                VSpacer(8.dp)
                 DigitSlots(
                     digits = 4,
                     value = state.year,
                     modifier = Modifier.width(w * 4 + gap * 3),
                     plateWidth = w,
                     plateHeight = h,
+                    gap = gap,
                     error = state.invalid,
                     showActive = state.year.length < 4,
                     shakeKey = state.shake,
@@ -210,13 +212,14 @@ private fun BirthFields(state: AgeUiState, compact: Boolean) {
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(monthLabel, style = NbType.labelSmall, color = NbColors.text3, textAlign = TextAlign.Center, maxLines = 1)
-                VSpacer(12.dp)
+                VSpacer(8.dp)
                 DigitSlots(
                     digits = 2,
                     value = state.month,
                     modifier = Modifier.width(w * 2 + gap),
                     plateWidth = w,
                     plateHeight = h,
+                    gap = gap,
                     error = state.invalid,
                     showActive = state.year.length == 4,
                     shakeKey = state.shake,
@@ -241,13 +244,13 @@ fun NotAvailableScreen(onPrivacyPolicy: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            BrandMark(width = 33.dp, height = 48.dp, alpha = 0.55f)
-            VSpacer(24.dp)
-            Text(stringResource(R.string.na_title), style = NbType.title, color = NbColors.chalk, textAlign = TextAlign.Center)
+            BrandMark(size = 48.dp, alpha = 0.55f)
+            VSpacer(8.dp)
+            Text(stringResource(R.string.na_title), style = NbType.title, color = NbColors.ink, textAlign = TextAlign.Center)
             VSpacer(16.dp)
             Text(stringResource(R.string.na_body), style = NbType.body, color = NbColors.text2, textAlign = TextAlign.Center)
-            VSpacer(40.dp)
-            // Text link (prototype `.na .link`): `labelSmall` `text2`, underlined in `outline`, 48 dp target.
+            VSpacer(24.dp)
+            // Text link (01 §0.1): `labelSmall` `accent`, underlined, 48 dp target.
             val label = stringResource(R.string.privacy_policy)
             Box(
                 Modifier
@@ -259,7 +262,7 @@ fun NotAvailableScreen(onPrivacyPolicy: () -> Unit) {
                 Text(
                     label,
                     style = NbType.labelSmall,
-                    color = NbColors.text2,
+                    color = NbColors.accent,
                     modifier = Modifier.underlined(),
                 )
             }

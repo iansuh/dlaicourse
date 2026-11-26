@@ -48,17 +48,11 @@
     <string name="record_loss">P</string>
     <string name="record_draw">E</string>
     <string name="record_rate">Victorias</string>
-    <string name="recent_form">Últimas 10</string>
     <string name="first_game_waiting">Esperando tu primera partida</string>
-    <string name="other_modes">Más formas de jugar</string>
     <string name="cpu_title">Contra la computadora</string>
-    <string name="cpu_sub">Sin conexión · Fácil · Normal · Difícil</string>
     <string name="room_title">Crear sala</string>
-    <string name="room_sub">1 vs 1 o por equipos con amigos, hasta 5 vs 5</string>
     <string name="join_title">Unirse con código</string>
-    <string name="join_sub">El código de 5 caracteres de un amigo</string>
     <string name="quick_title">Partida rápida</string>
-    <string name="quick_sub">Juega ya contra alguien de tu nivel · turnos de 60 s</string>
     <string name="quick_start">Iniciar partida rápida</string>
     <string name="offline_band">Sin conexión · solo contra la computadora</string>
     <string name="needs_internet">Se necesita conexión a internet</string>
@@ -113,7 +107,6 @@
     <string name="opp_ready">Número elegido</string>
     <string name="opp_disconnected">Desconectado · %1$s</string>
     <string name="my_secret">Mi número</string>
-    <string name="col_guess">Mi intento</string>
     <string name="col_hint">Pista</string>
     <string name="col_opp">Rival</string>
     <string name="opp_log_title">Registro rival</string>
@@ -132,8 +125,6 @@
     <string name="memo">Notas</string>
     <string name="memo_help">Toca: descartar → confirmar → borrar</string>
     <string name="memo_clear">Borrar</string>
-    <string name="memo_collapse">Ocultar notas</string>
-    <string name="memo_expand">Mostrar notas</string>
     <string name="pitch">Lanzar</string>
     <string name="waiting_opp">Esperando al rival</string>
     <string name="waiting_ready">Esperando al rival</string>
@@ -235,7 +226,6 @@
     <string name="res_disconnect_opp">Tu rival no volvió</string>
     <string name="res_cancelled">La partida por equipos ya se decidió</string>
     <string name="opp_secret">Su número</string>
-    <string name="line_score">Strikes por ronda</string>
     <string name="best">Mejor</string>
     <string name="me_short">Yo</string>
     <string name="cpu_short">Compu</string>
@@ -429,8 +419,6 @@
     <string name="lock_in_short">Fijar</string>
     <string name="menu_random_fill">Rellenar al azar</string>
     <string name="nick_error_long">Hasta 12 caracteres</string>
-    <string name="line_score_all">Mostrar todas las rondas</string>
-    <string name="line_score_recent">Mostrar rondas recientes</string>
     <string name="practice_short">Practicar</string>
     <string name="msg_player_card">Ver jugador</string>
     <string name="profile_by_digits">Por cifras</string>
@@ -480,4 +468,20 @@
     <string name="card_context_online">Historial en línea</string>
     <string name="best_none_a11y">sin mejor jugada aún</string>
     <string name="best_hint_a11y">mejor: %1$d strikes, %2$d bolas</string>
+    <string name="memo_open">Abrir notas</string>
+    <string name="log_row_opp_spoken">Pista del rival: %1$d strikes, %2$d bolas.</string>
+    <string name="home_first_time">¿Eres nuevo? Cómo se juega</string>
+    <string name="home_other_modes">Otras formas de jugar</string>
+    <string name="tile_cpu">Contra la computadora</string>
+    <string name="tile_room">Crear sala</string>
+    <string name="tile_join">Unirse con código</string>
+    <string name="quick_meta">60 s · rival parecido</string>
+    <string name="result_taken">Rondas</string>
+    <string name="result_time">Tiempo</string>
+    <string name="result_level">Nivel</string>
+    <string name="result_wins_value">%1$d V</string>
+    <string name="innings_link">Ronda por ronda</string>
+    <string name="innings_title">Ronda por ronda</string>
+    <string name="result_summary_a11y">%1$s %2$s, %3$s %4$s, %5$s %6$s</string>
+    <string name="result_rounds_value">%1$d</string>
 </resources>

@@ -176,13 +176,13 @@ object QaScreens {
             TutorialScreen(onFinish = {}, initial = Tutorial.pitch(Tutorial.next(Tutorial.next(explain)).copy(input = Tutorial.SECRET)))
         },
         QaScreen("how-to-play", keys = listOf(Key.Desc(R.string.action_back))) { HowToPlayScreen(onBack = {}) },
-        QaScreen("home", tight = true, keys = listOf(Key.Tag("quickMatch"), Key.Txt(R.string.cpu_title), Key.Txt(R.string.create_title), Key.Txt(R.string.join_title), Key.Desc(R.string.home_settings), Key.Desc(R.string.home_help))) {
+        QaScreen("home", tight = true, keys = listOf(Key.Tag("quickMatch"), Key.Txt(R.string.tile_cpu), Key.Txt(R.string.tile_room), Key.Txt(R.string.tile_join), Key.Desc(R.string.home_settings), Key.Desc(R.string.home_help))) {
             HomeScreen(home, {}, {}, {}, {}, {}, {}, {}, {}, {})
         },
-        QaScreen("home-offline", tight = true, keys = listOf(Key.Txt(R.string.cpu_title), Key.Desc(R.string.home_settings))) {
+        QaScreen("home-offline", tight = true, keys = listOf(Key.Txt(R.string.tile_cpu), Key.Desc(R.string.home_settings))) {
             HomeScreen(home.copy(online = false), {}, {}, {}, {}, {}, {}, {}, {}, {})
         },
-        QaScreen("home-new", keys = listOf(Key.Tag("quickMatch"), Key.Txt(R.string.cpu_title))) {
+        QaScreen("home-new", keys = listOf(Key.Tag("quickMatch"), Key.Txt(R.string.tile_cpu))) {
             HomeScreen(home.copy(stats = Stats(0, 0, 0), recentForm = ""), {}, {}, {}, {}, {}, {}, {}, {}, {})
         },
         QaScreen("cpu-setup", keys = listOf(Key.Tag("cpuStart"), Key.Desc(R.string.action_close))) {
@@ -302,6 +302,8 @@ fun ComposeContentTestRule.setScreen(screen: QaScreen, small: Boolean = false) {
 // Measuring
 
 /** Resource templates of the active locale, to name the string key behind a rendered text. */
+private val PLACEHOLDER_ONLY = Regex("""^\s*%(?:\d+\$)?[sd]\s*$""")
+
 class Templates(res: Resources) {
     private val entries: List<Pair<String, Regex>>
 
@@ -313,7 +315,8 @@ class Templates(res: Resources) {
         }
         for (f in R.string::class.java.fields) {
             val id = f.getInt(null)
-            runCatching { res.getString(id) }.getOrNull()?.takeIf { it.isNotBlank() }?.let { list += f.name to regexOf(it) }
+            // A template that is only a placeholder ("%1$d") has no literal text to identify a string by.
+            runCatching { res.getString(id) }.getOrNull()?.takeIf { it.isNotBlank() && !it.matches(PLACEHOLDER_ONLY) }?.let { list += f.name to regexOf(it) }
         }
         for (f in R.plurals::class.java.fields) {
             val id = f.getInt(null)

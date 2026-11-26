@@ -48,17 +48,11 @@
     <string name="record_loss">敗</string>
     <string name="record_draw">分</string>
     <string name="record_rate">勝率</string>
-    <string name="recent_form">直近10戦</string>
     <string name="first_game_waiting">最初の対戦を待っています</string>
-    <string name="other_modes">ほかの遊び方</string>
     <string name="cpu_title">コンピューターと対戦</string>
-    <string name="cpu_sub">オフライン・かんたん・ふつう・むずかしい</string>
     <string name="room_title">ルームを作る</string>
-    <string name="room_sub">1対1、または友だちとチーム戦（最大5対5）</string>
     <string name="join_title">コードで参加</string>
-    <string name="join_sub">友だちから届く5文字のコード</string>
     <string name="quick_title">クイックマッチ</string>
-    <string name="quick_sub">近い実力の相手とすぐ対戦・1手60秒</string>
     <string name="quick_start">クイックマッチを開始</string>
     <string name="offline_band">オフライン・コンピューター対戦のみ</string>
     <string name="needs_internet">インターネット接続が必要です</string>
@@ -107,7 +101,6 @@
     <string name="opp_ready">数字を決めました</string>
     <string name="opp_disconnected">切断中・%1$s</string>
     <string name="my_secret">自分の数字</string>
-    <string name="col_guess">自分の予想</string>
     <string name="col_hint">ヒント</string>
     <string name="col_opp">相手</string>
     <string name="opp_log_title">相手の記録</string>
@@ -126,8 +119,6 @@
     <string name="memo">メモ</string>
     <string name="memo_help">タップで 除外 → 確定 → 解除</string>
     <string name="memo_clear">消去</string>
-    <string name="memo_collapse">メモを隠す</string>
-    <string name="memo_expand">メモを表示</string>
     <string name="pitch">投げる</string>
     <string name="waiting_opp">相手を待っています</string>
     <string name="waiting_ready">相手を待っています</string>
@@ -221,7 +212,6 @@
     <string name="res_disconnect_opp">相手が戻りませんでした</string>
     <string name="res_cancelled">チーム戦の勝敗が先に決まりました</string>
     <string name="opp_secret">相手の数字</string>
-    <string name="line_score">ラウンドごとのストライク</string>
     <string name="best">最高</string>
     <string name="me_short">自分</string>
     <string name="cpu_short">コンピューター</string>
@@ -413,8 +403,6 @@
     <string name="lock_in_short">決定</string>
     <string name="menu_random_fill">ランダムで埋める</string>
     <string name="nick_error_long">12文字までです</string>
-    <string name="line_score_all">すべてのラウンドを表示</string>
-    <string name="line_score_recent">最近のラウンドを表示</string>
     <string name="practice_short">練習</string>
     <string name="msg_player_card">プレイヤーを見る</string>
     <string name="profile_by_digits">桁数別</string>
@@ -464,4 +452,20 @@
     <string name="card_context_online">オンライン戦績</string>
     <string name="best_none_a11y">最高記録なし</string>
     <string name="best_hint_a11y">最高 %1$dストライク %2$dボール</string>
+    <string name="memo_open">メモを開く</string>
+    <string name="log_row_opp_spoken">相手の判定 %1$dストライク %2$dボール。</string>
+    <string name="home_first_time">はじめての方へ：遊び方</string>
+    <string name="home_other_modes">ほかの遊び方</string>
+    <string name="tile_cpu">コンピューター</string>
+    <string name="tile_room">ルーム作成</string>
+    <string name="tile_join">コードで参加</string>
+    <string name="quick_meta">60秒 · 近い実力の相手</string>
+    <string name="result_taken">かかった回</string>
+    <string name="result_time">時間</string>
+    <string name="result_level">難易度</string>
+    <string name="result_wins_value">%1$d勝</string>
+    <string name="innings_link">回ごとの記録を見る</string>
+    <string name="innings_title">回ごとの記録</string>
+    <string name="result_summary_a11y">%1$s %2$s、%3$s %4$s、%5$s %6$s</string>
+    <string name="result_rounds_value">%1$d回</string>
 </resources>

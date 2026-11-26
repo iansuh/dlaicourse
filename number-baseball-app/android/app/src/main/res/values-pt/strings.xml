@@ -48,17 +48,11 @@
     <string name="record_loss">D</string>
     <string name="record_draw">E</string>
     <string name="record_rate">Vitórias</string>
-    <string name="recent_form">Últimas 10</string>
     <string name="first_game_waiting">Esperando sua primeira partida</string>
-    <string name="other_modes">Mais formas de jogar</string>
     <string name="cpu_title">Contra o computador</string>
-    <string name="cpu_sub">Offline · Fácil · Normal · Difícil</string>
     <string name="room_title">Criar sala</string>
-    <string name="room_sub">1x1 ou em times com amigos, até 5x5</string>
     <string name="join_title">Entrar com código</string>
-    <string name="join_sub">O código de 5 caracteres de um amigo</string>
     <string name="quick_title">Partida rápida</string>
-    <string name="quick_sub">Jogue já contra alguém do seu nível · turnos de 60 s</string>
     <string name="quick_start">Iniciar partida rápida</string>
     <string name="offline_band">Offline · só contra o computador</string>
     <string name="needs_internet">É preciso conexão com a internet</string>
@@ -113,7 +107,6 @@
     <string name="opp_ready">Número escolhido</string>
     <string name="opp_disconnected">Desconectado · %1$s</string>
     <string name="my_secret">Meu número</string>
-    <string name="col_guess">Meu palpite</string>
     <string name="col_hint">Dica</string>
     <string name="col_opp">Adv.</string>
     <string name="opp_log_title">Registro do rival</string>
@@ -132,8 +125,6 @@
     <string name="memo">Anotações</string>
     <string name="memo_help">Toque: descartar → confirmar → limpar</string>
     <string name="memo_clear">Limpar</string>
-    <string name="memo_collapse">Ocultar anotações</string>
-    <string name="memo_expand">Mostrar anotações</string>
     <string name="pitch">Lançar</string>
     <string name="waiting_opp">Aguardando o adversário</string>
     <string name="waiting_ready">Aguardando o adversário</string>
@@ -235,7 +226,6 @@
     <string name="res_disconnect_opp">Seu adversário não voltou</string>
     <string name="res_cancelled">A partida em times já foi decidida</string>
     <string name="opp_secret">Número dele</string>
-    <string name="line_score">Strikes por rodada</string>
     <string name="best">Melhor</string>
     <string name="me_short">Eu</string>
     <string name="cpu_short">Computador</string>
@@ -429,8 +419,6 @@
     <string name="lock_in_short">Fixar</string>
     <string name="menu_random_fill">Preencher ao acaso</string>
     <string name="nick_error_long">No máximo 12 caracteres</string>
-    <string name="line_score_all">Mostrar todas as rodadas</string>
-    <string name="line_score_recent">Mostrar rodadas recentes</string>
     <string name="practice_short">Treinar</string>
     <string name="msg_player_card">Ver jogador</string>
     <string name="profile_by_digits">Por dígitos</string>
@@ -480,4 +468,20 @@
     <string name="card_context_online">Histórico online</string>
     <string name="best_none_a11y">ainda sem melhor</string>
     <string name="best_hint_a11y">melhor: %1$d strikes, %2$d bolas</string>
+    <string name="memo_open">Abrir anotações</string>
+    <string name="log_row_opp_spoken">Dica do adversário: %1$d strikes, %2$d bolas.</string>
+    <string name="home_first_time">Primeira vez? Como jogar</string>
+    <string name="home_other_modes">Outras formas de jogar</string>
+    <string name="tile_cpu">Contra o computador</string>
+    <string name="tile_room">Criar sala</string>
+    <string name="tile_join">Entrar com código</string>
+    <string name="quick_meta">60 s · adversário parecido</string>
+    <string name="result_taken">Rodadas</string>
+    <string name="result_time">Tempo</string>
+    <string name="result_level">Nível</string>
+    <string name="result_wins_value">%1$d V</string>
+    <string name="innings_link">Rodada a rodada</string>
+    <string name="innings_title">Rodada a rodada</string>
+    <string name="result_summary_a11y">%1$s %2$s, %3$s %4$s, %5$s %6$s</string>
+    <string name="result_rounds_value">%1$d</string>
 </resources>

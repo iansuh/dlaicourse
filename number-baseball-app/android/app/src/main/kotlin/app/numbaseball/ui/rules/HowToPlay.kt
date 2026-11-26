@@ -35,7 +35,7 @@ fun HowToPlayScreen(onBack: () -> Unit) {
             Text(
                 stringResource(R.string.how_goal),
                 style = NbType.title,
-                color = NbColors.chalk,
+                color = NbColors.ink,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).semantics { heading() },
             )
             VSpacer(8.dp)
@@ -44,7 +44,7 @@ fun HowToPlayScreen(onBack: () -> Unit) {
             STEPS.forEachIndexed { i, step ->
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                     Text((i + 1).toString(), style = NbType.numLabel, color = NbColors.text3, modifier = Modifier.width(28.dp).padding(top = 3.dp))
-                    Text(stringResource(step), style = NbType.reading, color = NbColors.chalk)
+                    Text(stringResource(step), style = NbType.reading, color = NbColors.ink)
                 }
             }
             VSpacer(24.dp)

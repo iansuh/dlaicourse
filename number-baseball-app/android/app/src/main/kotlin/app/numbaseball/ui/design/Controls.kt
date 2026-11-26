@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.ui.draw.clip
 import androidx.compose.material3.ripple
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,6 +50,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.setProgress
@@ -134,7 +134,8 @@ fun NbButton(
                     small -> 12.dp
                     else -> 24.dp
                 },
-                vertical = if (isLargeFont() && !textLike) 16.dp else 8.dp,
+                // Large text: buttons grow with 16 dp vertical padding (DESIGN_SYSTEM 11.3), unless their height is fixed.
+                vertical = if (isLargeFont() && !textLike && !small && heightOverride == null) 16.dp else 8.dp,
             ),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -157,6 +158,33 @@ fun NbButton(
 }
 
 /**
+ * Equal tiles in a row: each child gets (width − gaps) ÷ n, all take the tallest child's height (at least [minHeight]).
+ * Used instead of `IntrinsicSize.Min`, whose intrinsic pass under-measures auto-sizing text (two-line labels at 200 %).
+ */
+@Composable
+fun EqualTilesRow(gap: Dp, minHeight: Dp, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    androidx.compose.ui.layout.SubcomposeLayout(modifier.fillMaxWidth()) { constraints ->
+        val gapPx = gap.roundToPx()
+        val minH = minHeight.roundToPx()
+        var w = 0
+        // Probe pass (no semantics, never placed): the tallest tile at the shared width.
+        val probe = subcompose("probe") {
+            androidx.compose.ui.layout.Layout(content, Modifier.clearAndSetSemantics {}) { ms, _ ->
+                val n = ms.size.coerceAtLeast(1)
+                w = ((constraints.maxWidth - gapPx * (n - 1)) / n).coerceAtLeast(0)
+                val h = ms.maxOfOrNull { it.measure(androidx.compose.ui.unit.Constraints(minWidth = w, maxWidth = w, minHeight = minH)).height } ?: minH
+                layout(w, h) {}
+            }
+        }.first().measure(androidx.compose.ui.unit.Constraints())
+        val h = probe.height
+        val placeables = subcompose("tiles", content).map { it.measure(androidx.compose.ui.unit.Constraints.fixed(w, h)) }
+        layout(constraints.maxWidth, h) {
+            placeables.forEachIndexed { i, p -> p.place(i * (w + gapPx), 0) }
+        }
+    }
+}
+
+/**
  * Segmented control = tiles (DESIGN_SYSTEM 12.13): no track, equal `surface2` tiles, 8 dp gap, 48 dp min ([tileHeight]
  * 52 on Home), radius 12; selected tile `ink`.
  */
@@ -170,17 +198,11 @@ fun <T> Segmented(
     tileHeight: Dp = NbSize.segmented,
     label: @Composable (item: T, selected: Boolean) -> Unit,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth().height(IntrinsicSize.Min),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    EqualTilesRow(8.dp, tileHeight, modifier) {
         items.forEach { item ->
             val isSelected = item == selected
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .heightIn(min = tileHeight)
                     .clip(RoundedCornerShape(NbRadius.m))
                     .background(if (isSelected) NbColors.ink else NbColors.surface2)
                     .clickable(enabled = enabled, role = Role.RadioButton) { onSelect(item) },
@@ -193,12 +215,20 @@ fun <T> Segmented(
 /** Segment label: number `numSummary` `ink` + unit `labelSmall` `text2` ("4자리"); selected: both `onInk`. */
 @Composable
 fun NumberUnitLabel(number: String, unit: String?, selected: Boolean) {
+    if (isLargeFont() && unit != null) {
+        // Large text: the unit goes under the number so neither is cut in a narrow tile (ADAPTIVE §2.5).
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 2.dp, vertical = 4.dp)) {
+            Text(number, style = NbType.numSummary, color = if (selected) NbColors.onInk else NbColors.ink, maxLines = 1, softWrap = false)
+            Text(unit, style = NbType.labelSmall, color = if (selected) NbColors.onInk else NbColors.text2, maxLines = 1, softWrap = false, fitMinScale = 0.5f)
+        }
+        return
+    }
     // Number and unit share a baseline (prototype `.seg button`: align-items baseline, gap 2).
     Row(Modifier.padding(horizontal = 2.dp)) {
         Text(number, style = NbType.numSummary, color = if (selected) NbColors.onInk else NbColors.ink, maxLines = 1, softWrap = false, modifier = Modifier.alignByBaseline())
         if (unit != null) {
             HSpacer(2.dp)
-            Text(unit, style = NbType.labelSmall, color = if (selected) NbColors.onInk else NbColors.text2, maxLines = 1, softWrap = false, fitMinScale = 0.5f, modifier = Modifier.alignByBaseline())
+            Text(unit, style = NbType.labelSmall, color = if (selected) NbColors.onInk else NbColors.text2, maxLines = 1, softWrap = false, fitMinScale = 0.5f, modifier = Modifier.weight(1f, fill = false).alignByBaseline())
         }
     }
 }

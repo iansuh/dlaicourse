@@ -49,8 +49,10 @@ import app.numbaseball.data.settings.SettingsRepository
 import app.numbaseball.ui.design.ButtonKind
 import app.numbaseball.ui.design.exactLineHeight
 import app.numbaseball.ui.design.ChaseLamps
-import app.numbaseball.ui.design.Lamp
-import app.numbaseball.ui.design.LampColor
+import app.numbaseball.ui.design.Avatar
+import app.numbaseball.ui.design.Dot
+import app.numbaseball.ui.theme.NbSize
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import app.numbaseball.ui.design.NameWithTag
 import app.numbaseball.ui.design.NbButton
 import app.numbaseball.ui.design.NbScreen
@@ -211,14 +213,14 @@ private fun Searching(digits: Int, elapsed: Int, slow: Boolean, compact: Boolean
                 // DESIGN_SYSTEM 12.4 width rule: 56 dp, shrinking to 44 dp so six plates fit.
                 val width = minOf(56.dp, (maxWidth - 8.dp * (digits - 1)) / digits).coerceAtLeast(44.dp)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    repeat(digits) { QuestionPlate(lit = it == sweep, width = width, height = 64.dp) }
+                    repeat(digits) { QuestionPlate(lit = it == sweep, width = width, height = 64.dp, color = NbColors.textDisabled) }
                 }
             }
             VSpacer(20.dp)
         }
-        ChaseLamps()
+        ChaseLamps(NbSize.dot)
         VSpacer(20.dp)
-        Text(stringResource(R.string.search_title), style = NbType.title, color = NbColors.chalk, textAlign = TextAlign.Center)
+        Text(stringResource(R.string.search_title), style = NbType.title, color = NbColors.ink, textAlign = TextAlign.Center)
         VSpacer(20.dp)
         Text(formatClock(elapsed), style = NbType.numTimer, color = NbColors.text2)
         VSpacer(20.dp)
@@ -235,13 +237,16 @@ private fun Searching(digits: Int, elapsed: Int, slow: Boolean, compact: Boolean
 @Composable
 private fun Found(opponent: FoundOpponent) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }) {
-        Text("VS", style = NbType.numLabel.copy(letterSpacing = 0.12.sp * 14), color = NbColors.text3)
+        // Found (04 v2): avatar 48 · `VS` · name + tag (`headline`) · three lit `accent` dots · title · sub.
+        Avatar(opponent.nickname, NbSize.avatarL)
+        VSpacer(12.dp)
+        Text("VS", style = NbType.numLabel.copy(letterSpacing = 0.12.sp * 13), color = NbColors.text3)
         VSpacer(6.dp)
         NameWithTag(opponent.nickname, opponent.tag, nameStyle = NbType.headline, tagStyle = NbType.numTag.copy(fontSize = 22.sp, lineHeight = 34.sp))
         VSpacer(20.dp)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { repeat(3) { Lamp(LampColor.CHALK, lit = true, size = 12.dp, glow = false) } }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.clearAndSetSemantics {}) { repeat(3) { Dot(NbColors.accent, NbSize.dot) } }
         VSpacer(20.dp)
-        Text(stringResource(R.string.found_title), style = NbType.title, color = NbColors.chalk, textAlign = TextAlign.Center)
+        Text(stringResource(R.string.found_title), style = NbType.title, color = NbColors.ink, textAlign = TextAlign.Center)
         VSpacer(20.dp)
         Text(stringResource(R.string.found_sub), style = NbType.caption, color = NbColors.text3, textAlign = TextAlign.Center)
     }

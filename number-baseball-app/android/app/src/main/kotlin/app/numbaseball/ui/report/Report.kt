@@ -177,7 +177,7 @@ fun ColumnScope.PlayerCard(
                 if (context != null) Text(context, style = NbType.caption, color = NbColors.text3)
             }
         }
-        // `.card-rec`: 20 dp gaps, 0 / 16 / 16; values Barlow 600 24 / 28 over `caption` labels (46 dp); the message
+        // `.card-rec`: 20 dp gaps, 0 / 16 / 16; values Inter 700 24 / 28 over `caption` labels (46 dp); the message
         // states use one 48 dp line, so the sheet moves by at most 2 dp between states.
         when (shown) {
             is CardRecord.Loaded, CardRecord.Loading -> {
@@ -225,7 +225,7 @@ fun ColumnScope.PlayerCard(
 @Composable
 private fun RecordValue(value: Int?, label: String) {
     Column {
-        Text(value?.toString() ?: "–", style = NbType.numStat.copy(fontSize = 24.sp, lineHeight = 28.sp), color = if (value == null) NbColors.textDisabled else NbColors.chalk)
+        Text(value?.toString() ?: "–", style = NbType.numStat.copy(fontSize = 24.sp, lineHeight = 28.sp), color = if (value == null) NbColors.textDisabled else NbColors.ink)
         Text(label, style = NbType.caption, color = NbColors.text3)
     }
 }
@@ -240,10 +240,10 @@ fun ReportSheet(state: ReportUiState, onChoice: (ReportChoice) -> Unit, onNoteCh
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         // Prototype `.sh-title` 4 / 16 / 4, `.sh-sub` 0 / 16 / 8.
         Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp)) {
-            Text(stringResource(R.string.report_title, state.target.displayName), style = NbType.title, color = NbColors.chalk, modifier = Modifier.semantics { heading() })
+            Text(stringResource(R.string.report_title, state.target.displayName), style = NbType.title, color = NbColors.ink, modifier = Modifier.semantics { heading() })
             state.target.messageText?.let {
                 VSpacer(4.dp)
-                Text(it, style = NbType.bodyStrong, color = NbColors.chalk, maxLines = 2)
+                Text(it, style = NbType.bodyStrong, color = NbColors.ink, maxLines = 2)
             }
             VSpacer(4.dp)
             Text(stringResource(R.string.report_pick), style = NbType.caption, color = NbColors.text3)
@@ -262,7 +262,7 @@ fun ReportSheet(state: ReportUiState, onChoice: (ReportChoice) -> Unit, onNoteCh
                 placeholder = stringResource(R.string.report_note),
                 height = 48.dp,
                 horizontalPadding = 12.dp,
-                textStyle = NbType.body.copy(color = NbColors.chalk),
+                textStyle = NbType.body.copy(color = NbColors.ink),
                 modifier = Modifier.fillMaxWidth(),
             )
             VSpacer(12.dp)
@@ -277,7 +277,7 @@ fun ReportSheet(state: ReportUiState, onChoice: (ReportChoice) -> Unit, onNoteCh
                 Text(
                     stringResource(if ((it as? UiError.Code)?.code == ErrorCodes.RATE_LIMITED) R.string.report_limit else it.message()),
                     style = NbType.caption,
-                    color = NbColors.out,
+                    color = NbColors.danger,
                 )
             }
             VSpacer(16.dp)
@@ -298,11 +298,11 @@ fun ReportSheet(state: ReportUiState, onChoice: (ReportChoice) -> Unit, onNoteCh
 private fun ReportDone(state: ReportUiState, onBlockToo: () -> Unit, onClose: () -> Unit) {
     // Prototype `.done`: 12 / 24 / 4 padding, 8 dp gaps; `.sh-actions` 16 dp padding, 8 dp gap.
     Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.size(48.dp).background(NbColors.surface4, CircleShape), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(48.dp).background(NbColors.surface2, CircleShape), contentAlignment = Alignment.Center) {
             NbIcon(R.drawable.ic_check, null, NbColors.ball)
         }
         VSpacer(8.dp)
-        Text(stringResource(R.string.report_done_title), style = NbType.title, color = NbColors.chalk, modifier = Modifier.semantics { heading() })
+        Text(stringResource(R.string.report_done_title), style = NbType.title, color = NbColors.ink, modifier = Modifier.semantics { heading() })
         VSpacer(8.dp)
         Text(stringResource(R.string.report_done_body), style = NbType.body, color = NbColors.text2, textAlign = TextAlign.Center)
         if (state.choice == ReportChoice.CHILD_SAFETY) {
