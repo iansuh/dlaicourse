@@ -175,7 +175,22 @@ val checkReleaseConfig by tasks.registering {
     val missing = missingReleaseValues
     val placeholdersAllowed = placeholderRelease
     val signed = releaseSigningConfigured
+    val legalDocs = listOf(file("../../docs/play/TERMS_OF_USE.md"), file("../../docs/play/PRIVACY_POLICY.md"))
     doLast {
+        // The in-app legal texts are generated from the public sections of these docs: refuse to ship "[...]" blanks.
+        val placeholder = Regex("""\[[^\]\n]+\](?!\()""")
+        val blanks = legalDocs.flatMap { doc ->
+            val lines = doc.readLines()
+            listOf("English", "한국어").flatMap { marker ->
+                val start = lines.indexOfFirst { it.startsWith("## ") && marker in it }
+                if (start < 0) emptyList() else lines.drop(start + 1)
+                    .takeWhile { it.trim() != "---" && !it.startsWith("## ") }
+                    .flatMap { line -> placeholder.findAll(line).map { "${doc.name}: ${it.value}" }.toList() }
+            }
+        }.distinct()
+        if (blanks.isNotEmpty() && !placeholdersAllowed) {
+            throw GradleException("Legal texts still contain placeholders: ${blanks.joinToString()}. Fill them in docs/play/ first.")
+        }
         if (missing.isNotEmpty() && !placeholdersAllowed) {
             throw GradleException(
                 "Release build needs ${missing.joinToString()}. Set them as Gradle properties or environment " +
