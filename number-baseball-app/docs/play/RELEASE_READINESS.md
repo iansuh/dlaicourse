@@ -82,7 +82,7 @@ From `docs/qa/TEST_PLAN.md` 14.1 ("Remaining manual") and the DEFECTS notes. Use
 
 1. ✅ **게임 전용 이메일 만들기** — 완료: `numbaseball.help@gmail.com` (문서에 반영됨, 빌드 값 `NB_CONTACT_EMAIL`은 출시 빌드 때 넣음) (Gmail, 2단계 인증). `RELEASE_GUIDE.md` 1장.
    - 넣을 곳: 빌드 값 `NB_CONTACT_EMAIL` (설정 화면의 문의 주소), `docs/play/PRIVACY_POLICY.md` / `TERMS_OF_USE.md` / `DELETE_ACCOUNT_PAGE.md`의 `[연락처 이메일]` (한국어·영어 본문 모두), `RELEASE_GUIDE.md` 6장의 `[연락처 이메일]`, Play Console 개발자 이메일, AdMob.
-2. **게임 전용 전화번호, 운영자 정보 정하기** (본인 명의). 한국 개인 계정과 트레이더는 이 번호가 스토어에 공개됩니다.
+2. ◐ **게임 전용 전화번호, 운영자 정보 정하기** — 성명 서상현 / Sanghyun Suh, 개발자 표시명 Number Baseball 반영. 주소(집 또는 비상주 사무실 결정 중)와 070 번호 남음. (본인 명의). 한국 개인 계정과 트레이더는 이 번호가 스토어에 공개됩니다.
    - 넣을 곳: `docs/play/PRIVACY_POLICY.md`와 `TERMS_OF_USE.md`의 `[운영자 성명]`, `[운영자 주소]`, `[게임 전용 전화번호]`, `[개발자 표시명]`, `[시행일]` (본문 두 언어 모두). Play Console 결제 프로필과 같은 값이어야 합니다.
 3. **도메인 사기 + 서버 주소 정하기** (연 1~2만 원, WHOIS 비공개). 서버는 4번에서 만든 Render 주소에 연결합니다.
    - 넣을 곳: 빌드 값 `NB_SERVER_URL` (예: `https://도메인`), 문서의 `[도메인]` (개인정보처리방침 4곳, `RELEASE_GUIDE.md`, 약관), Play Console 개인정보처리방침 URL `https://도메인/privacy`, 계정 삭제 URL `https://도메인/delete-account`, 스토어 웹사이트 칸, AdMob 개인정보 메시지 URL.
@@ -100,7 +100,7 @@ From `docs/qa/TEST_PLAN.md` 14.1 ("Remaining manual") and the DEFECTS notes. Use
    - 상품: 제품 ID **`remove_ads`** (정확히, 코드 상수 `REMOVE_ADS_PRODUCT_ID`), 1회 구매(소모성 아님), 4.99달러, **활성**. 이름·설명은 10-2의 표를 붙여 넣습니다. 앱을 내부 테스트에 한 번 올린 뒤에 만들 수 있는 경우가 많습니다.
    - 넣을 곳: 프로젝트에는 넣을 값이 없습니다(ID가 코드에 고정). 상품이 활성이어야 앱이 가격을 가져옵니다.
 8. **라이선스 테스터 등록과 테스트 구매** (`RELEASE_GUIDE.md` 10-3): Play Console 설정 → 라이선스 테스트에 테스트용 Gmail 추가, 같은 계정을 내부 테스트 테스터에도 넣고 **Play 스토어로 설치**해서 구매·복원·환불을 확인합니다 (위 4장 7번).
-9. **앱 이름 확인**: Play 스토어에서 같은 이름 검색, **KIPRIS**(kipris.or.kr)에서 "숫자야구 조용한 한판" 상표 검색. 이름을 바꾸면 `app_name` 문자열과 `STORE_LISTING.md`의 `[앱 이름]` 한 곳씩만 고치면 됩니다.
+9. ✅ **앱 이름 확인** — 2026-11-26 사장님 확인: KIPRIS에 '숫자야구'·'조용한 한판' 상표 없음, Play 스토어에 '조용한 한판' 없음('숫자야구' 이름의 게임은 여러 개). 웹 검색에서도 같은 이름 없음.: Play 스토어에서 같은 이름 검색, **KIPRIS**(kipris.or.kr)에서 "숫자야구 조용한 한판" 상표 검색. 이름을 바꾸면 `app_name` 문자열과 `STORE_LISTING.md`의 `[앱 이름]` 한 곳씩만 고치면 됩니다.
 10. **업로드 키 만들기** (`RELEASE_GUIDE.md` 4장, `keytool`, 저장소 밖에 보관, 백업 2곳, 비밀번호 관리자). Play 앱 서명을 사용합니다.
     - 넣을 곳: 빌드 값 `NB_RELEASE_STORE_FILE` (파일 경로), `NB_RELEASE_STORE_PASSWORD`, `NB_RELEASE_KEY_ALIAS` (`upload`), `NB_RELEASE_KEY_PASSWORD`. 이 네 값과 2·3·5번의 `NB_*` 값이 모두 있어야 서명된 AAB가 만들어집니다. 지금 GitHub Actions에는 서명 단계가 없으므로, 처음에는 Android 담당이 자기 컴퓨터에서 빌드합니다.
 11. **스토어 등록정보와 그래픽** 올리기 (`STORE_LISTING.md` 10개 언어, `design/store/` 아이콘·그래픽, 스크린샷 6장은 광고와 실제 닉네임이 없는 것으로).
