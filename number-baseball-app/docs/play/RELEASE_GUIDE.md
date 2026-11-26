@@ -58,7 +58,7 @@
 4. **결제 프로필**: 실명과 주소를 넣습니다. **이 주소가 트레이더 주소로 스토어에 공개됩니다.** 신분증과 맞는 실제 법적 주소여야 하며, 남의 주소나 가짜 주소를 쓰면 안 됩니다.
 5. **연락처 이메일·연락처 전화번호**: Google이 운영자에게 연락할 때만 쓰는 정보로 공개되지 않습니다.
 6. **개발자 이메일(공개)**: 게임 전용 이메일. **개발자 전화번호(공개)**: 게임 전용 번호. 모두 인증번호로 확인합니다.
-7. **트레이더 여부 신고**: **"트레이더(trader)"** 를 고릅니다. 광고 수익이 있는 앱은 Google 기준 트레이더입니다. 화면 안내에 따라 공개 전화번호 등을 확인합니다. 이용약관 링크를 물으면 `https://[도메인]/terms` 를 넣습니다.
+7. **트레이더 여부 신고**: **"트레이더(trader)"** 를 고릅니다. 광고 수익이 있는 앱은 Google 기준 트레이더입니다. 화면 안내에 따라 공개 전화번호 등을 확인합니다. 이용약관 링크를 물으면 `https://quietdual.com/terms` 를 넣습니다.
 8. 공개될 정보를 보여 주는 화면이 나오면 이름·주소·전화·이메일이 맞는지 확인합니다.
 9. 등록비 25달러를 결제합니다.
 10. **신원 확인**: 신분증 사진을 올립니다. 며칠 걸릴 수 있습니다.
@@ -76,7 +76,7 @@
 | 이메일 | 공개 | 게임 전용 이메일 |
 | 국가 | 공개 | 대한민국 |
 | 연락처 이메일·전화 | 비공개 (Google만 사용) | 개인 것도 가능 |
-| 앱 지원 이메일·웹사이트 | 공개 | 게임 전용 이메일, `https://[도메인]` |
+| 앱 지원 이메일·웹사이트 | 공개 | 게임 전용 이메일, `https://quietdual.com` |
 
 - 트레이더 정보는 늦어도 **2027년 3월 1일**부터 표시됩니다(일부 자료는 전 세계 이용자에게 보인다고 설명).
 - 나중에 집 주소를 내리고 싶어지면 "트레이더 아님"으로 바꾸는 것은 안 됩니다(광고가 있으면 사실과 다름). 그때는 개인사업자 등록 후 **조직 계정**으로 옮겨 사업장 주소를 쓰는 방법뿐입니다(`POLICY_REVIEW.md` R1 D안).
@@ -148,7 +148,7 @@ keytool -export -rfc -keystore upload-keystore.jks -alias upload -file upload_ce
 | `NB_RELEASE_STORE_PASSWORD` | 키 저장소 비밀번호 |
 | `NB_RELEASE_KEY_ALIAS` | `upload` |
 | `NB_RELEASE_KEY_PASSWORD` | 키 비밀번호 (보통 같은 값) |
-| `NB_SERVER_URL`, `NB_CONTACT_EMAIL` | 서버 주소(`https://[도메인]`), 게임 전용 이메일 |
+| `NB_SERVER_URL`, `NB_CONTACT_EMAIL` | 서버 주소(`https://quietdual.com`), 게임 전용 이메일 |
 | `NB_ADMOB_APP_ID`, `NB_ADMOB_BANNER_ID`, `NB_ADMOB_INTERSTITIAL_ID` | AdMob 실제 ID (9장) |
 | `NB_MAX_AD_CONTENT_RATING` | 광고 등급 상한(기본 `G`), 콘텐츠 등급 결과에 맞춤 |
 
@@ -178,13 +178,13 @@ Play Console → 해당 앱 → **앱 무결성(App integrity) → Play 앱 서�
 - 앱 이름, 간단한 설명, 자세한 설명: `STORE_LISTING.md`의 en-US를 붙여 넣고, **번역 추가**로 나머지 9개 언어(ko-KR, ja-JP, zh-CN, es-419, fr-FR, de-DE, pt-BR, ru-RU, vi)를 넣습니다.
 - 그래픽: 아이콘 512×512 PNG, 그래픽 이미지 1024×500, 휴대폰 스크린샷 6장(디자인 담당이 준비). 광고가 보이는 화면이나 실제 플레이어 닉네임은 넣지 않습니다.
 - 앱 카테고리: 게임 → **보드** 또는 **퍼즐**(둘 중 하나, 추천: 퍼즐). 태그는 관련 있는 것만.
-- **스토어 설정 → 연락처 세부정보**: 이메일 = 게임 전용 이메일, 웹사이트 = `https://[도메인]`, 전화번호 = 비워 둠(선택 사항). **웹사이트 칸은 app-ads.txt 때문에 꼭 넣습니다.**
+- **스토어 설정 → 연락처 세부정보**: 이메일 = 게임 전용 이메일, 웹사이트 = `https://quietdual.com`, 전화번호 = 비워 둠(선택 사항). **웹사이트 칸은 app-ads.txt 때문에 꼭 넣습니다.**
 
 ### 5-2. 앱 콘텐츠 (정책 → 앱 콘텐츠)
 
 | 양식 | 답 |
 | --- | --- |
-| 개인정보처리방침 | `https://[도메인]/privacy` |
+| 개인정보처리방침 | `https://quietdual.com/privacy` |
 | 앱 액세스 | "일부 기능이 제한됨" → 6장의 영어 안내문 붙여 넣기 |
 | 광고 | **예, 광고가 포함되어 있습니다** (광고 제거 구매가 있어도 "예". 안 산 사람에게는 광고가 나오기 때문) |
 | 앱 내 구매 | 양식은 없습니다. 10장에서 `remove_ads` 상품을 **활성**으로 만들고 그 기능이 든 앱을 올리면 스토어에 **"앱 내 구매 제공"** 표시가 자동으로 붙습니다 |
@@ -212,7 +212,7 @@ Play Console → 해당 앱 → **앱 무결성(App integrity) → Play 앱 서�
 `POLICY_CHECKLIST.md` 5절 표를 그대로 옮깁니다. 요약:
 
 - 데이터를 수집하거나 공유하나요? **예**. 전송 중 암호화? **예**. 삭제 요청 방법 제공? **예**.
-- 계정 삭제 URL: `https://[도메인]/delete-account`
+- 계정 삭제 URL: `https://quietdual.com/delete-account`
 - 수집(공유 안 함): 이름(닉네임), 사용자 ID(계정 번호·태그·토큰), 기타 작업(전적·차단·신고), 기타 사용자 생성 콘텐츠(신고 메모), 기타 인앱 메시지(채팅·신고 스냅샷)
 - 수집(공유 안 함): **금융 정보 → 구매 내역**(광고 제거 구매 상태. 선택 항목, 목적: 앱 기능). 카드번호 같은 **결제 정보는 선택하지 않습니다**(Google Play가 처리하고 앱은 못 받음).
 - 수집 + 공유(광고 SDK): 대략적인 위치, 앱 상호작용, 진단, 기기 또는 기타 ID
@@ -235,7 +235,7 @@ No login or password is needed. On first launch, enter a birth year and month th
 - Online play without a second device: Home > Private room > Join, enter room code [REVIEW_ROOM_CODE]. A test bot joins, plays a 4-digit duel and sends a chat message.
 - Chat safety: long-press the bot's message to Report it or Block the player. Settings > Mute all chat hides all chat.
 - Quick Match pairs real players and allows preset quick phrases only; free-text chat is available in private rooms. Use two devices, or the room above.
-- Account deletion: Settings > Delete account (immediate). Without the app: email the contact address, as explained at https://[도메인]/delete-account
+- Account deletion: Settings > Delete account (immediate). Without the app: email the contact address, as explained at https://quietdual.com/delete-account
 - Ads: banners only on the home, results and profile screens; a full-screen ad can appear after a finished match, on the way to the results screen (at most one per 3 matches and 4 minutes apart). Never during a match, on app start or exit. In the review room (code above) no full-screen ad is shown.
 - In-app purchase: Settings > Remove ads (one-time purchase, removes all ads). No purchase is needed to use any feature of the game.
 - The game server runs 24/7. Contact: numbaseball.help@gmail.com
@@ -280,10 +280,10 @@ No login or password is needed. On first launch, enter a birth year and month th
 
 | 주소 | 확인할 것 |
 | --- | --- |
-| `https://[도메인]/privacy` | `PRIVACY_POLICY.md`의 공개 본문(한국어·영어). 대괄호가 남아 있지 않은지 |
-| `https://[도메인]/terms` | `TERMS_OF_USE.md`의 공개 본문. `#child-safety` 부분 |
-| `https://[도메인]/delete-account` | 글자만 있는 안내 페이지. 스토어와 같은 앱 이름·개발자 이름, 게임 전용 이메일이 보이는지 |
-| `https://[도메인]/app-ads.txt` | 9장의 한 줄이 그대로 보이는지 |
+| `https://quietdual.com/privacy` | `PRIVACY_POLICY.md`의 공개 본문(한국어·영어). 대괄호가 남아 있지 않은지 |
+| `https://quietdual.com/terms` | `TERMS_OF_USE.md`의 공개 본문. `#child-safety` 부분 |
+| `https://quietdual.com/delete-account` | 글자만 있는 안내 페이지. 스토어와 같은 앱 이름·개발자 이름, 게임 전용 이메일이 보이는지 |
+| `https://quietdual.com/app-ads.txt` | 9장의 한 줄이 그대로 보이는지 |
 
 ---
 
@@ -319,7 +319,7 @@ No login or password is needed. On first launch, enter a birth year and month th
 
 AdMob → **개인정보 보호 및 메시지**:
 
-1. **유럽 규정 메시지(GDPR)** 만들기: 언어 10개 선택, 개인정보처리방침 URL `https://[도메인]/privacy`, 앱 선택 → 게시. (유럽경제지역·영국·스위스 이용자에게 필요합니다.)
+1. **유럽 규정 메시지(GDPR)** 만들기: 언어 10개 선택, 개인정보처리방침 URL `https://quietdual.com/privacy`, 앱 선택 → 게시. (유럽경제지역·영국·스위스 이용자에게 필요합니다.)
 2. **미국 주 규정 메시지** 만들기: 같은 방식으로 게시.
 3. 앱은 이 메시지를 UMP로 띄우고, 설정에 "개인정보 옵션" 메뉴를 둡니다(Android 담당).
 
@@ -331,7 +331,7 @@ AdMob → **개인정보 보호 및 메시지**:
    google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
    ```
 3. 서버(예: Render)의 **Environment**에 `APP_ADS_TXT` 라는 이름으로 그 한 줄을 넣고 저장합니다(서버 담당이 만든 기능).
-4. 브라우저로 `https://[도메인]/app-ads.txt` 를 열어 그 줄이 보이는지 확인합니다.
+4. 브라우저로 `https://quietdual.com/app-ads.txt` 를 열어 그 줄이 보이는지 확인합니다.
 5. Play Console의 **스토어 설정 → 웹사이트**가 같은 도메인인지 확인합니다.
 6. 하루 이상 기다리면 AdMob의 app-ads.txt 상태가 "확인됨"으로 바뀝니다. 앱이 공개된 뒤에만 확인됩니다.
 7. AdMob이 앱을 검토 중이라는 표시가 있으면 끝날 때까지 광고가 적게 나올 수 있습니다.

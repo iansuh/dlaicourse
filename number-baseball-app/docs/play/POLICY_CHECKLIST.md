@@ -85,7 +85,7 @@ Sources: Trader status declaration, https://support.google.com/googleplay/androi
   - **Legal name** (EEA/UK users also see it in "Offered by"), **address** from the Google payments profile, a **verified public phone number**, **email**; no D-U-N-S (personal account).
   - Third-party summaries say the trader details are shown to users **worldwide**, not only in the EEA/UK.
   - The address cannot simply be a made-up or borrowed one: it comes from the payments profile, which must match the verified identity. Whether a personal-account trader can show a different public address is **[UNCONFIRMED]**.
-  - A terms-of-service link may be shown for traders (third-party source); use `https://[도메인]/terms` if Play Console asks.
+  - A terms-of-service link may be shown for traders (third-party source); use `https://quietdual.com/terms` if Play Console asks.
   - Still use a **dedicated game email**: the public email receives spam and harassment, and it keeps personal mail separate. The phone shown can be a dedicated number as long as it is the owner's and passes verification.
 
 ## 3. New personal account testing rule
@@ -118,7 +118,7 @@ Definitions used: "collected" = sent off the device; "shared" = transferred to a
 | Is all user data encrypted in transit? | Yes (requires HTTPS/WSS only on our server; AdMob uses TLS) |
 | Do you provide a way for users to request that their data is deleted? | Yes (in-app Delete account; without the app by email, explained at `/delete-account`) |
 | Account creation method | "Other" / account created automatically by the app, no username/password (pick the closest option the form offers) |
-| Delete account URL | `https://[도메인]/delete-account` |
+| Delete account URL | `https://quietdual.com/delete-account` |
 
 **Data types**
 
@@ -386,7 +386,7 @@ Source: Prepare your app for review, https://support.google.com/googleplay/andro
 
 | Declaration | Answer |
 | --- | --- |
-| Privacy policy | `https://[도메인]/privacy` |
+| Privacy policy | `https://quietdual.com/privacy` |
 | App access | Restricted functionality + instructions (section 15) |
 | Ads | Yes (also with Remove ads) |
 | Content rating | IARC questionnaire (section 9) |

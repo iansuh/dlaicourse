@@ -84,7 +84,7 @@ From `docs/qa/TEST_PLAN.md` 14.1 ("Remaining manual") and the DEFECTS notes. Use
    - 넣을 곳: 빌드 값 `NB_CONTACT_EMAIL` (설정 화면의 문의 주소), `docs/play/PRIVACY_POLICY.md` / `TERMS_OF_USE.md` / `DELETE_ACCOUNT_PAGE.md`의 `[연락처 이메일]` (한국어·영어 본문 모두), `RELEASE_GUIDE.md` 6장의 `[연락처 이메일]`, Play Console 개발자 이메일, AdMob.
 2. ◐ **게임 전용 전화번호, 운영자 정보 정하기** — 성명 서상현 / Sanghyun Suh, 개발자 표시명 Number Baseball 반영. 주소(집 또는 비상주 사무실 결정 중)와 070 번호 남음. (본인 명의). 한국 개인 계정과 트레이더는 이 번호가 스토어에 공개됩니다.
    - 넣을 곳: `docs/play/PRIVACY_POLICY.md`와 `TERMS_OF_USE.md`의 `[운영자 성명]`, `[운영자 주소]`, `[게임 전용 전화번호]`, `[개발자 표시명]`, `[시행일]` (본문 두 언어 모두). Play Console 결제 프로필과 같은 값이어야 합니다.
-3. **도메인 사기 + 서버 주소 정하기** (연 1~2만 원, WHOIS 비공개). 서버는 4번에서 만든 Render 주소에 연결합니다.
+3. ✅ **도메인 사기 + 서버 주소 정하기** — 구입: `quietdual.com` (가비아, 네임서버 기본). 문서 반영, 빌드 값 `NB_SERVER_URL`=`https://quietdual.com`은 출시 빌드 때. DNS는 Render 배포 후 연결. (연 1~2만 원, WHOIS 비공개). 서버는 4번에서 만든 Render 주소에 연결합니다.
    - 넣을 곳: 빌드 값 `NB_SERVER_URL` (예: `https://도메인`), 문서의 `[도메인]` (개인정보처리방침 4곳, `RELEASE_GUIDE.md`, 약관), Play Console 개인정보처리방침 URL `https://도메인/privacy`, 계정 삭제 URL `https://도메인/delete-account`, 스토어 웹사이트 칸, AdMob 개인정보 메시지 URL.
 4. **서버 배포 (Render)**: `backend/server/DEPLOY.md` 순서대로. Starter 요금제 + 디스크 `/data` 1GB, Docker (`backend/server/Dockerfile`), Health check `/health`.
    - 환경 변수: `ADMIN_TOKEN` (16자 이상 무작위), `REVIEW_ROOM_CODE` (5글자, 예 `PLAYR`), `TRUSTED_PROXY_HOPS=1`, `QUICK_MATCH_FREE_CHAT=false`, `MIN_AGE=14`, 나중에 `APP_ADS_TXT`. `PORT`, `DATA_DIR`, `RELAXED_RATE_LIMITS`, `TEST_HOOKS`는 넣지 않습니다.
