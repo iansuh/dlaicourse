@@ -174,3 +174,20 @@ Spec changes made in this review:
 Deviation decisions: year + month age entry accepted; server-error dialog actions accepted; opponent sheet from the overflow menu accepted; result link hidden at large text accepted; auto-shrink accepted with the floor.
 
 Conditions before release (carried, not design defects): the best-hint 150 ms cross-fade (round-2 condition, still "not yet"), and the owner must fill in the `[개발자 표시명]` / `[시행일]` placeholders in the legal docs (the release build already refuses them).
+
+## 2026-11-26: Design system v2 "Clean White" (owner decision: redesign direction A)
+
+The owner chose Direction A of [`redesign/PROPOSAL.md`](redesign/PROPOSAL.md). Turned it into the full system so the engineer can implement every screen. Engineer's guide with the token migration table, per-screen change list and checklist: [`REDESIGN_V2.md`](REDESIGN_V2.md).
+
+| # | Area | Change |
+| --- | --- | --- |
+| 1 | Tokens | `tokens.json` 2.0.0, light. Names kept where the role is the same (`bg`, `surface1–4`, `line`, `outline`, `text2/3`, `textDisabled`, `strike`, `ball`, `strikeTint`, `team*`, `scrim`, `focus`, all motion and haptic tokens). Split / renamed: `chalk` → `ink` + `accent`, `onChalk` → `onAccent` + `onInk`, `chalkPressed` → `accentPressed`, `out` → `out` (OUT chip) + `danger`, `outTint` → `dangerTint`, `lampOff(Ring)` → `dotOff`, `duel_strip_h` → `opp_row_h`. Removed: glows, `shadow`, lamp sizes, log header. New: `accentTint`, `inverse*`, `numSummary`, chip / avatar / pill / tile sizes, `banner_clear_space`. `prototype/gen-tokens.js` now generates `tokens.css` |
+| 2 | Faint-zero fix | Zero counts in `text3` (5.78 on bg, 5.25 on the latest row) instead of the proposal's 1.87 : 1 grey. All text passes AA; `textDisabled` only for disabled controls |
+| 3 | Fonts | Inter 4.000 (OFL 1.1), Latin subset, TrueType, 500 / 600 / 700 in `fonts/` with `OFL-Inter.txt`; Barlow Condensed retired (files removed from `design/fonts/`). Words stay in the system face |
+| 4 | DESIGN_SYSTEM.md | Rewritten as v2: direction, colour + contrast, type, spacing, radius 6 / 12 / 16, flat elevation, icons, motion (chip count-up on the unchanged hooks), haptics and sound kept, accessibility (AA, 48 dp, 1.3× numeral cap, shrink floor), components (opponent row, entry head, memo sheet, hint chips, ruled-out keys, tiles, summary, banner line), ads, dark theme note |
+| 5 | Screens | 01–15, FLOW, ADAPTIVE updated: memo behind a sheet, inning table behind "회별 기록 보기", Home with 4 numbers / 3 tiles / quick-match block, result with headline + opponent number + 3 summary numbers, 광고 제거 as a quiet line above the banner (24 dp clear space measured from its target). All functional states and policy rules kept |
+| 6 | Prototype + shots | `prototype/` rebuilt on v2 (CSS, runtime, all pages); age screen now year + month. **All 58 existing shots regenerated** with the same names, plus 2 new (`match-memo-ko`, `result-innings-ko`): 60 shots |
+
+Self-check: no non-token colour in the prototype except the ad creative and IME placeholders; one accent-filled control per screen; no shadows; the 광고 제거 target ends 24 dp above the band on every result shot with a banner; Home, result and match-late fit 360 × 800 without scrolling; compact match at 360 × 320 keeps two log rows.
+
+Open for the owner: launcher icon stays dark for now (REDESIGN_V2 §6).

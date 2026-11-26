@@ -12,9 +12,11 @@
   .code { display: flex; gap: 8px; }
   .code span { width: 48px; height: 60px; border-radius: var(--r-m); background: var(--c-surface2); display: grid; place-items: center; font: var(--t-num-code); }
   .invite .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 4px; }
-  .rules { flex: none; height: 48px; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 16px; background: var(--c-surface1); border-top: 1px solid var(--c-line); border-bottom: 1px solid var(--c-line); }
+  .rules { flex: none; min-height: 48px; display: flex; align-items: center; gap: 8px; margin: 0 16px; padding: 0 0 0 0; border-top: 1px solid var(--c-line); border-bottom: 1px solid var(--c-line); }
+  .rules .ic { color: var(--c-text2); }
   .rules .v { flex: 1; min-width: 0; font: var(--t-body-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .fill { flex: none; display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 2px; align-items: center; padding: 16px 16px 12px; }
+  .fill .dots { gap: 6px; }
   .fill .v { font: var(--t-body-strong); white-space: nowrap; }
   .fill .s { grid-column: 1 / -1; font: var(--t-caption); color: var(--c-text3); }
   .teams { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 16px; }
@@ -22,25 +24,22 @@
   .team-h { height: 36px; display: flex; align-items: center; gap: 8px; }
   .team-h .n { font: var(--t-subtitle); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .team-h .c { font: var(--t-num-label); letter-spacing: var(--t-num-label-track); color: var(--c-text3); }
-  .seat { position: relative; height: 56px; border-radius: var(--r-m); background: var(--c-surface1); display: flex; flex-direction: column; justify-content: center; padding: 0 10px 0 13px; min-width: 0; overflow: hidden; }
-  .seat::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: var(--z-stripe-w); }
-  .team.a .seat.taken::before { background: var(--c-team-a); }
-  .team.b .seat.taken::before { background: var(--c-team-b); }
+  .seat { position: relative; min-height: 56px; border-radius: var(--r-m); background: var(--c-surface2); display: flex; flex-direction: column; justify-content: center; padding: 0 10px 0 12px; min-width: 0; overflow: hidden; }
   .seat .pname { font: var(--t-body-strong); }
   .seat .meta { display: flex; gap: 4px; margin-top: 2px; }
-  .seat.mine { box-shadow: inset 0 0 0 1px var(--c-outline); }
-  .seat.empty { background: transparent; box-shadow: inset 0 0 0 1px var(--c-line); color: var(--c-text3); font: var(--t-caption); align-items: center; flex-direction: row; justify-content: center; gap: 6px; }
-  .seat.empty .lamp { width: 6px; height: 6px; }
-  .seat.move { background: transparent; box-shadow: inset 0 0 0 1px var(--c-outline); color: var(--c-chalk); font: var(--t-label-small); }
+  .seat .tag:not(.solid) { background: var(--c-bg); }
+  .seat.empty { background: var(--c-bg); box-shadow: inset 0 0 0 var(--z-border) var(--c-line); color: var(--c-text3); font: var(--t-caption); align-items: center; flex-direction: row; justify-content: center; gap: 6px; }
+  
+  .seat.move { color: var(--c-accent); font: var(--t-label-small); }
   .seat.move .ic { width: 20px; height: 20px; }
   .team .btn-small { width: 100%; margin-top: 4px; }
   .spacer { flex: 1 1 auto; }
   .practice { flex: none; padding: 16px; }
-  .chatbar { flex: none; height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--c-surface1); border-top: 1px solid var(--c-line); }
+  .chatbar { flex: none; min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--c-bg); border-top: 1px solid var(--c-line); }
   .chatbar .ic { color: var(--c-text2); }
   .chatbar .msg { flex: 1; min-width: 0; font: var(--t-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--c-text2); }
-  .chatbar .msg b { color: var(--c-chalk); font-weight: 700; }
-  .badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--c-chalk); color: var(--c-on-chalk); font: 600 13px/20px var(--font-num); text-align: center; }
+  .chatbar .msg b { color: var(--c-ink); font-weight: 700; }
+  .badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--c-accent); color: var(--c-on-accent); font: 600 13px/20px var(--font-num); text-align: center; }
 </style>
 <script src="js/strings.js"></script>
 <script src="js/icons.js"></script>
@@ -49,7 +48,7 @@
 window.build = function (qs) {
   const t = P.t;
   const seat = (name, tag, tags = [], mine) => `<div class="seat taken${mine ? ' mine' : ''}"><span class="pname ellipsis">${name}<span class="ptag">#${tag}</span></span>${tags.length ? `<span class="meta">${tags.map((x) => `<span class="tag${x === 'me' ? ' solid' : ''}">${t(x)}</span>`).join('')}</span>` : ''}</div>`;
-  const empty = `<div class="seat empty"><span class="lamp"></span>${t('emptySeat')}</div>`;
+  const empty = `<div class="seat empty"><span class="dot s"></span>${t('emptySeat')}</div>`;
   document.getElementById('app').innerHTML = `
     <div class="sysbar"></div>
     <header class="topbar">
@@ -68,7 +67,7 @@ window.build = function (qs) {
       <button class="btn-text" style="height:48px;padding:0 12px">${t('edit')}</button>
     </section>
     <section class="fill">
-      <span class="lamps">${[1, 1, 1, 1, 0, 0].map((x) => `<span class="lamp${x ? ' on ch' : ''}"></span>`).join('')}</span>
+      <span class="dots">${[1, 1, 1, 1, 0, 0].map((x) => `<span class="dot${x ? ' ink' : ''}"></span>`).join('')}</span>
       <span class="v">${t('filled', { a: 4, b: 6 })}</span>
       <span class="s">${t('autoStart')}</span>
     </section>

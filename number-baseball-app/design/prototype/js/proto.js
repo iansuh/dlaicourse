@@ -1,8 +1,13 @@
-/* Prototype runtime: language, icons, system bars, and builders shared by match screens.
+/* Prototype runtime (design system v2, Clean White): language, icons, system bars, and builders shared by match screens.
    Query: ?lang=ko|en|de|ru  (+ page-specific params). */
 (function () {
   const qs = new URLSearchParams(location.search);
   const lang = qs.get('lang') || 'ko';
+  // ?fs=2: font scale. Words scale fully (--fs), numerals cap at 1.3x (--ns, DESIGN_SYSTEM 3.3).
+  const fsc = parseFloat(qs.get('fs') || '1');
+  document.documentElement.style.setProperty('--fs', fsc);
+  document.documentElement.style.setProperty('--ns', Math.min(fsc, 1.3));
+  if (fsc >= 1.5) document.documentElement.classList.add('large');
   document.documentElement.lang = lang;
   const S = window.STR[lang] || window.STR.ko;
   const t = (k, p) => {
@@ -16,32 +21,23 @@
   // Judge: strikes and balls of guess g against secret s (strings of distinct digits).
   const judge = (s, g) => { let st = 0, b = 0; for (let i = 0; i < g.length; i++) { if (s[i] === g[i]) st++; else if (s.includes(g[i])) b++; } return { s: st, b }; };
 
-  const hintCells = (h, n, latest) => {
-    if (h.s === 0 && h.b === 0) {
-      return `<span class="ho">${latest ? `<span class="cell-stack"><span class="h-out">OUT</span><span class="lamps isolate"><span class="lamp s on ou"></span></span></span>` : '<span class="h-out">OUT</span>'}</span>`;
-    }
-    const cell = (v, k, cls, lampCls) => {
-      const txt = `<span class="hint ${v ? cls : 'h-zero'}">${v}${k}</span>`;
-      if (!latest) return txt;
-      let l = ''; for (let i = 0; i < n; i++) l += `<span class="lamp s${i < v ? ' on ' + lampCls : ''}"></span>`;
-      return `<span class="cell-stack">${txt}<span class="lamps">${l}</span></span>`;
-    };
-    return `<span class="hs">${cell(h.s, 'S', 'h-s', 'st')}</span><span class="hb">${cell(h.b, 'B', 'h-b', 'bl')}</span>`;
-  };
-  const oppCell = (h) => (h.s === 0 && h.b === 0) ? '<span class="h-out" style="height:20px;font-size:12px">OUT</span>'
-    : `<span class="${h.s ? '' : 'h-zero'}">${h.s}S</span> <span class="${h.b ? '' : 'h-zero'}">${h.b}B</span>`;
+  // Hint chips (DESIGN_SYSTEM 12.6): S solid strike chip, B outlined ball chip, zero counts plain text3, 0S 0B = one wide OUT chip.
+  const hintCells = (h) => (h.s === 0 && h.b === 0) ? '<span class="hints"><span class="hint h-out">OUT</span></span>'
+    : `<span class="hints"><span class="hint ${h.s ? 'h-s' : 'h-zero'}">${h.s}S</span><span class="hint ${h.b ? 'h-b' : 'h-zero'}">${h.b}B</span></span>`;
+  const oppText = (h) => (h.s === 0 && h.b === 0) ? 'OUT' : `${h.s}S ${h.b}B`;
 
+  // Pitch log: no header row; newest first; only the latest row is highlighted and labels the opponent column "상대".
   function logHtml(m) {
-    const n = m.secretOpp.length;
     let rows = '';
     for (let i = m.mine.length - 1; i >= 0; i--) {
       const g = m.mine[i], h = judge(m.secretOpp, g), og = m.theirs[i], oh = og ? judge(m.secretMine, og) : null;
       const latest = i === m.mine.length - 1;
-      rows += `<li class="log-row${latest ? ' latest' : ''}"><span class="r">${i + 1}</span><span class="g num">${g}</span>${hintCells(h, n, latest)}<span class="op">${oh ? oppCell(oh) : ''}</span></li>`;
+      rows += `<li class="log-row${latest ? ' latest' : ''}"><span class="r num">${i + 1}</span><span class="g num">${g}</span>${hintCells(h)}<span class="opph num">${latest && oh ? `<small>${t('colOpp')}</small>` : ''}${oh ? oppText(oh) : ''}</span></li>`;
     }
-    return `<div class="log-head"><span>#</span><span>${t('colGuess')}</span><span class="h-hint">${t('colHint')}</span><span class="h-opp">${t('colOpp')}</span></div><ol class="log-rows">${rows}</ol>`;
+    return `<ol class="log-rows">${rows}</ol>`;
   }
 
+  // Memo sheet grid (05 §2.4): digit status row + n position rows. Cells 40dp, header 44dp.
   function memoHtml(m) {
     const n = m.secretOpp.length, D = '0123456789';
     let g = '<span class="ml h"></span>';
@@ -53,8 +49,7 @@
         g += `<button class="mc ${st}${m.memo[d] === 'x' && st !== 'o' ? ' dim' : ''}" aria-label="${p} ${d}">${st === 'o' ? `<b>${d}</b>` : ''}</button>`;
       }
     }
-    const empty = !Object.keys(m.memo).length;
-    return `<div class="memo-bar"><span class="sec-label">${t('memo')}</span><span class="memo-help">${empty ? t('memoHelp') : ''}</span><button class="btn-text">${t('memoClear')}</button><button class="iconbtn dim" style="width:36px;height:36px;margin-right:-8px" aria-label="${t('memoHide')}">${icon('keyboard_arrow_down')}</button></div><div class="memo-grid">${g}</div>`;
+    return `<div class="memo-grid">${g}</div>`;
   }
 
   function slotsHtml(n, entry, opts = {}) {
@@ -76,7 +71,7 @@
       return c.join(' ');
     };
     const full = m.entry.length === m.secretOpp.length;
-    const pitchLabel = opts.offline ? t('pitch') : opts.waiting ? `<span class="waiting-chase"><span class="lamp on ch"></span><span class="lamp"></span><span class="lamp"></span></span>${t('waitingOpp')}` : (opts.label || t('pitch'));
+    const pitchLabel = opts.offline ? t('pitch') : opts.waiting ? `<span class="dots"><span class="dot s accent"></span><span class="dot s"></span><span class="dot s"></span></span>${t('waitingOpp')}` : (opts.label || t('pitch'));
     let k = '';
     for (const d of '01234') k += `<button class="key ${keyCls(d)}">${d}</button>`;
     for (const d of '56789') k += `<button class="key ${keyCls(d)}">${d}</button>`;
@@ -92,20 +87,14 @@
     return `<div class="keypad full${opts.waiting || opts.offline ? ' locked' : ''}">${k}</div><div class="keypad compact">${c}</div>`;
   }
 
-  // In-app brand mark: the icon's number plate, numeral and three strike lamps (viewBox crops the 108dp icon).
-  const mark = () => `<svg class="brandmark" viewBox="33 24 42 63" aria-hidden="true"><rect x="36" y="28" width="36" height="44" rx="6" fill="#1A231F" stroke="#3B4943"/><path fill="#ECEFE6" d="M61.53 54.9Q61.53 56.64 61.38 57.87Q61.06 60.72 59.18 62.36Q57.3 64 54.14 64Q50.86 64 48.8 62.26Q46.74 60.52 46.58 57.63Q46.47 56.56 46.47 55.34Q46.47 54.86 46.94 54.86H51.57Q52.04 54.86 52.04 55.34Q52.04 56.25 52.16 57.04Q52.28 58.07 52.79 58.64Q53.31 59.21 54.14 59.21Q54.93 59.21 55.44 58.66Q55.96 58.11 56.12 57.16Q56.23 55.77 56.23 54.31Q56.23 52.45 56.04 51.38Q55.88 50.47 55.38 49.98Q54.89 49.49 54.14 49.49Q53.55 49.49 52.95 50Q52.71 50.16 52.64 50.16Q52.48 50.16 52.28 49.96L49.91 47.55Q49.75 47.39 49.75 47.19Q49.75 47.03 49.87 46.88L54.65 40.98Q54.73 40.9 54.69 40.82Q54.65 40.75 54.53 40.75H47.42Q47.22 40.75 47.08 40.61Q46.94 40.47 46.94 40.27V36.47Q46.94 36.28 47.08 36.14Q47.22 36 47.42 36H61.02Q61.22 36 61.36 36.14Q61.49 36.28 61.49 36.47V40.43Q61.49 40.75 61.3 41.02L56.87 46.6Q56.83 46.68 56.83 46.76Q56.83 46.84 56.91 46.84Q58.65 46.99 59.85 48.42Q61.06 49.84 61.34 51.98Q61.53 53.48 61.53 54.9Z"/><circle cx="44.5" cy="81.5" r="3" fill="#F5B83D"/><circle cx="54" cy="81.5" r="3" fill="#F5B83D"/><circle cx="63.5" cy="81.5" r="3" fill="#F5B83D"/></svg>`;
+  // In-app brand mark v2: 32dp ink plate (radius 8), white "3" (the icon's numeral path), three strike dots = three strikes.
+  const mark = () => `<svg class="brandmark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#111418"/><g transform="translate(11.2 4.6) scale(0.62) translate(-46.47 -36)"><path fill="#FFFFFF" d="M61.53 54.9Q61.53 56.64 61.38 57.87Q61.06 60.72 59.18 62.36Q57.3 64 54.14 64Q50.86 64 48.8 62.26Q46.74 60.52 46.58 57.63Q46.47 56.56 46.47 55.34Q46.47 54.86 46.94 54.86H51.57Q52.04 54.86 52.04 55.34Q52.04 56.25 52.16 57.04Q52.28 58.07 52.79 58.64Q53.31 59.21 54.14 59.21Q54.93 59.21 55.44 58.66Q55.96 58.11 56.12 57.16Q56.23 55.77 56.23 54.31Q56.23 52.450 56.04 51.38Q55.88 50.47 55.38 49.98Q54.89 49.49 54.14 49.49Q53.55 49.49 52.95 50Q52.71 50.16 52.64 50.16Q52.48 50.16 52.28 49.96L49.91 47.55Q49.75 47.39 49.75 47.19Q49.75 47.03 49.87 46.88L54.65 40.98Q54.73 40.9 54.69 40.82Q54.65 40.75 54.53 40.75H47.42Q47.22 40.75 47.08 40.61Q46.94 40.47 46.94 40.27V36.47Q46.94 36.28 47.08 36.14Q47.22 36 47.42 36H61.02Q61.22 36 61.36 36.14Q61.49 36.28 61.49 36.47V40.43Q61.49 40.750 61.3 41.02L56.87 46.6Q56.83 46.68 56.83 46.76Q56.83 46.84 56.91 46.84Q58.65 46.99 59.85 48.42Q61.06 49.84 61.34 51.98Q61.53 53.48 61.53 54.9Z"/></g><circle cx="11" cy="26" r="1.7" fill="#B54708"/><circle cx="16" cy="26" r="1.7" fill="#B54708"/><circle cx="21" cy="26" r="1.7" fill="#B54708"/></svg>`;
 
   // Layout fitting used by the match screen: fade the log when it overflows; collapse the memo grid
   // when the log cannot show the latest row plus one full row.
+  // Log fade: 20dp bottom mask when rows continue below.
   function fit() {
-    const rows = document.querySelector('.log-rows'), memo = document.querySelector('.memo');
-    if (!rows) return;
-    const minLog = 64 + 44;
-    if (memo && !memo.classList.contains('collapsed') && rows.clientHeight < minLog && getComputedStyle(memo).display !== 'none') {
-      memo.classList.add('collapsed');
-      const b = memo.querySelector('.memo-bar .iconbtn'); if (b) b.innerHTML = icon('keyboard_arrow_up');
-    }
-    rows.classList.toggle('fade', rows.scrollHeight > rows.clientHeight + 1);
+    document.querySelectorAll('.log-rows, .fit-scroll').forEach((rows) => rows.classList.toggle('fade', rows.scrollHeight > rows.clientHeight + 1));
   }
 
   function sysbar() {
@@ -133,7 +122,7 @@
   // font-feature-settings, so a class rule cannot hold it: every element set in the display face gets it inline.
   function tnum(root) {
     (root || document).querySelectorAll('*').forEach((el) => {
-      if (/Barlow/.test(getComputedStyle(el).fontFamily)) el.style.fontVariantNumeric = 'tabular-nums';
+      if (/Inter NB/.test(getComputedStyle(el).fontFamily)) el.style.fontVariantNumeric = 'tabular-nums';
     });
   }
   window.P = { mark, fit, digitsLabel, qs, lang, t, icon, judge, logHtml, memoHtml, slotsHtml, keypadHtml, apply, tnum };

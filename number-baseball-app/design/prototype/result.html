@@ -7,37 +7,42 @@
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/proto.css">
 <style>
-  .hero { flex: none; padding: 8px 16px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; }
-  .hero h1 { font: var(--t-display); }
-  .hero p { font: var(--t-body); color: var(--c-text2); }
-  .reveal { flex: none; padding: 0 16px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-  .rv { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .rv .cap { font: var(--t-caption); color: var(--c-text3); }
-  .rv .slot { width: 52px; height: 60px; font: var(--t-num-slot-sm); font-size: 32px; }
-  .rv.mine .slot { width: 40px; height: 44px; font: var(--t-num-log); letter-spacing: 0; background: var(--c-surface1); color: var(--c-text2); }
-  .ls { flex: none; margin: 28px 16px 0; border-top: 1px solid var(--c-line); padding-top: 12px; }
-  .ls .cap { font: var(--t-label-small); color: var(--c-text3); display: flex; justify-content: space-between; }
-  .ls .cap .num { font: var(--t-num-tag); color: var(--c-text3); display: inline-flex; align-items: center; gap: 4px; }
-  .ls .cap .num .ic { width: 16px; height: 16px; }
-  .ls table { width: 100%; border-collapse: collapse; margin-top: 8px; font-feature-settings: "tnum" 1; }
-  .ls th, .ls td { height: 32px; text-align: center; padding: 0; }
-  .ls th { font: var(--t-num-label); letter-spacing: var(--t-num-label-track); color: var(--c-text3); font-weight: 600; }
-  .ls td { font: var(--t-num-log); letter-spacing: 0; color: var(--c-chalk); vertical-align: baseline; }
-  .ls td, .ls th { line-height: 32px; }
-  .ls td.z { color: var(--c-text-disabled); }
-  .ls td.fin { color: var(--c-strike); }
-  .ls .who { width: 80px; text-align: left; font: var(--t-caption); line-height: 32px; color: var(--c-text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px; }
-  .ls .tot { width: 56px; text-align: right; font: var(--t-num-hint); }
-  .ls th.tot { font: var(--t-label-small); color: var(--c-text3); }
-  .ls tr + tr td { border-top: 1px solid var(--c-line); }
-  /* Upper area (hero → line score) is one vertical scroll region; actions and band stay pinned (06 §1). */
-  .upper { flex: 1 1 auto; min-height: 0; overflow: hidden; padding-bottom: 16px; }
-  .upper.fade { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent); }
-  .topbar .adlink { margin-right: 0; }
-  .topbar .adlink.end { margin-right: 4px; }
-  .actions { flex: none; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 8px; }
-  .adnote { display: flex; align-items: center; justify-content: center; gap: 6px; font: var(--t-caption); color: var(--c-text3); padding-bottom: 4px; text-align: center; }
-  .adnote .ic { width: 16px; height: 16px; }
+  .upper { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 16px 8px; }
+  .badge { flex: none; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--c-surface2); color: var(--c-text2); margin-top: 4px; }
+  .badge.win { background: var(--c-accent-tint); color: var(--c-accent); }
+  .badge .ic { width: 32px; height: 32px; }
+  .upper h1 { font: var(--t-display); margin-top: 12px; }
+  .upper .sub { font: var(--t-body); color: var(--c-text2); margin-top: 4px; }
+  .cap { font: var(--t-caption); color: var(--c-text3); }
+  .plates-label { margin-top: 16px; }
+  .upper .slots { margin: 8px 0 0; }
+  .upper .slot { width: var(--z-plate-result-w); height: calc(var(--z-plate-result-h) * var(--ns, 1)); }
+  .mysecret { margin-top: 12px; font: var(--t-caption); color: var(--c-text3); display: flex; align-items: center; gap: 6px; }
+  .mysecret .num { font: var(--t-num-tag); font-weight: 700; color: var(--c-text2); letter-spacing: .12em; }
+  .rstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; margin-top: 16px; padding: 14px 0; border-top: 1px solid var(--c-line); border-bottom: 1px solid var(--c-line); }
+  .rstats > div + div { border-left: 1px solid var(--c-line); }
+  .rstats .n { font: var(--t-num-summary); }
+  .rstats .l { font: var(--t-caption); color: var(--c-text3); }
+  .upper .link { margin-top: 0; }
+  .actions { flex: none; padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+  .actions.noad { padding-bottom: 0; }
+  .noband { height: 0; }
+  /* Innings sheet (회별 기록 보기) */
+  .inn { padding: 0 16px 8px; }
+  .inn-head { display: flex; align-items: center; min-height: 56px; padding: 0 4px 0 16px; }
+  .inn-head .t { flex: 1; font: var(--t-title); }
+  .inn table { width: 100%; border-collapse: collapse; font-feature-settings: "tnum" 1; }
+  .inn th, .inn td { height: 40px; text-align: center; padding: 0; }
+  .inn th { font: var(--t-num-label); color: var(--c-text3); }
+  .inn td { font: var(--t-num-log); letter-spacing: 0; font-size: 18px; }
+  .inn td.z { color: var(--c-text3); font-weight: 500; }
+  .inn td.fin { color: var(--c-strike); font-weight: 700; }
+  .inn .who { width: 80px; text-align: left; font: var(--t-caption); color: var(--c-text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px; }
+  .inn .tot { width: 56px; text-align: right; }
+  .inn th.tot { font: var(--t-label-small); color: var(--c-text3); }
+  .inn tr + tr td { border-top: 1px solid var(--c-line); }
+  .inn .time { display: flex; align-items: center; gap: 4px; justify-content: flex-end; font: var(--t-num-tag); color: var(--c-text3); padding: 8px 0 0; }
+  .inn .time .ic { width: 16px; height: 16px; }
 </style>
 <script src="js/strings.js"></script>
 <script src="js/icons.js"></script>
@@ -45,7 +50,7 @@
 <script>
 window.build = function (qs) {
   const t = P.t, outcome = qs.get('outcome') || 'win', mode = qs.get('mode') || 'online';
-  // ?ad=after: this result was reached through an interstitial (06 §3) → no banner on it. ?ads=removed: purchased, no link, no banner.
+  // ?ad=after: reached through an interstitial (06 §3) -> no banner. ?ads=removed: purchased -> no 광고 제거 line, no banner.
   const removed = qs.get('ads') === 'removed', afterAd = qs.get('ad') === 'after', banner = !removed && !afterAd;
   const secretOpp = '3916', secretMine = '0472';
   const mine = ['1234', '5780', '3196', '3169', '3961', '3916'];
@@ -53,48 +58,49 @@ window.build = function (qs) {
   if (outcome === 'lose') mine[5] = '3961';
   const n = 4, rounds = mine.length;
   const sMine = mine.map((g) => P.judge(secretOpp, g)), sTheirs = theirs.map((g) => P.judge(secretMine, g));
-  const best = sTheirs.reduce((a, h) => (h.s > a.s || (h.s === a.s && h.b > a.b) ? h : a), { s: -1, b: 0 });
-  let lamps = ''; for (let i = 0; i < n; i++) lamps += `<span class="lamp l${outcome === 'win' ? ' on st' : ''}"></span>`;
   const head = { win: t('resWin'), lose: t('resLose'), draw: t('resDraw') }[outcome];
   const sub = { win: t('resWinSub', { n: rounds }), lose: t('resLoseSub', { n: rounds }), draw: t('resDrawSub', { n: rounds }) }[outcome];
   const oppName = mode === 'cpu' ? t('cpuShort') : 'Kestrel';
-  const cell = (h, i, arr) => `<td class="${h.s === n ? 'fin' : h.s === 0 ? 'z' : ''}">${h.s}</td>`;
-  const head9 = sMine.map((_, i) => `<th>${i + 1}</th>`).join('');
-  if (outcome === 'win') document.getElementById('app').classList.add('tint-win');
+  const third = mode === 'cpu' ? `<div><div class="n">${t('levelNormal')}</div><div class="l">${t('levelLabel')}</div></div>`
+    : `<div><div class="n num">${t('winsN', { n: outcome === 'win' ? 13 : 12 })}</div><div class="l">${t('recordLabel')}</div></div>`;
+  const cell = (h) => `<td class="${h.s === n ? 'fin' : h.s === 0 ? 'z' : ''}">${h.s}</td>`;
+  const best = (arr) => Math.max(...arr.map((h) => h.s));
+  const innings = qs.get('innings') ? `<div class="scrim"></div><section class="sheet"><div class="grab"></div>
+      <div class="inn-head"><span class="t">${t('innings')}</span><button class="iconbtn" aria-label="close">${P.icon('close')}</button></div>
+      <div class="inn"><table aria-label="${t('innings')}">
+        <tr><th class="who"></th>${sMine.map((_, i) => `<th>${i + 1}</th>`).join('')}<th class="tot">${t('bestLabel')}</th></tr>
+        <tr><td class="who">${t('me')}</td>${sMine.map(cell).join('')}<td class="tot ${best(sMine) === n ? 'fin' : ''}">${best(sMine)}S</td></tr>
+        <tr><td class="who">${oppName}</td>${sTheirs.map(cell).join('')}<td class="tot ${best(sTheirs) === n ? 'fin' : ''}">${best(sTheirs)}S</td></tr>
+      </table><div class="time">${P.icon('timer')}3:12</div></div>
+      <div style="height:32px"></div></section>` : '';
   document.getElementById('app').innerHTML = `
     <div class="sysbar"></div>
     <header class="topbar">
       <button class="iconbtn" aria-label="${t('home')}">${P.icon('close')}</button>
-      <span class="tb-title"></span>
-      ${removed ? '' : `<button class="btn-text adlink${mode === 'online' ? '' : ' end'}">${t('removeAds')}</button>`}
+      <span class="grow"></span>
       ${mode === 'online' ? `<button class="iconbtn dim" aria-label="${t('report')}">${P.icon('flag')}</button>` : ''}
     </header>
     <div class="upper">
-    <section class="hero">
-      <span class="lamps l" aria-hidden="true">${lamps}</span>
+      <span class="badge${outcome === 'win' ? ' win' : ''}" aria-hidden="true">${P.icon(outcome === 'win' ? 'check' : 'sports_baseball')}</span>
       <h1>${head}</h1>
-      <p>${sub}</p>
-    </section>
-    <section class="reveal">
-      <div class="rv"><span class="cap">${t('oppSecret')}</span>${P.slotsHtml(n, secretOpp.split(''), { cls: outcome === 'win' ? 'hit' : '' })}</div>
-      <div class="rv mine"><span class="cap">${t('mySecret')}</span>${P.slotsHtml(n, secretMine.split(''))}</div>
-    </section>
-    <section class="ls">
-      <div class="cap"><span>${t('lineScore')}</span><span class="num" aria-label="${t('time')} 3:12">${P.icon('timer')}3:12</span></div>
-      <table aria-label="${t('lineScore')}">
-        <tr><th class="who"></th>${head9}<th class="tot">${t('bestLabel')}</th></tr>
-        <tr><td class="who">${t('me')}</td>${sMine.map(cell).join('')}<td class="tot">${outcome === 'win' ? `<span class="h-s">${n}S</span>` : `${Math.max(...sMine.map((h) => h.s))}S`}</td></tr>
-        <tr><td class="who">${oppName}</td>${sTheirs.map(cell).join('')}<td class="tot">${best.s === n ? `<span class="h-s">${n}S</span>` : `${best.s}S`}</td></tr>
-      </table>
-    </section>
+      <p class="sub">${sub}</p>
+      <span class="cap plates-label">${t('oppSecret')}</span>
+      ${P.slotsHtml(n, secretOpp.split(''), { cls: 'plate' })}
+      <span class="mysecret">${t('mySecret')}<span class="num">${secretMine}</span></span>
+      <div class="rstats">
+        <div><div class="n num">${t('roundsV', { n: rounds })}</div><div class="l">${t('takenLabel')}</div></div>
+        <div><div class="n num">3:12</div><div class="l">${t('time')}</div></div>
+        ${third}
+      </div>
+      <button class="link">${t('inningsLink')}${P.icon('chevron_right')}</button>
     </div>
     <section class="actions">
       <button class="btn btn-primary">${t('rematch')}</button>
       <button class="btn btn-secondary">${t('home')}</button>
     </section>
+    ${removed ? '<div style="height:24px;flex:none"></div>' : `<button class="removeads"${banner ? '' : ' style="margin-bottom:0"'}>${t('removeAds')}</button>`}
     ${!banner ? '' : '<div class="adslot"><div class="creative"><i>AD</i>Sample banner creative · adaptive 360×50</div></div>'}
-    <div class="gesture"></div>`;
-  const up = document.querySelector('.upper'); up.classList.toggle('fade', up.scrollHeight > up.clientHeight + 1);
+    <div class="gesture"></div>${innings}`;
 };
 </script>
 </head>

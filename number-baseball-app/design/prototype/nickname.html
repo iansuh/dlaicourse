@@ -13,22 +13,23 @@
   .body .lead { font: var(--t-body); color: var(--c-text2); margin-top: 8px; }
   .field { margin-top: 32px; }
   .field label { display: block; font: var(--t-label-small); color: var(--c-text2); margin-bottom: 8px; }
-  .input { height: var(--z-text-field-h); border-radius: var(--r-m); background: var(--c-surface2); box-shadow: inset 0 0 0 2px var(--c-chalk); display: flex; align-items: center; padding: 0 16px; font: 400 18px/24px var(--font-sans); }
-  .input .caret { width: 2px; height: 24px; background: var(--c-chalk); margin-left: 1px; }
+  .input { height: var(--z-text-field-h); border-radius: var(--r-m); background: var(--c-surface2); box-shadow: inset 0 0 0 2px var(--c-accent); display: flex; align-items: center; padding: 0 16px; font: 400 18px/24px var(--font-sans); }
+  .input .caret { width: 2px; height: 24px; background: var(--c-accent); margin-left: 1px; }
   .input .clear { margin-left: auto; margin-right: -12px; color: var(--c-text3); }
-  .input.error { box-shadow: inset 0 0 0 2px var(--c-out); }
+  .input.error { box-shadow: inset 0 0 0 2px var(--c-danger); }
   .help { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; font: var(--t-caption); color: var(--c-text3); }
   .help .count { font: var(--t-num-tag); font-feature-settings: "tnum" 1; }
-  .help.error { color: var(--c-out); }
+  .help.error { color: var(--c-danger); }
   .preview { margin-top: 24px; padding: 16px 0 0; border-top: 1px solid var(--c-line); }
   .preview .cap { font: var(--t-caption); color: var(--c-text3); }
   .preview .chipline { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
   .preview .pname { font: var(--t-title); }
-  .preview .ptag { font-size: 20px; line-height: 28px; }
+  .preview .ptag { font-size: calc(20px * var(--ns, 1)); line-height: 28px; }
+  .eyebrow .brandmark { width: 32px; height: 32px; }
   .preview .note { font: var(--t-caption); color: var(--c-text3); margin-top: 4px; }
   .actions { flex: none; padding: 16px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
   .terms { font: var(--t-caption); color: var(--c-text3); text-align: center; }
-  .terms u { color: var(--c-text2); text-underline-offset: 3px; }
+  .terms u { color: var(--c-accent); text-decoration: none; font-weight: 700; }
 </style>
 <script src="js/strings.js"></script>
 <script src="js/icons.js"></script>

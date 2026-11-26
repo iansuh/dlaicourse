@@ -2,6 +2,10 @@
    Placeholders: {n}, {a}, {b}, {name}, {s}. Plurals are simplified here; Android must use <plurals>. */
 window.STR = {
   ko: {
+    // v2 (Clean White)
+    takenLabel: '걸린 회', recordLabel: '내 기록', inningsLink: '회별 기록 보기', innings: '회별 기록', roundsV: '{n}회', winsN: '{n}승', levelLabel: '난이도', levelNormal: '보통',
+    firstTime: '처음이라면 게임 방법 보기', otherModesShort: '다른 방법으로', cpuTile: '컴퓨터와', roomTile: '방 만들기', joinTile: '코드로 참가', quickMeta: '60초 · 비슷한 상대', homeGreet: '오늘도 조용히 한 판',
+    ageMonth: '달', ageTitle2: '태어난 해와 달을 입력해 주세요', ageLead2: '태어난 해와 달만 확인해요. 이름이나 생일 날짜는 묻지 않아요.', ageInvalid2: '올바른 연도와 달을 입력해 주세요',
     legendTitle: '판정 읽는 법', legS: '<b>스트라이크</b> · 숫자와 자리가 모두 맞음', legB: '<b>볼</b> · 숫자는 있지만 자리가 다름', legO: '<b>아웃</b> · 맞는 숫자가 하나도 없음',
     recentForm: '최근 10경기', otherModes: '다른 방법으로 하기', lineScore: '회별 스트라이크', backToRoom: '방으로 돌아가기',
     bestLabel: '최고', moveHereSeat: '이 자리로 이동', winRateV: '승률',
@@ -64,6 +68,9 @@ window.STR = {
     removeAdsError: '지금은 구매할 수 없어요. 잠시 후 다시 시도해 주세요', restore: '구매 복원', restoreSub: '이 Google 계정으로 산 구매를 다시 확인해요', retry: '다시 시도'
   },
   en: {
+    takenLabel: 'Rounds', recordLabel: 'My record', inningsLink: 'Round by round', innings: 'Round by round', roundsV: '{n}', winsN: '{n} W', levelLabel: 'Level', levelNormal: 'Normal',
+    firstTime: 'New here? How to play', otherModesShort: 'More ways to play', cpuTile: 'vs Computer', roomTile: 'Create room', joinTile: 'Join with code', quickMeta: '60 s · similar opponent', homeGreet: 'One quiet game today',
+    ageMonth: 'Month', ageTitle2: 'Enter the year and month you were born', ageLead2: 'We only ask for the year and month. No name, no birth date.', ageInvalid2: 'Enter a valid year and month',
     legendTitle: 'Reading the hints', legS: '<b>Strike</b> · right digit, right place', legB: '<b>Ball</b> · right digit, wrong place', legO: '<b>Out</b> · no digit matches',
     recentForm: 'Last 10', otherModes: 'More ways to play', lineScore: 'Strikes by round', backToRoom: 'Back to room',
     bestLabel: 'Best', moveHereSeat: 'Move here', imeNote: 'System keyboard (IME)', cpuShort: 'Computer',
@@ -117,6 +124,8 @@ window.STR = {
     removeAdsError: 'Can’t buy right now. Try again later', restore: 'Restore purchase', restoreSub: 'Checks purchases on this Google account', retry: 'Try again'
   },
   de: {
+    takenLabel: 'Runden', recordLabel: 'Meine Bilanz', inningsLink: 'Runde für Runde', innings: 'Runde für Runde', roundsV: '{n}', winsN: '{n} S', levelLabel: 'Stufe', levelNormal: 'Normal',
+    firstTime: 'Neu hier? So wird gespielt', otherModesShort: 'Weitere Spielarten', cpuTile: 'Gegen Computer', roomTile: 'Raum erstellen', joinTile: 'Mit Code beitreten', quickMeta: '60 s · ähnlicher Gegner', homeGreet: 'Heute ein leises Spiel',
     legendTitle: 'So liest du die Hinweise', legS: '<b>Strike</b> · richtige Ziffer, richtige Stelle', legB: '<b>Ball</b> · richtige Ziffer, falsche Stelle', legO: '<b>Out</b> · keine Ziffer stimmt',
     recentForm: 'Letzte 10', cpuShort: 'Computer', otherModes: 'Weitere Spielarten', lineScore: 'Strikes pro Runde', backToRoom: 'Zurück zum Raum', bestLabel: 'Bestes', moveHereSeat: 'Hierher wechseln',
     resWin: 'Gewonnen', resLose: 'Verloren', resDraw: 'Unentschieden', resWinSub: 'In Runde {n} geknackt', resLoseSub: 'Dein Gegner war in Runde {n} schneller', resDrawSub: 'Beide in Runde {n} geknackt',
@@ -141,6 +150,8 @@ window.STR = {
     digitPick: 'Ziffern', adLabel: 'Anzeige'
   },
   ru: {
+    takenLabel: 'Раунды', recordLabel: 'Мой счёт', inningsLink: 'По раундам', innings: 'По раундам', roundsV: '{n}', winsN: '{n} П',
+    firstTime: 'Впервые? Как играть', otherModesShort: 'Другие режимы', cpuTile: 'С компьютером', roomTile: 'Создать комнату', joinTile: 'Войти по коду', quickMeta: '60 с · похожий соперник', homeGreet: 'Сегодня тихая партия',
     legendTitle: 'Как читать подсказки', legS: '<b>Страйк</b> · цифра и место верны', legB: '<b>Болл</b> · цифра есть, место другое', legO: '<b>Аут</b> · ни одна цифра не совпала',
     recentForm: 'Последние 10', cpuShort: 'Компьютер', otherModes: 'Другие режимы', lineScore: 'Страйки по раундам', backToRoom: 'Вернуться в комнату', bestLabel: 'Лучшее', moveHereSeat: 'Перейти сюда',
     roomCodeTitle: 'Комната {code}', inviteCode: 'Код приглашения', copy: 'Копировать', share: 'Поделиться', roomRule: '{n} цифры · {a} на {a} · {s} с', edit: 'Изменить',

@@ -12,19 +12,24 @@
   .eyebrow .nm { display: flex; flex-direction: column; }
   .eyebrow .nm span:last-child { font: var(--t-caption); color: var(--c-text3); }
   .body h1 { font: var(--t-headline); margin-top: 24px; }
+  .eyebrow .brandmark { width: 32px; height: 32px; }
   .body .lead { font: var(--t-body); color: var(--c-text2); margin-top: 8px; }
   .yr { margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
   .yr .cap { font: var(--t-label-small); color: var(--c-text3); }
-  .yr .err { font: var(--t-caption); color: var(--c-out); min-height: 18px; }
+  .yr .err { font: var(--t-caption); color: var(--c-danger); min-height: 18px; }
+  .ym { display: flex; gap: 16px; align-items: flex-end; }
+  .ym > div { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .ym .slots { margin: 0; gap: 6px; }
+  .ym .slot { width: 48px; }
   .spacer { flex: 1 1 auto; }
   .entry { border-top: 0; padding-bottom: 12px; }
-  .key.ok { grid-column: span 4; background: var(--c-chalk); color: var(--c-on-chalk); font: var(--t-label); }
+  .key.ok { grid-column: span 4; background: var(--c-accent); color: var(--c-on-accent); font: var(--t-label); }
   .key.ok.is-disabled { background: var(--c-surface2); color: var(--c-text-disabled); }
   .na { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 32px; gap: 16px; }
-  .na .brandmark { width: 33px; height: 48px; opacity: .55; }
+  .na .brandmark { width: 48px; height: 48px; opacity: .55; }
   .na h1 { font: var(--t-title); margin-top: 8px; }
   .na p { font: var(--t-body); color: var(--c-text2); }
-  .na .link { margin-top: 24px; font: var(--t-label-small); color: var(--c-text2); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--c-outline); min-height: 48px; display: flex; align-items: center; }
+  .na .link { margin-top: 24px; font: var(--t-label-small); color: var(--c-text2); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--c-accent); color: var(--c-accent); min-height: 48px; display: flex; align-items: center; }
 </style>
 <script src="js/strings.js"></script>
 <script src="js/icons.js"></script>
@@ -39,21 +44,24 @@ window.build = function (qs) {
     return;
   }
   const err = st === 'error';
-  const e = (qs.get('entry') || (err ? '2091' : '199')).split('');
-  let slots = '';
-  for (let i = 0; i < 4; i++) slots += `<div class="slot ${e[i] != null ? 'filled' : i === e.length ? 'active' : ''}${err ? ' error' : ''}" aria-label="${i + 1}">${e[i] != null ? e[i] : ''}</div>`;
+  // Birth year + month (owner decision DEF-051): 4 + 2 plates on one keypad, 확인 at 6 digits.
+  const e = (qs.get('entry') || (err ? '209113' : '199')).split('');
+  const plate = (i) => `<div class="slot ${e[i] != null ? 'filled' : i === e.length ? 'active' : ''}${err ? ' error' : ''}" aria-label="${i + 1}">${e[i] != null ? e[i] : ''}</div>`;
+  let y = '', mo = '';
+  for (let i = 0; i < 4; i++) y += plate(i);
+  for (let i = 4; i < 6; i++) mo += plate(i);
+  const slots = `<div class="ym"><div><span class="cap">${t('ageYear')}</span><div class="slots">${y}</div></div><div><span class="cap">${t('ageMonth')}</span><div class="slots">${mo}</div></div></div>`;
   let keys = '';
   for (const d of '0123456789') keys += `<button class="key">${d}</button>`;
-  keys += `<button class="key fn" aria-label="${t('backspace')}">${P.icon('backspace')}</button><button class="key ok${e.length === 4 && !err ? '' : ' is-disabled'}">${t('ageConfirm')}</button>`;
+  keys += `<button class="key fn" aria-label="${t('backspace')}">${P.icon('backspace')}</button><button class="key ok${e.length === 6 && !err ? '' : ' is-disabled'}">${t('ageConfirm')}</button>`;
   document.getElementById('app').innerHTML = `<div class="sysbar"></div>
     <section class="body">
       <div class="eyebrow">${P.mark()}<span class="nm"><span>${t('appName')}</span><span>${t('appSub')}</span></span></div>
-      <h1>${t('ageTitle')}</h1>
-      <p class="lead">${t('ageLead')}</p>
+      <h1>${t('ageTitle2')}</h1>
+      <p class="lead">${t('ageLead2')}</p>
       <div class="yr" role="group" aria-label="${t('ageYear')}">
-        <span class="cap">${t('ageYear')}</span>
-        <div class="slots">${slots}</div>
-        <span class="err">${err ? t('ageInvalid') : ''}</span>
+        ${slots}
+        <span class="err">${err ? t('ageInvalid2') : ''}</span>
       </div>
       <div class="spacer"></div>
     </section>

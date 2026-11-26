@@ -12,21 +12,21 @@
   h1 { font: var(--t-headline); margin-bottom: 8px; }
   p { color: var(--c-text2); }
   h2 { font: var(--t-label-small); color: var(--c-text3); margin: 32px 0 8px; }
-  a { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--c-line); color: var(--c-chalk); text-decoration: none; font: var(--t-body); }
+  a { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--c-line); color: var(--c-ink); text-decoration: none; font: var(--t-body); }
   a span { color: var(--c-text3); font: var(--t-caption); }
 </style>
 </head>
 <body>
 <main>
-  <h1>Night Game prototype</h1>
+  <h1>Clean White prototype (design system v2)</h1>
   <p>Open at 360 dp wide (device toolbar). Add <code>?lang=en|de|ru</code> to any page. Shots are in <code>../shots/</code>; specs in <code>../screens/</code>.</p>
   <h2>CORE</h2>
-  <a href="age.html">First run: age (birth year) <span>?state=error|na · ?entry=1998</span></a>
+  <a href="age.html">First run: age (birth year + month) <span>?state=error|na · ?entry=199803</span></a>
   <a href="nickname.html">First run: nickname <span>?state=error · ?ime=0</span></a>
   <a href="home.html">Home <span>?ad=none</span></a>
   <a href="search.html">Quick match search <span>?state=found</span></a>
-  <a href="match.html">Match: guessing <span>?state=secret|waiting|late|phrases|reconnect · ?digits=3..6 · ?clock=warn|crit · resize below 480 dp tall for compact</span></a>
-  <a href="result.html">Result: duel <span>?outcome=win|lose|draw · ?mode=online|cpu · ?ad=after (after an interstitial) · ?ads=removed</span></a>
+  <a href="match.html">Match: guessing <span>?state=secret|waiting|late|phrases|reconnect|memo · ?digits=3..6 · ?clock=warn|crit · ?mode=cpu · ?fs=2 · resize below 480 dp tall for compact</span></a>
+  <a href="result.html">Result: duel <span>?outcome=win|lose|draw · ?mode=online|cpu · ?ad=after (after an interstitial) · ?ads=removed · ?innings=1</span></a>
   <h2>ROOMS AND TEAMS</h2>
   <a href="lobby.html">Private room lobby</a>
   <a href="team-board.html">Team match board <span>?state=final · ?mine=live · ?ads=removed</span></a>

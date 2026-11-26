@@ -1,8 +1,9 @@
 // Reference-shot renderer: every PNG in ../shots/ (except icon-preview.png) comes from this table.
 // Usage (from design/prototype):  node shoot.js [name-filter] [--out=dir]
-// Needs Playwright + Chromium, and Roboto + Noto Sans CJK KR installed as system fonts
-// (the stand-ins named in tokens.css --font-sans). Density 2: 360 x 800 dp -> 720 x 1600 px.
-// Digits in the display face are tabular (DESIGN_SYSTEM 3.1); proto.js enforces it on every Barlow element.
+// Design system v2 (Clean White). Needs Playwright + Chromium, and Roboto + Noto Sans CJK KR installed as system fonts
+// (the stand-ins named in tokens.css --font-sans). Digits use the bundled Inter files from ../fonts (family "Inter NB").
+// Density 2: 360 x 800 dp -> 720 x 1600 px. Run `node gen-tokens.js` first after any change to ../tokens.json.
+// Digits are tabular (DESIGN_SYSTEM 3.1); proto.js enforces it on every element set in Inter.
 const path = require('path');
 const { chromium } = require('playwright');
 
@@ -32,6 +33,7 @@ const SHOTS = [
   S('match-phrases-ko', 'match.html', 'state=phrases'),
   S('match-reconnect-ko', 'match.html', 'state=reconnect'),
   S('match-6digits-ko', 'match.html', 'digits=6'),
+  S('match-memo-ko', 'match.html', 'state=memo'),
   S('match-small-ko', 'match.html', '', SMALL),
   S('match-small-de', 'match.html', 'lang=de', SMALL),
   S('result-win-ko', 'result.html'),
@@ -41,6 +43,7 @@ const SHOTS = [
   S('result-cpu-lose-ko', 'result.html', 'mode=cpu&outcome=lose&ad=after'),
   S('result-link-ko', 'result.html', 'ad=after'),
   S('result-link-en', 'result.html', 'lang=en&ad=after'),
+  S('result-innings-ko', 'result.html', 'innings=1'),
   S('lobby-ko', 'lobby.html'),
   S('lobby-en', 'lobby.html', 'lang=en'),
   S('lobby-de', 'lobby.html', 'lang=de'),

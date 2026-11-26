@@ -1,6 +1,6 @@
 # 밝고 단순한 화면으로: 리디자인 제안 / Light, simple redesign proposal
 
-Status: proposal for the owner to choose from (2026-11-26). Nothing in the app or in `DESIGN_SYSTEM.md` has changed yet.
+Status: **decided 2026-11-26: Direction A "Clean white".** Turned into design system v2: [`../DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md), [`../tokens.json`](../tokens.json) 2.0.0, [`../REDESIGN_V2.md`](../REDESIGN_V2.md); the reference shots in `../shots/` are regenerated from `../prototype/`. This file and `proto.html` stay as the decision record (one deviation: zero counts use `text3`, not `disabled`, so all text passes AA).
 Files: prototype `proto.html` (`?dir=A|B&screen=home|match|result&fs=1|2`), renderer `shoot.js`, contrast check `contrast.js`, PNGs in this folder.
 
 ![current vs A vs B](compare.png)

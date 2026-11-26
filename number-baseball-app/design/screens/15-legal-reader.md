@@ -1,6 +1,6 @@
 # 15 In-app reader: Terms of Use and Privacy policy
 
-Prototype: `prototype/legal.html`. Shot: `legal-ko.png`.
+Design system v2 (Clean White, 2026-11-26). Prototype: `prototype/legal.html`. Shot: `legal-ko.png`.
 
 **Purpose:** owner decision "App only": the Terms and the privacy policy are read inside the app (the server's static `/terms` and `/privacy` pages exist only because Google requires public URLs). Long legal text must be comfortable to read on a phone and in a small window.
 
@@ -8,10 +8,10 @@ Prototype: `prototype/legal.html`. Shot: `legal-ko.png`.
 
 | Element | Spec |
 | --- | --- |
-| Top bar | 56 dp: `arrow_back` · "이용약관" or "개인정보 처리방침" `title`; scrolled state as Settings (`surface1` + 1 dp `line`, status-bar area `surface1`) |
+| Top bar | 56 dp: `arrow_back` · "이용약관" or "개인정보 처리방침" `title`; scrolled state as Settings (1 dp `line` bottom edge, fill stays `bg`) |
 | Meta line | 4 dp below the bar, 16 dp margins: "버전 2026-11-v1 · 시행일 …" `caption` `text3`, version in `numTag` |
 | Contents | 16 dp below: 1 dp `line` above and below, 8 dp padding; "목차" `labelSmall` `text3`; one 48 dp row per top-level heading: number (`numLabel` `text3`, 16 dp column) + title `body` `text2`; tap scrolls to the heading (the heading lands 8 dp under the top bar) |
-| Body | paragraphs 15 / 24 sp, 400, chalk (one step looser than `body` for long reading), 12 dp between paragraphs; lists indented 20 dp, markers `text3`, 6 dp between items; `b` = 700 |
+| Body | paragraphs 15 / 24 sp, 400, `ink` (one step looser than `body` for long reading), 12 dp between paragraphs; lists indented 20 dp, markers `text3`, 6 dp between items; `b` = 700 |
 | Headings | `subtitle` (16 / 22, 700), 28 dp above, 8 dp below; second-level headings `bodyStrong` |
 | Column | content max width 560 dp, centred on wide windows; 16 dp margins (12 compact) |
 | End | 32 dp bottom padding + navigation inset; last line "마지막 업데이트: …" `caption` `text3` |

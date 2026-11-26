@@ -8,49 +8,49 @@
 <link rel="stylesheet" href="css/proto.css">
 <style>
   .memo-toggle, .opp-compact { display: none !important; }
-  /* Compact window (height < 480dp): one-screen layout without memo, 6-column keypad. */
+  .m-top .clock { margin-left: 4px; }
+  /* Compact window (height < 480dp): one screen, no opponent row, no entry head, 6-column keypad (ADAPTIVE §1). */
   @media (max-height: 479px) {
-    .sysbar, .gesture, .duel, .memo, .log-head { display: none; }
-    .topbar { height: 48px; }
+    .sysbar, .gesture, .opp, .entry-head, .legend-box, .secret-head p { display: none; }
+    .topbar { min-height: 48px; }
     .m-top .mode { display: none; }
-    .log { border-top: 1px solid var(--c-line); }
-    .log-row { height: 40px; }
-    .log-row.latest { height: 48px; }
-    .log-row.latest .cell-stack .lamps { display: none; }
+    .clockbar { margin: 0 12px; }
+    .log { padding: 4px 12px 0; }
+    .log-row { min-height: 40px; padding: 2px 6px; }
+    .log-row.latest { min-height: 48px; padding: 4px 8px 4px 6px; }
     .log-row.latest .g { font: var(--t-num-log); letter-spacing: var(--t-num-log-track); }
-    .log { --log-cols: 24px minmax(0, 1fr) 40px 40px 64px; }
-    .log-row { padding: 0 12px; }
-    .entry { padding: 8px 12px 8px; gap: 8px; flex-direction: column; }
-    .slot { height: var(--z-slot-h-compact); font: var(--t-num-slot-sm); width: 48px; }
-    .slot.active::after { bottom: 8px; }
+    .log-row.latest .opph small { display: none; }
+    .hint { height: 24px; min-width: 38px; padding: 0 6px; }
+    .h-out { min-width: 82px; }
+    .entry { padding: 8px 12px 8px; }
+    .slots { margin: 0 0 8px; gap: 8px; }
+    .slot { height: var(--z-slot-h-compact); width: 48px; font: var(--t-num-slot-sm); letter-spacing: 0; }
     .keypad.full { display: none; }
     .keypad.compact { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) 64px; gap: 4px; }
-    .keypad.compact .key { height: 48px; font-size: 26px; }
+    .keypad.compact .key { min-height: 48px; font-size: 22px; }
     .keypad.compact .key.pitch { grid-column: auto; font: var(--t-label-small); padding: 0 4px; }
     .memo-toggle { display: grid !important; }
     .opp-compact { display: flex !important; }
   }
   .opp-compact { align-items: center; gap: 6px; font: var(--t-caption); color: var(--c-text2); white-space: nowrap; overflow: hidden; }
-  .opp-compact .lamp { width: 6px; height: 6px; }
-  .secret-legend { flex: none; border-top: 1px solid var(--c-line); }
-  .secret-legend .log-head { display: flex; }
-  .secret-legend .lg-row { display: grid; grid-template-columns: 56px 1fr; align-items: center; height: var(--z-history-row-h); padding: 0 16px; border-top: 1px solid var(--c-line); }
-  .secret-legend .lg-row .k { display: flex; align-items: center; gap: 6px; }
-  .secret-legend .lg-row .k .hint { font: var(--t-num-hint); }
-  .secret-legend .lg-row .d { font: var(--t-caption); color: var(--c-text2); }
-  .secret-legend .lg-row .d b { color: var(--c-chalk); font-weight: 700; }
-  .secret-head { padding: 24px 16px 4px; text-align: center; }
+  .legend-box { flex: none; margin: 8px 16px 0; padding: 16px; border-radius: var(--r-m); background: var(--c-surface2); }
+  .legend-box .sec-label { display: block; margin-bottom: 12px; }
+  .secret-head { padding: 16px 16px 4px; text-align: center; }
   .secret-head h1 { font: var(--t-title); }
   .secret-head p { font: var(--t-caption); color: var(--c-text3); margin-top: 4px; }
-  .secret-opp { display: flex; align-items: center; justify-content: center; gap: 8px; font: var(--t-caption); color: var(--c-text2); padding: 8px 0 0; }
-  .spacer { flex: 1 1 auto; }
+  .phr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 16px; }
+  .large .opp .avatar { display: none; }
+  .large .log-row { grid-template-columns: calc(var(--z-round-col-w) * var(--ns)) minmax(0, 1fr) auto; }
+  .large .log-row .opph { grid-column: 2 / 4; text-align: left; }
+  .large .log-row.latest .opph small { display: inline; margin-right: 6px; }
+  .large .m-top .mode { display: none; }
 </style>
 <script src="js/strings.js"></script>
 <script src="js/icons.js"></script>
 <script src="js/proto.js"></script>
 <script>
 window.build = function (qs) {
-  const t = P.t, state = qs.get('state') || 'guess', n = +(qs.get('digits') || 4);
+  const t = P.t, state = qs.get('state') || 'guess', n = +(qs.get('digits') || 4), cpu = qs.get('mode') === 'cpu';
   const m = {
     secretOpp: '3916', secretMine: '0472',
     mine: ['1234', '5780', '3196'],
@@ -64,42 +64,45 @@ window.build = function (qs) {
     m.entry = (qs.get('entry') || '391').split('');
     m.memo = { '0': 'x', '2': 'x', '4': 'x', '5': 'x', '7': 'x', '8': 'x', '1': 'o', '3': 'o', '6': 'o', '9': 'o', '1:3': 'o', '2:9': 'o', '3:1': 'o', '4:2': 'x', '4:6': 'o', '1:1': 'x', '3:3': 'x' };
   }
-  if (n !== 4) { m.secretOpp = '391652'.slice(0, n); m.secretMine = '047281'.slice(0, n); m.mine = ['123456'.slice(0, n), '578042'.slice(0, n), '319620'.slice(0, n)]; m.theirs = ['583219'.slice(0, n), '029153'.slice(0, n), '072418'.slice(0, n)]; m.memo = { '7': 'x', '8': 'x', '1': 'o', '3': 'o' }; }
+  if (n !== 4) { m.secretOpp = '391652'.slice(0, n); m.secretMine = '047281'.slice(0, n); m.mine = ['123456'.slice(0, n), '578042'.slice(0, n), '319620'.slice(0, n)]; m.theirs = ['583219'.slice(0, n), '029153'.slice(0, n), '072418'.slice(0, n)]; m.memo = { '7': 'x', '8': 'x', '1': 'o', '3': 'o' }; m.entry = (qs.get('entry') || '391').split(''); }
   const app = document.getElementById('app');
   const clockCls = qs.get('clock') || (state === 'reconnect' ? 'paused' : '');
   const clockVal = clockCls === 'warn' ? '0:08' : clockCls === 'crit' ? '0:04' : '0:42';
   const clockPct = clockCls === 'warn' ? 13 : clockCls === 'crit' ? 7 : 70;
   const roundNo = state === 'secret' ? 0 : m.mine.length + 1;
+  const modeLine = cpu ? `${t('cpuShort')} · ${t('digitsN', { n })}` : t('modeQuick') + ' · ' + t('digitsN', { n });
   const top = `
     <header class="topbar m-top">
       <button class="iconbtn" aria-label="${t('leave')}">${P.icon('close')}</button>
-      <div class="tb-stack"><span class="round">${state === 'secret' ? t('modeQuick') : t('round', { n: roundNo })}</span><span class="mode">${state === 'secret' ? t('digitsN', { n }) : t('modeQuick') + ' · ' + t('digitsN', { n })}</span><span class="opp-compact"><span class="lamp${state === 'waiting' ? '' : ' on bl'}"></span>${state === 'waiting' ? t('oppThinking') : t('oppPitched')}</span></div>
+      <div class="tb-stack"><span class="round">${state === 'secret' ? (cpu ? t('modeCpu') : t('modeQuick')) : t('round', { n: roundNo })}</span><span class="mode">${state === 'secret' ? t('digitsN', { n }) : modeLine}</span><span class="opp-compact"><span class="dot s${state === 'waiting' ? '' : ' ball'}"></span>${state === 'waiting' ? t('oppThinking') : t('oppPitched')}</span></div>
       <button class="iconbtn dim memo-toggle" aria-label="${t('memoShow')}">${P.icon('edit_note')}</button>
-      <div class="clock ${clockCls}" role="timer" aria-label="${t('timeLeft')}">${P.icon('timer')}<span class="v">${clockVal}</span></div>
+      <div class="clock ${clockCls}" role="timer" aria-label="${t('timeLeft')}">${P.icon('timer')}<span class="v num">${clockVal}</span></div>
       <button class="iconbtn" aria-label="${t('more')}">${P.icon('more_vert')}</button>
-      <div class="clockbar ${clockCls}"><i style="width:${clockPct}%"></i></div>
-    </header>`;
-  const duel = (status) => `
-    <section class="duel">
-      <span class="vs">VS</span>
-      <div class="opp"><span class="pname">Kestrel<span class="ptag">#2048</span></span>
-        <span class="pstatus">${status === 'pitched' ? `<span class="lamp on bl"></span>${t('oppPitched')}` : status === 'picking' ? `<span class="lamp"></span>${t('oppPicking')}` : `<span class="lamp"></span>${t('oppThinking')}`}</span></div>
-      ${qs.get('mode') !== 'cpu' ? `<button class="iconbtn dim" aria-label="${t('phrases')}">${P.icon('chat')}</button>` : ''}
-      ${status !== 'picking' ? `<div class="mysecret"><span class="cap">${t('mySecret')}</span><span class="miniplates">${m.secretMine.split('').map((d) => `<span>${d}</span>`).join('')}</span></div>` : ''}
+    </header>
+    <div class="clockbar ${clockCls}"><i style="width:${clockPct}%"></i></div>`;
+  const opp = (status) => `
+    <section class="opp">
+      ${cpu ? `<span class="avatar m">${P.icon('memory', 'ic sm')}</span>` : '<span class="avatar m">K</span>'}
+      <div class="who"><span class="name"><span class="pname">${cpu ? t('cpuShort') : 'Kestrel'}</span>${cpu ? '' : '<span class="ptag">#2048</span>'}</span>
+        <span class="pstatus">${status === 'pitched' ? `<span class="dot s ball"></span>${t('oppPitched')}` : status === 'picking' ? `<span class="dot s"></span>${t('oppPicking')}` : `<span class="dot s"></span>${t('oppThinking')}`}</span></div>
+      ${cpu ? '' : `<button class="iconbtn dim" aria-label="${t('phrases')}">${P.icon('chat')}</button>`}
     </section>`;
   if (state === 'secret') {
     const e = (qs.get('entry') || '047').split('');
     m.entry = e;
-    app.innerHTML = `<div class="sysbar"></div>${top}${duel('picking')}
-      <section class="secret-legend" aria-label="${t('legendTitle')}">
-        <div class="log-head"><span>${t('legendTitle')}</span></div>
-        <div class="lg-row"><span class="k lamps"><span class="lamp on st"></span><span class="hint h-s">1S</span></span><span class="d">${t('legS')}</span></div>
-        <div class="lg-row"><span class="k lamps"><span class="lamp on bl"></span><span class="hint h-b">1B</span></span><span class="d">${t('legB')}</span></div>
-        <div class="lg-row"><span class="k"><span class="h-out">OUT</span></span><span class="d">${t('legO')}</span></div>
+    const chip = (c, txt) => `<span class="hint ${c}">${txt}</span>`;
+    app.innerHTML = `<div class="sysbar"></div>${top}${opp('picking')}
+      <section class="legend-box" aria-label="${t('legendTitle')}">
+        <span class="sec-label">${t('legendTitle')}</span>
+        <div class="legend">
+          <span class="k">${chip('h-s', '1S')}</span><span class="d">${t('legS')}</span>
+          <span class="k">${chip('h-b', '1B')}</span><span class="d">${t('legB')}</span>
+          <span class="k">${chip('h-out', 'OUT')}</span><span class="d">${t('legO')}</span>
+        </div>
       </section>
       <div class="spacer"></div>
       <div class="secret-head"><h1>${t('secretTitle')}</h1><p>${t('secretRule', { n })}</p></div>
-      <section class="entry" style="border-top:0">
+      <section class="entry">
         ${P.slotsHtml(n, e)}
         ${P.keypadHtml({ ...m, memo: null }, { label: t('lockIn'), secret: true })}
       </section>
@@ -107,21 +110,27 @@ window.build = function (qs) {
     return;
   }
   const waiting = state === 'waiting';
+  if (waiting) m.entry = ['3', '9', '6', '1'];
   const phraseSheet = state === 'phrases' ? `<div class="scrim"></div><section class="sheet" style="padding-bottom:24px"><div class="grab"></div>
       <div style="display:flex;align-items:center;padding:4px 4px 0 16px"><span style="flex:1;font:var(--t-title)">${t('phrases')}</span><button class="iconbtn" aria-label="close">${P.icon('close')}</button></div>
       <p style="padding:0 16px 12px;font:var(--t-caption);color:var(--c-text3)">${t('phrasesNote')}</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px">${['ph1', 'ph2', 'ph3', 'ph4', 'ph5', 'ph6'].map((k) => `<button class="btn btn-tonal" style="height:48px">${t(k)}</button>`).join('')}</div>
+      <div class="phr">${['ph1', 'ph2', 'ph3', 'ph4', 'ph5', 'ph6'].map((k) => `<button class="btn btn-tonal">${t(k)}</button>`).join('')}</div>
     </section>` : '';
-  if (waiting) m.entry = ['3', '9', '6', '1'];
-  const recon = state === 'reconnect' ? `<div class="conn" role="status"><span class="lamps"><span class="lamp on ch"></span><span class="lamp"></span><span class="lamp"></span></span><span class="tx"><b>${t('reconnecting')}</b><span>${t('reconnectSub', { s: '0:48' })}</span></span><span class="cd">0:48</span></div>` : '';
-  app.innerHTML = `<div class="sysbar"></div>${top}${recon}${duel(waiting ? 'thinking' : 'pitched')}
+  const memoSheet = state === 'memo' ? `<div class="scrim"></div><section class="sheet memo-sheet"><div class="grab"></div>
+      <div class="memo-head"><span class="t">${t('memo')}</span><button class="btn-text" style="min-height:48px">${t('memoClear')}</button><button class="iconbtn" aria-label="${t('memoHide')}">${P.icon('close')}</button></div>
+      <p class="memo-help">${t('memoHelp')}</p>
+      ${P.memoHtml(m)}
+      <div style="height:24px"></div>
+    </section>` : '';
+  const recon = state === 'reconnect' ? `<div class="conn" role="status"><span class="dots"><span class="dot accent"></span><span class="dot"></span><span class="dot"></span></span><span class="tx"><b>${t('reconnecting')}</b><span>${t('reconnectSub', { s: '0:48' })}</span></span><span class="cd num">0:48</span></div>` : '';
+  app.innerHTML = `<div class="sysbar"></div>${top}${recon}${opp(waiting ? 'thinking' : 'pitched')}
     <section class="log${n >= 5 ? ' wide' : ''}">${P.logHtml(m)}</section>
-    <section class="memo">${P.memoHtml(m)}</section>
     <section class="entry">
+      <div class="entry-head"><span class="mynum">${t('mySecret')} <span class="num">${m.secretMine}</span></span><button class="memo-btn">${P.icon('edit_note')}${t('memo')}</button></div>
       ${P.slotsHtml(n, m.entry, { locked: waiting, noActive: state === 'reconnect' })}
       ${P.keypadHtml(m, { waiting, offline: state === 'reconnect' })}
     </section>
-    <div class="gesture"></div>${phraseSheet}`;
+    <div class="gesture"></div>${phraseSheet}${memoSheet}`;
 };
 </script>
 </head>

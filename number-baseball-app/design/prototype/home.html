@@ -7,31 +7,32 @@
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/proto.css">
 <style>
-  .h-head { flex: none; height: 56px; display: flex; align-items: center; padding: 0 4px 0 16px; gap: 12px; }
+  .h-head { flex: none; min-height: 56px; display: flex; align-items: center; padding: 0 4px 0 16px; gap: 10px; }
   .brand { flex: 1; min-width: 0; display: flex; flex-direction: column; } /* localized app name, system font */
-  .brand .n { font: var(--t-subtitle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brand .n { font: var(--t-subtitle); font-size: calc(17px * var(--fs, 1)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .brand .s { font: var(--t-caption); color: var(--c-text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .hero { flex: none; padding: 12px 16px 0; }
-  .hero .cap { font: var(--t-caption); color: var(--c-text3); }
-  .hero .pname { font: var(--t-title); display: block; margin-top: 2px; }
-  .hero .ptag { font-size: 18px; line-height: 28px; }
-  .record { display: flex; align-items: flex-end; margin-top: 16px; }
-  .record > div { display: flex; flex-direction: column; gap: 2px; padding-right: 20px; }
-  .record > div + div { padding-left: 20px; border-left: 1px solid var(--c-line); }
-  .record .v { font: var(--t-num-stat); font-feature-settings: "tnum" 1; }
-  .record .v.sm { color: var(--c-text2); }
-  .record .k { font: var(--t-caption); color: var(--c-text3); }
-  .formrow { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
-  .formrow .cap { flex: none; }
-  .spacer { flex: 1 1 auto; min-height: 16px; }
-  .scroller { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
-  .scroller.tight .formrow { display: none; }
-  .modes .sec-head { padding-left: 16px; }
-  .row .lead-box { width: 40px; height: 40px; border-radius: var(--r-m); background: var(--c-surface2); display: grid; place-items: center; color: var(--c-chalk); flex: none; }
-  .row + .row::before { left: 72px; }
-  .dock { flex: none; padding: 16px 16px 24px; margin-top: 8px; border-top: 1px solid var(--c-line); background: var(--c-surface1); display: flex; flex-direction: column; gap: 12px; }
-  .dock .dh .t { font: var(--t-subtitle); display: block; }
-  .dock .dh .s { font: var(--t-caption); color: var(--c-text3); display: block; margin-top: 2px; }
+  .body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 0 16px; overflow: hidden; }
+  .me { flex: none; display: flex; align-items: center; gap: 12px; padding: 16px 0 8px; text-align: left; width: 100%; }
+  .me .pname { font: var(--t-subtitle); font-size: calc(17px * var(--fs, 1)); display: flex; min-width: 0; }
+  .me .cap { font: var(--t-caption); color: var(--c-text3); }
+  .stats { flex: none; display: flex; justify-content: space-between; margin-top: 12px; padding: 0 4px 20px; border-bottom: 1px solid var(--c-line); }
+  .stat .v { font: var(--t-num-stat); letter-spacing: var(--t-num-stat-track); }
+  .stat .v small { font-size: .7em; }
+  .stat .k { font: var(--t-caption); color: var(--c-text3); }
+  .hero { flex: none; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .hero .slots { margin: 0; gap: 8px; }
+  .hero .slot { width: 56px; }
+  .hero .link { min-height: 40px; }
+  .body.tight .hero { display: none; }
+  .modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .mode { min-height: var(--z-mode-tile-h); border-radius: var(--r-m); box-shadow: inset 0 0 0 var(--z-border) var(--c-line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 10px 4px; text-align: center; font: var(--t-label-small); font-size: calc(14px * var(--fs, 1)); line-height: 1.3; color: var(--c-ink); }
+  .modes-label { display: block; margin: 0 0 10px 4px; }
+  .quick { flex: none; margin-top: 24px; }
+  .quick-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0 4px 10px; }
+  .quick-head .t { font: var(--t-subtitle); }
+  .quick-head .s { font: var(--t-caption); color: var(--c-text3); text-align: right; }
+  .quick .seg { margin-bottom: 12px; }
+  .foot { flex: none; height: var(--l-banner-clear-space); }
 </style>
 <script src="js/strings.js"></script>
 <script src="js/icons.js"></script>
@@ -41,10 +42,9 @@ window.build = function (qs) {
   if (qs.get('ad') === 'none') document.querySelector('.adslot').remove();
   document.querySelectorAll('.seg [data-n]').forEach((b) => { b.innerHTML = P.digitsLabel(+b.dataset.n); });
   document.querySelector('.h-head').insertAdjacentHTML('afterbegin', P.mark());
-  // Fit rule: if the upper area overflows, hide the form row first; if it still overflows, it scrolls.
-  requestAnimationFrame(() => { const sc = document.querySelector('.scroller'); if (sc.scrollHeight > sc.clientHeight + 1) sc.classList.add('tight'); });
-  const form = 'WWLWDLWWLW'; // oldest -> newest
-  document.querySelector('.form').innerHTML = form.split('').map((r) => `<span class="lamp ${r === 'W' ? 'on st' : r === 'D' ? 'draw' : ''}"></span>`).join('');
+  document.querySelector('.hero').insertAdjacentHTML('afterbegin', P.slotsHtml(4, ['?', '?', '?', '?'], { cls: 'q' }).replace(/ filled/g, ''));
+  // Fit rule (02): if the body overflows, the "? ? ? ?" hero hides first; then the body scrolls above the pinned quick-match block.
+  requestAnimationFrame(() => { const b = document.querySelector('.body'); if (b.scrollHeight > b.clientHeight + 1) b.classList.add('tight'); });
 };
 </script>
 </head>
@@ -53,57 +53,45 @@ window.build = function (qs) {
   <div class="sysbar"></div>
   <header class="h-head">
     <span class="brand"><span class="n" data-t="appName"></span><span class="s" data-t="appSub"></span></span>
-    <button class="iconbtn dim" data-icon="help" data-al="howTo"></button>
-    <button class="iconbtn dim" data-icon="settings" data-al="settings"></button>
+    <button class="iconbtn" data-icon="help" data-al="howTo"></button>
+    <button class="iconbtn" data-icon="settings" data-al="settings"></button>
   </header>
 
-  <div class="scroller">
-  <section class="hero">
-    <span class="cap" data-t="record"></span>
-    <span class="pname">새벽투수<span class="ptag">#4821</span></span>
-    <div class="record">
-      <div><span class="v">12</span><span class="k" data-t="win"></span></div>
-      <div><span class="v">8</span><span class="k" data-t="loss"></span></div>
-      <div><span class="v">3</span><span class="k" data-t="draw"></span></div>
-      <div><span class="v sm">52%</span><span class="k" data-t="winRate"></span></div>
+  <div class="body">
+    <button class="me" data-al="profile">
+      <span class="avatar">새</span>
+      <span style="min-width:0;display:flex;flex-direction:column">
+        <span class="pname"><span class="ellipsis">새벽투수</span><span class="ptag">#4821</span></span>
+        <span class="cap" data-t="record"></span>
+      </span>
+    </button>
+    <div class="stats">
+      <div class="stat"><div class="v num">12</div><div class="k" data-t="win"></div></div>
+      <div class="stat"><div class="v num">8</div><div class="k" data-t="loss"></div></div>
+      <div class="stat"><div class="v num">3</div><div class="k" data-t="draw"></div></div>
+      <div class="stat"><div class="v num">52<small>%</small></div><div class="k" data-t="winRate"></div></div>
     </div>
-    <div class="formrow"><span class="cap" data-t="recentForm"></span><span class="form" role="img" aria-label="승 승 패 승 무 패 승 승 패 승"></span></div>
-  </section>
-
-  <div class="spacer"></div>
-
-  <nav class="modes">
-    <div class="sec-head"><span class="sec-label" data-t="otherModes"></span></div>
-    <div class="list">
-      <button class="row" style="width:100%;text-align:left">
-        <span class="lead-box" data-icon="memory"></span>
-        <span class="rt"><span class="t" data-t="cpuTitle"></span><span class="s" data-t="cpuSub"></span></span>
-        <span data-icon="chevron_right" data-icon-cls="ic chev"></span>
-      </button>
-      <button class="row" style="width:100%;text-align:left">
-        <span class="lead-box" data-icon="group"></span>
-        <span class="rt"><span class="t" data-t="roomTitle"></span><span class="s" data-t="roomSub"></span></span>
-        <span data-icon="chevron_right" data-icon-cls="ic chev"></span>
-      </button>
-      <button class="row" style="width:100%;text-align:left">
-        <span class="lead-box" data-icon="login"></span>
-        <span class="rt"><span class="t" data-t="joinTitle"></span><span class="s" data-t="joinSub"></span></span>
-        <span data-icon="chevron_right" data-icon-cls="ic chev"></span>
-      </button>
-    </div>
-  </nav>
+    <div class="spacer" style="min-height:16px"></div>
+    <div class="hero"><button class="link"><span data-t="firstTime"></span><span data-icon="chevron_right"></span></button></div>
+    <div class="spacer" style="min-height:16px"></div>
+    <span class="sec-label modes-label" data-t="otherModesShort"></span>
+    <nav class="modes">
+      <button class="mode" data-icon="memory"><span data-t="cpuTile"></span></button>
+      <button class="mode" data-icon="group"><span data-t="roomTile"></span></button>
+      <button class="mode" data-icon="login"><span data-t="joinTile"></span></button>
+    </nav>
+    <section class="quick">
+      <div class="quick-head"><span class="t" data-t="quickTitle"></span><span class="s" data-t="quickMeta"></span></div>
+      <div class="seg tall" role="radiogroup">
+        <button role="radio" aria-checked="false" data-n="3"></button>
+        <button role="radio" aria-checked="true" data-n="4"></button>
+        <button role="radio" aria-checked="false" data-n="5"></button>
+        <button role="radio" aria-checked="false" data-n="6"></button>
+      </div>
+      <button class="btn btn-primary"><span data-t="quickStart"></span></button>
+    </section>
+    <div class="foot"></div>
   </div>
-
-  <section class="dock">
-    <div class="dh"><span class="t" data-t="quickTitle"></span><span class="s" data-t="quickSub"></span></div>
-    <div class="seg" role="radiogroup">
-      <button role="radio" aria-checked="true" data-n="3"></button>
-      <button role="radio" aria-checked="false" data-n="4"></button>
-      <button role="radio" aria-checked="false" data-n="5"></button>
-      <button role="radio" aria-checked="false" data-n="6"></button>
-    </div>
-    <button class="btn btn-primary" data-icon="bolt"><span data-t="quickStart"></span></button>
-  </section>
 
   <div class="adslot"><div class="creative"><i>AD</i>Sample banner creative · adaptive 360×50</div></div>
   <div class="gesture"></div>

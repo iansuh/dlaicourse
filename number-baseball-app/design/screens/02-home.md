@@ -1,41 +1,47 @@
 # 02 Home
 
-Prototype: `prototype/home.html` (`?ad=none`). Shots: `home-ko.png`, `home-de.png`, `home-ru.png`.
+Design system v2 (Clean White, 2026-11-26). Prototype: `prototype/home.html` (`?ad=none`). Shots: `home-ko.png`, `home-de.png`, `home-ru.png`.
 
-**Purpose:** see my record, start a quick match with one thumb, reach the other modes.
+**Purpose:** see my record at a glance, start a quick match with one thumb, reach the other modes. v2 simplification: record = four numbers only (no form dots, no row subtitles), other modes = three tiles, one quick-match block at the bottom.
 
 ## Layout (360 × 800, top to bottom)
 
 | Region | Spec |
 | --- | --- |
-| Status bar | 24 dp |
-| Header | 56 dp: brand mark 22 × 32 dp at x = 16; 12 dp; name stack: `app_name_main` "숫자야구" in `subtitle` over `app_name_sub` "조용한 한판" in `caption` `text3` (system font, each line ellipsizes; en "Number Baseball" / "Quiet Duel"); `help` and `settings` icon buttons (48 dp, `text2`), last one 4 dp from the edge |
-| Hero | padding 12 / 16 / 0: "내 기록" `caption` `text3`; nickname `title` + tag `numTag` 18 sp; record row 16 dp below: three columns `numStat` values (승 패 무) with `caption` `text3` labels, 20 dp padding each side of a 1 dp `line` divider, then win rate (same style, value in `text2`, e.g. `52%`); form row 16 dp below: "최근 10경기" `caption` `text3` + 12 dp + ten 8 dp lamps, 6 dp gap, oldest left: win = lit strike lamp, draw = 1.5 dp chalk ring, loss = unlit |
+| Status bar | 24 dp, dark icons |
+| Top bar | 56 dp, `bg`: brand mark 32 × 32 dp at x = 16; 10 dp; name stack `app_name_main` "숫자야구" `subtitle` 17 sp over `app_name_sub` "조용한 한판" `caption` `text3` (each line ellipsizes; en "Number Baseball" / "Quiet Duel"); `help` and `settings` icon buttons (48 dp, `ink`), last one 4 dp from the edge |
+| Body | 16 dp side margins, everything below until the band |
+| Me | 16 dp top, 8 dp bottom: avatar 48 dp (initial "새") · 12 dp · nickname `subtitle` 17 sp + tag `numTag` `text3` over "내 기록" `caption` `text3`. The whole row is one button → Profile (10) |
+| Record | 12 dp below: four columns spread across the width (4 dp inner padding): 승 · 패 · 무 · 승률; value `numStat` `ink` (승률 shows `52` + `%` at 0.7 em) over label `caption` `text3`; 20 dp bottom padding and a 1 dp `line` under the row |
 | Spacer | flexible, min 16 dp |
-| Other modes | section label "다른 방법으로 하기" (40 dp header); three 64 dp rows with a 40 × 40 dp `surface2` lead plate (radius 8, icon 24 chalk), title `subtitle`, subtitle `caption` `text3` (max 2 lines), chevron; dividers inset 72 dp: 컴퓨터와 대결 (`memory`, "오프라인 · 쉬움 · 보통 · 어려움"), 방 만들기 (`group`, "친구와 1:1 또는 팀전, 최대 5 대 5"), 코드로 참가 (`login`, "친구에게 받은 5자리 코드") |
-| Quick match dock | 8 dp above; `surface1` band, 1 dp `line` top, padding 16 / 16 / 24: "빠른 대전" `subtitle` over "비슷한 상대와 바로 한 판 · 60초 제한" `caption` `text3` (stacked, never side by side); 12 dp; digit segmented control 48 dp (3자리 … 6자리, default 3 on first launch, then last used); 12 dp; primary 56 dp `bolt` + "빠른 대전 시작" |
+| Hero | centred: four `?` plates 56 × 64 dp, 8 dp gap (question state, DESIGN_SYSTEM 12.4: `bg`, 1.5 dp `line`, `numSlot` `text3`); 12 dp; link "처음이라면 게임 방법 보기" + `chevron_right` (12.14 Link, 40 dp row, 48 dp target) → tutorial (01). Decorative plates are hidden from TalkBack |
+| Spacer | flexible, min 16 dp |
+| Other modes | label "다른 방법으로" `labelSmall` `text3` (4 dp left inset, 10 dp below); three mode tiles (12.19), 8 dp gap, 84 dp min: `memory` 컴퓨터와 · `group` 방 만들기 · `login` 코드로 참가 |
+| Quick match | 24 dp below the tiles: head row "빠른 대전" `subtitle` left, "60초 · 비슷한 상대" `caption` `text3` right (baseline aligned, 4 dp inset, 10 dp below); digit tiles (12.13, 52 dp, 3자리 … 6자리, default 4 on first launch, then last used); 12 dp; primary 56 dp "빠른 대전 시작" (no icon) |
+| Clear space | 24 dp (`banner_clear_space`) |
 | Ad band | anchored adaptive banner (DESIGN_SYSTEM 13): 1 dp `line`, `surface1`, 50–90 dp; collapsed when not loaded |
 | Navigation inset | below the band, `bg` |
 
-The 24 dp dock bottom padding is the clear space above the banner. Nothing else is tappable within 24 dp of the band.
+Removed in v2: the "최근 10경기" form dots, the vertical dividers in the record, mode subtitles ("오프라인 · 쉬움 · 보통 · 어려움" etc.), the `surface1` dock band and its `bolt` icon, the dock subtitle "비슷한 상대와 바로 한 판 · 60초 제한" (now the short `quickMeta` caption).
 
 ## Behaviour
-- Tapping the hero opens Profile (10). The whole hero is one button (TalkBack: "내 기록, 새벽투수 4821, 12승 8패 3무, 승률 52퍼센트, 프로필 열기").
-- Quick match start → Terms gate (13) if needed → Quick match search (04) with the chosen digit count.
-- 방 만들기 → create-room sheet (07); 코드로 참가 → join screen (07); 컴퓨터와 대결 → setup sheet (03).
-- `help` replays the tutorial (01). `settings` opens Settings (11).
-- Record numbers update when returning from a result: changed values count up (150 ms) with no sound.
+- Me row → Profile (10). TalkBack: "내 기록, 새벽투수 4821, 12승 8패 3무, 승률 52퍼센트, 프로필 열기" (the record row is part of the same node).
+- 빠른 대전 시작 → Terms gate (13) if needed → Quick match search (04) with the chosen digit count.
+- 방 만들기 → create-room sheet (07); 코드로 참가 → join screen (07); 컴퓨터와 → setup sheet (03).
+- `help` and the hero link both open the tutorial (01). `settings` opens Settings (11).
+- Record numbers count up (150 ms) when returning from a result, no sound.
 
 ## States
 
 | State | Presentation |
 | --- | --- |
-| New player (no games) | record values show `0`, win rate `–`; form row replaced by `caption` `text3` "첫 경기를 기다리는 중" |
-| Record loading | numerals show `–` in `textDisabled` (no skeleton shimmer) |
-| Offline | 48 dp `surface3` band under the header: `cloud_off` 20 dp + "오프라인 · 컴퓨터 대결만 할 수 있어요" `caption`; 방 만들기 and 코드로 참가 rows disabled (`textDisabled`, subtitle "인터넷 연결 필요"); dock button disabled with label "연결을 기다리는 중"; no banner |
-| Long German / Russian | mode subtitles wrap to 2 lines (rows grow); dock title and caption stay stacked (shots `home-de`, `home-ru`) |
-| Content does not fit (long translations, windows shorter than about 760 dp) | the region from the hero to the mode rows is one scroll area; when it overflows, the form row hides first; if it still overflows it scrolls under the pinned dock (16 dp bottom fade). The dock and the ad band never scroll |
-| Small window (< 480 dp) | ADAPTIVE.md; no banner |
+| New player (no games) | record values `0`, win rate `–` (`text3`); everything else unchanged (the hero link is the beginner's way in) |
+| Record loading | values `–` in `textDisabled`, no shimmer |
+| Offline | 48 dp `surface2` band under the top bar: `cloud_off` 20 dp `text2` + "오프라인 · 컴퓨터 대결만 할 수 있어요" `caption`; 방 만들기 and 코드로 참가 tiles disabled (icon + label `textDisabled`, not tappable, TalkBack "인터넷 연결 필요"); quick-match button disabled (`surface2` / `textDisabled`) with label "연결을 기다리는 중"; digit tiles stay selectable; no banner |
+| Maintenance | the offline band variant with `schedule` (14) |
+| Long German / Russian | tile labels wrap to 2 lines (tiles grow to fit; all three keep equal height); the quick-match caption may wrap under the title (shots `home-de`, `home-ru`) |
+| Content does not fit (windows shorter than about 700 dp, long translations, large text) | the hero (`?` plates + link) hides first; if it still overflows, the region from Me to the tiles scrolls (20 dp bottom fade) above the pinned quick-match block. The quick-match block and the band never scroll |
+| Small window (< 480 dp) | ADAPTIVE §1: hero and record labels hidden, tiles 56 dp, no banner |
 
 ## Ads
-Banner allowed. When the band expands after load, the dock and rows above move up; taps on moved controls are ignored for 300 ms (`settle_guard`).
+Banner allowed. When the band expands, the quick-match block moves up; taps on moved controls are ignored for 300 ms (`settle_guard`). The 24 dp clear space sits between the primary button and the band.

@@ -13,20 +13,19 @@
   .score .side .n { font: var(--t-subtitle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .score .mid { display: flex; align-items: center; gap: 12px; }
   .score .v { font: var(--t-num-score); font-feature-settings: "tnum" 1; min-width: 32px; text-align: center; }
-  .score .v.lead { color: var(--c-chalk); }
+  .score .v.lead { color: var(--c-ink); }
   .score .v.trail { color: var(--c-text3); }
   .score .colon { font: 600 32px/40px var(--font-num); color: var(--c-text3); }
   .score-sub { flex: none; text-align: center; font: var(--t-caption); color: var(--c-text3); margin-top: -12px; padding-bottom: 16px; }
-  .final { flex: none; padding: 20px 16px 8px; text-align: center; }
+  .final { flex: none; padding: 4px 16px 8px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .final .badge { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--c-accent-tint); color: var(--c-accent); margin-bottom: 12px; }
+  .final .badge .ic { width: 32px; height: 32px; }
   .final h1 { font: var(--t-display); }
-  .duels { flex: none; border-top: 1px solid var(--c-line); }
+  .duels { flex: none; padding: 0 16px; }
   .duels-h { height: 28px; display: grid; grid-template-columns: 1fr 88px 1fr; align-items: center; padding: 0 16px; font: var(--t-label-small); color: var(--c-text3); }
   .duels-h span:nth-child(2) { text-align: center; } .duels-h span:nth-child(3) { text-align: right; }
-  .duel-row { position: relative; display: grid; grid-template-columns: 1fr 88px 1fr; align-items: center; height: 72px; padding: 0 16px; border-top: 1px solid var(--c-line); }
-  .duel-row::before, .duel-row::after { content: ""; position: absolute; top: 12px; bottom: 12px; width: var(--z-stripe-w); border-radius: 0 2px 2px 0; }
-  .duel-row::before { left: 0; background: var(--c-team-a); }
-  .duel-row::after { right: 0; background: var(--c-team-b); border-radius: 2px 0 0 2px; }
-  .duel-row.me { background: var(--c-surface1); }
+  .duel-row { position: relative; display: grid; grid-template-columns: 1fr 88px 1fr; align-items: center; min-height: 72px; padding: 0 12px; border-bottom: 1px solid var(--c-line); }
+  .duel-row.me { background: var(--c-surface2); border-radius: var(--r-m); border-bottom: 0; margin-bottom: 4px; }
   .p { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
   .p.b { align-items: flex-end; text-align: right; }
   .p .pname { font: var(--t-body-strong); max-width: 100%; display: flex; min-width: 0; }
@@ -35,15 +34,14 @@
   .p .best .lbl { font: var(--t-caption); color: var(--c-text3); }
   .p .best { display: flex; align-items: center; gap: 6px; font: var(--t-num-tag); color: var(--c-text2); }
   .p.lost .pname, .p.lost .best { color: var(--c-text3); }
-  .p .won { display: inline-flex; align-items: center; gap: 4px; font: var(--t-micro); color: var(--c-strike); }
-  .p .won .lamp { width: 6px; height: 6px; }
+  .p .won { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: var(--r-s); background: var(--c-strike); color: #FFFFFF; font: var(--t-micro); }
   .st { display: flex; flex-direction: column; align-items: center; gap: 2px; font: var(--t-caption); color: var(--c-text2); text-align: center; }
   .st .rn { font: var(--t-num-label); letter-spacing: var(--t-num-label-track); color: var(--c-text3); }
-  .st.live .dot { display: flex; align-items: center; gap: 6px; }
+  .st .live-dot { display: flex; align-items: center; gap: 6px; }
   .st.warn { color: var(--c-strike); }
   .spacer { flex: 1 1 auto; }
-  .foot { flex: none; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 8px; }
-  .watch-note { flex: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; border-top: 1px solid var(--c-line); font: var(--t-caption); color: var(--c-text3); }
+  .foot { flex: none; padding: 16px 16px 0; display: flex; flex-direction: column; gap: 8px; }
+  .watch-note { flex: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; font: var(--t-caption); color: var(--c-text3); }
 </style>
 <script src="js/strings.js"></script>
 <script src="js/icons.js"></script>
@@ -52,19 +50,18 @@
 window.build = function (qs) {
   // ?mine=live: my duel still running (board opened as a sheet from my duel → arrow_back, no watching note).
   const t = P.t, final = qs.get('state') === 'final', mineLive = !final && qs.get('mine') === 'live';
-  const hint = (s, b) => (s === 0 && b === 0) ? '<span class="h-out" style="height:18px;font-size:11px;padding:0 4px">OUT</span>' : `<span>${s}S ${b}B</span>`;
-  const won = `<span class="won"><span class="lamp on st"></span>${t('wonTag')}</span>`;
+  const hint = (s, b) => (s === 0 && b === 0) ? '<span>OUT</span>' : `<span>${s}S ${b}B</span>`;
+  const won = `<span class="won">${t('wonTag')}</span>`;
   const rows = final ? [
     { a: ['새벽투수', '4821'], b: ['민트초코', '0912'], st: `<span class="rn">R7</span>`, win: 'a', me: true, bestA: [4, 0], bestB: [2, 1] },
     { a: ['Kestrel', '2048'], b: ['Größenwahn', '7731'], st: `<span class="rn">R9</span>`, win: 'b', bestA: [2, 2], bestB: [4, 0] },
     { a: ['밤하늘', '5530'], b: ['Volna', '1187'], st: `<span class="rn">R6</span>`, win: 'a', bestA: [4, 0], bestB: [1, 2] }
   ] : [
     { a: ['새벽투수', '4821'], b: ['민트초코', '0912'], st: `<span class="rn">R7</span>`, win: 'a', me: true, bestA: [4, 0], bestB: [2, 1] },
-    { a: ['Kestrel', '2048'], b: ['Größenwahn', '7731'], st: `<span class="rn">R5</span><span class="dot"><span class="lamp s on ch"></span>${t('playing')}</span>`, live: true, bestA: [2, 1], bestB: [1, 2] },
+    { a: ['Kestrel', '2048'], b: ['Größenwahn', '7731'], st: `<span class="rn">R5</span><span class="live-dot"><span class="dot s accent"></span>${t('playing')}</span>`, live: true, bestA: [2, 1], bestB: [1, 2] },
     { a: ['밤하늘', '5530'], b: ['Volna', '1187'], st: `<span class="rn">R4</span><span>${t('disconnected', { s: '0:41' })}</span>`, warn: true, bestA: [1, 1], bestB: [0, 0] }
   ];
-  if (final) document.getElementById('app').classList.add('tint-win');
-  if (mineLive) Object.assign(rows[0], { st: `<span class="rn">R5</span><span class="dot"><span class="lamp s on ch"></span>${t('playing')}</span>`, win: null, live: true, bestA: [2, 1], bestB: [1, 1] });
+    if (mineLive) Object.assign(rows[0], { st: `<span class="rn">R5</span><span class="live-dot"><span class="dot s accent"></span>${t('playing')}</span>`, win: null, live: true, bestA: [2, 1], bestB: [1, 1] });
   const scoreA = rows.filter((r) => r.win === 'a').length, scoreB = rows.filter((r) => r.win === 'b').length;
   const rowHtml = (r) => `
     <div class="duel-row${r.me ? ' me' : ''}">
@@ -77,10 +74,9 @@ window.build = function (qs) {
     <header class="topbar">
       <button class="iconbtn" aria-label="${mineLive ? t('backToDuel') : final ? t('home') : t('leave')}">${P.icon(mineLive ? 'arrow_back' : 'close')}</button>
       <span class="tb-title">${t('teamMatch')}</span>
-      ${final && qs.get('ads') !== 'removed' ? `<button class="btn-text">${t('removeAds')}</button>` : ''}
       <button class="iconbtn" aria-label="${t('chat')}">${P.icon('chat')}</button>
     </header>
-    ${final ? `<section class="final win"><span class="lamps l" style="justify-content:center;margin-bottom:12px">${'<span class="lamp l on st"></span>'.repeat(2)}<span class="lamp l"></span></span><h1>${t('resWin')}</h1></section>` : ''}
+    ${final ? `<section class="final win"><span class="badge" aria-hidden="true">${P.icon('check')}</span><h1>${t('resWin')}</h1></section>` : ''}
     <section class="score">
       <div class="side a"><span class="tbadge a">A</span><span class="n">${t('teamA')}</span></div>
       <div class="mid"><span class="v ${scoreA >= scoreB ? 'lead' : 'trail'}">${scoreA}</span><span class="colon">:</span><span class="v ${scoreB >= scoreA ? 'lead' : 'trail'}">${scoreB}</span></div>
@@ -95,7 +91,7 @@ window.build = function (qs) {
     <section class="foot">
       ${final ? `<button class="btn btn-primary">${t('backToRoom')}</button><button class="btn btn-secondary">${t('home')}</button>` : ''}
     </section>
-    ${final ? '<div class="adslot"><div class="creative"><i>AD</i>Sample banner creative · adaptive 360×50</div></div>' : ''}
+    ${final ? (qs.get('ads') === 'removed' ? '<div style="height:24px;flex:none"></div>' : `<button class="removeads">${t('removeAds')}</button><div class="adslot"><div class="creative"><i>AD</i>Sample banner creative · adaptive 360×50</div></div>`) : ''}
     <div class="gesture"></div>`;
 };
 </script>

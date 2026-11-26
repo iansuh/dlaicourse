@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="css/proto.css">
 <style>
   .behind { flex: 1 1 auto; padding: 72px 16px 0; color: var(--c-text3); font: var(--t-title); }
+  .sheet .scrim2 { display: none; }
   .sheet { top: 136px; display: flex; flex-direction: column; }
   .sh-head { flex: none; height: 48px; display: flex; align-items: center; padding: 0 4px 0 16px; }
   .sh-head .t { flex: 1; font: var(--t-title); }
@@ -19,29 +20,30 @@
   .m .who { font: var(--t-micro); color: var(--c-text2); display: flex; align-items: center; gap: 6px; }
   .m .who .ptag { font: var(--t-num-tag); font-size: 13px; line-height: 16px; }
   .m .who .tbadge { width: 16px; height: 16px; font-size: 12px; border-radius: 3px; }
-  .bub { padding: 10px 12px; border-radius: var(--r-m); background: var(--c-surface4); font: var(--t-body); color: var(--c-chalk); }
+  .bub { padding: 10px 12px; border-radius: var(--r-m); background: var(--c-surface2); font: var(--t-body); color: var(--c-ink); }
   .m.me { align-self: flex-end; align-items: flex-end; }
-  .m.me .bub { background: var(--c-chalk); color: var(--c-on-chalk); }
+  .m.me .bub { background: var(--c-accent-tint); color: var(--c-ink); }
   .m .time { font: var(--t-caption); font-size: 12px; color: var(--c-text3); }
-  /* Masked words: text2 on surface4 (5.59:1); in my chalk bubble textDisabled on chalk (5.48:1). DESIGN_SYSTEM 12.15. */
+  /* Masked words: text2 in both bubbles (7.13 on surface2, 6.88 on accentTint). DESIGN_SYSTEM 12.15. */
   .mask { letter-spacing: .1em; color: var(--c-text2); }
-  .m.me .mask { color: var(--c-text-disabled); }
-  .m.held .bub { box-shadow: 0 0 0 2px var(--c-chalk); }
+  
+  .m.held .bub { box-shadow: 0 0 0 2px var(--c-accent); }
   .quick { flex: none; display: flex; gap: 8px; padding: 8px 16px; overflow: hidden; border-top: 1px solid var(--c-line); }
-  .chip { flex: none; height: var(--z-chip-h); padding: 0 12px; border-radius: var(--r-s); box-shadow: inset 0 0 0 1px var(--c-outline); font: var(--t-label-small); color: var(--c-chalk); display: flex; align-items: center; white-space: nowrap; }
+  .m .who .tbadge { font-size: 11px; }
+  .chip { flex: none; height: var(--z-chip-h); padding: 0 12px; border-radius: var(--r-full); background: var(--c-surface2); font: var(--t-label-small); color: var(--c-ink); display: flex; align-items: center; white-space: nowrap; }
   .chip-touch { padding: 8px 0; display: flex; }
   .compose { flex: none; display: flex; align-items: center; gap: 8px; padding: 4px 4px 8px 16px; }
   .field { flex: 1; height: 48px; border-radius: var(--r-m); background: var(--c-surface2); display: flex; align-items: center; padding: 0 12px; font: var(--t-body); color: var(--c-text3); }
-  .send { width: 48px; height: 48px; border-radius: var(--r-m); background: var(--c-chalk); color: var(--c-on-chalk); display: grid; place-items: center; }
+  .send { width: 48px; height: 48px; border-radius: var(--r-m); background: var(--c-accent); color: var(--c-on-accent); display: grid; place-items: center; }
   .send.off { background: var(--c-surface2); color: var(--c-text-disabled); }
   .limit { flex: none; padding: 0 16px 4px; font: var(--t-caption); color: var(--c-strike); display: flex; align-items: center; gap: 6px; }
   .limit .ic { width: 16px; height: 16px; }
-  .menu { position: absolute; left: 0; right: 0; bottom: 0; background: var(--c-surface3); border-radius: var(--r-l) var(--r-l) 0 0; box-shadow: var(--shadow-3); padding-bottom: 24px; }
+  .menu { position: absolute; left: 0; right: 0; bottom: 0; background: var(--c-surface3); border-radius: var(--r-l) var(--r-l) 0 0; padding-bottom: 24px; }
   .menu .ctx { padding: 4px 16px 12px; font: var(--t-caption); color: var(--c-text3); border-bottom: 1px solid var(--c-line); }
-  .menu .ctx b { color: var(--c-chalk); font: var(--t-body-strong); display: block; margin-top: 2px; }
+  .menu .ctx b { color: var(--c-ink); font: var(--t-body-strong); display: block; margin-top: 2px; }
   .menu .row { min-height: 56px; }
   .menu .row .lead { color: var(--c-text2); }
-  .menu .row.danger .lead, .menu .row.danger .t { color: var(--c-out); }
+  .menu .row.danger .lead, .menu .row.danger .t { color: var(--c-danger); }
 </style>
 <script src="js/strings.js"></script>
 <script src="js/icons.js"></script>
@@ -76,15 +78,15 @@ window.build = function (qs) {
         <div class="m${st === 'actions' ? ' held' : ''}">${who('Größenwahn', '7731', 'b')}<span class="bub">${c.masked}</span></div>
         <div class="m me"><span class="bub">${c.mine}</span><span class="time">9:41</span></div>
       </div>`}
-      <div class="quick">${c.chips.map((q) => `<button class="chip"${st === 'limit' ? ' disabled style="box-shadow:none;background:var(--c-surface2);color:var(--c-text-disabled)"' : ''}>${q}</button>`).join('')}</div>
+      <div class="quick">${c.chips.map((q) => `<button class="chip"${st === 'limit' ? ' disabled style="background:var(--c-surface1);color:var(--c-text-disabled)"' : ''}>${q}</button>`).join('')}</div>
       ${st === 'limit' ? `<div class="limit">${P.icon('timer')}${c.limit}</div>` : ''}
       <div class="compose"><div class="field">${c.ph}</div><button class="send off" aria-label="send" aria-disabled="true">${P.icon('send')}</button></div>
       <div class="gesture" style="height:16px"></div>
     </section>
     ${st === 'actions' ? `
-    <div class="scrim" style="background:rgba(0,0,0,.4)"></div>
+    <div class="scrim"></div>
     <section class="menu">
-      <div class="grab sheet-grab" style="width:32px;height:4px;border-radius:2px;background:var(--c-outline);margin:12px auto 8px"></div>
+      <div class="grab sheet-grab" style="width:32px;height:4px;border-radius:2px;background:var(--c-dot-off);margin:12px auto 8px"></div>
       <div class="ctx">${c.from}<b>Größenwahn#7731 · ${c.masked}</b></div>
       <button class="row single" style="width:100%;text-align:left">${P.icon('content_copy', 'ic lead')}<span class="rt"><span class="t">${c.copy}</span></span></button>
       <button class="row single" style="width:100%;text-align:left">${P.icon('flag', 'ic lead')}<span class="rt"><span class="t">${c.report}</span></span></button>
