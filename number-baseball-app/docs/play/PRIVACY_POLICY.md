@@ -22,7 +22,7 @@
 
 시행일: [시행일]
 
-[운영자 성명](Google Play 개발자 이름: [개발자 표시명], 이하 "운영자")은 숫자야구 게임 앱 **숫자야구: 조용한 한판**(이하 "앱")와 앱이 쓰는 게임 서버 및 웹 페이지(`https://[도메인]`)에서 이용자의 개인정보를 아래와 같이 처리합니다. 앱은 개인 개발자가 운영합니다.
+[운영자 성명](Google Play 개발자 이름: Number Baseball, 이하 "운영자")은 숫자야구 게임 앱 **숫자야구: 조용한 한판**(이하 "앱")와 앱이 쓰는 게임 서버 및 웹 페이지(`https://[도메인]`)에서 이용자의 개인정보를 아래와 같이 처리합니다. 앱은 개인 개발자가 운영합니다.
 
 운영자 정보: [운영자 성명] / 주소 [운영자 주소] / 전화 [게임 전용 전화번호] / 이메일 numbaseball.help@gmail.com (Google Play의 개발자 정보와 같습니다)
 
@@ -168,9 +168,9 @@
 
 Effective date: [시행일]
 
-[운영자 성명] (developer name on Google Play: [개발자 표시명]; "we") runs the number-guessing game app **Number Baseball: Quiet Duel** (the "app"), its game server and the web pages at `https://[도메인]`. This policy explains what personal data we process and why. The app is run by an individual developer.
+Sanghyun Suh (developer name on Google Play: Number Baseball; "we") runs the number-guessing game app **Number Baseball: Quiet Duel** (the "app"), its game server and the web pages at `https://[도메인]`. This policy explains what personal data we process and why. The app is run by an individual developer.
 
-Who we are: [운영자 성명] / address [운영자 주소] / phone [게임 전용 전화번호] / email numbaseball.help@gmail.com (the same details as in our Google Play developer information)
+Who we are: Sanghyun Suh / address [운영자 주소] / phone [게임 전용 전화번호] / email numbaseball.help@gmail.com (the same details as in our Google Play developer information)
 
 ### 1. Summary
 
@@ -285,7 +285,7 @@ We do not sell or give your personal data to other companies or people, except w
 
 ### 11. Privacy contact
 
-- Person responsible for privacy: [운영자 성명] (operator)
+- Person responsible for privacy: Sanghyun Suh (operator)
 - Contact: numbaseball.help@gmail.com
 
 ### 12. Additional information for some regions

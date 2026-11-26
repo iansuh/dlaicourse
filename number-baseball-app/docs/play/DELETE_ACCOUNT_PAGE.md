@@ -12,7 +12,7 @@
 
 # 숫자야구: 조용한 한판 — 계정 삭제
 
-앱: 숫자야구: 조용한 한판 · 개발자: [개발자 표시명]
+앱: 숫자야구: 조용한 한판 · 개발자: Number Baseball
 
 **앱이 있다면:** 앱의 **설정 → 계정 삭제**를 누르면 즉시 삭제됩니다.
 
@@ -32,7 +32,7 @@
 
 # Number Baseball: Quiet Duel — Delete your account
 
-App: Number Baseball: Quiet Duel · Developer: [개발자 표시명]
+App: Number Baseball: Quiet Duel · Developer: Number Baseball
 
 **If you have the app:** open **Settings → Delete account**. Your account is deleted immediately.
 
